@@ -1,0 +1,20 @@
+name: daily-scan
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Smoke test
+        env:
+          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+        run: |
+          python -c "import os, requests; r = requests.get(f'https://eodhd.com/api/eod/AAPL.US?api_token={os.environ[\"EODHD_API_KEY\"]}&fmt=json&from=2026-04-01'); print('OK' if r.status_code == 200 else 'FAIL', r.status_code)"

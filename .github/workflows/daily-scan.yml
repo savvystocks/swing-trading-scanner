@@ -2,10 +2,18 @@ name: daily-scan
 
 on:
   workflow_dispatch:
+    inputs:
+      scan_limit:
+        description: "Limit universe size (leave blank for full scan)"
+        required: false
+        default: "50"
+  schedule:
+    - cron: "30 22 * * 1-5"
 
 jobs:
   scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -13,8 +21,16 @@ jobs:
           python-version: "3.11"
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Smoke test
+      - name: Run daily scan
         env:
           EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
-        run: |
-          python -c "import os, requests; r = requests.get(f'https://eodhd.com/api/eod/AAPL.US?api_token={os.environ[\"EODHD_API_KEY\"]}&fmt=json&from=2026-04-01'); print('OK' if r.status_code == 200 else 'FAIL', r.status_code)"
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          SCAN_LIMIT: ${{ inputs.scan_limit }}
+        run: python scripts/run_daily_scan.py
+      - name: Upload scan result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scan-result
+          path: data/results/

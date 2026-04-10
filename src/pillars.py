@@ -435,13 +435,18 @@ def gate_6_liquidity(fundamentals, df_ind):
 
 def gate_7_earnings_blackout(fundamentals):
     earnings = (fundamentals or {}).get("Earnings", {}) or {}
-    trend = earnings.get("Trend", {}) or {}
-    future_dates = []
+    history = earnings.get("History", {}) or {}
     today = pd.Timestamp.now().normalize()
-    for date_str in trend.keys():
+    future_dates = []
+    for row in history.values():
+        report_date_str = row.get("reportDate")
+        if not report_date_str:
+            continue
+        if row.get("epsActual") is not None:
+            continue
         try:
-            d = pd.Timestamp(date_str)
-            if d > today:
+            d = pd.Timestamp(report_date_str)
+            if d >= today:
                 future_dates.append(d)
         except Exception:
             pass

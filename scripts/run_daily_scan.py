@@ -10,8 +10,9 @@ from src.email_report import render_email, send_email
 
 def main():
     limit = None
-    if os.environ.get("SCAN_LIMIT"):
-        limit = int(os.environ["SCAN_LIMIT"])
+    scan_limit_env = os.environ.get("SCAN_LIMIT", "").strip()
+    if scan_limit_env and scan_limit_env.isdigit():
+        limit = int(scan_limit_env)
 
     print(f"Starting daily scan (limit={limit})")
     scan = run_scan(universe_limit=limit)

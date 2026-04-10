@@ -25,6 +25,7 @@ def main():
         "scored_total": scan["scored_total"],
         "api_calls": scan["api_calls"],
         "vix_regime": scan["vix_regime"],
+        "sector_performance": scan.get("sector_performance", []),
         "tickets": [r["ticket"] for r in scan["results"]],
     }
 

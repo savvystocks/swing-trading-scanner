@@ -31,6 +31,20 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .sector-summary-grid { display:flex; flex-wrap:wrap; gap:6px 10px; }
   .sector-chip { background:#fff; padding:4px 10px; border-radius:12px; border:1px solid #e0e0e0; font-size:11px; }
   .sector-chip strong { color:#0052cc; margin-right:4px; }
+  .sector-perf { margin:16px 0 22px; }
+  .sector-perf h3 { margin:0 0 8px; font-size:13px; color:#384766; }
+  table.sectors { width:100%; border-collapse:collapse; font-size:11px; background:#fff; border-radius:6px; overflow:hidden; border:1px solid #e5e5e5; }
+  table.sectors th { background:#f4f6fa; text-align:left; padding:7px 8px; border-bottom:1px solid #ddd; font-weight:600; color:#384766; }
+  table.sectors td { padding:6px 8px; border-bottom:1px solid #f0f0f0; }
+  table.sectors td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .pos { color:#0d7b34; }
+  .neg { color:#c94545; }
+  .outlook { display:inline-block; padding:2px 7px; border-radius:3px; font-weight:600; font-size:10px; }
+  .o-LEADING { background:#0d7b34; color:#fff; }
+  .o-STRONG { background:#1a9850; color:#fff; }
+  .o-NEUTRAL { background:#999; color:#fff; }
+  .o-LAGGING { background:#e67e22; color:#fff; }
+  .o-WEAK { background:#c94545; color:#fff; }
   .tier-badge { display:inline-block; padding:3px 10px; border-radius:4px; font-weight:600; font-size:11px; color:#fff; }
   .t5 { background:#0d7b34; }
   .t4 { background:#1a9850; }
@@ -68,6 +82,38 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   <div class="regime">
     Market Regime: <strong>{{ regime }}</strong> &middot; VIX {{ vix }}
   </div>
+
+  {% if sector_performance %}
+    <div class="sector-perf">
+      <h3>Sector Performance &amp; Outlook</h3>
+      <table class="sectors">
+        <thead>
+          <tr>
+            <th>Sector</th>
+            <th class="num">1D</th>
+            <th class="num">5D</th>
+            <th class="num">1M</th>
+            <th class="num">3M</th>
+            <th class="num">vs SPY (1M)</th>
+            <th>Outlook</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sector_performance %}
+            <tr>
+              <td><strong>{{ s.sector }}</strong></td>
+              <td class="num {% if s.ret_1d and s.ret_1d > 0 %}pos{% elif s.ret_1d and s.ret_1d < 0 %}neg{% endif %}">{% if s.ret_1d is not none %}{{ "%+.1f"|format(s.ret_1d) }}%{% else %}-{% endif %}</td>
+              <td class="num {% if s.ret_5d and s.ret_5d > 0 %}pos{% elif s.ret_5d and s.ret_5d < 0 %}neg{% endif %}">{% if s.ret_5d is not none %}{{ "%+.1f"|format(s.ret_5d) }}%{% else %}-{% endif %}</td>
+              <td class="num {% if s.ret_1m and s.ret_1m > 0 %}pos{% elif s.ret_1m and s.ret_1m < 0 %}neg{% endif %}">{% if s.ret_1m is not none %}{{ "%+.1f"|format(s.ret_1m) }}%{% else %}-{% endif %}</td>
+              <td class="num {% if s.ret_3m and s.ret_3m > 0 %}pos{% elif s.ret_3m and s.ret_3m < 0 %}neg{% endif %}">{% if s.ret_3m is not none %}{{ "%+.1f"|format(s.ret_3m) }}%{% else %}-{% endif %}</td>
+              <td class="num {% if s.rs_vs_spy and s.rs_vs_spy > 0 %}pos{% elif s.rs_vs_spy and s.rs_vs_spy < 0 %}neg{% endif %}">{% if s.rs_vs_spy is not none %}{{ "%+.1f"|format(s.rs_vs_spy) }}%{% else %}-{% endif %}</td>
+              <td><span class="outlook o-{{ s.outlook }}">{{ s.outlook }}</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
 
   {% if sector_summary %}
     <div class="sector-summary">
@@ -194,6 +240,7 @@ def render_email(scan):
         watchlist_tickets=watchlist,
         rejected_tickets=rejected,
         sector_summary=sector_summary,
+        sector_performance=scan.get("sector_performance", []),
     )
 
 

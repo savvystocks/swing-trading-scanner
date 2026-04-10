@@ -21,6 +21,7 @@ from src.pillars import (
     pick_benchmark,
 )
 from src.scoring import score_candidate, build_trade_ticket
+from src.sectors import fetch_sector_performance
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 UNIVERSE_PATH = PROJECT_ROOT / "data" / "universe" / "universe.json"
@@ -164,6 +165,10 @@ def run_scan(universe_limit=None, verbose=True):
     vix_pillar = pillar_5_global_macro(vix_df)
     if verbose:
         print(f"VIX regime: {vix_pillar.get('regime')} (vix={vix_pillar.get('vix')})")
+
+    sector_perf = fetch_sector_performance(client, spy_df, FROM_DATE)
+    if verbose:
+        print(f"Sector ETFs loaded: {len(sector_perf)}")
         print(f"Scanning {len(universe)} tickers...")
 
     candidates = []
@@ -216,6 +221,7 @@ def run_scan(universe_limit=None, verbose=True):
     return {
         "scan_date": time.strftime("%Y-%m-%d"),
         "vix_regime": vix_pillar,
+        "sector_performance": sector_perf,
         "universe_size": len(universe),
         "fast_filter_survivors": len(candidates),
         "scored_total": len(scored),
@@ -229,6 +235,7 @@ def save_results(scan, path=None):
     serializable = {
         "scan_date": scan["scan_date"],
         "vix_regime": scan["vix_regime"],
+        "sector_performance": scan.get("sector_performance", []),
         "universe_size": scan["universe_size"],
         "fast_filter_survivors": scan["fast_filter_survivors"],
         "scored_total": scan["scored_total"],

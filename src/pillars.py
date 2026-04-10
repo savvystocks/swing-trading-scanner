@@ -128,7 +128,7 @@ def pillar_3_can_slim(fundamentals):
         "revenue_growth_20pct": rev_growth_yoy is not None and rev_growth_yoy >= 0.20,
         "profit_margin_positive": profit_margin is not None and profit_margin > 0,
         "roe_above_17pct": roe is not None and roe >= 0.17,
-        "peg_reasonable": peg is None or (0 < peg <= 2.5),
+        "peg_reasonable": peg is not None and 0 < peg <= 2.5,
     }
     passed = sum(1 for v in checks.values() if v)
     if passed >= 4:
@@ -421,7 +421,7 @@ def gate_6_liquidity(fundamentals, df_ind):
     checks = {
         "mcap_above_500m": bool(mcap and mcap >= 500_000_000),
         "dollar_vol_above_2m": bool(dollar_vol >= 2_000_000),
-        "float_above_30pct": bool(float_pct is None or float_pct >= 30),
+        "float_above_30pct": bool(float_pct is not None and float_pct >= 30),
     }
     verdict = "PASS" if all(checks.values()) else "FAIL"
     return {
@@ -438,26 +438,40 @@ def gate_7_earnings_blackout(fundamentals):
     history = earnings.get("History", {}) or {}
     today = pd.Timestamp.now().normalize()
     future_dates = []
+    past_with_actual = 0
     for row in history.values():
         report_date_str = row.get("reportDate")
         if not report_date_str:
             continue
-        if row.get("epsActual") is not None:
-            continue
         try:
             d = pd.Timestamp(report_date_str)
-            if d >= today:
-                future_dates.append(d)
         except Exception:
-            pass
+            continue
+        if row.get("epsActual") is not None:
+            past_with_actual += 1
+            continue
+        if d >= today:
+            future_dates.append(d)
+
+    if not history or past_with_actual == 0:
+        return {
+            "verdict": "FAIL",
+            "next_earnings": None,
+            "days_until": None,
+            "reason": "no earnings history data — cannot verify blackout",
+        }
+
     if not future_dates:
-        return {"verdict": "PASS", "next_earnings": None, "days_until": None, "reason": "no scheduled date"}
+        return {
+            "verdict": "PASS",
+            "next_earnings": None,
+            "days_until": None,
+            "reason": "no scheduled future earnings within feed",
+        }
+
     next_date = min(future_dates)
     days = (next_date - today).days
-    if days <= 10:
-        verdict = "FAIL"
-    else:
-        verdict = "PASS"
+    verdict = "FAIL" if days <= 10 else "PASS"
     return {
         "verdict": verdict,
         "next_earnings": next_date.strftime("%Y-%m-%d"),

@@ -11,77 +11,127 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <style>
   body { font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif; background:#f4f4f4; margin:0; padding:20px; color:#222; }
-  .wrap { max-width:860px; margin:0 auto; background:#fff; padding:28px 32px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+  .wrap { max-width:960px; margin:0 auto; background:#fff; padding:28px 32px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
   h1 { font-size:22px; margin:0 0 6px; }
   .meta { color:#666; font-size:13px; margin-bottom:20px; }
   .regime { background:#e8f1ff; padding:10px 14px; border-radius:6px; margin-bottom:18px; font-size:13px; }
   .regime strong { color:#0052cc; }
-  h2 { font-size:16px; margin:24px 0 8px; border-bottom:2px solid #eee; padding-bottom:6px; }
-  table { width:100%; border-collapse:collapse; font-size:13px; }
-  th { background:#f8f8f8; text-align:left; padding:8px 10px; border-bottom:1px solid #ddd; font-weight:600; }
-  td { padding:8px 10px; border-bottom:1px solid #f0f0f0; }
-  .tier5 { background:#e7f7ee; }
-  .tier4 { background:#f0faf3; }
-  .tier3 { background:#fff; }
-  .tier0 { background:#fef2f2; color:#888; }
-  .ticker { font-weight:600; color:#0052cc; }
-  .tier-badge { display:inline-block; padding:2px 8px; border-radius:4px; font-weight:600; font-size:11px; }
-  .t5 { background:#0d7b34; color:#fff; }
-  .t4 { background:#1a9850; color:#fff; }
-  .t3 { background:#4a90e2; color:#fff; }
-  .t2 { background:#999; color:#fff; }
-  .t0 { background:#c94545; color:#fff; }
-  .footer { margin-top:30px; font-size:11px; color:#999; text-align:center; }
+  h2 { font-size:16px; margin:28px 0 10px; border-bottom:2px solid #eee; padding-bottom:6px; }
+  .card { border:1px solid #e5e5e5; border-radius:8px; padding:16px 18px; margin-bottom:14px; background:#fdfdfd; }
+  .card.tier5 { border-left:6px solid #0d7b34; }
+  .card.tier4 { border-left:6px solid #1a9850; }
+  .card.tier3 { border-left:6px solid #4a90e2; }
+  .card.tier0 { border-left:6px solid #c94545; background:#fef7f7; }
+  .card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .card-head-left { display:flex; align-items:center; gap:10px; }
+  .tier-badge { display:inline-block; padding:3px 10px; border-radius:4px; font-weight:600; font-size:11px; color:#fff; }
+  .t5 { background:#0d7b34; }
+  .t4 { background:#1a9850; }
+  .t3 { background:#4a90e2; }
+  .t2 { background:#999; }
+  .t0 { background:#c94545; }
+  .ticker { font-weight:700; font-size:17px; color:#111; }
+  .name { color:#666; font-size:13px; }
+  .price-row { font-size:13px; color:#333; margin-bottom:12px; }
+  .price-row strong { color:#0052cc; font-size:15px; }
+  .price-row span { margin-right:14px; }
+  .pillar-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:6px 20px; font-size:12px; margin-top:10px; }
+  .pillar-row { display:flex; align-items:flex-start; gap:8px; padding:3px 0; }
+  .verdict { display:inline-block; width:52px; font-weight:600; font-size:10px; padding:2px 6px; border-radius:3px; text-align:center; flex-shrink:0; }
+  .v-PASS, .v-PASS_BONUS { background:#d4edda; color:#155724; }
+  .v-PARTIAL { background:#fff3cd; color:#856404; }
+  .v-FAIL { background:#f8d7da; color:#721c24; }
+  .v-UNAVAILABLE { background:#e0e0e0; color:#555; }
+  .pillar-label { font-weight:600; color:#333; min-width:36px; }
+  .pillar-summary { color:#666; font-size:11px; }
+  .gate-row { font-size:11px; color:#555; margin-top:6px; padding-top:8px; border-top:1px dashed #e5e5e5; }
+  .gate-row strong { color:#333; }
+  table.summary { width:100%; border-collapse:collapse; font-size:12px; margin-top:6px; }
+  table.summary th { background:#f8f8f8; text-align:left; padding:6px 8px; border-bottom:1px solid #ddd; font-weight:600; font-size:11px; }
+  table.summary td { padding:6px 8px; border-bottom:1px solid #f0f0f0; }
   .empty { text-align:center; color:#666; font-style:italic; padding:24px; background:#fafafa; border-radius:6px; }
+  .footer { margin-top:30px; font-size:11px; color:#999; text-align:center; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Swing Trading Scan — {{ scan_date }}</h1>
-  <div class="meta">Universe scanned: {{ universe_size }} &middot; Fast-filter survivors: {{ fast_survivors }} &middot; Fully scored: {{ scored_total }} &middot; API calls: {{ api_calls }}</div>
+  <div class="meta">Universe: {{ universe_size }} &middot; Fast-filter survivors: {{ fast_survivors }} &middot; Fully scored: {{ scored_total }} &middot; API calls: {{ api_calls }}</div>
 
   <div class="regime">
     Market Regime: <strong>{{ regime }}</strong> &middot; VIX {{ vix }}
   </div>
 
   {% if top_tickets %}
-    <h2>Top {{ top_tickets|length }} Candidates</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Tier</th><th>Ticker</th><th>Name</th><th>Price</th><th>Stop</th><th>Phase 1 Target</th><th>Runner</th><th>R/R</th><th>Pillars</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for t in top_tickets %}
-          <tr class="tier{{ (t.tier|int) if t.tier is number else 0 }}">
-            <td><span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">T{{ t.tier }}</span></td>
-            <td class="ticker">{{ t.ticker }}</td>
-            <td>{{ t.name[:28] }}</td>
-            <td>${{ "%.2f"|format(t.price) }}</td>
-            <td>${{ "%.2f"|format(t.stop_loss) }}</td>
-            <td>${{ "%.2f"|format(t.phase1_target) }}</td>
-            <td>${{ "%.2f"|format(t.runner_target) }}</td>
-            <td>{{ t.risk_reward }}</td>
-            <td>{{ t.pillars_passed }}/{{ t.applicable_pillars }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <h2>Actionable Candidates ({{ top_tickets|length }})</h2>
+    {% for t in top_tickets %}
+      <div class="card tier{{ (t.tier|int) if t.tier is number else 0 }}">
+        <div class="card-head">
+          <div class="card-head-left">
+            <span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">TIER {{ t.tier }}</span>
+            <span class="ticker">{{ t.ticker }}</span>
+            <span class="name">{{ t.name[:40] }}</span>
+          </div>
+          <div style="font-size:12px; color:#666;">{{ t.pillars_passed }}/{{ t.applicable_pillars }} pillars</div>
+        </div>
+
+        <div class="price-row">
+          <span>Entry <strong>${{ "%.2f"|format(t.price) }}</strong></span>
+          <span>Stop ${{ "%.2f"|format(t.stop_loss) }} ({{ "%.0f"|format(t.stop_pct) }}%)</span>
+          <span>Phase 1 ${{ "%.2f"|format(t.phase1_target) }} (+50%)</span>
+          <span>Runner ${{ "%.2f"|format(t.runner_target) }} (+80%)</span>
+          <span>R/R {{ t.risk_reward }}</span>
+        </div>
+
+        <div class="pillar-grid">
+          {% for key, label in [('p1','P1 Trend'), ('p2','P2 Squeeze'), ('p3','P3 Growth'), ('p4','P4 RS'), ('p5','P5 Macro'), ('p6','P6 Revisions'), ('p7','P7 Squeeze')] %}
+            <div class="pillar-row">
+              <span class="verdict v-{{ t.pillars[key].verdict }}">{{ t.pillars[key].verdict }}</span>
+              <span class="pillar-label">{{ label }}</span>
+              <span class="pillar-summary">{{ t.pillars[key].summary }}</span>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="gate-row">
+          {% for key, label in [('g3','RVOL'), ('g4','Catalyst'), ('g6','Liquidity'), ('g7','Earnings')] %}
+            <strong>{{ label }}:</strong> <span class="verdict v-{{ t.gates[key].verdict }}">{{ t.gates[key].verdict }}</span> {{ t.gates[key].summary }} &nbsp;
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
   {% else %}
     <div class="empty">No candidates passed all gates today. Patience is a position.</div>
   {% endif %}
 
+  {% if watchlist_tickets %}
+    <h2>Watchlist ({{ watchlist_tickets|length }}) — below Tier 3 threshold</h2>
+    <table class="summary">
+      <thead><tr><th>Ticker</th><th>Name</th><th>Pillars</th><th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P5</th><th>P6</th><th>P7</th></tr></thead>
+      <tbody>
+        {% for t in watchlist_tickets %}
+          <tr>
+            <td><strong>{{ t.ticker }}</strong></td>
+            <td>{{ t.name[:25] }}</td>
+            <td>{{ t.pillars_passed }}/{{ t.applicable_pillars }}</td>
+            {% for k in ['p1','p2','p3','p4','p5','p6','p7'] %}
+              <td><span class="verdict v-{{ t.pillars[k].verdict }}">{{ t.pillars[k].verdict }}</span></td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
   {% if rejected_tickets %}
     <h2>Rejected at Gate ({{ rejected_tickets|length }})</h2>
-    <table>
-      <thead><tr><th>Ticker</th><th>Name</th><th>Pillars</th><th>Failed Gates</th></tr></thead>
+    <table class="summary">
+      <thead><tr><th>Ticker</th><th>Name</th><th>Failed Gates</th></tr></thead>
       <tbody>
         {% for t in rejected_tickets %}
-          <tr class="tier0">
-            <td class="ticker">{{ t.ticker }}</td>
-            <td>{{ t.name[:28] }}</td>
-            <td>{{ t.pillars_passed }}/{{ t.applicable_pillars }}</td>
+          <tr>
+            <td><strong>{{ t.ticker }}</strong></td>
+            <td>{{ t.name[:25] }}</td>
             <td>{{ t.hard_gate_fails|join(', ') }}</td>
           </tr>
         {% endfor %}
@@ -89,7 +139,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     </table>
   {% endif %}
 
-  <div class="footer">Generated by swing-trading-scanner &middot; v3.1 spec &middot; Long equity only, 1-3 month horizon</div>
+  <div class="footer">swing-trading-scanner &middot; v3.1 spec &middot; long equity only, 1-3 month horizon</div>
 </div>
 </body>
 </html>"""
@@ -97,8 +147,9 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
 def render_email(scan):
     tickets = scan.get("tickets") or [r["ticket"] for r in scan.get("results", [])]
-    top = [t for t in tickets if t["tier"] and t["tier"] >= 3][:25]
-    rejected = [t for t in tickets if not t.get("tier") or t["tier"] == 0][:10]
+    top = [t for t in tickets if t.get("tier") and t["tier"] >= 3][:30]
+    watchlist = [t for t in tickets if t.get("tier") == 2][:20]
+    rejected = [t for t in tickets if not t.get("tier") or t["tier"] == 0][:15]
     regime = scan["vix_regime"]
     vix_val = regime.get("vix")
     t = Template(EMAIL_TEMPLATE)
@@ -111,6 +162,7 @@ def render_email(scan):
         regime=regime.get("regime", "unknown"),
         vix=round(vix_val, 2) if vix_val is not None else "n/a",
         top_tickets=top,
+        watchlist_tickets=watchlist,
         rejected_tickets=rejected,
     )
 

@@ -79,7 +79,7 @@ def score_candidate(pillars, gates, is_us):
     }
 
 
-def build_trade_ticket(ticker, name, price, tier_info, pillars, gates, vix_regime):
+def build_trade_ticket(ticker, name, price, tier_info, pillars, gates, vix_regime, sector="", industry="", description=""):
     stop_widths = {"low_vol": 0.10, "normal": 0.12, "elevated": 0.15, "extreme": 0.20, "crisis": 0.20, "unknown": 0.12}
     stop_pct = stop_widths.get(vix_regime, 0.12)
 
@@ -142,9 +142,18 @@ def build_trade_ticket(ticker, name, price, tier_info, pillars, gates, vix_regim
         "g7": {"verdict": g7["verdict"], "summary": f"next earnings {g7.get('next_earnings','?')} ({g7.get('days_until','?')} days)"},
     }
 
+    short_desc = (description or "").strip()
+    if len(short_desc) > 220:
+        cut = short_desc[:220]
+        last_space = cut.rfind(" ")
+        short_desc = cut[:last_space] + "..." if last_space > 0 else cut + "..."
+
     return {
         "ticker": ticker,
         "name": name,
+        "sector": sector or "",
+        "industry": industry or "",
+        "description": short_desc,
         "price": float(price),
         "tier": tier_info["tier"],
         "label": tier_info["label"],

@@ -22,8 +22,15 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .card.tier4 { border-left:6px solid #1a9850; }
   .card.tier3 { border-left:6px solid #4a90e2; }
   .card.tier0 { border-left:6px solid #c94545; background:#fef7f7; }
-  .card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-  .card-head-left { display:flex; align-items:center; gap:10px; }
+  .card-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .card-head-left { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .sector-badge { display:inline-block; padding:2px 8px; border-radius:3px; font-size:10px; font-weight:600; background:#eef2f7; color:#384766; text-transform:uppercase; letter-spacing:0.3px; }
+  .description { font-size:12px; color:#555; line-height:1.4; margin:6px 0 10px; padding:8px 10px; background:#fafafa; border-left:3px solid #e0e0e0; }
+  .sector-summary { margin:16px 0 22px; padding:14px 16px; background:#f7f9fc; border-radius:6px; font-size:12px; }
+  .sector-summary h3 { margin:0 0 8px; font-size:13px; color:#384766; }
+  .sector-summary-grid { display:flex; flex-wrap:wrap; gap:6px 10px; }
+  .sector-chip { background:#fff; padding:4px 10px; border-radius:12px; border:1px solid #e0e0e0; font-size:11px; }
+  .sector-chip strong { color:#0052cc; margin-right:4px; }
   .tier-badge { display:inline-block; padding:3px 10px; border-radius:4px; font-weight:600; font-size:11px; color:#fff; }
   .t5 { background:#0d7b34; }
   .t4 { background:#1a9850; }
@@ -62,6 +69,17 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     Market Regime: <strong>{{ regime }}</strong> &middot; VIX {{ vix }}
   </div>
 
+  {% if sector_summary %}
+    <div class="sector-summary">
+      <h3>Actionable candidates by sector (Tier 3+)</h3>
+      <div class="sector-summary-grid">
+        {% for sec, count in sector_summary %}
+          <span class="sector-chip"><strong>{{ count }}</strong>{{ sec }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
   {% if top_tickets %}
     <h2>Actionable Candidates ({{ top_tickets|length }})</h2>
     {% for t in top_tickets %}
@@ -71,9 +89,12 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">TIER {{ t.tier }}</span>
             <span class="ticker">{{ t.ticker }}</span>
             <span class="name">{{ t.name[:40] }}</span>
+            {% if t.sector %}<span class="sector-badge">{{ t.sector }}{% if t.industry %} / {{ t.industry }}{% endif %}</span>{% endif %}
           </div>
           <div style="font-size:12px; color:#666;">{{ t.pillars_passed }}/{{ t.applicable_pillars }} pillars</div>
         </div>
+
+        {% if t.description %}<div class="description">{{ t.description }}</div>{% endif %}
 
         <div class="price-row">
           <span>Entry <strong>${{ "%.2f"|format(t.price) }}</strong></span>
@@ -147,13 +168,21 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
 def render_email(scan):
     tickets = scan.get("tickets") or [r["ticket"] for r in scan.get("results", [])]
-    top = [t for t in tickets if t.get("tier") and t["tier"] >= 3][:30]
+    actionable = [t for t in tickets if t.get("tier") and t["tier"] >= 3]
+    top = actionable[:30]
     watchlist = [t for t in tickets if t.get("tier") == 2][:20]
     rejected = [t for t in tickets if not t.get("tier") or t["tier"] == 0][:15]
     regime = scan["vix_regime"]
     vix_val = regime.get("vix")
-    t = Template(EMAIL_TEMPLATE)
-    return t.render(
+
+    sector_counts = {}
+    for t in actionable:
+        s = t.get("sector") or "Unknown"
+        sector_counts[s] = sector_counts.get(s, 0) + 1
+    sector_summary = sorted(sector_counts.items(), key=lambda x: x[1], reverse=True)
+
+    tmpl = Template(EMAIL_TEMPLATE)
+    return tmpl.render(
         scan_date=scan["scan_date"],
         universe_size=scan["universe_size"],
         fast_survivors=scan["fast_filter_survivors"],
@@ -164,6 +193,7 @@ def render_email(scan):
         top_tickets=top,
         watchlist_tickets=watchlist,
         rejected_tickets=rejected,
+        sector_summary=sector_summary,
     )
 
 

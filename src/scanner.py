@@ -125,8 +125,16 @@ def full_score(client, candidate, vix_pillar):
 
     tier_info = score_candidate(pillars, gates, is_us)
     price = float(ind["close"].iloc[-1])
-    name = (fundamentals.get("General", {}) or {}).get("Name", candidate["name"])
-    ticket = build_trade_ticket(ticker, name, price, tier_info, pillars, gates, vix_pillar.get("regime", "unknown"))
+    general = fundamentals.get("General", {}) or {}
+    name = general.get("Name", candidate["name"])
+    sector = general.get("Sector", "") or ""
+    industry = general.get("Industry", "") or ""
+    description = general.get("Description", "") or ""
+    ticket = build_trade_ticket(
+        ticker, name, price, tier_info, pillars, gates,
+        vix_pillar.get("regime", "unknown"),
+        sector=sector, industry=industry, description=description,
+    )
 
     return {
         "ticket": ticket,

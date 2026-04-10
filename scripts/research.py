@@ -90,14 +90,27 @@ def research(raw_ticker):
 
     tier_info = score_candidate(pillars, gates, is_us)
     price = float(ind["close"].iloc[-1])
-    name = (fundamentals.get("General", {}) or {}).get("Name", ticker)
-    ticket = build_trade_ticket(ticker, name, price, tier_info, pillars, gates, p5.get("regime", "unknown"))
+    general = fundamentals.get("General", {}) or {}
+    name = general.get("Name", ticker)
+    sector = general.get("Sector", "") or ""
+    industry = general.get("Industry", "") or ""
+    description = general.get("Description", "") or ""
+    ticket = build_trade_ticket(
+        ticker, name, price, tier_info, pillars, gates,
+        p5.get("regime", "unknown"),
+        sector=sector, industry=industry, description=description,
+    )
 
     bar = "=" * 72
     print(bar)
-    print(f"  {ticker}  —  {name}")
+    print(f"  {ticker}  -  {name}")
+    if ticket.get("sector") or ticket.get("industry"):
+        print(f"  {ticket.get('sector','')}" + (f"  /  {ticket.get('industry')}" if ticket.get('industry') else ""))
     print(f"  {ticket['label']}   |   {ticket['pillars_passed']}/{ticket['applicable_pillars']} pillars")
     print(bar)
+    if ticket.get("description"):
+        print()
+        print(f"  {ticket['description']}")
     print()
     print("Trade levels:")
     print(f"  Entry    ${ticket['price']:.2f}")

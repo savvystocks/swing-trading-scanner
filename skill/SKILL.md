@@ -264,12 +264,24 @@ phase1 = round(close*1.50, 2)
 runner = round(close*1.80, 2)
 rr = round((phase1-close)/(close-stop), 2) if close > stop else None
 
-name = (fundamentals.get("General", {}) or {}).get("Name", TICKER)
+general = fundamentals.get("General", {}) or {}
+name = general.get("Name", TICKER)
+sector = general.get("Sector", "") or ""
+industry = general.get("Industry", "") or ""
+desc = (general.get("Description", "") or "").strip()
+if len(desc) > 220:
+    cut = desc[:220]
+    ls = cut.rfind(" ")
+    desc = (cut[:ls] if ls > 0 else cut) + "..."
 
 print(f"{'='*72}")
 print(f"  {TICKER}  -  {name}")
+if sector or industry:
+    print(f"  {sector}" + (f"  /  {industry}" if industry else ""))
 print(f"  Tier {tier}   |   {passes}/{applicable} pillars")
 print(f"{'='*72}")
+if desc:
+    print(f"\n  {desc}")
 print(f"\nTrade levels:")
 print(f"  Entry    ${close:.2f}")
 print(f"  Stop     ${stop:.2f}  ({stop_pct*100:.0f}%)")

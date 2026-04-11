@@ -25,11 +25,19 @@ Runs every weekday at 22:30 UTC via GitHub Actions. Pulls data from EODHD, compu
 - `data/universe/universe.json` — committed, rebuilt only on manual universe.py run
 
 ## Secrets
-Local Windows user env var: EODHD_API_KEY (set via setx)
-GitHub repo secrets: EODHD_API_KEY, GMAIL_USER, GMAIL_APP_PASSWORD
+- EODHD_API_KEY: `69d8b4f4a14cc1.42263743` — All-in-One subscription, Savvas's personal account, £99.99/mo, monthly billing to his card. 100,000 API call/day quota, typical daily scan uses ~5,200. Key is also persisted as a Windows user env var (set via `setx`) and as a GitHub repo secret.
+- GMAIL_USER: `savvastgeorgiou@gmail.com` — scan emails sent from and to this address.
+- GMAIL_APP_PASSWORD: stored only in GitHub repo secrets and Savvas's password manager. NEVER write the Gmail app password into this file or any committed file — it lives only in encrypted GitHub secrets.
+- Account login for EODHD: Google SSO via savvastgeorgiou@gmail.com.
 
 ## Cost model
-One ongoing cost: EODHD All-in-One £99.99/mo. Everything else (GitHub Actions, Gmail SMTP) is free. CI uses ~300 of 2000 free minutes per month.
+One ongoing cost: EODHD All-in-One £99.99/mo. Everything else (GitHub Actions, Gmail SMTP) is free. CI uses ~300 of 2000 free minutes per month. EODHD daily quota usage ~5,200 of 100,000 (5%).
+
+## Schedule
+Cron fires at 13:30 UTC Monday-Friday (1 hour before US market open, during the LSE session). Email arrives in Savvas's inbox around 14:30 UK time (summer) / 13:30 (winter). Data is yesterday's EOD bars — running at 13:30 vs 22:30 UTC uses the same input, it's purely a delivery-time preference.
+
+## Related projects
+Savvas is also building a hyper-growth small-cap research project in a separate folder. Separate codebase, separate scope — if a session switches to that folder, load its own CLAUDE.md and don't carry assumptions from this repo.
 
 ## Spec v3.1 decisions (vs v3.0 original)
 - Gate 5 (options flow) demoted from hard gate to scoring modifier, scoped US-only. LSE names skip entirely. Bullish flow +0.5 tier, bearish -0.5.

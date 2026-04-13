@@ -22,13 +22,15 @@ from src.pillars import (
 )
 from src.scoring import score_candidate, build_trade_ticket
 from src.sectors import fetch_sector_performance
+from src.breadth import compute_market_breadth
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 UNIVERSE_PATH = PROJECT_ROOT / "data" / "universe" / "universe.json"
 RESULTS_DIR = PROJECT_ROOT / "data" / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-FROM_DATE = "2024-11-01"
+from datetime import datetime, timedelta
+FROM_DATE = (datetime.now() - timedelta(days=420)).strftime("%Y-%m-%d")
 
 
 def load_universe(limit=None):
@@ -167,8 +169,10 @@ def run_scan(universe_limit=None, verbose=True):
         print(f"VIX regime: {vix_pillar.get('regime')} (vix={vix_pillar.get('vix')})")
 
     sector_perf = fetch_sector_performance(client, spy_df, FROM_DATE)
+    breadth = compute_market_breadth(client)
     if verbose:
         print(f"Sector ETFs loaded: {len(sector_perf)}")
+        print(f"Breadth: {breadth['regime']} ({breadth.get('pct_above_200', '?')}% above 200d MA)")
         print(f"Scanning {len(universe)} tickers...")
 
     candidates = []
@@ -222,6 +226,7 @@ def run_scan(universe_limit=None, verbose=True):
         "scan_date": time.strftime("%Y-%m-%d"),
         "vix_regime": vix_pillar,
         "sector_performance": sector_perf,
+        "breadth": breadth,
         "universe_size": len(universe),
         "fast_filter_survivors": len(candidates),
         "scored_total": len(scored),

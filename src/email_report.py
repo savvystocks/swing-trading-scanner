@@ -81,6 +81,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
   <div class="regime">
     Market Regime: <strong>{{ regime }}</strong> &middot; VIX {{ vix }}
+    {% if breadth %} &middot; Breadth: <strong>{{ breadth.regime|upper }}</strong> ({{ breadth.pct_above_200 }}% above 200d, {{ breadth.pct_above_50 }}% above 50d){% endif %}
   </div>
 
   {% if sector_performance %}
@@ -241,6 +242,7 @@ def render_email(scan):
         rejected_tickets=rejected,
         sector_summary=sector_summary,
         sector_performance=scan.get("sector_performance", []),
+        breadth=scan.get("breadth"),
     )
 
 

@@ -18,22 +18,23 @@ def score_candidate(pillars, gates, is_us):
     passes = sum(1 for v in pillar_results.values() if v in ("PASS", "PASS_BONUS"))
     partials = sum(1 for v in pillar_results.values() if v == "PARTIAL")
     fails = sum(1 for v in pillar_results.values() if v == "FAIL")
+    effective_score = passes + partials * 0.5
 
     if applicable_pillars == 7:
-        if passes >= 6:
+        if effective_score >= 6:
             tier = 5
-        elif passes >= 5:
+        elif effective_score >= 5:
             tier = 4
-        elif passes >= 4:
+        elif effective_score >= 4:
             tier = 3
         else:
             tier = 2
     else:
-        if passes >= 6:
+        if effective_score >= 5.5:
             tier = 5
-        elif passes >= 4:
+        elif effective_score >= 4:
             tier = 4
-        elif passes >= 3:
+        elif effective_score >= 3:
             tier = 3
         else:
             tier = 2

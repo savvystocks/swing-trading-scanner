@@ -57,6 +57,10 @@ def score_candidate(pillars, gates, is_us):
     elif gates.get("gate_5_modifier", {}).get("direction") == "bearish":
         tier = max(0, tier - 0.5)
 
+    post_earn = (gates.get("gate_7") or {}).get("post_earnings")
+    if post_earn and post_earn.get("verdict") == "CATALYST" and tier > 0:
+        tier = min(5, tier + 0.5)
+
     if tier == 0:
         label = "NO TRADE"
     elif tier >= 5:
@@ -140,7 +144,7 @@ def build_trade_ticket(ticker, name, price, tier_info, pillars, gates, vix_regim
         "g3": {"verdict": g3["verdict"], "summary": f"RVOL {g3.get('rvol') or 0:.2f}x"},
         "g4": {"verdict": g4["verdict"], "summary": f"Tier {g4.get('tier','?')} catalyst, beat={g4.get('recent_earnings_beat', False)}"},
         "g6": {"verdict": g6["verdict"], "summary": f"mcap ${(g6.get('market_cap') or 0)/1e9:.1f}B, $vol ${g6.get('dollar_volume_20d', 0)/1e6:.1f}M"},
-        "g7": {"verdict": g7["verdict"], "summary": f"next earnings {g7.get('next_earnings','?')} ({g7.get('days_until','?')} days)"},
+        "g7": {"verdict": g7["verdict"], "summary": _g7_summary(g7)},
     }
 
     short_desc = (description or "").strip()
@@ -169,3 +173,21 @@ def build_trade_ticket(ticker, name, price, tier_info, pillars, gates, vix_regim
         "pillars": pillar_detail,
         "gates": gate_detail,
     }
+
+
+def _g7_summary(g7):
+    post = g7.get("post_earnings")
+    base = f"next earnings {g7.get('next_earnings', '?')} ({g7.get('days_until', '?')} days)"
+    if not post:
+        return base
+    pe = post
+    parts = [f"POST-EARN {pe['verdict']}"]
+    if pe.get("surprise_pct") is not None:
+        parts.append(f"surprise {pe['surprise_pct']:+.1f}%")
+    if pe.get("gap_pct") is not None:
+        parts.append(f"gap {pe['gap_pct']:+.1f}%")
+    if pe.get("holding_gap") is not None:
+        parts.append(f"holding={'yes' if pe['holding_gap'] else 'no'}")
+    if pe.get("volume_spike") is not None:
+        parts.append(f"vol {pe['volume_spike']:.1f}x")
+    return ", ".join(parts)

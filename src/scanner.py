@@ -107,7 +107,7 @@ def full_score(client, candidate, vix_pillar):
     g3 = gate_3_rvol(ind)
     g4 = gate_4_catalyst(fundamentals, news)
     g6 = gate_6_liquidity(fundamentals, ind)
-    g7 = gate_7_earnings_blackout(fundamentals)
+    g7 = gate_7_earnings_blackout(fundamentals, ind)
 
     pillars = {
         "pillar_1": candidate["p1"],

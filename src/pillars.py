@@ -433,11 +433,12 @@ def gate_6_liquidity(fundamentals, df_ind):
     }
 
 
-def gate_7_earnings_blackout(fundamentals):
+def gate_7_earnings_blackout(fundamentals, ind=None):
     earnings = (fundamentals or {}).get("Earnings", {}) or {}
     history = earnings.get("History", {}) or {}
     today = pd.Timestamp.now().normalize()
     future_dates = []
+    past_reports = []
     past_with_actual = 0
     for row in history.values():
         report_date_str = row.get("reportDate")
@@ -449,6 +450,7 @@ def gate_7_earnings_blackout(fundamentals):
             continue
         if row.get("epsActual") is not None:
             past_with_actual += 1
+            past_reports.append((d, row))
             continue
         if d >= today:
             future_dates.append(d)
@@ -458,24 +460,117 @@ def gate_7_earnings_blackout(fundamentals):
             "verdict": "FAIL",
             "next_earnings": None,
             "days_until": None,
+            "post_earnings": None,
             "reason": "no earnings history data — cannot verify blackout",
         }
 
+    post = _check_post_earnings(past_reports, today, ind)
+
     if not future_dates:
+        verdict = "PASS"
+        if post and post.get("verdict") == "CATALYST":
+            verdict = "PASS_BONUS"
         return {
-            "verdict": "PASS",
+            "verdict": verdict,
             "next_earnings": None,
             "days_until": None,
+            "post_earnings": post,
             "reason": "no scheduled future earnings within feed",
         }
 
     next_date = min(future_dates)
     days = (next_date - today).days
-    verdict = "FAIL" if days <= 10 else "PASS"
+
+    if days <= 10:
+        return {
+            "verdict": "FAIL",
+            "next_earnings": next_date.strftime("%Y-%m-%d"),
+            "days_until": days,
+            "post_earnings": None,
+        }
+
+    verdict = "PASS"
+    if post and post.get("verdict") == "CATALYST":
+        verdict = "PASS_BONUS"
     return {
         "verdict": verdict,
         "next_earnings": next_date.strftime("%Y-%m-%d"),
         "days_until": days,
+        "post_earnings": post,
+    }
+
+
+def _check_post_earnings(past_reports, today, ind=None):
+    if not past_reports:
+        return None
+    past_reports.sort(key=lambda x: x[0], reverse=True)
+    last_date, last_row = past_reports[0]
+    days_since = (today - last_date).days
+    if days_since > 7 or days_since < 0:
+        return None
+
+    eps_actual = _num(last_row.get("epsActual"))
+    eps_estimate = _num(last_row.get("epsEstimate"))
+    surprise_pct = _num(last_row.get("surprisePercent"))
+
+    beat = surprise_pct is not None and surprise_pct > 0
+    big_beat = surprise_pct is not None and surprise_pct >= 10
+
+    gap_pct = None
+    holding_gap = None
+    volume_spike = None
+    if ind is not None and len(ind) >= 5:
+        try:
+            report_idx = ind.index.get_indexer([last_date], method="nearest")[0]
+            if report_idx >= 1 and report_idx < len(ind) - 1:
+                pre_close = float(ind["close"].iloc[report_idx - 1])
+                post_open = float(ind["open"].iloc[report_idx])
+                post_close = float(ind["close"].iloc[report_idx])
+                current_close = float(ind["close"].iloc[-1])
+                report_volume = float(ind["volume"].iloc[report_idx])
+                avg_vol = float(ind["volume"].iloc[max(0, report_idx-21):report_idx].mean()) if report_idx > 1 else 1
+
+                if pre_close > 0:
+                    gap_pct = (post_open - pre_close) / pre_close * 100
+                if post_open > 0:
+                    holding_gap = current_close >= post_open * 0.97
+                if avg_vol > 0:
+                    volume_spike = report_volume / avg_vol
+        except Exception:
+            pass
+
+    score = 0
+    if beat:
+        score += 1
+    if big_beat:
+        score += 1
+    if gap_pct is not None and gap_pct > 3:
+        score += 1
+    if gap_pct is not None and gap_pct > 8:
+        score += 1
+    if holding_gap:
+        score += 1
+    if volume_spike is not None and volume_spike > 2:
+        score += 1
+    if volume_spike is not None and volume_spike > 4:
+        score += 1
+
+    if score >= 4:
+        verdict = "CATALYST"
+    elif score >= 2:
+        verdict = "MILD"
+    else:
+        verdict = "WEAK"
+
+    return {
+        "verdict": verdict,
+        "score": score,
+        "days_since_report": days_since,
+        "surprise_pct": round(surprise_pct, 1) if surprise_pct is not None else None,
+        "beat": beat,
+        "gap_pct": round(gap_pct, 1) if gap_pct is not None else None,
+        "holding_gap": holding_gap,
+        "volume_spike": round(volume_spike, 1) if volume_spike is not None else None,
     }
 
 

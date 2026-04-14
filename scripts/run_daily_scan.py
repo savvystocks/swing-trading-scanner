@@ -6,7 +6,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.scanner import run_scan, save_results
 from src.email_report import render_email, send_email
-from src.telegram import send_swing_alerts
 
 
 def main():
@@ -39,10 +38,6 @@ def main():
             f.write(html)
         print(f"Wrote {out}")
         return
-
-    tickets = scan_for_email.get("tickets", [])
-    sent = send_swing_alerts(tickets, min_tier=4)
-    print(f"Telegram alerts sent: {sent}")
 
     try:
         send_email(html, scan["scan_date"])

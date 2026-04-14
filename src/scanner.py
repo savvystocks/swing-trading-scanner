@@ -23,6 +23,7 @@ from src.pillars import (
 from src.scoring import score_candidate, build_trade_ticket
 from src.sectors import fetch_sector_performance
 from src.breadth import compute_market_breadth
+from src.telegram import send_alert, _explain_swing, _opinion_swing
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 UNIVERSE_PATH = PROJECT_ROOT / "data" / "universe" / "universe.json"
@@ -206,6 +207,23 @@ def run_scan(universe_limit=None, verbose=True):
             result, reason = full_score(client, c, vix_pillar)
             if result:
                 scored.append(result)
+                t = result["ticket"]
+                if t.get("tier") and t["tier"] >= 4:
+                    post = ""
+                    g7 = t.get("gates", {}).get("g7", {})
+                    if "POST-EARN" in g7.get("summary", ""):
+                        post = " POST-EARN"
+                    explanation = _explain_swing(t)
+                    opinion = _opinion_swing(t)
+                    text = (
+                        f"<b>SWING TIER {t['tier']}{post}</b>\n"
+                        f"<b>{t['ticker']}</b> {t.get('name', '')[:25]}\n"
+                        f"Entry ${t['price']:.2f} | Stop ${t['stop_loss']:.2f}\n"
+                        f"Target ${t['phase1_target']:.2f} (+50%) | R/R {t.get('risk_reward', '?')}\n\n"
+                        f"<i>Why: {explanation}</i>\n\n"
+                        f"{opinion}"
+                    )
+                    send_alert(text)
         except Exception as e:
             errors += 1
             if verbose and errors < 10:

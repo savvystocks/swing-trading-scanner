@@ -215,9 +215,9 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
 def render_email(scan):
     tickets = scan.get("tickets") or [r["ticket"] for r in scan.get("results", [])]
-    actionable = [t for t in tickets if t.get("tier") and t["tier"] >= 3]
+    actionable = [t for t in tickets if t.get("tier") and t["tier"] >= 5]
     top = actionable[:30]
-    watchlist = [t for t in tickets if t.get("tier") == 2][:20]
+    watchlist = [t for t in tickets if t.get("tier") and t["tier"] in (3, 4)][:20]
     rejected = [t for t in tickets if not t.get("tier") or t["tier"] == 0][:15]
     regime = scan["vix_regime"]
     vix_val = regime.get("vix")

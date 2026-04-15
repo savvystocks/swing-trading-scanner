@@ -208,7 +208,7 @@ def run_scan(universe_limit=None, verbose=True):
             if result:
                 scored.append(result)
                 t = result["ticket"]
-                if t.get("tier") and t["tier"] >= 4:
+                if t.get("tier") and t["tier"] >= 5:
                     post = ""
                     g7 = t.get("gates", {}).get("g7", {})
                     if "POST-EARN" in g7.get("summary", ""):

@@ -45,6 +45,20 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .o-NEUTRAL { background:#999; color:#fff; }
   .o-LAGGING { background:#e67e22; color:#fff; }
   .o-WEAK { background:#c94545; color:#fff; }
+  .conv-box { display:inline-flex; align-items:center; gap:8px; padding:3px 10px; border-radius:4px; background:#f0f5ff; border:1px solid #c5d8ff; font-size:11px; }
+  .conv-box .score { font-weight:700; color:#0052cc; font-size:13px; }
+  .stress-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:3px; vertical-align:middle; }
+  .stress-PASS { background:#1a9850; }
+  .stress-WARN { background:#f0ad4e; }
+  .stress-FAIL { background:#c94545; }
+  .stress-UNKNOWN { background:#ccc; }
+  .conv-pick-card { border:2px solid #0052cc; background:linear-gradient(180deg, #fafcff 0%, #fff 100%); border-radius:8px; padding:14px 18px; margin-bottom:12px; }
+  .conv-pick-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:13px; }
+  .conv-pick-head .ticker { font-size:16px; font-weight:700; }
+  .conv-pick-breakdown { display:grid; grid-template-columns:repeat(4, 1fr); gap:4px 12px; font-size:10px; color:#555; margin-top:6px; }
+  .conv-pick-breakdown .k { color:#888; }
+  .conv-pick-breakdown .v { font-weight:600; color:#333; }
+  .stress-row { font-size:11px; color:#555; margin-top:6px; padding-top:6px; border-top:1px dashed #e5e5e5; }
   .tier-badge { display:inline-block; padding:3px 10px; border-radius:4px; font-weight:600; font-size:11px; color:#fff; }
   .t5 { background:#0d7b34; }
   .t4 { background:#1a9850; }
@@ -127,8 +141,46 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     </div>
   {% endif %}
 
+  {% if conviction_picks %}
+    <h2>Top Conviction Picks ({{ conviction_picks|length }})</h2>
+    <div style="font-size:11px; color:#666; margin:-4px 0 12px;">Highest-conviction ranked subset. Score combines IBD composite RS, up/down volume, earnings acceleration, sector leadership, pivot proximity, analyst upside, multi-timeframe trend, and FCF quality.</div>
+    {% for t in conviction_picks %}
+      <div class="conv-pick-card">
+        <div class="conv-pick-head">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">T{{ t.tier }}</span>
+            <span class="ticker">{{ t.ticker }}</span>
+            <span style="color:#555;">{{ t.name[:35] }}</span>
+            {% if t.sector %}<span class="sector-badge">{{ t.sector }}</span>{% endif %}
+          </div>
+          <div class="conv-box">
+            <span>Conviction</span><span class="score">{{ t.conviction.score }}</span><span style="color:#888;">/100</span>
+            {% if t.stress %}<span class="stress-dot stress-{{ t.stress.overall }}" title="Stress: {{ t.stress.overall }}"></span>{% endif %}
+          </div>
+        </div>
+        <div style="font-size:12px; color:#333; margin-bottom:4px;">
+          Entry ${{ "%.2f"|format(t.price) }} &middot; Stop ${{ "%.2f"|format(t.stop_loss) }} &middot; Phase 1 ${{ "%.2f"|format(t.phase1_target) }} &middot; Runner ${{ "%.2f"|format(t.runner_target) }} &middot; R/R {{ t.risk_reward }}
+        </div>
+        <div class="conv-pick-breakdown">
+          {% for key, label in [('composite_rs','RS %ile'),('up_down_vol','U/D Vol'),('earnings_accel','E. Accel'),('sector_lead','Sector'),('pivot_proximity','Pivot'),('analyst_upside','Upside'),('multi_tf_trend','Weekly'),('fcf_quality','FCF')] %}
+            {% set b = t.conviction.breakdown[key] %}
+            <div><span class="k">{{ label }}:</span> <span class="v">{{ b.points }}/{{ b.max }}</span> <span class="k">({{ b.value if b.value is not none else 'n/a' }})</span></div>
+          {% endfor %}
+        </div>
+        {% if t.stress %}
+          <div class="stress-row">
+            Stress: <strong>{{ t.stress.overall }}</strong> &nbsp;
+            {% for key, label in [('drawdown_1y','DD 1Y'),('spy_correlation','Corr'),('beta','Beta'),('gap_frequency_1y','Gaps')] %}
+              <span class="stress-dot stress-{{ t.stress.tests[key].label }}"></span>{{ label }} {{ t.stress.tests[key].value }} &nbsp;
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+
   {% if top_tickets %}
-    <h2>Actionable Candidates ({{ top_tickets|length }})</h2>
+    <h2>All Actionable Candidates ({{ top_tickets|length }})</h2>
     {% for t in top_tickets %}
       <div class="card tier{{ (t.tier|int) if t.tier is number else 0 }}">
         <div class="card-head">
@@ -138,7 +190,10 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <span class="name">{{ t.name[:40] }}</span>
             {% if t.sector %}<span class="sector-badge">{{ t.sector }}{% if t.industry %} / {{ t.industry }}{% endif %}</span>{% endif %}
           </div>
-          <div style="font-size:12px; color:#666;">{{ t.pillars_passed }}/{{ t.applicable_pillars }} pillars</div>
+          <div style="font-size:12px; color:#666;">
+            {% if t.conviction %}<span class="conv-box"><span class="score">{{ t.conviction.score }}</span>/100 {% if t.stress %}<span class="stress-dot stress-{{ t.stress.overall }}"></span>{% endif %}</span> &middot; {% endif %}
+            {{ t.pillars_passed }}/{{ t.applicable_pillars }} pillars
+          </div>
         </div>
 
         {% if t.description %}<div class="description">{{ t.description }}</div>{% endif %}
@@ -216,6 +271,8 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 def render_email(scan):
     tickets = scan.get("tickets") or [r["ticket"] for r in scan.get("results", [])]
     actionable = [t for t in tickets if t.get("tier") and t["tier"] >= 5]
+    scored_with_conviction = [t for t in tickets if t.get("tier") and t["tier"] >= 3 and t.get("conviction")]
+    conviction_picks = sorted(scored_with_conviction, key=lambda t: t["conviction"]["score"], reverse=True)[:10]
     top = actionable[:30]
     watchlist = [t for t in tickets if t.get("tier") and t["tier"] in (3, 4)][:20]
     rejected = [t for t in tickets if not t.get("tier") or t["tier"] == 0][:15]
@@ -243,6 +300,7 @@ def render_email(scan):
         sector_summary=sector_summary,
         sector_performance=scan.get("sector_performance", []),
         breadth=scan.get("breadth"),
+        conviction_picks=conviction_picks,
     )
 
 

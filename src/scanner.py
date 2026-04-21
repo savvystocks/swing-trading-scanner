@@ -22,6 +22,8 @@ from src.pillars import (
 )
 from src.scoring import score_candidate, build_trade_ticket
 from src.sectors import fetch_sector_performance
+from src.conviction import conviction_score, compute_composite_rs_percentiles
+from src.stress_tests import run_stress_tests
 from src.breadth import compute_market_breadth
 from src.telegram import send_alert, _explain_swing, _opinion_swing
 
@@ -145,6 +147,9 @@ def full_score(client, candidate, vix_pillar):
         "pillars": pillars,
         "gates": gates,
         "tier_info": tier_info,
+        "ind": ind,
+        "fundamentals": fundamentals,
+        "sector": sector,
     }, None
 
 
@@ -230,7 +235,39 @@ def run_scan(universe_limit=None, verbose=True):
                 print(f"  score error on {c['ticker']}: {type(e).__name__}: {e}")
                 traceback.print_exc()
 
-    scored.sort(key=lambda r: (r["tier_info"]["tier"], r["tier_info"]["pillars_passed"]), reverse=True)
+    if verbose:
+        print(f"\nComputing conviction scores and stress tests for Tier 3+ candidates...")
+    actionable_ind = {r["ticket"]["ticker"]: r["ind"] for r in scored if r["tier_info"]["tier"] and r["tier_info"]["tier"] >= 3}
+    rs_percentiles = compute_composite_rs_percentiles(actionable_ind)
+
+    for r in scored:
+        tier = r["tier_info"]["tier"]
+        if not tier or tier < 3:
+            r["ticket"]["conviction"] = None
+            r["ticket"]["stress"] = None
+            continue
+        ticker = r["ticket"]["ticker"]
+        bench = vuke_df if ticker.endswith(".LSE") else spy_df
+        cs = conviction_score(
+            ticker=ticker,
+            df_ind=r["ind"],
+            fundamentals=r["fundamentals"],
+            sector=r["sector"],
+            sector_performance=sector_perf,
+            composite_rs_percentile=rs_percentiles.get(ticker),
+        )
+        st = run_stress_tests(r["ind"], bench)
+        r["ticket"]["conviction"] = cs
+        r["ticket"]["stress"] = st
+
+    scored.sort(
+        key=lambda r: (
+            r["tier_info"]["tier"] or 0,
+            (r["ticket"].get("conviction") or {}).get("score", -1),
+            r["tier_info"]["pillars_passed"],
+        ),
+        reverse=True,
+    )
 
     if verbose:
         print(f"\nScored {len(scored)} candidates. Top tier breakdown:")
@@ -238,6 +275,13 @@ def run_scan(universe_limit=None, verbose=True):
         tiers = Counter(r["tier_info"]["tier"] for r in scored)
         for t in sorted(tiers.keys(), reverse=True):
             print(f"  Tier {t}: {tiers[t]}")
+        top5 = [r for r in scored if r["ticket"].get("conviction")][:5]
+        if top5:
+            print(f"Top 5 by conviction:")
+            for r in top5:
+                cs = r["ticket"]["conviction"]
+                st = r["ticket"]["stress"]
+                print(f"  {r['ticket']['ticker']:12s} T{r['tier_info']['tier']} conv={cs['score']}/100 stress={st['overall']}")
         print(f"Total API calls: {client.calls_made}")
 
     return {

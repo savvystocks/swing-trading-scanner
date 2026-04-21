@@ -25,7 +25,7 @@ from src.sectors import fetch_sector_performance
 from src.conviction import conviction_score, compute_composite_rs_percentiles
 from src.stress_tests import run_stress_tests
 from src.breadth import compute_market_breadth
-from src.telegram import send_alert, _explain_swing, _opinion_swing
+from src.telegram import send_swing_alerts
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 UNIVERSE_PATH = PROJECT_ROOT / "data" / "universe" / "universe.json"
@@ -212,23 +212,6 @@ def run_scan(universe_limit=None, verbose=True):
             result, reason = full_score(client, c, vix_pillar)
             if result:
                 scored.append(result)
-                t = result["ticket"]
-                if t.get("tier") and t["tier"] >= 5:
-                    post = ""
-                    g7 = t.get("gates", {}).get("g7", {})
-                    if "POST-EARN" in g7.get("summary", ""):
-                        post = " POST-EARN"
-                    explanation = _explain_swing(t)
-                    opinion = _opinion_swing(t)
-                    text = (
-                        f"<b>SWING TIER {t['tier']}{post}</b>\n"
-                        f"<b>{t['ticker']}</b> {t.get('name', '')[:25]}\n"
-                        f"Entry ${t['price']:.2f} | Stop ${t['stop_loss']:.2f}\n"
-                        f"Target ${t['phase1_target']:.2f} (+50%) | R/R {t.get('risk_reward', '?')}\n\n"
-                        f"<i>Why: {explanation}</i>\n\n"
-                        f"{opinion}"
-                    )
-                    send_alert(text)
         except Exception as e:
             errors += 1
             if verbose and errors < 10:
@@ -268,6 +251,15 @@ def run_scan(universe_limit=None, verbose=True):
         ),
         reverse=True,
     )
+
+    tickets_for_alerts = [r["ticket"] for r in scored]
+    try:
+        sent = send_swing_alerts(tickets_for_alerts, min_tier=5)
+        if verbose and sent:
+            print(f"Sent {sent} Telegram alerts")
+    except Exception as e:
+        if verbose:
+            print(f"Telegram alert batch failed: {e}")
 
     if verbose:
         print(f"\nScored {len(scored)} candidates. Top tier breakdown:")

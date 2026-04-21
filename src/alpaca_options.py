@@ -1,4 +1,5 @@
 import os
+import re
 import logging
 from datetime import datetime, timedelta
 
@@ -92,41 +93,29 @@ def get_options_chain(symbol, direction, current_price):
             if spread_pct > 40:
                 continue
 
-            parts = contract_symbol.split()
-            strike = None
-            expiration = None
-            contract_right = "C"
-            try:
-                sym_str = contract_symbol if isinstance(contract_symbol, str) else str(contract_symbol)
-                import re
-                m = re.match(r'([A-Z]+)(\d{6})([CP])(\d+)', sym_str)
-                if m:
-                    exp_raw = m.group(2)
-                    contract_right = m.group(3)
-                    strike_raw = m.group(4)
-                    expiration = f"20{exp_raw[:2]}-{exp_raw[2:4]}-{exp_raw[4:6]}"
-                    strike = int(strike_raw) / 1000
-            except Exception:
-                pass
-
-            if not strike or not expiration:
+            sym_str = contract_symbol if isinstance(contract_symbol, str) else str(contract_symbol)
+            m = re.match(r"([A-Z]+)(\d{6})([CP])(\d+)", sym_str)
+            if not m:
                 continue
+            exp_raw = m.group(2)
+            contract_right = m.group(3)
+            strike_raw = m.group(4)
+            expiration = f"20{exp_raw[:2]}-{exp_raw[2:4]}-{exp_raw[4:6]}"
+            strike = int(strike_raw) / 1000
 
             dte = (datetime.strptime(expiration, "%Y-%m-%d") - datetime.now()).days
             if dte < 14 or dte > 50:
                 continue
 
-            oi = int(snapshot.open_interest) if snapshot.open_interest else 0
-            vol = int(trade.size) if trade else 0
+            iv = getattr(snapshot, "implied_volatility", None)
+            if iv is None:
+                iv = getattr(greeks, "implied_volatility", 0) or 0
+            vol = int(trade.size) if trade and getattr(trade, "size", None) else 0
 
             score = 0
             if 0.40 <= delta <= 0.60:
                 score += 3
             else:
-                score += 1
-            if oi >= 500:
-                score += 2
-            elif oi >= 100:
                 score += 1
             if 21 <= dte <= 35:
                 score += 2
@@ -135,6 +124,8 @@ def get_options_chain(symbol, direction, current_price):
             if spread_pct < 10:
                 score += 2
             elif spread_pct < 20:
+                score += 1
+            if vol >= 50:
                 score += 1
 
             contracts.append({
@@ -145,17 +136,19 @@ def get_options_chain(symbol, direction, current_price):
                 "gamma": round(abs(greeks.gamma), 4) if greeks.gamma else 0,
                 "theta": round(greeks.theta, 4) if greeks.theta else 0,
                 "vega": round(greeks.vega, 4) if greeks.vega else 0,
-                "impliedVol": round(greeks.implied_volatility, 4) if greeks.implied_volatility else 0,
+                "impliedVol": round(iv, 4) if iv else 0,
                 "bid": bid,
                 "ask": ask,
                 "mid": round(mid, 2),
-                "openInterest": oi,
+                "openInterest": 0,
                 "volume": vol,
                 "spread_pct": round(spread_pct, 1),
                 "score": score,
                 "right": contract_right,
+                "symbol": sym_str,
             })
         except Exception as e:
+            logger.debug(f"skip contract {contract_symbol}: {e}")
             continue
 
     if not contracts:

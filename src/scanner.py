@@ -264,8 +264,8 @@ def run_scan(universe_limit=None, verbose=True):
         reverse=True,
     )
     if verbose:
-        print(f"\nFetching options trade suggestions for top 2 conviction US picks...")
-    for r in top_conviction_us[:2]:
+        print(f"\nFetching options trade suggestions for top 3 conviction US picks...")
+    for r in top_conviction_us[:3]:
         try:
             t = r["ticket"]
             opt = suggest_options_trade(

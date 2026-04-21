@@ -24,6 +24,7 @@ from src.scoring import score_candidate, build_trade_ticket
 from src.sectors import fetch_sector_performance
 from src.conviction import conviction_score, compute_composite_rs_percentiles
 from src.stress_tests import run_stress_tests
+from src.options_suggest import suggest_options_trade
 from src.breadth import compute_market_breadth
 from src.telegram import send_swing_alerts
 
@@ -251,6 +252,35 @@ def run_scan(universe_limit=None, verbose=True):
         ),
         reverse=True,
     )
+
+    top_conviction_us = [
+        r for r in scored
+        if r["ticket"].get("conviction")
+        and r["ticket"]["ticker"].endswith(".US")
+        and r["ticket"].get("tier", 0) >= 3
+    ]
+    top_conviction_us.sort(
+        key=lambda r: r["ticket"]["conviction"]["score"],
+        reverse=True,
+    )
+    if verbose:
+        print(f"\nFetching options trade suggestions for top 2 conviction US picks...")
+    for r in top_conviction_us[:2]:
+        try:
+            t = r["ticket"]
+            opt = suggest_options_trade(
+                ticker=t["ticker"],
+                phase1_target=t["phase1_target"],
+                current_price=t["price"],
+            )
+            t["options_trade"] = opt
+            if verbose and opt:
+                print(f"  {t['ticker']}: {opt['strike']:.0f}C {opt['expiration']} @ ${opt['premium_mid']:.2f} (delta {opt['delta']}, ROI if target {opt['projected_roi_pct']:.0f}%)")
+            elif verbose:
+                print(f"  {t['ticker']}: no suitable contract found")
+        except Exception as e:
+            if verbose:
+                print(f"  options fetch error on {r['ticket']['ticker']}: {type(e).__name__}: {e}")
 
     tickets_for_alerts = [r["ticket"] for r in scored]
     try:

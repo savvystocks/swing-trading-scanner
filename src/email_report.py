@@ -59,6 +59,11 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .conv-pick-breakdown .k { color:#888; }
   .conv-pick-breakdown .v { font-weight:600; color:#333; }
   .stress-row { font-size:11px; color:#555; margin-top:6px; padding-top:6px; border-top:1px dashed #e5e5e5; }
+  .options-box { margin-top:10px; padding:10px 12px; background:#fffbe8; border:1px solid #f0d969; border-radius:6px; font-size:12px; }
+  .options-box h4 { margin:0 0 6px; font-size:12px; color:#6a5300; text-transform:uppercase; letter-spacing:0.5px; }
+  .options-box .row1 { font-weight:600; color:#444; margin-bottom:3px; }
+  .options-box .row2 { color:#555; margin-bottom:3px; }
+  .options-box .payoff { color:#0d7b34; font-weight:600; margin-top:4px; }
   .tier-badge { display:inline-block; padding:3px 10px; border-radius:4px; font-weight:600; font-size:11px; color:#fff; }
   .t5 { background:#0d7b34; }
   .t4 { background:#1a9850; }
@@ -173,6 +178,30 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% for key, label in [('drawdown_1y','DD 1Y'),('spy_correlation','Corr'),('beta','Beta'),('gap_frequency_1y','Gaps')] %}
               <span class="stress-dot stress-{{ t.stress.tests[key].label }}"></span>{{ label }} {{ t.stress.tests[key].value }} &nbsp;
             {% endfor %}
+          </div>
+        {% endif %}
+        {% if t.options_trade %}
+          <div class="options-box">
+            <h4>Options Swing Trade</h4>
+            <div class="row1">
+              {{ "%.0f"|format(t.options_trade.strike) }} Call &middot; exp {{ t.options_trade.expiration }} ({{ t.options_trade.dte }}d) &middot;
+              Premium ${{ "%.2f"|format(t.options_trade.premium_mid) }}
+              (cost ${{ "%.0f"|format(t.options_trade.cost_per_contract) }}/contract)
+            </div>
+            <div class="row2">
+              Delta {{ t.options_trade.delta }} &middot;
+              Theta {{ t.options_trade.theta }} &middot;
+              IV {{ t.options_trade.iv_pct }}% &middot;
+              OI {{ t.options_trade.open_interest }} &middot;
+              Spread {{ t.options_trade.spread_pct }}%
+            </div>
+            <div class="row2">
+              Breakeven ${{ "%.2f"|format(t.options_trade.breakeven) }} ({{ "%+.1f"|format(t.options_trade.breakeven_pct_move) }}% move from spot)
+            </div>
+            <div class="payoff">
+              If stock hits Phase 1 target: contract ~${{ "%.2f"|format(t.options_trade.projected_value_at_target) }}
+              ({{ "%+.0f"|format(t.options_trade.projected_roi_pct) }}% return on premium)
+            </div>
           </div>
         {% endif %}
       </div>

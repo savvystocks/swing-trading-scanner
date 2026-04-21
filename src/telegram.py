@@ -223,12 +223,25 @@ def send_swing_alerts(tickets, min_tier=4):
 
         paragraph = build_paragraph(t)
 
+        options_block = ""
+        opt = t.get("options_trade")
+        if opt:
+            options_block = (
+                f"\n\n<b>Options swing trade</b>\n"
+                f"{opt['strike']:.0f} call · exp {opt['expiration']} ({opt['dte']}d)\n"
+                f"Premium ${opt['premium_mid']:.2f} (cost ${opt['cost_per_contract']:.0f}/contract) · delta {opt['delta']}\n"
+                f"Breakeven ${opt['breakeven']:.2f} ({opt['breakeven_pct_move']:+.1f}% move) · IV {opt['iv_pct']}%\n"
+                f"If stock hits +50% target: contract ~${opt['projected_value_at_target']:.2f} "
+                f"(+{opt['projected_roi_pct']:.0f}% on premium)"
+            )
+
         text = (
             f"<b>TIER {tier}{conv_str}{post}</b> {stress_tag}\n"
             f"<b>{t['ticker']}</b> · {t.get('name', '')[:32]}{sector_line}\n\n"
             f"Entry ${t['price']:.2f} · Stop ${t['stop_loss']:.2f} · "
             f"Target ${t['phase1_target']:.2f} (+50%) · R/R {t.get('risk_reward', '?')}\n\n"
             f"<i>{paragraph}</i>"
+            f"{options_block}"
         )
         if send_alert(text):
             count += 1

@@ -146,6 +146,117 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     </div>
   {% endif %}
 
+  {% if theme_summary %}
+    <div class="sector-summary">
+      <h3>Themes across Lane A &amp; B picks</h3>
+      <div class="sector-summary-grid">
+        {% for sec, tickers in theme_summary %}
+          <span class="sector-chip"><strong>{{ tickers|length }}</strong>{{ sec }} <span style="color:#999; font-size:10px;">{{ tickers[:5]|join(', ') }}{% if tickers|length > 5 %}+{{ tickers|length - 5 }}{% endif %}</span></span>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% if lane_a %}
+    <h2 style="color:#0d7b34;">Lane A — Run With It ({{ lane_a|length }})</h2>
+    <div style="font-size:11px; color:#666; margin:-4px 0 12px;">High-tier setups with strong conviction. Hold weeks to months. Size up.</div>
+    {% for t in lane_a %}
+      <div class="conv-pick-card">
+        <div class="conv-pick-head">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">T{{ t.tier }}</span>
+            <span class="ticker">{{ t.ticker }}</span>
+            <span style="color:#555;">{{ t.name[:32] }}</span>
+            {% if t.sector %}<span class="sector-badge">{{ t.sector }}</span>{% endif %}
+            {% if t.sector_maturity and t.sector_maturity != 'N/A' %}<span style="font-size:9px; padding:2px 5px; border-radius:3px; background:{% if t.sector_maturity == 'LATE' %}#e67e22{% elif t.sector_maturity == 'MID' %}#f0ad4e{% else %}#0d7b34{% endif %}; color:#fff;">{{ t.sector_maturity }}</span>{% endif %}
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span style="font-size:10px; color:#888;">OPP</span><span style="font-size:15px; font-weight:700; color:#0052cc;">{{ t.opportunity.score }}</span>
+            {% if t.conviction %}<span style="font-size:10px; color:#888;">CONV</span><span style="font-size:13px; font-weight:600;">{{ t.conviction.score }}</span>{% endif %}
+            {% if t.stress %}<span class="stress-dot stress-{{ t.stress.overall }}"></span>{% endif %}
+          </div>
+        </div>
+        <div style="font-size:12px; color:#333; margin-bottom:4px;">
+          Entry ${{ "%.2f"|format(t.price) }} &middot; Stop ${{ "%.2f"|format(t.stop_loss) }} &middot; Phase 1 ${{ "%.2f"|format(t.phase1_target) }} &middot; Runner ${{ "%.2f"|format(t.runner_target) }} &middot; R/R {{ t.risk_reward }}
+        </div>
+        {% if t.lane_b_signal_count and t.lane_b_signal_count > 0 %}
+          <div style="font-size:11px; color:#0d7b34; margin-top:4px;">Early signals firing:
+          {% if t.lane_b.pocket_pivot.fired %}[Pocket Pivot] {% endif %}
+          {% if t.lane_b.base_quality.fired %}[Base Quality {{ t.lane_b.base_quality.score }}/10] {% endif %}
+          {% if t.lane_b.insider_cluster.fired %}[Insider Cluster {{ t.lane_b.insider_cluster.buyer_count }}x] {% endif %}
+          {% if t.lane_b.revenue_acceleration.fired %}[Rev Accel {{ t.lane_b.revenue_acceleration.latest_qoq_pct }}% QoQ] {% endif %}
+          {% if t.lane_b.earnings_turn.fired %}[Earnings Turn] {% endif %}
+          {% if t.lane_b.peer_pack.fired %}[Peer Pack Laggard] {% endif %}
+          </div>
+        {% endif %}
+        {% if t.options_trade %}
+          <div class="options-box">
+            <h4>Options Swing Trade
+            {% if t.options_trade.vol_interpretation %}
+              <span style="float:right; font-size:10px; padding:1px 6px; border-radius:3px; background:{% if t.options_trade.vol_interpretation == 'CHEAP' %}#0d7b34{% elif t.options_trade.vol_interpretation == 'FAIR' %}#1a9850{% elif t.options_trade.vol_interpretation == 'EXPENSIVE' %}#e67e22{% else %}#c94545{% endif %}; color:#fff;">vol {{ t.options_trade.vol_interpretation }}</span>
+            {% endif %}
+            </h4>
+            <div class="row1">{{ "%.0f"|format(t.options_trade.strike) }} Call · exp {{ t.options_trade.expiration }} ({{ t.options_trade.dte }}d) · Premium ${{ "%.2f"|format(t.options_trade.premium_mid) }} (cost ${{ "%.0f"|format(t.options_trade.cost_per_contract) }}/contract)</div>
+            <div class="row2">Delta {{ t.options_trade.delta }} · Theta {{ t.options_trade.theta }} · IV {{ t.options_trade.iv_pct }}% · Spread {{ t.options_trade.spread_pct }}%
+            {% if t.options_trade.iv_skew and t.options_trade.iv_skew.skew_bias %}&middot; Skew {{ t.options_trade.iv_skew.skew_bias }}{% endif %}
+            </div>
+            <div class="row2">Breakeven ${{ "%.2f"|format(t.options_trade.breakeven) }} ({{ "%+.1f"|format(t.options_trade.breakeven_pct_move) }}% move)</div>
+            <div class="payoff">If stock hits Phase 1 target: contract ~${{ "%.2f"|format(t.options_trade.projected_value_at_target) }} ({{ "%+.0f"|format(t.options_trade.projected_roi_pct) }}% return on premium)</div>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if lane_b %}
+    <h2 style="color:#0052cc;">Lane B — Catch It Early ({{ lane_b|length }})</h2>
+    <div style="font-size:11px; color:#666; margin:-4px 0 12px;">Early-stage opportunities — institutional footprints present but price hasn't moved yet. These are the setups BEFORE they become Lane A. Hold months.</div>
+    <table class="summary">
+      <thead><tr><th>Ticker</th><th>Name</th><th>T</th><th>Opp</th><th>Sector</th><th>Maturity</th><th>Signals firing</th><th>Entry</th></tr></thead>
+      <tbody>
+        {% for t in lane_b %}
+          <tr>
+            <td><strong>{{ t.ticker }}</strong></td>
+            <td>{{ t.name[:22] }}</td>
+            <td><span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">T{{ t.tier }}</span></td>
+            <td><strong style="color:#0052cc;">{{ t.opportunity.score }}</strong></td>
+            <td style="font-size:10px;">{{ (t.sector or '-')[:16] }}</td>
+            <td style="font-size:10px;">{{ t.sector_maturity or '-' }}</td>
+            <td style="font-size:10px;">
+              {% if t.lane_b.pocket_pivot.fired %}Pocket-Pivot {% endif %}
+              {% if t.lane_b.base_quality.fired %}Base({{ t.lane_b.base_quality.score }}) {% endif %}
+              {% if t.lane_b.insider_cluster.fired %}Insider({{ t.lane_b.insider_cluster.buyer_count }}) {% endif %}
+              {% if t.lane_b.revenue_acceleration.fired %}RevAccel {% endif %}
+              {% if t.lane_b.earnings_turn.fired %}EarnTurn {% endif %}
+              {% if t.lane_b.peer_pack.fired %}PeerLag {% endif %}
+            </td>
+            <td>${{ "%.2f"|format(t.price) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if lane_c %}
+    <h2 style="color:#c94545;">Lane C — Catalyst Today ({{ lane_c|length }})</h2>
+    <div style="font-size:11px; color:#666; margin:-4px 0 12px;">Names reporting a recent earnings catalyst with post-gap momentum holding. Short-horizon plays (0-5 days).</div>
+    <table class="summary">
+      <thead><tr><th>Ticker</th><th>Name</th><th>T</th><th>Opp</th><th>Entry</th><th>Post-Earnings Info</th></tr></thead>
+      <tbody>
+        {% for t in lane_c %}
+          <tr>
+            <td><strong>{{ t.ticker }}</strong></td>
+            <td>{{ t.name[:22] }}</td>
+            <td><span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">T{{ t.tier }}</span></td>
+            <td><strong>{{ t.opportunity.score }}</strong></td>
+            <td>${{ "%.2f"|format(t.price) }}</td>
+            <td style="font-size:10px;">{{ t.gates.g7.summary }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
   {% if conviction_picks %}
     <h2>Top Conviction Picks ({{ conviction_picks|length }})</h2>
     <div style="font-size:11px; color:#666; margin:-4px 0 12px;">Highest-conviction ranked subset. Score combines IBD composite RS, up/down volume, earnings acceleration, sector leadership, pivot proximity, analyst upside, multi-timeframe trend, and FCF quality.</div>
@@ -319,12 +430,35 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
 def render_email(scan):
     tickets = scan.get("tickets") or [r["ticket"] for r in scan.get("results", [])]
+
+    lane_a = sorted(
+        [t for t in tickets if t.get("lane") == "A"],
+        key=lambda t: t.get("opportunity", {}).get("score", 0),
+        reverse=True,
+    )[:20]
+    lane_b = sorted(
+        [t for t in tickets if t.get("lane") == "B"],
+        key=lambda t: t.get("opportunity", {}).get("score", 0),
+        reverse=True,
+    )[:20]
+    lane_c = sorted(
+        [t for t in tickets if t.get("lane") == "C"],
+        key=lambda t: t.get("opportunity", {}).get("score", 0),
+        reverse=True,
+    )[:15]
+
     actionable = [t for t in tickets if t.get("tier") and t["tier"] >= 4]
     scored_with_conviction = [t for t in tickets if t.get("tier") and t["tier"] >= 4 and t.get("conviction")]
     conviction_picks = sorted(scored_with_conviction, key=lambda t: t["conviction"]["score"], reverse=True)[:10]
     top = actionable[:30]
     watchlist = []
     rejected = [t for t in tickets if not t.get("tier") or t["tier"] == 0][:15]
+
+    theme_buckets = {}
+    for t in (lane_a + lane_b):
+        s = t.get("sector") or "Unknown"
+        theme_buckets.setdefault(s, []).append(t["ticker"])
+    theme_summary = sorted(theme_buckets.items(), key=lambda x: -len(x[1]))
 
     def _is_coiled(t):
         p = (t.get("pillars") or {}).get("p2") or {}
@@ -371,6 +505,10 @@ def render_email(scan):
         breadth=scan.get("breadth"),
         conviction_picks=conviction_picks,
         squeeze_watchlist=squeeze_watchlist,
+        lane_a=lane_a,
+        lane_b=lane_b,
+        lane_c=lane_c,
+        theme_summary=theme_summary,
     )
 
 

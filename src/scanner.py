@@ -28,6 +28,7 @@ from src.options_suggest import suggest_options_trade
 from src.breadth import compute_market_breadth
 from src.telegram import send_swing_alerts
 from src.lane_b import run_all_lane_b, compute_peer_pack_rotation, lane_b_signal_count
+from src.opportunity import opportunity_score, classify_lane
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 UNIVERSE_PATH = PROJECT_ROOT / "data" / "universe" / "universe.json"
@@ -279,14 +280,24 @@ def run_scan(universe_limit=None, verbose=True):
         r["ticket"]["conviction"] = cs
         r["ticket"]["stress"] = st
 
+    for r in scored:
+        opp = opportunity_score(r["ticket"])
+        r["ticket"]["opportunity"] = opp
+        r["ticket"]["lane"] = classify_lane(r["ticket"], opp["score"])
+
     scored.sort(
         key=lambda r: (
+            r["ticket"].get("opportunity", {}).get("score", 0),
             r["tier_info"]["tier"] or 0,
             (r["ticket"].get("conviction") or {}).get("score", -1),
-            r["tier_info"]["pillars_passed"],
         ),
         reverse=True,
     )
+
+    if verbose:
+        from collections import Counter
+        lanes = Counter(r["ticket"].get("lane") for r in scored)
+        print(f"Lane classification: A={lanes.get('A', 0)}  B={lanes.get('B', 0)}  C={lanes.get('C', 0)}  none={lanes.get(None, 0)}")
 
     top_conviction_us = [
         r for r in scored

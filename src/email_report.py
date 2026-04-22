@@ -180,7 +180,8 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       </div>
       <div class="legend-block">
         <div class="legend-title">Options yellow box</div>
-        <div class="legend-row">Shown only on <strong>top 3 Lane A + top 3 Lane B</strong> picks. Alpaca chain, 14-50 DTE, delta 0.30-0.70.</div>
+        <div class="legend-row">Shown only in the <strong>Priority Options Plays</strong> section at the top — top 3 Big Cap (mcap ≥ $10B, liquid chains) + top 3 Early (Lane B signals firing, cheaper IV).</div>
+        <div class="legend-row">Chain source: Alpaca. Window: 14-50 DTE, delta 0.30-0.70, spread &lt; 40%.</div>
         <div class="legend-row"><strong>vol CHEAP:</strong> realized vol in bottom 30% of 1yr range — options undervalued, buy calls.</div>
         <div class="legend-row"><strong>vol FAIR/EXPENSIVE:</strong> mid-range / top 30% — premium rich, consider debit spreads.</div>
         <div class="legend-row"><strong>Skew bullish:</strong> calls more bid than puts — market positioning aligns with trade.</div>
@@ -194,14 +195,67 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       </div>
       <div class="legend-block">
         <div class="legend-title">Action priority order</div>
-        <div class="legend-row"><strong>1.</strong> Lane A top 3 with options box — take the options play first.</div>
-        <div class="legend-row"><strong>2.</strong> Lane B top 3 with options box — size smaller, bigger upside.</div>
-        <div class="legend-row"><strong>3.</strong> Remaining Lane A/B stock plays — green-dot first, avoid red-dot.</div>
+        <div class="legend-row"><strong>1.</strong> Priority Options — 3 Big Cap + 3 Early at top of email, options yellow box.</div>
+        <div class="legend-row"><strong>2.</strong> Lane A stock plays — high-tier, high-conviction core holdings. Green-dot first.</div>
+        <div class="legend-row"><strong>3.</strong> Lane B stock plays — early signals firing, smaller size, longer hold.</div>
         <div class="legend-row"><strong>4.</strong> Lane C only on strong open/close and if earnings gap held overnight.</div>
         <div class="legend-row"><strong>5.</strong> Squeeze Watchlist — set buy-stops above upper band, trigger only on breakout.</div>
       </div>
     </div>
   </div>
+
+  {% if priority_options %}
+    <h2 style="color:#6a5300; background:#fffbe8; padding:8px 12px; border-radius:6px; border-left:4px solid #f0d969;">Priority Options Plays — Top 3 Big Cap + Top 3 Early ({{ priority_options|length }})</h2>
+    <div style="font-size:11px; color:#666; margin:-4px 0 12px;">These are the 6 highest-priority options trades today. Big cap = market cap ≥ $10B (liquid chains, reliable fills). Early = Lane B signals firing (cheaper IV, bigger leverage). Sized for $1,000 budget each.</div>
+    {% for t in priority_options %}
+      <div class="conv-pick-card" style="border-color:{% if t.priority_bucket == 'BIG_CAP' %}#0d7b34{% else %}#0052cc{% endif %};">
+        <div class="conv-pick-head">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:10px; padding:3px 8px; border-radius:3px; background:{% if t.priority_bucket == 'BIG_CAP' %}#0d7b34{% else %}#0052cc{% endif %}; color:#fff; font-weight:700; letter-spacing:0.4px;">{% if t.priority_bucket == 'BIG_CAP' %}BIG CAP{% else %}EARLY{% endif %}</span>
+            <span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">T{{ t.tier }}</span>
+            <span class="ticker">{{ t.ticker }}</span>
+            <span style="color:#555;">{{ t.name[:28] }}</span>
+            {% if t.sector %}<span class="sector-badge">{{ t.sector }}</span>{% endif %}
+            {% if t.market_cap %}<span style="font-size:10px; color:#666;">${{ "%.1f"|format(t.market_cap / 1e9) }}B mcap</span>{% endif %}
+            {% if t.sector_maturity and t.sector_maturity != 'N/A' %}<span style="font-size:9px; padding:2px 5px; border-radius:3px; background:{% if t.sector_maturity == 'LATE' %}#e67e22{% elif t.sector_maturity == 'MID' %}#f0ad4e{% else %}#0d7b34{% endif %}; color:#fff;">{{ t.sector_maturity }}</span>{% endif %}
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span style="font-size:10px; color:#888;">OPP</span><span style="font-size:15px; font-weight:700; color:#0052cc;">{{ t.opportunity.score }}</span>
+            {% if t.conviction %}<span style="font-size:10px; color:#888;">CONV</span><span style="font-size:13px; font-weight:600;">{{ t.conviction.score }}</span>{% endif %}
+            {% if t.stress %}<span class="stress-dot stress-{{ t.stress.overall }}"></span>{% endif %}
+          </div>
+        </div>
+        <div style="font-size:12px; color:#333; margin-bottom:4px;">
+          Entry ${{ "%.2f"|format(t.price) }} &middot; Stop ${{ "%.2f"|format(t.stop_loss) }} &middot; Phase 1 ${{ "%.2f"|format(t.phase1_target) }} &middot; Runner ${{ "%.2f"|format(t.runner_target) }} &middot; R/R {{ t.risk_reward }}
+        </div>
+        {% if t.lane_b_signal_count and t.lane_b_signal_count > 0 %}
+          <div style="font-size:11px; color:#0d7b34; margin-top:4px;">Early signals firing:
+          {% if t.lane_b.pocket_pivot.fired %}[Pocket Pivot] {% endif %}
+          {% if t.lane_b.base_quality.fired %}[Base Quality {{ t.lane_b.base_quality.score }}/10] {% endif %}
+          {% if t.lane_b.insider_cluster.fired %}[Insider Cluster {{ t.lane_b.insider_cluster.buyer_count }}x] {% endif %}
+          {% if t.lane_b.revenue_acceleration.fired %}[Rev Accel {{ t.lane_b.revenue_acceleration.latest_qoq_pct }}% QoQ] {% endif %}
+          {% if t.lane_b.earnings_turn.fired %}[Earnings Turn] {% endif %}
+          {% if t.lane_b.peer_pack.fired %}[Peer Pack Laggard] {% endif %}
+          </div>
+        {% endif %}
+        {% if t.options_trade %}
+          <div class="options-box">
+            <h4>Options Swing Trade
+            {% if t.options_trade.vol_interpretation %}
+              <span style="float:right; font-size:10px; padding:1px 6px; border-radius:3px; background:{% if t.options_trade.vol_interpretation == 'CHEAP' %}#0d7b34{% elif t.options_trade.vol_interpretation == 'FAIR' %}#1a9850{% elif t.options_trade.vol_interpretation == 'EXPENSIVE' %}#e67e22{% else %}#c94545{% endif %}; color:#fff;">vol {{ t.options_trade.vol_interpretation }}</span>
+            {% endif %}
+            </h4>
+            <div class="row1">{{ "%.0f"|format(t.options_trade.strike) }} Call · exp {{ t.options_trade.expiration }} ({{ t.options_trade.dte }}d) · Premium ${{ "%.2f"|format(t.options_trade.premium_mid) }} (cost ${{ "%.0f"|format(t.options_trade.cost_per_contract) }}/contract)</div>
+            <div class="row2">Delta {{ t.options_trade.delta }} · Theta {{ t.options_trade.theta }} · IV {{ t.options_trade.iv_pct }}% · Spread {{ t.options_trade.spread_pct }}%
+            {% if t.options_trade.iv_skew and t.options_trade.iv_skew.skew_bias %}&middot; Skew {{ t.options_trade.iv_skew.skew_bias }}{% endif %}
+            </div>
+            <div class="row2">Breakeven ${{ "%.2f"|format(t.options_trade.breakeven) }} ({{ "%+.1f"|format(t.options_trade.breakeven_pct_move) }}% move)</div>
+            <div class="payoff">If stock hits Phase 1 target: contract ~${{ "%.2f"|format(t.options_trade.projected_value_at_target) }} ({{ "%+.0f"|format(t.options_trade.projected_roi_pct) }}% return on premium)</div>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
 
   {% if sector_summary %}
     <div class="sector-summary">
@@ -257,21 +311,6 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
           {% if t.lane_b.peer_pack.fired %}[Peer Pack Laggard] {% endif %}
           </div>
         {% endif %}
-        {% if t.options_trade and loop.index <= 3 %}
-          <div class="options-box">
-            <h4>Options Swing Trade
-            {% if t.options_trade.vol_interpretation %}
-              <span style="float:right; font-size:10px; padding:1px 6px; border-radius:3px; background:{% if t.options_trade.vol_interpretation == 'CHEAP' %}#0d7b34{% elif t.options_trade.vol_interpretation == 'FAIR' %}#1a9850{% elif t.options_trade.vol_interpretation == 'EXPENSIVE' %}#e67e22{% else %}#c94545{% endif %}; color:#fff;">vol {{ t.options_trade.vol_interpretation }}</span>
-            {% endif %}
-            </h4>
-            <div class="row1">{{ "%.0f"|format(t.options_trade.strike) }} Call · exp {{ t.options_trade.expiration }} ({{ t.options_trade.dte }}d) · Premium ${{ "%.2f"|format(t.options_trade.premium_mid) }} (cost ${{ "%.0f"|format(t.options_trade.cost_per_contract) }}/contract)</div>
-            <div class="row2">Delta {{ t.options_trade.delta }} · Theta {{ t.options_trade.theta }} · IV {{ t.options_trade.iv_pct }}% · Spread {{ t.options_trade.spread_pct }}%
-            {% if t.options_trade.iv_skew and t.options_trade.iv_skew.skew_bias %}&middot; Skew {{ t.options_trade.iv_skew.skew_bias }}{% endif %}
-            </div>
-            <div class="row2">Breakeven ${{ "%.2f"|format(t.options_trade.breakeven) }} ({{ "%+.1f"|format(t.options_trade.breakeven_pct_move) }}% move)</div>
-            <div class="payoff">If stock hits Phase 1 target: contract ~${{ "%.2f"|format(t.options_trade.projected_value_at_target) }} ({{ "%+.0f"|format(t.options_trade.projected_roi_pct) }}% return on premium)</div>
-          </div>
-        {% endif %}
       </div>
     {% endfor %}
   {% endif %}
@@ -279,81 +318,30 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   {% if lane_b %}
     <h2 style="color:#0052cc;">Lane B — Catch It Early ({{ lane_b|length }})</h2>
     <div style="font-size:11px; color:#666; margin:-4px 0 12px;">Early-stage opportunities — institutional footprints present but price hasn't moved yet. These are the setups BEFORE they become Lane A. Hold months.</div>
-
-    {% for t in lane_b[:3] %}
-      <div class="conv-pick-card" style="border-color:#0052cc;">
-        <div class="conv-pick-head">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">T{{ t.tier }}</span>
-            <span class="ticker">{{ t.ticker }}</span>
-            <span style="color:#555;">{{ t.name[:32] }}</span>
-            {% if t.sector %}<span class="sector-badge">{{ t.sector }}</span>{% endif %}
-            {% if t.sector_maturity and t.sector_maturity != 'N/A' %}<span style="font-size:9px; padding:2px 5px; border-radius:3px; background:{% if t.sector_maturity == 'LATE' %}#e67e22{% elif t.sector_maturity == 'MID' %}#f0ad4e{% else %}#0d7b34{% endif %}; color:#fff;">{{ t.sector_maturity }}</span>{% endif %}
-          </div>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <span style="font-size:10px; color:#888;">OPP</span><span style="font-size:15px; font-weight:700; color:#0052cc;">{{ t.opportunity.score }}</span>
-            {% if t.conviction %}<span style="font-size:10px; color:#888;">CONV</span><span style="font-size:13px; font-weight:600;">{{ t.conviction.score }}</span>{% endif %}
-            {% if t.stress %}<span class="stress-dot stress-{{ t.stress.overall }}"></span>{% endif %}
-          </div>
-        </div>
-        <div style="font-size:12px; color:#333; margin-bottom:4px;">
-          Entry ${{ "%.2f"|format(t.price) }} &middot; Stop ${{ "%.2f"|format(t.stop_loss) }} &middot; Phase 1 ${{ "%.2f"|format(t.phase1_target) }} &middot; Runner ${{ "%.2f"|format(t.runner_target) }} &middot; R/R {{ t.risk_reward }}
-        </div>
-        {% if t.lane_b_signal_count and t.lane_b_signal_count > 0 %}
-          <div style="font-size:11px; color:#0052cc; margin-top:4px;">Early signals firing:
-          {% if t.lane_b.pocket_pivot.fired %}[Pocket Pivot] {% endif %}
-          {% if t.lane_b.base_quality.fired %}[Base Quality {{ t.lane_b.base_quality.score }}/10] {% endif %}
-          {% if t.lane_b.insider_cluster.fired %}[Insider Cluster {{ t.lane_b.insider_cluster.buyer_count }}x] {% endif %}
-          {% if t.lane_b.revenue_acceleration.fired %}[Rev Accel {{ t.lane_b.revenue_acceleration.latest_qoq_pct }}% QoQ] {% endif %}
-          {% if t.lane_b.earnings_turn.fired %}[Earnings Turn] {% endif %}
-          {% if t.lane_b.peer_pack.fired %}[Peer Pack Laggard] {% endif %}
-          </div>
-        {% endif %}
-        {% if t.options_trade %}
-          <div class="options-box">
-            <h4>Options Swing Trade
-            {% if t.options_trade.vol_interpretation %}
-              <span style="float:right; font-size:10px; padding:1px 6px; border-radius:3px; background:{% if t.options_trade.vol_interpretation == 'CHEAP' %}#0d7b34{% elif t.options_trade.vol_interpretation == 'FAIR' %}#1a9850{% elif t.options_trade.vol_interpretation == 'EXPENSIVE' %}#e67e22{% else %}#c94545{% endif %}; color:#fff;">vol {{ t.options_trade.vol_interpretation }}</span>
-            {% endif %}
-            </h4>
-            <div class="row1">{{ "%.0f"|format(t.options_trade.strike) }} Call · exp {{ t.options_trade.expiration }} ({{ t.options_trade.dte }}d) · Premium ${{ "%.2f"|format(t.options_trade.premium_mid) }} (cost ${{ "%.0f"|format(t.options_trade.cost_per_contract) }}/contract)</div>
-            <div class="row2">Delta {{ t.options_trade.delta }} · Theta {{ t.options_trade.theta }} · IV {{ t.options_trade.iv_pct }}% · Spread {{ t.options_trade.spread_pct }}%
-            {% if t.options_trade.iv_skew and t.options_trade.iv_skew.skew_bias %}&middot; Skew {{ t.options_trade.iv_skew.skew_bias }}{% endif %}
-            </div>
-            <div class="row2">Breakeven ${{ "%.2f"|format(t.options_trade.breakeven) }} ({{ "%+.1f"|format(t.options_trade.breakeven_pct_move) }}% move)</div>
-            <div class="payoff">If stock hits Phase 1 target: contract ~${{ "%.2f"|format(t.options_trade.projected_value_at_target) }} ({{ "%+.0f"|format(t.options_trade.projected_roi_pct) }}% return on premium)</div>
-          </div>
-        {% endif %}
-      </div>
-    {% endfor %}
-
-    {% if lane_b|length > 3 %}
-      <div style="font-size:11px; color:#666; margin:14px 0 6px;">Other Lane B picks:</div>
-      <table class="summary">
-        <thead><tr><th>Ticker</th><th>Name</th><th>T</th><th>Opp</th><th>Sector</th><th>Maturity</th><th>Signals firing</th><th>Entry</th></tr></thead>
-        <tbody>
-          {% for t in lane_b[3:] %}
-            <tr>
-              <td><strong>{{ t.ticker }}</strong></td>
-              <td>{{ t.name[:22] }}</td>
-              <td><span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">T{{ t.tier }}</span></td>
-              <td><strong style="color:#0052cc;">{{ t.opportunity.score }}</strong></td>
-              <td style="font-size:10px;">{{ (t.sector or '-')[:16] }}</td>
-              <td style="font-size:10px;">{{ t.sector_maturity or '-' }}</td>
-              <td style="font-size:10px;">
-                {% if t.lane_b.pocket_pivot.fired %}Pocket-Pivot {% endif %}
-                {% if t.lane_b.base_quality.fired %}Base({{ t.lane_b.base_quality.score }}) {% endif %}
-                {% if t.lane_b.insider_cluster.fired %}Insider({{ t.lane_b.insider_cluster.buyer_count }}) {% endif %}
-                {% if t.lane_b.revenue_acceleration.fired %}RevAccel {% endif %}
-                {% if t.lane_b.earnings_turn.fired %}EarnTurn {% endif %}
-                {% if t.lane_b.peer_pack.fired %}PeerLag {% endif %}
-              </td>
-              <td>${{ "%.2f"|format(t.price) }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% endif %}
+    <table class="summary">
+      <thead><tr><th>Ticker</th><th>Name</th><th>T</th><th>Opp</th><th>Sector</th><th>Maturity</th><th>Signals firing</th><th>Entry</th></tr></thead>
+      <tbody>
+        {% for t in lane_b %}
+          <tr>
+            <td><strong>{{ t.ticker }}</strong></td>
+            <td>{{ t.name[:22] }}</td>
+            <td><span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">T{{ t.tier }}</span></td>
+            <td><strong style="color:#0052cc;">{{ t.opportunity.score }}</strong></td>
+            <td style="font-size:10px;">{{ (t.sector or '-')[:16] }}</td>
+            <td style="font-size:10px;">{{ t.sector_maturity or '-' }}</td>
+            <td style="font-size:10px;">
+              {% if t.lane_b.pocket_pivot.fired %}Pocket-Pivot {% endif %}
+              {% if t.lane_b.base_quality.fired %}Base({{ t.lane_b.base_quality.score }}) {% endif %}
+              {% if t.lane_b.insider_cluster.fired %}Insider({{ t.lane_b.insider_cluster.buyer_count }}) {% endif %}
+              {% if t.lane_b.revenue_acceleration.fired %}RevAccel {% endif %}
+              {% if t.lane_b.earnings_turn.fired %}EarnTurn {% endif %}
+              {% if t.lane_b.peer_pack.fired %}PeerLag {% endif %}
+            </td>
+            <td>${{ "%.2f"|format(t.price) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   {% endif %}
 
   {% if lane_c %}
@@ -555,6 +543,34 @@ def render_email(scan):
         theme_buckets.setdefault(s, []).append(t["ticker"])
     theme_summary = sorted(theme_buckets.items(), key=lambda x: -len(x[1]))
 
+    BIG_CAP_THRESHOLD = 10_000_000_000
+    all_with_options = [t for t in tickets if t.get("options_trade") and t.get("opportunity")]
+    big_cap_pool = sorted(
+        [t for t in all_with_options if (t.get("market_cap") or 0) >= BIG_CAP_THRESHOLD],
+        key=lambda t: t["opportunity"].get("score", 0),
+        reverse=True,
+    )
+    early_pool = sorted(
+        [t for t in all_with_options if (t.get("lane_b_signal_count") or 0) >= 1],
+        key=lambda t: t["opportunity"].get("score", 0),
+        reverse=True,
+    )
+
+    priority_options = []
+    used_tickers = set()
+    for t in big_cap_pool[:3]:
+        t["priority_bucket"] = "BIG_CAP"
+        priority_options.append(t)
+        used_tickers.add(t["ticker"])
+    for t in early_pool:
+        if len(priority_options) >= 6:
+            break
+        if t["ticker"] in used_tickers:
+            continue
+        t["priority_bucket"] = "EARLY"
+        priority_options.append(t)
+        used_tickers.add(t["ticker"])
+
     def _is_coiled(t):
         p = (t.get("pillars") or {}).get("p2") or {}
         sq = p.get("squeeze_pct")
@@ -604,6 +620,7 @@ def render_email(scan):
         lane_b=lane_b,
         lane_c=lane_c,
         theme_summary=theme_summary,
+        priority_options=priority_options,
     )
 
 

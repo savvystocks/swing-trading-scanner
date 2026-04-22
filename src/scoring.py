@@ -177,6 +177,7 @@ def build_trade_ticket(ticker, name, price, tier_info, pillars, gates, vix_regim
         "hard_gate_fails": tier_info["hard_gate_fails"],
         "pillars": pillar_detail,
         "gates": gate_detail,
+        "market_cap": g6.get("market_cap"),
     }
 
 

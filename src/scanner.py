@@ -27,6 +27,7 @@ from src.stress_tests import run_stress_tests
 from src.options_suggest import suggest_options_trade
 from src.breadth import compute_market_breadth
 from src.telegram import send_swing_alerts
+from src.lane_b import run_all_lane_b, compute_peer_pack_rotation, lane_b_signal_count
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 UNIVERSE_PATH = PROJECT_ROOT / "data" / "universe" / "universe.json"
@@ -151,6 +152,7 @@ def full_score(client, candidate, vix_pillar):
         "ind": ind,
         "fundamentals": fundamentals,
         "sector": sector,
+        "insider": insider,
     }, None
 
 
@@ -218,6 +220,32 @@ def run_scan(universe_limit=None, verbose=True):
             if verbose and errors < 10:
                 print(f"  score error on {c['ticker']}: {type(e).__name__}: {e}")
                 traceback.print_exc()
+
+    if verbose:
+        print(f"\nComputing Lane B detectors (pocket pivot / base quality / insider cluster / revenue accel / earnings turn)...")
+    for r in scored:
+        lane_b = run_all_lane_b(r["ind"], r.get("fundamentals"), r.get("insider"))
+        r["lane_b"] = lane_b
+        r["ticket"]["lane_b"] = lane_b
+
+    if verbose:
+        print(f"Computing peer pack rotation across {len(scored)} scored names...")
+    peer_signals = compute_peer_pack_rotation(scored)
+    for r in scored:
+        sig = peer_signals.get(r["ticket"]["ticker"])
+        if sig:
+            r["lane_b"]["peer_pack"] = sig
+            r["ticket"]["lane_b"]["peer_pack"] = sig
+        else:
+            r["lane_b"]["peer_pack"] = {"fired": False}
+            r["ticket"]["lane_b"]["peer_pack"] = {"fired": False}
+
+    for r in scored:
+        r["ticket"]["lane_b_signal_count"] = lane_b_signal_count(r["lane_b"])
+
+    if verbose:
+        lb_hits = sum(1 for r in scored if r["ticket"]["lane_b_signal_count"] > 0)
+        print(f"  Lane B signals: {lb_hits} names fired at least one detector")
 
     if verbose:
         print(f"\nComputing conviction scores and stress tests for Tier 3+ candidates...")

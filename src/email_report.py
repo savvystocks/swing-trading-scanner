@@ -236,7 +236,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
         </div>
 
         <div class="pillar-grid">
-          {% for key, label in [('p1','P1 Trend'), ('p2','P2 Squeeze'), ('p3','P3 Growth'), ('p4','P4 RS'), ('p5','P5 Macro'), ('p6','P6 Revisions'), ('p7','P7 Squeeze')] %}
+          {% for key, label in [('p1','P1 Trend'), ('p2','P2 Vol Squeeze'), ('p3','P3 Growth'), ('p4','P4 RS'), ('p5','P5 Macro'), ('p6','P6 Revisions'), ('p7','P7 Short Sq.')] %}
             <div class="pillar-row">
               <span class="verdict v-{{ t.pillars[key].verdict }}">{{ t.pillars[key].verdict }}</span>
               <span class="pillar-label">{{ label }}</span>
@@ -254,6 +254,26 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     {% endfor %}
   {% else %}
     <div class="empty">No candidates passed all gates today. Patience is a position.</div>
+  {% endif %}
+
+  {% if squeeze_watchlist %}
+    <h2>Squeeze Watchlist ({{ squeeze_watchlist|length }}) — coiled setups that could break out next</h2>
+    <div style="font-size:11px; color:#666; margin:-4px 0 12px;">Bollinger Bands compressed to ≤20th percentile of the last 120 days, P1 trend and P4 RS both clean, no hard-gate fails, upper band not yet pierced. These are the setups <em>before</em> they fire. Consider a buy-stop above the upper band.</div>
+    <table class="summary">
+      <thead><tr><th>Ticker</th><th>Name</th><th>Tier</th><th>Squeeze %ile</th><th>Entry</th><th>Sector</th></tr></thead>
+      <tbody>
+        {% for t in squeeze_watchlist %}
+          <tr>
+            <td><strong>{{ t.ticker }}</strong></td>
+            <td>{{ t.name[:28] }}</td>
+            <td>{% if t.tier %}<span class="tier-badge t{{ (t.tier|int) if t.tier is number else 0 }}">T{{ t.tier }}</span>{% else %}-{% endif %}</td>
+            <td>{{ "%.0f"|format(t.pillars.p2.squeeze_pct) }}</td>
+            <td>${{ "%.2f"|format(t.price) }}</td>
+            <td>{{ t.sector or '-' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   {% endif %}
 
   {% if watchlist_tickets %}
@@ -305,6 +325,26 @@ def render_email(scan):
     top = actionable[:30]
     watchlist = []
     rejected = [t for t in tickets if not t.get("tier") or t["tier"] == 0][:15]
+
+    def _is_coiled(t):
+        p = (t.get("pillars") or {}).get("p2") or {}
+        sq = p.get("squeeze_pct")
+        if sq is None or sq > 20:
+            return False
+        if p.get("upper_break"):
+            return False
+        p1 = (t.get("pillars") or {}).get("p1") or {}
+        p4 = (t.get("pillars") or {}).get("p4") or {}
+        if p1.get("verdict") == "FAIL" or p4.get("verdict") == "FAIL":
+            return False
+        if t.get("hard_gate_fails"):
+            return False
+        return True
+
+    squeeze_watchlist = sorted(
+        [t for t in tickets if _is_coiled(t)],
+        key=lambda t: (t.get("pillars") or {}).get("p2", {}).get("squeeze_pct") or 100,
+    )[:15]
     regime = scan["vix_regime"]
     vix_val = regime.get("vix")
 
@@ -330,6 +370,7 @@ def render_email(scan):
         sector_performance=scan.get("sector_performance", []),
         breadth=scan.get("breadth"),
         conviction_picks=conviction_picks,
+        squeeze_watchlist=squeeze_watchlist,
     )
 
 

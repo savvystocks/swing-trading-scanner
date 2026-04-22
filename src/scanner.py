@@ -284,7 +284,7 @@ def run_scan(universe_limit=None, verbose=True):
 
     tickets_for_alerts = [r["ticket"] for r in scored]
     try:
-        sent = send_swing_alerts(tickets_for_alerts, min_tier=5)
+        sent = send_swing_alerts(tickets_for_alerts, min_tier=4, tier4_min_conviction=70)
         if verbose and sent:
             print(f"Sent {sent} Telegram alerts")
     except Exception as e:

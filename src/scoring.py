@@ -1,3 +1,7 @@
+BASE_PILLARS = (1, 3, 4, 5, 6)
+BONUS_PILLARS = (2, 7)
+
+
 def score_candidate(pillars, gates, is_us):
     pillar_results = {
         1: pillars["pillar_1"]["verdict"],
@@ -9,35 +13,23 @@ def score_candidate(pillars, gates, is_us):
         7: pillars["pillar_7"]["verdict"],
     }
 
-    applicable_pillars = 7
-    p7 = pillars["pillar_7"]
-    if not is_us and p7.get("applicable") is False:
-        applicable_pillars = 6
-        pillar_results.pop(7)
+    base_ids = list(BASE_PILLARS)
+    applicable_pillars = len(base_ids)
+    base_results = {i: pillar_results[i] for i in base_ids}
 
-    passes = sum(1 for v in pillar_results.values() if v in ("PASS", "PASS_BONUS"))
-    partials = sum(1 for v in pillar_results.values() if v == "PARTIAL")
-    fails = sum(1 for v in pillar_results.values() if v == "FAIL")
+    passes = sum(1 for v in base_results.values() if v in ("PASS", "PASS_BONUS"))
+    partials = sum(1 for v in base_results.values() if v == "PARTIAL")
+    fails = sum(1 for v in base_results.values() if v == "FAIL")
     effective_score = passes + partials * 0.5
 
-    if applicable_pillars == 7:
-        if effective_score >= 6:
-            tier = 5
-        elif effective_score >= 5:
-            tier = 4
-        elif effective_score >= 4:
-            tier = 3
-        else:
-            tier = 2
+    if effective_score >= 5:
+        tier = 5
+    elif effective_score >= 4:
+        tier = 4
+    elif effective_score >= 3:
+        tier = 3
     else:
-        if effective_score >= 5.5:
-            tier = 5
-        elif effective_score >= 4:
-            tier = 4
-        elif effective_score >= 3:
-            tier = 3
-        else:
-            tier = 2
+        tier = 2
 
     hard_gate_fails = []
     if pillars["pillar_1"]["verdict"] == "FAIL":
@@ -51,6 +43,16 @@ def score_candidate(pillars, gates, is_us):
 
     if hard_gate_fails:
         tier = 0
+
+    bonus_applied = []
+    p2_pass = pillar_results[2] in ("PASS", "PASS_BONUS")
+    p7_pass = pillar_results[7] in ("PASS", "PASS_BONUS") and pillars["pillar_7"].get("applicable", True)
+    if tier > 0 and (p2_pass or p7_pass):
+        tier = min(5, tier + 0.5)
+        if p2_pass:
+            bonus_applied.append("p2_vol_squeeze")
+        if p7_pass:
+            bonus_applied.append("p7_short_squeeze")
 
     if gates.get("gate_5_modifier", {}).get("direction") == "bullish":
         tier = min(5, tier + 0.5)
@@ -81,6 +83,7 @@ def score_candidate(pillars, gates, is_us):
         "applicable_pillars": applicable_pillars,
         "hard_gate_fails": hard_gate_fails,
         "pillar_results": pillar_results,
+        "bonus_applied": bonus_applied,
     }
 
 
@@ -110,6 +113,8 @@ def build_trade_ticket(ticker, name, price, tier_info, pillars, gates, vix_regim
         },
         "p2": {
             "verdict": p2["verdict"],
+            "squeeze_pct": p2.get("squeeze_percentile"),
+            "upper_break": p2.get("upper_band_break"),
             "summary": f"squeeze pct {p2.get('squeeze_percentile', 0):.0f}, break={p2.get('upper_band_break', False)}",
         },
         "p3": {

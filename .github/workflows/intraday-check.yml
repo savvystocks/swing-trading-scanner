@@ -1,0 +1,38 @@
+name: intraday-rvol-check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 14,15,16,17,18,19 * * 1-5"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Download latest scan artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: daily-scan.yml
+          name: scan-result
+          path: data/results/
+          if_no_artifact_found: warn
+      - name: Run intraday RVOL check
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/run_intraday_check.py
+      - name: Save intraday state
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intraday-state
+          path: data/intraday_state/

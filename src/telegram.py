@@ -197,11 +197,20 @@ def _stress_label(t):
     return ""
 
 
-def send_swing_alerts(tickets, min_tier=4):
-    top = [t for t in tickets if t.get("tier") and t["tier"] >= min_tier]
+def send_swing_alerts(tickets, min_tier=4, tier4_min_conviction=70):
+    def _qualifies(t):
+        tier = t.get("tier")
+        if not tier or tier < min_tier:
+            return False
+        if tier >= 5:
+            return True
+        conv = (t.get("conviction") or {}).get("score")
+        return conv is not None and conv >= tier4_min_conviction
+
+    top = [t for t in tickets if _qualifies(t)]
     if not top:
         return 0
-    top = sorted(top, key=lambda t: ((t.get("conviction") or {}).get("score") or 0), reverse=True)
+    top = sorted(top, key=lambda t: (t["tier"], (t.get("conviction") or {}).get("score") or 0), reverse=True)
     count = 0
     for t in top[:10]:
         tier = t["tier"]

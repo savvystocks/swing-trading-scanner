@@ -9,6 +9,78 @@ ALPACA_API_KEY = os.environ.get("ALPACA_API_KEY", "")
 ALPACA_SECRET_KEY = os.environ.get("ALPACA_SECRET_KEY", "")
 
 
+def get_iv_skew_and_uoa(symbol, current_price):
+    if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
+        return None
+    try:
+        from alpaca.data.historical.option import OptionHistoricalDataClient
+        from alpaca.data.requests import OptionChainRequest
+    except ImportError:
+        return None
+    try:
+        client = OptionHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY)
+        today = datetime.now()
+        min_exp = (today + timedelta(days=20)).strftime("%Y-%m-%d")
+        max_exp = (today + timedelta(days=45)).strftime("%Y-%m-%d")
+        chain_req = OptionChainRequest(
+            underlying_symbol=symbol,
+            expiration_date_gte=min_exp,
+            expiration_date_lte=max_exp,
+            strike_price_gte=str(round(current_price * 0.85, 2)),
+            strike_price_lte=str(round(current_price * 1.15, 2)),
+        )
+        snaps = client.get_option_chain(chain_req)
+    except Exception as e:
+        logger.warning(f"IV skew fetch for {symbol}: {e}")
+        return None
+    if not snaps:
+        return None
+    calls_near = []
+    puts_near = []
+    total_volume = 0
+    for sym, s in snaps.items():
+        try:
+            g = s.greeks
+            if not g or not g.delta:
+                continue
+            d = abs(float(g.delta))
+            iv = None
+            iv_val = getattr(s, "implied_volatility", None) or getattr(g, "implied_volatility", None)
+            if iv_val:
+                iv = float(iv_val)
+            if iv is None:
+                continue
+            m = re.match(r"[A-Z]+\d{6}([CP])\d+", sym if isinstance(sym, str) else str(sym))
+            if not m:
+                continue
+            is_call = m.group(1) == "C"
+            if 0.20 <= d <= 0.35:
+                (calls_near if is_call else puts_near).append(iv)
+            if s.latest_trade and getattr(s.latest_trade, "size", None):
+                total_volume += int(s.latest_trade.size)
+        except Exception:
+            continue
+    avg_call_iv = sum(calls_near) / len(calls_near) if calls_near else None
+    avg_put_iv = sum(puts_near) / len(puts_near) if puts_near else None
+    skew = None
+    bias = "unknown"
+    if avg_call_iv and avg_put_iv:
+        skew = (avg_put_iv - avg_call_iv) * 100
+        if skew > 5:
+            bias = "bearish"
+        elif skew < -2:
+            bias = "bullish"
+        else:
+            bias = "neutral"
+    return {
+        "avg_call_iv_pct": round(avg_call_iv * 100, 1) if avg_call_iv else None,
+        "avg_put_iv_pct": round(avg_put_iv * 100, 1) if avg_put_iv else None,
+        "skew_pct": round(skew, 1) if skew is not None else None,
+        "skew_bias": bias,
+        "chain_total_volume_today": total_volume,
+    }
+
+
 def get_live_price(symbol):
     if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
         return None

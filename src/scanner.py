@@ -307,6 +307,7 @@ def run_scan(universe_limit=None, verbose=True):
                 ticker=t["ticker"],
                 phase1_target=t["phase1_target"],
                 current_price=t["price"],
+                df_ind=r["ind"],
             )
             t["options_trade"] = opt
             if verbose and opt:

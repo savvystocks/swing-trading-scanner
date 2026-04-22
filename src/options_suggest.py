@@ -1,4 +1,5 @@
-from src.alpaca_options import get_options_chain, get_live_price
+from src.alpaca_options import get_options_chain, get_live_price, get_iv_skew_and_uoa
+from src.iv_metrics import vol_rank, options_interpretation
 
 
 def _estimate_option_value_at_target(contract, stock_price_now, stock_price_at_target):
@@ -18,7 +19,7 @@ def _estimate_option_value_at_target(contract, stock_price_now, stock_price_at_t
     return intrinsic_at_target + extrinsic_at_target
 
 
-def suggest_options_trade(ticker, phase1_target, current_price=None):
+def suggest_options_trade(ticker, phase1_target, current_price=None, df_ind=None):
     if not ticker.endswith(".US"):
         print(f"  [options {ticker}] SKIP: not a .US ticker")
         return None
@@ -35,6 +36,10 @@ def suggest_options_trade(ticker, phase1_target, current_price=None):
     contract = get_options_chain(underlying, "call", current_price)
     if not contract:
         return None
+
+    vr = vol_rank(df_ind) if df_ind is not None else None
+    interp = options_interpretation(vr["vol_rank_pct"]) if vr else "unknown"
+    skew = get_iv_skew_and_uoa(underlying, current_price)
 
     mid = contract["mid"]
     strike = contract["strike"]
@@ -70,4 +75,7 @@ def suggest_options_trade(ticker, phase1_target, current_price=None):
         "projected_value_at_target": round(value_at_target, 2),
         "projected_roi_pct": round(roi_pct, 0),
         "profit_per_contract_at_target": round(profit_per_contract, 2),
+        "vol_rank": vr,
+        "vol_interpretation": interp,
+        "iv_skew": skew,
     }

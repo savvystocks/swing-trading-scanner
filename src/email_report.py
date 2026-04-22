@@ -137,7 +137,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
   {% if sector_summary %}
     <div class="sector-summary">
-      <h3>Actionable candidates by sector (Tier 3+)</h3>
+      <h3>Actionable candidates by sector (Tier 4+)</h3>
       <div class="sector-summary-grid">
         {% for sec, count in sector_summary %}
           <span class="sector-chip"><strong>{{ count }}</strong>{{ sec }}</span>
@@ -299,11 +299,11 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
 def render_email(scan):
     tickets = scan.get("tickets") or [r["ticket"] for r in scan.get("results", [])]
-    actionable = [t for t in tickets if t.get("tier") and t["tier"] >= 5]
-    scored_with_conviction = [t for t in tickets if t.get("tier") and t["tier"] >= 3 and t.get("conviction")]
+    actionable = [t for t in tickets if t.get("tier") and t["tier"] >= 4]
+    scored_with_conviction = [t for t in tickets if t.get("tier") and t["tier"] >= 4 and t.get("conviction")]
     conviction_picks = sorted(scored_with_conviction, key=lambda t: t["conviction"]["score"], reverse=True)[:10]
     top = actionable[:30]
-    watchlist = [t for t in tickets if t.get("tier") and t["tier"] in (3, 4)][:20]
+    watchlist = []
     rejected = [t for t in tickets if not t.get("tier") or t["tier"] == 0][:15]
     regime = scan["vix_regime"]
     vix_val = regime.get("vix")

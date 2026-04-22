@@ -21,7 +21,7 @@ from src.pillars import (
     pick_benchmark,
 )
 from src.scoring import score_candidate, build_trade_ticket
-from src.sectors import fetch_sector_performance
+from src.sectors import fetch_sector_performance, sector_maturity_map, GICS_TO_ETF
 from src.conviction import conviction_score, compute_composite_rs_percentiles
 from src.stress_tests import run_stress_tests
 from src.options_suggest import suggest_options_trade
@@ -246,6 +246,13 @@ def run_scan(universe_limit=None, verbose=True):
     if verbose:
         lb_hits = sum(1 for r in scored if r["ticket"]["lane_b_signal_count"] > 0)
         print(f"  Lane B signals: {lb_hits} names fired at least one detector")
+
+    maturity_by_short = sector_maturity_map(sector_perf)
+    for r in scored:
+        sec = r["ticket"].get("sector") or ""
+        short = GICS_TO_ETF.get(sec, (None, None))[1]
+        maturity = maturity_by_short.get(short, "N/A")
+        r["ticket"]["sector_maturity"] = maturity
 
     if verbose:
         print(f"\nComputing conviction scores and stress tests for Tier 3+ candidates...")

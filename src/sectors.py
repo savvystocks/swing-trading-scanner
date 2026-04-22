@@ -92,6 +92,22 @@ def fetch_sector_performance(client, spy_df, from_date):
 
             outlook = _outlook(rs_vs_spy, stage, ret_3m)
 
+            sma_200 = close.rolling(200, min_periods=200).mean()
+            sma_200_now = float(sma_200.iloc[-1]) if not pd.isna(sma_200.iloc[-1]) else None
+            pct_above_200 = ((last_close - sma_200_now) / sma_200_now * 100) if sma_200_now else None
+
+            ret_6m = _pct_return(close, 126)
+
+            if outlook in ("LEADING", "STRONG"):
+                if (pct_above_200 is not None and pct_above_200 >= 20) or (ret_6m is not None and ret_6m >= 50):
+                    maturity = "LATE"
+                elif (pct_above_200 is not None and pct_above_200 >= 10) or (ret_6m is not None and ret_6m >= 25):
+                    maturity = "MID"
+                else:
+                    maturity = "EARLY"
+            else:
+                maturity = "N/A"
+
             rows.append({
                 "sector": short_name,
                 "etf": etf,
@@ -99,9 +115,12 @@ def fetch_sector_performance(client, spy_df, from_date):
                 "ret_5d": ret_5d,
                 "ret_1m": ret_1m,
                 "ret_3m": ret_3m,
+                "ret_6m": ret_6m,
+                "pct_above_200d": round(pct_above_200, 1) if pct_above_200 is not None else None,
                 "rs_vs_spy": rs_vs_spy,
                 "stage": stage,
                 "outlook": outlook,
+                "rotation_maturity": maturity,
             })
         except Exception:
             continue
@@ -109,3 +128,7 @@ def fetch_sector_performance(client, spy_df, from_date):
     rs_order = {"LEADING": 0, "STRONG": 1, "NEUTRAL": 2, "LAGGING": 3, "WEAK": 4}
     rows.sort(key=lambda r: (rs_order.get(r["outlook"], 99), -(r["rs_vs_spy"] or -99)))
     return rows
+
+
+def sector_maturity_map(sector_performance):
+    return {row["sector"]: row.get("rotation_maturity", "N/A") for row in sector_performance}

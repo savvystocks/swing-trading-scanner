@@ -28,13 +28,14 @@ def get_live_price(symbol):
 
 def get_options_chain(symbol, direction, current_price):
     if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
+        print(f"  [options {symbol}] SKIP: ALPACA_API_KEY or ALPACA_SECRET_KEY not set in env")
         return None
 
     try:
         from alpaca.data.historical.option import OptionHistoricalDataClient
         from alpaca.data.requests import OptionChainRequest
-    except ImportError:
-        logger.warning("alpaca-py not installed")
+    except ImportError as e:
+        print(f"  [options {symbol}] SKIP: alpaca-py not importable: {e}")
         return None
 
     try:
@@ -63,13 +64,15 @@ def get_options_chain(symbol, direction, current_price):
         )
         snapshots = client.get_option_chain(request)
     except Exception as e:
-        logger.warning(f"Alpaca chain fetch for {symbol}: {e}")
+        print(f"  [options {symbol}] FAIL: Alpaca chain request error: {type(e).__name__}: {e}")
         return None
 
     if not snapshots:
+        print(f"  [options {symbol}] FAIL: Alpaca returned empty chain (strikes {strike_lo:.2f}-{strike_hi:.2f}, exp {min_exp} to {max_exp})")
         return None
 
     contracts = []
+    reject_counts = {"no_greeks": 0, "delta": 0, "premium": 0, "spread": 0, "parse": 0, "dte": 0, "err": 0}
     for contract_symbol, snapshot in snapshots.items():
         try:
             greeks = snapshot.greeks
@@ -77,25 +80,30 @@ def get_options_chain(symbol, direction, current_price):
             trade = snapshot.latest_trade
 
             if not greeks or not quote:
+                reject_counts["no_greeks"] += 1
                 continue
 
             delta = abs(greeks.delta) if greeks.delta else 0
             if delta < 0.30 or delta > 0.70:
+                reject_counts["delta"] += 1
                 continue
 
             bid = float(quote.bid_price) if quote.bid_price else 0
             ask = float(quote.ask_price) if quote.ask_price else 0
             mid = (bid + ask) / 2 if bid > 0 and ask > 0 else 0
             if mid <= 0.10:
+                reject_counts["premium"] += 1
                 continue
 
             spread_pct = ((ask - bid) / mid * 100) if mid > 0 else 100
             if spread_pct > 40:
+                reject_counts["spread"] += 1
                 continue
 
             sym_str = contract_symbol if isinstance(contract_symbol, str) else str(contract_symbol)
             m = re.match(r"([A-Z]+)(\d{6})([CP])(\d+)", sym_str)
             if not m:
+                reject_counts["parse"] += 1
                 continue
             exp_raw = m.group(2)
             contract_right = m.group(3)
@@ -105,6 +113,7 @@ def get_options_chain(symbol, direction, current_price):
 
             dte = (datetime.strptime(expiration, "%Y-%m-%d") - datetime.now()).days
             if dte < 14 or dte > 50:
+                reject_counts["dte"] += 1
                 continue
 
             iv = getattr(snapshot, "implied_volatility", None)
@@ -148,10 +157,13 @@ def get_options_chain(symbol, direction, current_price):
                 "symbol": sym_str,
             })
         except Exception as e:
+            reject_counts["err"] += 1
             logger.debug(f"skip contract {contract_symbol}: {e}")
             continue
 
     if not contracts:
+        print(f"  [options {symbol}] FAIL: {len(snapshots)} contracts in chain, 0 passed filters. Rejects: {reject_counts}")
         return None
+    print(f"  [options {symbol}] OK: {len(contracts)}/{len(snapshots)} passed filters. Rejects: {reject_counts}")
     contracts.sort(key=lambda x: x["score"], reverse=True)
     return contracts[0]

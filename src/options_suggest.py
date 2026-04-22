@@ -20,6 +20,7 @@ def _estimate_option_value_at_target(contract, stock_price_now, stock_price_at_t
 
 def suggest_options_trade(ticker, phase1_target, current_price=None):
     if not ticker.endswith(".US"):
+        print(f"  [options {ticker}] SKIP: not a .US ticker")
         return None
 
     underlying = ticker.replace(".US", "")
@@ -28,6 +29,7 @@ def suggest_options_trade(ticker, phase1_target, current_price=None):
         live = get_live_price(underlying)
         current_price = live if live else current_price
     if current_price is None:
+        print(f"  [options {underlying}] SKIP: no current_price available")
         return None
 
     contract = get_options_chain(underlying, "call", current_price)

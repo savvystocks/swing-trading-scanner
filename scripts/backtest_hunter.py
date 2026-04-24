@@ -5,7 +5,7 @@ from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.options_hunter import SECTOR_TILT_KEYWORDS, _detect_sector_tilt, _compute_eta
+from src.options_hunter import SECTOR_TILT_KEYWORDS, _detect_sector_tilt, _compute_eta, _extension_adjustment
 
 
 def _pass(v):
@@ -80,6 +80,13 @@ def score_from_snapshot(w):
     if atr_pct is not None and atr_pct > 10:
         score -= 10
         reasons.append(f"ATR{atr_pct:.0f}%")
+
+    pct_above_50d = snap.get("pct_above_50d")
+    ext_adj = _extension_adjustment(pct_above_50d, None)
+    if ext_adj["delta"] != 0:
+        score += ext_adj["delta"]
+        if ext_adj["label"]:
+            reasons.append(ext_adj["label"])
 
     score = max(0, min(100, score))
 

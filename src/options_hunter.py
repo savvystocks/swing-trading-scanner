@@ -111,6 +111,8 @@ def options_hunter_score(ticket, pillars_raw, gates_raw, ind, fundamentals):
 
     pct_above_50d = None
     ret_20d = None
+    ret_5d = None
+    sq_pct_local = None
     try:
         last = ind.iloc[-1]
         close = float(last["close"])
@@ -129,17 +131,28 @@ def options_hunter_score(ticket, pillars_raw, gates_raw, ind, fundamentals):
         if sma_50 is not None and float(sma_50) > 0:
             pct_above_50d = (close / float(sma_50) - 1) * 100
 
+        sq_raw = last.get("bb_squeeze_pct")
+        try:
+            if sq_raw is not None:
+                sq_pct_local = float(sq_raw)
+        except (TypeError, ValueError):
+            sq_pct_local = None
+
         try:
             if len(ind) >= 21:
                 price_20d_ago = float(ind["close"].iloc[-21])
                 if price_20d_ago > 0:
                     ret_20d = (close / price_20d_ago - 1) * 100
+            if len(ind) >= 6:
+                price_5d_ago = float(ind["close"].iloc[-6])
+                if price_5d_ago > 0:
+                    ret_5d = (close / price_5d_ago - 1) * 100
         except Exception:
-            ret_20d = None
+            pass
     except Exception:
         pass
 
-    ext_adj = _extension_adjustment(pct_above_50d, ret_20d)
+    ext_adj = _extension_adjustment(pct_above_50d, ret_20d, sq_pct_local, ret_5d)
     if ext_adj["delta"] != 0:
         score += ext_adj["delta"]
         reasons.append(ext_adj["label"])
@@ -160,48 +173,71 @@ def options_hunter_score(ticket, pillars_raw, gates_raw, ind, fundamentals):
         "pct_from_high": pct_from_high,
         "pct_above_50d": round(pct_above_50d, 1) if pct_above_50d is not None else None,
         "ret_20d": round(ret_20d, 1) if ret_20d is not None else None,
+        "ret_5d": round(ret_5d, 1) if ret_5d is not None else None,
+        "squeeze_pct": round(sq_pct_local, 1) if sq_pct_local is not None else None,
         "extension_state": ext_adj["state"],
         "sector_tilt": tilt,
         "lane_b_count": lb_signals,
     }
 
 
-def _extension_adjustment(pct_above_50d, ret_20d):
+def _extension_adjustment(pct_above_50d, ret_20d, sq_pct=None, ret_5d=None):
     if pct_above_50d is None:
         return {"delta": 0, "label": "", "state": "unknown"}
 
     ext = pct_above_50d
-    if ext <= 10:
-        ext_pts = 10
-        ext_state = "PRIME"
-        label = f"prime entry ({ext:+.0f}% above 50d)"
+    labels = []
+
+    still_coiled = (
+        ext <= 5
+        and sq_pct is not None and sq_pct <= 30
+        and ret_20d is not None and ret_20d <= 5
+    )
+
+    if still_coiled:
+        ext_pts = 15
+        ext_state = "STILL_COILED"
+        labels.append(f"still coiled ({ext:+.0f}% 50d, {ret_20d:+.0f}% 20d, sq {sq_pct:.0f}p)")
+    elif ext <= 10:
+        ext_pts = 5
+        ext_state = "MILD_PRIME"
+        labels.append(f"mild entry ({ext:+.0f}% above 50d)")
     elif ext <= 18:
         ext_pts = 0
         ext_state = "MILD"
-        label = ""
     elif ext <= 28:
         ext_pts = -8
         ext_state = "EXTENDED"
-        label = f"extended ({ext:+.0f}% above 50d)"
+        labels.append(f"extended ({ext:+.0f}% above 50d)")
     elif ext <= 40:
         ext_pts = -18
         ext_state = "CHASING"
-        label = f"chasing ({ext:+.0f}% above 50d)"
+        labels.append(f"chasing ({ext:+.0f}% above 50d)")
     else:
         ext_pts = -28
         ext_state = "CHASING"
-        label = f"wildly extended ({ext:+.0f}% above 50d)"
+        labels.append(f"wildly extended ({ext:+.0f}% above 50d)")
 
-    if ret_20d is not None and ret_20d > 25:
-        ext_pts -= 10
-        if label:
-            label += f", up {ret_20d:+.0f}% in 20d"
-        else:
-            label = f"up {ret_20d:+.0f}% in 20d"
-        if ext_state in ("PRIME", "MILD"):
-            ext_state = "EXTENDED"
+    if ret_20d is not None:
+        if ret_20d > 20:
+            ext_pts -= 22
+            labels.append(f"up {ret_20d:+.0f}% in 20d (running)")
+            if ext_state in ("STILL_COILED", "MILD_PRIME", "MILD"):
+                ext_state = "EXTENDED"
+        elif ret_20d > 15:
+            ext_pts -= 15
+            labels.append(f"up {ret_20d:+.0f}% in 20d")
+            if ext_state in ("STILL_COILED", "MILD_PRIME", "MILD"):
+                ext_state = "EXTENDED"
+        elif ret_20d > 10:
+            ext_pts -= 8
+            labels.append(f"up {ret_20d:+.0f}% in 20d")
 
-    return {"delta": ext_pts, "label": label, "state": ext_state}
+    if ret_5d is not None and ret_5d > 8:
+        ext_pts -= 8
+        labels.append(f"up {ret_5d:+.0f}% in 5d (late)")
+
+    return {"delta": ext_pts, "label": ", ".join(labels), "state": ext_state}
 
 
 def _compute_eta(p2, earnings_days, earnings_bucket, lb_signals):

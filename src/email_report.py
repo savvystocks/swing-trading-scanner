@@ -495,8 +495,8 @@ OPTIONS_EMAIL_TEMPLATE = """<!DOCTYPE html>
   <div class="meta">Companion email to the main swing scan. Universe: {{ universe_size }} &middot; Regime: {{ regime }} &middot; VIX {{ vix }}</div>
 
   <div class="intro">
-    <strong>9 options trades — bucketed by market cap.</strong> Weighted toward mid-cap ($2B-$10B), historically the best risk-adjusted swing bucket.
-    <br>Each card shows: entry/stop/targets, the best contract from Alpaca's chain (14-50 DTE, delta 0.30-0.70, spread &lt;40%), vol rank, and projected ROI if the stock hits Phase 1.
+    <strong>9 options trades — Options Hunter Lane.</strong> Selected using the validated pre-move signature from 295 past 50%+ movers: 2x weight on P7 short squeeze, 2x P6 earnings revisions, earnings sweet-spot (11-21d), proximity to 52w high, sector tilt toward semis / networking / biotech / energy.
+    <br>Each card shows a <strong>Hunter score</strong> (0-100), an <strong>anticipated move ETA</strong>, and the triggering signals. Bucketed 1 MEGA / 3 LARGE / 4 MID / 1 EARLY. Chain from Alpaca (14-50 DTE, delta 0.30-0.70, spread &lt;40%).
   </div>
 
   <div class="bucket-legend">
@@ -522,11 +522,18 @@ OPTIONS_EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if t.sector_maturity and t.sector_maturity != 'N/A' %}<span style="font-size:9px; padding:2px 5px; border-radius:3px; background:{% if t.sector_maturity == 'LATE' %}#e67e22{% elif t.sector_maturity == 'MID' %}#f0ad4e{% else %}#0d7b34{% endif %}; color:#fff;">{{ t.sector_maturity }}</span>{% endif %}
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
-            <span style="font-size:10px; color:#888;">OPP</span><span style="font-size:15px; font-weight:700; color:#0052cc;">{{ t.opportunity.score }}</span>
-            {% if t.conviction %}<span style="font-size:10px; color:#888;">CONV</span><span style="font-size:13px; font-weight:600;">{{ t.conviction.score }}</span>{% endif %}
+            {% if t.hunter %}<span style="font-size:10px; color:#888;">HUNT</span><span style="font-size:15px; font-weight:700; color:#8e44ad;">{{ t.hunter.score }}</span>{% endif %}
+            <span style="font-size:10px; color:#888;">OPP</span><span style="font-size:13px; font-weight:600; color:#0052cc;">{{ t.opportunity.score if t.opportunity else '-' }}</span>
+            {% if t.conviction %}<span style="font-size:10px; color:#888;">CONV</span><span style="font-size:12px; font-weight:600;">{{ t.conviction.score }}</span>{% endif %}
             {% if t.stress %}<span class="stress-dot stress-{{ t.stress.overall }}"></span>{% endif %}
           </div>
         </div>
+        {% if t.hunter and t.hunter.eta_label %}
+          <div style="font-size:11px; color:#8e44ad; margin:4px 0 6px; padding:4px 8px; background:#faf5ff; border-radius:4px; display:inline-block;">
+            <strong>Move ETA:</strong> {{ t.hunter.eta_label }}
+            {% if t.hunter.reasons %} &middot; <span style="color:#555;">{{ t.hunter.reasons|join(' &middot; ') }}</span>{% endif %}
+          </div>
+        {% endif %}
         <div style="font-size:12px; color:#333; margin-bottom:4px;">
           Entry ${{ "%.2f"|format(t.price) }} &middot; Stop ${{ "%.2f"|format(t.stop_loss) }} &middot; Phase 1 ${{ "%.2f"|format(t.phase1_target) }} &middot; Runner ${{ "%.2f"|format(t.runner_target) }} &middot; R/R {{ t.risk_reward }}
         </div>
@@ -587,6 +594,23 @@ def _classify_cap_bucket(mcap):
 def build_priority_options(tickets, slot_plan=None):
     if slot_plan is None:
         slot_plan = [("MEGA", 1), ("LARGE", 3), ("MID", 4), ("EARLY", 1)]
+
+    hunter_qualified = [
+        t for t in tickets
+        if t.get("hunter") and t["hunter"].get("qualified") and t.get("options_trade")
+    ]
+    if hunter_qualified:
+        hunter_qualified.sort(key=lambda t: t["hunter"].get("score", 0), reverse=True)
+        picks = []
+        used = set()
+        for t in hunter_qualified:
+            bucket = t.get("priority_bucket") or _classify_cap_bucket(t.get("market_cap"))
+            t["priority_bucket"] = bucket
+            picks.append(t)
+            used.add(t["ticker"])
+        slot_cap = sum(s for _, s in slot_plan)
+        return picks[:slot_cap]
+
     all_with_options = [t for t in tickets if t.get("options_trade") and t.get("opportunity")]
     buckets = {"MEGA": [], "LARGE": [], "MID": [], "EARLY": []}
     for t in all_with_options:

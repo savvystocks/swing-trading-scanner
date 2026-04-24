@@ -29,6 +29,7 @@ from src.breadth import compute_market_breadth
 from src.telegram import send_swing_alerts
 from src.lane_b import run_all_lane_b, compute_peer_pack_rotation, lane_b_signal_count
 from src.opportunity import opportunity_score, classify_lane
+from src.options_hunter import classify_hunters
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 UNIVERSE_PATH = PROJECT_ROOT / "data" / "universe" / "universe.json"
@@ -299,21 +300,25 @@ def run_scan(universe_limit=None, verbose=True):
         lanes = Counter(r["ticket"].get("lane") for r in scored)
         print(f"Lane classification: A={lanes.get('A', 0)}  B={lanes.get('B', 0)}  C={lanes.get('C', 0)}  none={lanes.get(None, 0)}")
 
-    top_conviction_us = [
-        r for r in scored
-        if r["ticket"].get("conviction")
-        and r["ticket"]["ticker"].endswith(".US")
-        and r["ticket"].get("tier", 0) >= 3
-    ]
-    top_conviction_us.sort(
-        key=lambda r: r["ticket"]["conviction"]["score"],
-        reverse=True,
-    )
     if verbose:
-        print(f"\nFetching options trade suggestions for top 3 conviction US picks...")
-    for r in top_conviction_us[:3]:
-        try:
+        print(f"\nClassifying Options Hunter Lane (validated signature: 2x P7, 2x P6, 0.5x P3, earnings sweet spot, 52w high proximity, sector tilt)...")
+    hunter_picks = classify_hunters(scored)
+    if verbose:
+        from collections import Counter
+        bc = Counter(r["ticket"].get("priority_bucket") for r in hunter_picks)
+        print(f"  Hunter picks: {len(hunter_picks)}  MEGA={bc.get('MEGA',0)} LARGE={bc.get('LARGE',0)} MID={bc.get('MID',0)} EARLY={bc.get('EARLY',0)}")
+        for r in hunter_picks:
             t = r["ticket"]
+            h = t["hunter"]
+            print(f"    {t['ticker']:12s} [{t.get('priority_bucket','?')}] hunter={h['score']} eta={h['eta_label']} tier=T{t.get('tier','?')} reasons={'; '.join(h['reasons'][:3])}")
+
+    if verbose:
+        print(f"\nFetching options chains for {len(hunter_picks)} hunter picks (US only — Alpaca chain)...")
+    for r in hunter_picks:
+        t = r["ticket"]
+        if not t["ticker"].endswith(".US"):
+            continue
+        try:
             opt = suggest_options_trade(
                 ticker=t["ticker"],
                 phase1_target=t["phase1_target"],
@@ -327,7 +332,7 @@ def run_scan(universe_limit=None, verbose=True):
                 print(f"  {t['ticker']}: no suitable contract found")
         except Exception as e:
             if verbose:
-                print(f"  options fetch error on {r['ticket']['ticker']}: {type(e).__name__}: {e}")
+                print(f"  options fetch error on {t['ticker']}: {type(e).__name__}: {e}")
 
     tickets_for_alerts = [r["ticket"] for r in scored]
     try:

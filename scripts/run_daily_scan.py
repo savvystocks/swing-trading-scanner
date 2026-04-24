@@ -5,7 +5,7 @@ import traceback
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.scanner import run_scan, save_results
-from src.email_report import render_email, send_email
+from src.email_report import render_email, render_options_email, send_email
 
 
 def main():
@@ -29,21 +29,37 @@ def main():
         "tickets": [r["ticket"] for r in scan["results"]],
     }
 
-    html = render_email(scan_for_email)
+    html_main = render_email(scan_for_email)
+    html_options = render_options_email(scan_for_email)
+
+    results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "results")
+    os.makedirs(results_dir, exist_ok=True)
 
     if os.environ.get("SKIP_EMAIL"):
         print("SKIP_EMAIL set — not sending")
-        out = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "results", f"email_{scan['scan_date']}.html")
-        with open(out, "w", encoding="utf-8") as f:
-            f.write(html)
-        print(f"Wrote {out}")
+        main_path = os.path.join(results_dir, f"email_{scan['scan_date']}.html")
+        opts_path = os.path.join(results_dir, f"email_options_{scan['scan_date']}.html")
+        with open(main_path, "w", encoding="utf-8") as f:
+            f.write(html_main)
+        with open(opts_path, "w", encoding="utf-8") as f:
+            f.write(html_options)
+        print(f"Wrote {main_path}")
+        print(f"Wrote {opts_path}")
         return
 
     try:
-        send_email(html, scan["scan_date"])
-        print("Email sent")
+        send_email(html_main, scan["scan_date"], subject=f"Swing Scan {scan['scan_date']}")
+        print("Main scan email sent")
     except Exception as e:
-        print(f"Email send failed: {type(e).__name__}: {e}")
+        print(f"Main email send failed: {type(e).__name__}: {e}")
+        traceback.print_exc()
+        sys.exit(1)
+
+    try:
+        send_email(html_options, scan["scan_date"], subject=f"Options Plays {scan['scan_date']}")
+        print("Options email sent")
+    except Exception as e:
+        print(f"Options email send failed: {type(e).__name__}: {e}")
         traceback.print_exc()
         sys.exit(1)
 

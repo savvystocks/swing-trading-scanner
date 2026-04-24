@@ -25,6 +25,32 @@ def fetch_sp500():
             for s, n, sec in zip(df["Symbol"], df["Security"], df["GICS Sector"])]
 
 
+def fetch_sp400():
+    html = _fetch_html("https://en.wikipedia.org/wiki/List_of_S%26P_400_companies")
+    tables = pd.read_html(io.StringIO(html))
+    for t in tables:
+        cols = [str(c).strip() for c in t.columns]
+        if "Symbol" in cols and ("Security" in cols or "Company" in cols):
+            sym_col = "Symbol"
+            name_col = "Security" if "Security" in cols else "Company"
+            sector_col = next((c for c in cols if "GICS Sector" in c or c == "Sector"), None)
+            rows = []
+            for _, row in t.iterrows():
+                s = row.get(sym_col)
+                if pd.isna(s):
+                    continue
+                s = str(s).strip().replace(".", "-")
+                rows.append({
+                    "ticker": f"{s}.US",
+                    "name": str(row.get(name_col, "")),
+                    "sector": str(row.get(sector_col, "")) if sector_col else "",
+                    "index": "SP400",
+                })
+            if rows:
+                return rows
+    return []
+
+
 def fetch_russell2000():
     url = "https://www.ishares.com/us/products/239710/ishares-russell-2000-etf/1467271812596.ajax?fileType=csv&fileName=IWM_holdings&dataType=fund"
     r = requests.get(url, headers={"User-Agent": UA}, timeout=60)
@@ -93,6 +119,7 @@ def build_universe():
     universe = {}
     for loader, label in [
         (fetch_sp500, "S&P 500"),
+        (fetch_sp400, "S&P 400 MidCap"),
         (fetch_russell2000, "Russell 2000"),
         (fetch_ftse100, "FTSE 100"),
         (fetch_ftse250, "FTSE 250"),

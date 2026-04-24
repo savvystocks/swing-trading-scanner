@@ -568,6 +568,67 @@ OPTIONS_EMAIL_TEMPLATE = """<!DOCTYPE html>
     <div class="empty">No options plays passed filters today. Main scan still ran — check the companion email for stock setups.</div>
   {% endif %}
 
+  {% if paper and paper.summary %}
+    <h2 style="margin-top:32px; padding-top:18px; border-top:2px solid #eee;">Paper Trade Book</h2>
+    <div style="font-size:12px; color:#555; margin-bottom:12px;">
+      Hypothetical positions auto-opened from Hunter picks. Exit rules: -50% stop, +100% trim half, +200% trim to runner, +300% close, 21 DTE theta cliff, day before earnings, 50d SMA break.
+      &middot; <strong>Open</strong>: {{ paper.summary.open_count }}
+      &middot; <strong>Closed</strong>: {{ paper.summary.closed_count }}
+      &middot; <strong>Unrealized</strong>: <span style="color:{% if paper.summary.total_unrealized_pnl_usd >= 0 %}#0d7b34{% else %}#c94545{% endif %};">${{ "%+.0f"|format(paper.summary.total_unrealized_pnl_usd) }}</span>
+      &middot; <strong>Realized</strong>: <span style="color:{% if paper.summary.total_realized_pnl_usd >= 0 %}#0d7b34{% else %}#c94545{% endif %};">${{ "%+.0f"|format(paper.summary.total_realized_pnl_usd) }}</span>
+      &middot; <strong>Total P&amp;L</strong>: <span style="font-weight:700; color:{% if paper.summary.total_pnl_usd >= 0 %}#0d7b34{% else %}#c94545{% endif %};">${{ "%+.0f"|format(paper.summary.total_pnl_usd) }}</span>
+    </div>
+
+    {% if paper.events %}
+      <h3 style="font-size:13px; margin:14px 0 6px;">Today's Events</h3>
+      <table style="width:100%; border-collapse:collapse; font-size:11px;">
+        <thead><tr style="background:#f4f4f4;"><th align="left" style="padding:4px 8px;">Action</th><th align="left" style="padding:4px 8px;">Ticker</th><th align="left" style="padding:4px 8px;">Reason</th><th align="right" style="padding:4px 8px;">P&amp;L</th></tr></thead>
+        <tbody>
+        {% for ev in paper.events %}
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:4px 8px; font-weight:600; color:{% if ev.action == 'OPEN' %}#0052cc{% elif ev.action == 'CLOSE_ALL' %}{% if ev.pnl_pct and ev.pnl_pct > 0 %}#0d7b34{% else %}#c94545{% endif %}{% elif 'TRIM' in ev.action %}#e67e22{% else %}#888{% endif %};">{{ ev.action }}</td>
+            <td style="padding:4px 8px;">{{ ev.ticker }}</td>
+            <td style="padding:4px 8px; color:#555;">{{ ev.reason }}</td>
+            <td align="right" style="padding:4px 8px;">{% if ev.pnl_pct is not none %}{{ "%+.0f"|format(ev.pnl_pct) }}%{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+
+    {% if paper.positions %}
+      <h3 style="font-size:13px; margin:18px 0 6px;">Open Positions</h3>
+      <table style="width:100%; border-collapse:collapse; font-size:11px;">
+        <thead><tr style="background:#f4f4f4;">
+          <th align="left" style="padding:4px 8px;">Ticker</th>
+          <th align="right" style="padding:4px 8px;">Strike/Exp</th>
+          <th align="right" style="padding:4px 8px;">Spot</th>
+          <th align="right" style="padding:4px 8px;">Entry</th>
+          <th align="right" style="padding:4px 8px;">Mark</th>
+          <th align="right" style="padding:4px 8px;">P&amp;L %</th>
+          <th align="right" style="padding:4px 8px;">P&amp;L $</th>
+          <th align="right" style="padding:4px 8px;">Hunter</th>
+          <th align="left" style="padding:4px 8px;">Opened</th>
+        </tr></thead>
+        <tbody>
+        {% for p in paper.positions %}
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:4px 8px; font-weight:600;">{{ p.ticker }}</td>
+            <td align="right" style="padding:4px 8px;">{{ "%.0f"|format(p.contract.strike) }}C {{ p.contract.expiration }}</td>
+            <td align="right" style="padding:4px 8px;">{% if p.current_spot %}${{ "%.2f"|format(p.current_spot) }}{% else %}-{% endif %}</td>
+            <td align="right" style="padding:4px 8px;">${{ "%.2f"|format(p.entry_mid) }}</td>
+            <td align="right" style="padding:4px 8px;">${{ "%.2f"|format(p.current_mid) }}</td>
+            <td align="right" style="padding:4px 8px; font-weight:600; color:{% if p.current_pnl_pct >= 0 %}#0d7b34{% else %}#c94545{% endif %};">{{ "%+.0f"|format(p.current_pnl_pct) }}%</td>
+            <td align="right" style="padding:4px 8px; font-weight:600; color:{% if p.current_pnl_usd >= 0 %}#0d7b34{% else %}#c94545{% endif %};">${{ "%+.0f"|format(p.current_pnl_usd) }}</td>
+            <td align="right" style="padding:4px 8px; color:#8e44ad;">{{ p.hunter_snapshot.score }}</td>
+            <td style="padding:4px 8px; color:#555;">{{ p.opened_at }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  {% endif %}
+
   <div class="footer">swing-trading-scanner &middot; options companion &middot; Alpaca chain data</div>
 </div>
 </body>
@@ -649,6 +710,7 @@ def render_options_email(scan):
     priority_options = build_priority_options(tickets)
     regime = scan.get("vix_regime") or {}
     vix_val = regime.get("vix")
+    paper = scan.get("paper_trader") or {}
     tmpl = Template(OPTIONS_EMAIL_TEMPLATE)
     return tmpl.render(
         scan_date=scan["scan_date"],
@@ -656,6 +718,7 @@ def render_options_email(scan):
         regime=regime.get("regime", "unknown"),
         vix=round(vix_val, 2) if vix_val is not None else "n/a",
         priority_options=priority_options,
+        paper=paper,
     )
 
 

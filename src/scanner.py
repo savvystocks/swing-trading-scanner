@@ -30,6 +30,7 @@ from src.telegram import send_swing_alerts
 from src.lane_b import run_all_lane_b, compute_peer_pack_rotation, lane_b_signal_count
 from src.opportunity import opportunity_score, classify_lane
 from src.options_hunter import classify_hunters
+from src.paper_trader import run_daily_cycle as run_paper_trader_cycle
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 UNIVERSE_PATH = PROJECT_ROOT / "data" / "universe" / "universe.json"
@@ -334,6 +335,21 @@ def run_scan(universe_limit=None, verbose=True):
             if verbose:
                 print(f"  options fetch error on {t['ticker']}: {type(e).__name__}: {e}")
 
+    paper = None
+    try:
+        if verbose:
+            print(f"\nRunning paper trader daily cycle (mark-to-market, exit checks, new opens)...")
+        paper = run_paper_trader_cycle(hunter_picks, vix_pillar.get("regime", "unknown"))
+        if verbose:
+            s = paper["summary"]
+            print(f"  Paper: {s['open_count']} open, {s['closed_count']} closed total, unrealized ${s['total_unrealized_pnl_usd']:+.0f}, realized ${s['total_realized_pnl_usd']:+.0f}")
+            for ev in paper["events"]:
+                print(f"    {ev['action']:10s} {ev['ticker']:10s} {ev.get('reason','')}")
+    except Exception as e:
+        if verbose:
+            print(f"Paper trader cycle failed: {type(e).__name__}: {e}")
+            traceback.print_exc()
+
     tickets_for_alerts = [r["ticket"] for r in scored]
     try:
         sent = send_swing_alerts(tickets_for_alerts, min_tier=4, tier4_min_conviction=70)
@@ -368,6 +384,7 @@ def run_scan(universe_limit=None, verbose=True):
         "scored_total": len(scored),
         "api_calls": client.calls_made,
         "results": scored,
+        "paper_trader": paper,
     }
 
 

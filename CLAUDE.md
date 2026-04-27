@@ -1,9 +1,9 @@
 # Swing Trading Scanner — Project Memory
 
-A daily automated scanner that screens S&P 500 + Russell 2000 + FTSE 100 + FTSE 250 (2784 tickers) against Savvas's v3.1 quantitative swing trading system and emails the ranked results. Built April 2026.
+A daily automated scanner that screens S&P 500 + S&P 400 MidCap + Russell 2000 + FTSE 100 + FTSE 250 (3089 tickers) against Savvas's v3.1 quantitative swing trading system and emails the ranked results. Built April 2026.
 
 ## What it does
-Runs every weekday at 22:30 UTC via GitHub Actions. Pulls data from EODHD, computes all 7 pillars + 4 gates per ticker, scores into tiers 0-5, sends HTML email with per-pillar detail to savvastgeorgiou@gmail.com. Uses caching locally but CI runs fresh every day. Typical run: ~16 minutes, ~5200 API calls, 300-350 actionable candidates on a normal market day.
+Runs every weekday at 14:09 UTC via GitHub Actions (email arrives ~15:30 BST). Pulls data from EODHD, computes all 7 pillars + 4 gates per ticker, scores into tiers 0-5, sends an HTML Swing Scan email + a companion Priority Options Plays email to savvastgeorgiou@gmail.com. Uses caching locally but CI runs fresh every day. Typical run: ~21 minutes, ~5200 API calls, 300-350 actionable candidates on a normal market day.
 
 ## Repo
 - GitHub: https://github.com/savvystocks/swing-trading-scanner (private)
@@ -19,7 +19,7 @@ Runs every weekday at 22:30 UTC via GitHub Actions. Pulls data from EODHD, compu
 - `src/scanner.py` — main orchestrator with fast-filter → full-score pipeline
 - `src/email_report.py` — jinja2 HTML email template + SMTP send
 - `scripts/run_daily_scan.py` — entrypoint used by CI
-- `.github/workflows/daily-scan.yml` — cron 22:30 UTC Mon-Fri
+- `.github/workflows/daily-scan.yml` — cron 14:09 UTC Mon-Fri (email lands ~15:30 BST)
 - `spec/v3.1-spec.md` — current active spec
 - `spec/v3.0-original.md` — Savvas's original spec for reference
 - `data/universe/universe.json` — committed, rebuilt only on manual universe.py run
@@ -34,7 +34,7 @@ Runs every weekday at 22:30 UTC via GitHub Actions. Pulls data from EODHD, compu
 One ongoing cost: EODHD All-in-One £99.99/mo. Everything else (GitHub Actions, Gmail SMTP) is free. CI uses ~300 of 2000 free minutes per month. EODHD daily quota usage ~5,200 of 100,000 (5%).
 
 ## Schedule
-Cron fires at 13:30 UTC Monday-Friday (1 hour before US market open, during the LSE session). Email arrives in Savvas's inbox around 14:30 UK time (summer) / 13:30 (winter). Data is yesterday's EOD bars — running at 13:30 vs 22:30 UTC uses the same input, it's purely a delivery-time preference.
+Cron fires at 14:09 UTC Monday-Friday. Email arrives in Savvas's inbox around 15:30 BST (summer) / 14:30 GMT (winter). Data is yesterday's EOD bars — the time of day the cron fires is purely a delivery-time preference.
 
 ## Related projects
 Savvas is also building a hyper-growth small-cap research project in a separate folder. Separate codebase, separate scope — if a session switches to that folder, load its own CLAUDE.md and don't carry assumptions from this repo.
@@ -79,7 +79,7 @@ Savvas is not a coder. He gave me full coding control. He prefers plain text, cl
 - Gmail App Passwords UI returns "setting not available" when 2-Step Verification is not enabled yet. Enable 2SV first.
 
 ### Architecture decisions that paid off
-- Fast filter on Pillar 1 + Pillar 4 (OHLCV only) before hitting fundamentals endpoint cut the full-score calls from 2784 to ~824. One fundamentals call per fast-filter survivor, not per universe ticker. Huge API savings.
+- Fast filter on Pillar 1 + Pillar 4 (OHLCV only) before hitting fundamentals endpoint cuts the full-score calls from 3089 to ~900. One fundamentals call per fast-filter survivor, not per universe ticker. Huge API savings.
 - 12-hour cache on the EODHD client means local dev reruns are free. CI workspace is ephemeral so cache doesn't help there, but also doesn't hurt.
 - Per-ticker try/except in scanner loop means one broken ticker can't crash the whole scan.
 - GitHub Actions cron + upload-artifact gives a free history of every scan without needing a database.

@@ -15,10 +15,46 @@ def compute_drift(df, lookback_5d=5, lookback_10d=10):
     }
 
 
-def drift_score(drift, points_max=10.0):
+PRE_EVENT_KEYS = {
+    "earnings_bmo_tomorrow", "earnings_amc_today",
+    "earnings_bmo_with_beat_streak", "fda_pdufa_tomorrow",
+    "merger_cash_buyout", "major_contract_win",
+}
+
+POST_EVENT_KEYS = {
+    "definitive_agreement", "asset_sale", "merger", "fda_event",
+    "clinical_milestone", "private_placement", "covenant_relief",
+    "strategic_partnership", "contract_win", "activist_stake",
+    "insider_cluster", "buyback", "rebrand",
+}
+
+
+def drift_score(drift, signals=None, points_max=10.0):
     if not drift:
-        return {"points": 0.0, "label": "no drift data"}
+        return {"points": 0.0, "label": "no drift data", "extended": False}
     roc_5d = drift.get("roc_5d") or 0
+
+    is_pre_event = False
+    is_post_event = False
+    if signals:
+        for s in signals:
+            key = s.get("key", "")
+            if key in PRE_EVENT_KEYS:
+                is_pre_event = True
+            if key in POST_EVENT_KEYS:
+                is_post_event = True
+
+    treat_as_post = is_post_event and not is_pre_event
+
+    if treat_as_post and roc_5d >= 12:
+        points = -15.0
+        label = f"EXTENDED +{roc_5d:.1f}% post-event chase"
+        return {"points": points, "label": label, "roc_5d": roc_5d, "extended": True}
+    if treat_as_post and roc_5d >= 8:
+        points = -8.0
+        label = f"already moved +{roc_5d:.1f}% post-event"
+        return {"points": points, "label": label, "roc_5d": roc_5d, "extended": True}
+
     if roc_5d >= 8:
         points = points_max
         label = f"strong drift +{roc_5d:.1f}% 5d"
@@ -37,4 +73,4 @@ def drift_score(drift, points_max=10.0):
     else:
         points = -points_max * 0.3
         label = f"negative drift {roc_5d:+.1f}% 5d"
-    return {"points": round(points, 2), "label": label, "roc_5d": roc_5d}
+    return {"points": round(points, 2), "label": label, "roc_5d": roc_5d, "extended": False}

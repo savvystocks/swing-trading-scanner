@@ -29,6 +29,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .conf-HIGH { background:#0d7b34; color:#fff; }
   .conf-MEDIUM { background:#f0ad4e; color:#fff; }
   .conf-LOW { background:#999; color:#fff; }
+  .extended-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#c94545; color:#fff; letter-spacing:0.4px; }
   .score-box { background:#0052cc; color:#fff; padding:6px 12px; border-radius:6px; font-weight:700; font-size:14px; }
   .score-box.strong { background:#0d7b34; }
   .score-box.watch { background:#4a90e2; }
@@ -88,8 +89,8 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
         <div class="legend-row">Tone of last 7 days of headlines via keyword scoring. Positive = beat / approval / win / surge. Negative = miss / lawsuit / dilution / delay.</div>
       </div>
       <div class="legend-block">
-        <div class="legend-title">Pre-event Drift (max 10pts)</div>
-        <div class="legend-row">5-day price ROC into the catalyst. Stock drifting up = positive flow / smart money positioning. Drifting down = bearish.</div>
+        <div class="legend-title">Pre-event Drift (range -15 to +10pts)</div>
+        <div class="legend-row">5-day price ROC. For SCHEDULED events (earnings, FDA tomorrow): drift up = positive flow, +10pts. For POST-EVENT catalysts (8-K already filed): drift up &gt;8% = penalty (-8 to -15pts) and EXTENDED warning, since the move already happened.</div>
       </div>
       <div class="legend-block">
         <div class="legend-title">Historical Reaction (max 10pts)</div>
@@ -126,6 +127,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if c.sector %}<span class="sector-badge">{{ c.sector }}</span>{% endif %}
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
             <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
+            {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
           </div>
           <div class="score-box strong">
             {{ "%.0f"|format(c.score) }}
@@ -183,6 +185,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if c.sector %}<span class="sector-badge">{{ c.sector }}</span>{% endif %}
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
             <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
+            {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
           </div>
           <div class="score-box watch">
             {{ "%.0f"|format(c.score) }}

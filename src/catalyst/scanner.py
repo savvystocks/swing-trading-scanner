@@ -301,7 +301,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
     for r in enriched:
         data = r["data"]
         peer_data = peer_confirmation_score(r["ticker"], r.get("sector"), sector_map)
-        drift_pts = drift_score(data.get("drift"))
+        drift_pts = drift_score(data.get("drift"), signals=r["signals"])
         hist_pts = historical_score(data.get("hist_reaction"))
         fresh_pts = freshness_score(r["signals"])
 

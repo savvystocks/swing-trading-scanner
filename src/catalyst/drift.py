@@ -49,11 +49,20 @@ def drift_score(drift, signals=None, points_max=10.0):
     if treat_as_post and roc_5d >= 12:
         points = -15.0
         label = f"EXTENDED +{roc_5d:.1f}% post-event chase"
-        return {"points": points, "label": label, "roc_5d": roc_5d, "extended": True}
+        return {"points": points, "label": label, "roc_5d": roc_5d, "extended": True, "pre_priced": False}
     if treat_as_post and roc_5d >= 8:
         points = -8.0
         label = f"already moved +{roc_5d:.1f}% post-event"
-        return {"points": points, "label": label, "roc_5d": roc_5d, "extended": True}
+        return {"points": points, "label": label, "roc_5d": roc_5d, "extended": True, "pre_priced": False}
+
+    if is_pre_event and roc_5d >= 25:
+        points = -10.0
+        label = f"PRE-PRICED +{roc_5d:.1f}% (sell-the-news risk)"
+        return {"points": points, "label": label, "roc_5d": roc_5d, "extended": False, "pre_priced": True}
+    if is_pre_event and roc_5d >= 15:
+        points = -5.0
+        label = f"PRE-PRICED +{roc_5d:.1f}% (sell-the-news risk)"
+        return {"points": points, "label": label, "roc_5d": roc_5d, "extended": False, "pre_priced": True}
 
     if roc_5d >= 8:
         points = points_max
@@ -73,4 +82,4 @@ def drift_score(drift, signals=None, points_max=10.0):
     else:
         points = -points_max * 0.3
         label = f"negative drift {roc_5d:+.1f}% 5d"
-    return {"points": round(points, 2), "label": label, "roc_5d": roc_5d, "extended": False}
+    return {"points": round(points, 2), "label": label, "roc_5d": roc_5d, "extended": False, "pre_priced": False}

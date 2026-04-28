@@ -30,6 +30,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .conf-MEDIUM { background:#f0ad4e; color:#fff; }
   .conf-LOW { background:#999; color:#fff; }
   .extended-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#c94545; color:#fff; letter-spacing:0.4px; }
+  .priced-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#e67e22; color:#fff; letter-spacing:0.4px; }
   .score-box { background:#0052cc; color:#fff; padding:6px 12px; border-radius:6px; font-weight:700; font-size:14px; }
   .score-box.strong { background:#0d7b34; }
   .score-box.watch { background:#4a90e2; }
@@ -90,7 +91,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       </div>
       <div class="legend-block">
         <div class="legend-title">Pre-event Drift (range -15 to +10pts)</div>
-        <div class="legend-row">5-day price ROC. For SCHEDULED events (earnings, FDA tomorrow): drift up = positive flow, +10pts. For POST-EVENT catalysts (8-K already filed): drift up &gt;8% = penalty (-8 to -15pts) and EXTENDED warning, since the move already happened.</div>
+        <div class="legend-row">5-day price ROC. For SCHEDULED events with drift &lt;15% = positive flow, +10pts. Drift 15-25% = PRE-PRICED warning (-5pts, sell-the-news risk). Drift &gt;25% = -10pts. For POST-EVENT catalysts already filed: drift &gt;8% = EXTENDED warning, -8 to -15pts.</div>
       </div>
       <div class="legend-block">
         <div class="legend-title">Historical Reaction (max 10pts)</div>
@@ -128,6 +129,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
             <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
             {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
+            {% if c.components.drift.pre_priced %}<span class="priced-badge">PRE-PRICED &mdash; sell-the-news risk</span>{% endif %}
           </div>
           <div class="score-box strong">
             {{ "%.0f"|format(c.score) }}
@@ -186,6 +188,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
             <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
             {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
+            {% if c.components.drift.pre_priced %}<span class="priced-badge">PRE-PRICED &mdash; sell-the-news risk</span>{% endif %}
           </div>
           <div class="score-box watch">
             {{ "%.0f"|format(c.score) }}

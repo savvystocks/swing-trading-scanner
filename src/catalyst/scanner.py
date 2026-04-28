@@ -20,6 +20,9 @@ from src.catalyst.peers import peer_signals, peer_confirmation_score
 from src.catalyst.freshness import freshness_score
 from src.catalyst.llm_grader import grade_candidates, llm_score_to_points
 from src.catalyst.buy_signal import buy_signal
+from src.catalyst.tracker import (
+    snapshot_predictions, measure_outcomes, get_recent_stats,
+)
 
 
 def _normalize(t):
@@ -243,6 +246,20 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
     if verbose:
         print(f"=== Catalyst Scan v2 ({target_date or datetime.utcnow().date()}) ===")
+        print(f"Step 0/6: measure outcomes for prior predictions")
+    today = (target_date if isinstance(target_date, str) else (target_date or datetime.utcnow().date()).strftime("%Y-%m-%d"))
+    today_dt = datetime.strptime(today, "%Y-%m-%d").date()
+    measured_total = 0
+    for back in range(1, 8):
+        prior = (today_dt - timedelta(days=back)).strftime("%Y-%m-%d")
+        try:
+            measured, _ = measure_outcomes(client, prior)
+            measured_total += measured
+        except Exception as e:
+            if verbose:
+                print(f"  outcome measure failed for {prior}: {e}")
+    if verbose:
+        print(f"  measured outcomes for {measured_total} prior predictions")
         print(f"Step 1/6: gather catalyst signals")
 
     catalysts = gather_catalysts(client, edgar, target_date=target_date)
@@ -380,12 +397,24 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         from collections import Counter
         buckets = Counter(s.get("bucket") for s in final_scored)
         print(f"  STRONG: {buckets.get('STRONG',0)}  WATCH: {buckets.get('WATCH',0)}  SPEC: {buckets.get('SPECULATIVE',0)}")
+
+    scan_date_str = (target_date if isinstance(target_date, str) else (target_date or datetime.utcnow().date()).strftime("%Y-%m-%d"))
+    snap_count, _ = snapshot_predictions(scan_date_str, final_scored)
+    if verbose:
+        print(f"  saved {snap_count} predictions to tracker")
+
+    tracker_stats = get_recent_stats(days=30)
+    if verbose and tracker_stats and tracker_stats.get("BUY"):
+        b = tracker_stats["BUY"]
+        print(f"  tracker BUY 30d: n={b['n']} hit_t1={b['hit_t1_pct']}% avg_high={b['avg_next_high_pct']}%")
+    if verbose:
         print(f"Step 6/6: done. EODHD={client.calls_made}  EDGAR={edgar.calls_made}")
 
     candidates = [s for s in final_scored if s.get("bucket") in ("STRONG", "WATCH")]
 
     return {
-        "scan_date": (target_date if isinstance(target_date, str) else (target_date or datetime.utcnow().date()).strftime("%Y-%m-%d")),
+        "scan_date": scan_date_str,
+        "tracker_stats": tracker_stats,
         "candidates_total": len(per_ticker),
         "enriched_total": len(enriched),
         "scored_total": len(final_scored),

@@ -73,8 +73,34 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
   <div class="intro">
     <strong>How to use this email.</strong> Each card shows a BUY / WATCH / SKIP signal with a probability of next-day positive move, plus an entry / stop / target ladder (T1 = lower expected, T2 = higher expected). Multi-source score combines catalyst tier, liquidity, news, drift, history, freshness, peers, and LLM read of the filing. Buy at today's close, sell into tomorrow's gap.
-    <br><br><em style="color:#866;">Probability disclaimer: heuristic from catalyst-type base rates + quality factors, NOT backtested. Use for relative ranking and sizing, not as literal hit-rate.</em>
+    <br><br><em style="color:#866;">Probability disclaimer: heuristic from catalyst-type base rates + quality factors, NOT backtested. Use for relative ranking and sizing, not as literal hit-rate. Real measured stats below build up as the tracker runs.</em>
   </div>
+
+  {% if tracker_stats and tracker_stats.BUY and tracker_stats.BUY.n > 0 %}
+  <div class="legend" style="background:#f0fdf4; border-color:#bbf7d0;">
+    <h3 style="color:#166534;">Real-money tracker (last {{ tracker_stats.lookback_days }}d, n={{ tracker_stats.total_measured }})</h3>
+    <div class="legend-grid">
+      {% if tracker_stats.BUY %}
+      <div class="legend-block">
+        <div class="legend-title" style="color:#0d7b34;">BUY signal outcomes (n={{ tracker_stats.BUY.n }})</div>
+        <div class="legend-row"><strong>Hit T1:</strong> {{ tracker_stats.BUY.hit_t1_pct }}% &middot; <strong>Hit T2:</strong> {{ tracker_stats.BUY.hit_t2_pct }}% &middot; <strong>Hit stop:</strong> {{ tracker_stats.BUY.hit_stop_pct }}%</div>
+        <div class="legend-row"><strong>Gap up next day:</strong> {{ tracker_stats.BUY.gap_up_pct }}% &middot; <strong>Avg high:</strong> {{ "%+.2f"|format(tracker_stats.BUY.avg_next_high_pct) }}% &middot; <strong>Avg close:</strong> {{ "%+.2f"|format(tracker_stats.BUY.avg_next_close_pct) }}%</div>
+      </div>
+      {% endif %}
+      {% if tracker_stats.WATCH %}
+      <div class="legend-block">
+        <div class="legend-title" style="color:#0052cc;">WATCH signal outcomes (n={{ tracker_stats.WATCH.n }})</div>
+        <div class="legend-row"><strong>Hit T1:</strong> {{ tracker_stats.WATCH.hit_t1_pct }}% &middot; <strong>Hit T2:</strong> {{ tracker_stats.WATCH.hit_t2_pct }}% &middot; <strong>Hit stop:</strong> {{ tracker_stats.WATCH.hit_stop_pct }}%</div>
+        <div class="legend-row"><strong>Gap up next day:</strong> {{ tracker_stats.WATCH.gap_up_pct }}% &middot; <strong>Avg high:</strong> {{ "%+.2f"|format(tracker_stats.WATCH.avg_next_high_pct) }}% &middot; <strong>Avg close:</strong> {{ "%+.2f"|format(tracker_stats.WATCH.avg_next_close_pct) }}%</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="intro" style="background:#f0f7ff; border-color:#93c5fd;">
+    <strong>Tracker building up.</strong> Real-money outcome stats appear here once the scanner has accumulated measured next-day results from prior BUY/WATCH signals. Today's predictions are saved and will be measured tomorrow.
+  </div>
+  {% endif %}
 
   <div class="legend">
     <h3>Score components reference (each ticker is graded across all of these)</h3>
@@ -296,6 +322,7 @@ def render_catalyst_email(scan, max_strong=20, max_watch=20):
         llm_graded=scan.get("llm_graded", 0),
         eodhd_calls=scan.get("eodhd_calls", 0),
         edgar_calls=scan.get("edgar_calls", 0),
+        tracker_stats=scan.get("tracker_stats"),
         strong=strong,
         watch=watch,
     )

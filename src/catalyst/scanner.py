@@ -19,6 +19,7 @@ from src.catalyst.historical import historical_earnings_reaction, historical_sco
 from src.catalyst.peers import peer_signals, peer_confirmation_score
 from src.catalyst.freshness import freshness_score
 from src.catalyst.llm_grader import grade_candidates, llm_score_to_points
+from src.catalyst.buy_signal import buy_signal
 
 
 def _normalize(t):
@@ -363,6 +364,14 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         s["components"]["llm"] = llm_pts
         s["score"] = round(s["score"] + llm_pts["points"], 2)
         s["confidence"] = confidence_label(s["components"])
+        enriched_data = s.get("_enriched_data") or {}
+        s["buy_signal"] = buy_signal(
+            ticker_data={"price": s.get("price")},
+            components=s["components"],
+            df=enriched_data.get("df"),
+            catalyst_tier=s.get("catalyst_tier", "-"),
+            confidence=s.get("confidence", "MEDIUM"),
+        )
         s.pop("_enriched_data", None)
         final_scored.append(s)
 

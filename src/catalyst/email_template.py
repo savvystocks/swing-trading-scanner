@@ -31,6 +31,11 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .conf-LOW { background:#999; color:#fff; }
   .extended-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#c94545; color:#fff; letter-spacing:0.4px; }
   .priced-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#e67e22; color:#fff; letter-spacing:0.4px; }
+  .signal-box { display:flex; flex-direction:column; align-items:center; padding:8px 12px; border-radius:6px; margin:0 0 0 8px; min-width:90px; color:#fff; }
+  .signal-action { font-weight:700; font-size:14px; letter-spacing:0.6px; }
+  .signal-prob { font-size:10px; opacity:0.9; margin-top:2px; }
+  .trade-row { display:flex; flex-wrap:wrap; gap:14px; padding:8px 12px; background:#fafafa; border-radius:4px; margin-top:8px; font-size:11px; color:#444; }
+  .trade-row strong { color:#222; }
   .score-box { background:#0052cc; color:#fff; padding:6px 12px; border-radius:6px; font-weight:700; font-size:14px; }
   .score-box.strong { background:#0d7b34; }
   .score-box.watch { background:#4a90e2; }
@@ -67,7 +72,8 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   <div class="meta">Pre-close scan for tomorrow's overnight catalysts &middot; Multi-source scoring &middot; Universe: {{ candidates_total }} candidates &middot; Enriched: {{ enriched_total }} &middot; LLM-graded: {{ llm_graded }} &middot; STRONG: {{ strong|length }} &middot; WATCH: {{ watch|length }} &middot; EODHD: {{ eodhd_calls }} &middot; EDGAR: {{ edgar_calls }}</div>
 
   <div class="intro">
-    <strong>How to use this email.</strong> Each name has a multi-source score combining catalyst tier, liquidity setup, news sentiment, pre-event price drift, historical earnings reaction, catalyst freshness, sector peer confirmation, and LLM-read of the actual filing/news content. Confidence label (HIGH/MEDIUM/LOW) reflects how many sources independently corroborate the bullish setup. Buckets are percentile-ranked: top 5% = STRONG, top 5-15% = WATCH. Buy at today's close, sell into tomorrow's gap.
+    <strong>How to use this email.</strong> Each card shows a BUY / WATCH / SKIP signal with a probability of next-day positive move, plus an entry / stop / target ladder (T1 = lower expected, T2 = higher expected). Multi-source score combines catalyst tier, liquidity, news, drift, history, freshness, peers, and LLM read of the filing. Buy at today's close, sell into tomorrow's gap.
+    <br><br><em style="color:#866;">Probability disclaimer: heuristic from catalyst-type base rates + quality factors, NOT backtested. Use for relative ranking and sizing, not as literal hit-rate.</em>
   </div>
 
   <div class="legend">
@@ -131,9 +137,17 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
             {% if c.components.drift.pre_priced %}<span class="priced-badge">PRE-PRICED &mdash; sell-the-news risk</span>{% endif %}
           </div>
-          <div class="score-box strong">
-            {{ "%.0f"|format(c.score) }}
-            <div class="pctile">top {{ "%.0f"|format(100 - c.percentile) }}%</div>
+          <div style="display:flex; align-items:center;">
+            <div class="score-box strong">
+              {{ "%.0f"|format(c.score) }}
+              <div class="pctile">top {{ "%.0f"|format(100 - c.percentile) }}%</div>
+            </div>
+            {% if c.buy_signal %}
+            <div class="signal-box" style="background:{{ c.buy_signal.signal_color }};">
+              <div class="signal-action">{{ c.buy_signal.signal }}</div>
+              <div class="signal-prob">{{ c.buy_signal.probability_pct }}% prob</div>
+            </div>
+            {% endif %}
           </div>
         </div>
         <div class="price-row">
@@ -147,6 +161,15 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <strong>{{ cat.label }}</strong> &middot; {{ cat.details }}
           </div>
         {% endfor %}
+        {% if c.buy_signal and c.buy_signal.entry_price %}
+          <div class="trade-row">
+            <span>Entry <strong>${{ "%.2f"|format(c.buy_signal.entry_price) }}</strong></span>
+            {% if c.buy_signal.stop_price %}<span>Stop <strong>${{ "%.2f"|format(c.buy_signal.stop_price) }}</strong> ({{ "%.1f"|format(c.buy_signal.stop_pct) }}%)</span>{% endif %}
+            {% if c.buy_signal.target_1_price %}<span>T1 <strong>${{ "%.2f"|format(c.buy_signal.target_1_price) }}</strong> (+{{ "%.1f"|format(c.buy_signal.expected_move_low_pct) }}%)</span>{% endif %}
+            {% if c.buy_signal.target_2_price %}<span>T2 <strong>${{ "%.2f"|format(c.buy_signal.target_2_price) }}</strong> (+{{ "%.1f"|format(c.buy_signal.expected_move_high_pct) }}%)</span>{% endif %}
+            {% if c.buy_signal.atr_pct %}<span style="color:#888;">ATR {{ "%.1f"|format(c.buy_signal.atr_pct) }}%</span>{% endif %}
+          </div>
+        {% endif %}
         {% if c.components.llm.reasoning %}
           <div class="llm-box">
             <strong>LLM read:</strong> {{ c.components.llm.reasoning }}
@@ -190,9 +213,17 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
             {% if c.components.drift.pre_priced %}<span class="priced-badge">PRE-PRICED &mdash; sell-the-news risk</span>{% endif %}
           </div>
-          <div class="score-box watch">
-            {{ "%.0f"|format(c.score) }}
-            <div class="pctile">top {{ "%.0f"|format(100 - c.percentile) }}%</div>
+          <div style="display:flex; align-items:center;">
+            <div class="score-box watch">
+              {{ "%.0f"|format(c.score) }}
+              <div class="pctile">top {{ "%.0f"|format(100 - c.percentile) }}%</div>
+            </div>
+            {% if c.buy_signal %}
+            <div class="signal-box" style="background:{{ c.buy_signal.signal_color }};">
+              <div class="signal-action">{{ c.buy_signal.signal }}</div>
+              <div class="signal-prob">{{ c.buy_signal.probability_pct }}% prob</div>
+            </div>
+            {% endif %}
           </div>
         </div>
         <div class="price-row">
@@ -206,6 +237,14 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <strong>{{ cat.label }}</strong> &middot; {{ cat.details }}
           </div>
         {% endfor %}
+        {% if c.buy_signal and c.buy_signal.entry_price %}
+          <div class="trade-row">
+            <span>Entry <strong>${{ "%.2f"|format(c.buy_signal.entry_price) }}</strong></span>
+            {% if c.buy_signal.stop_price %}<span>Stop <strong>${{ "%.2f"|format(c.buy_signal.stop_price) }}</strong></span>{% endif %}
+            {% if c.buy_signal.target_1_price %}<span>T1 <strong>${{ "%.2f"|format(c.buy_signal.target_1_price) }}</strong></span>{% endif %}
+            {% if c.buy_signal.target_2_price %}<span>T2 <strong>${{ "%.2f"|format(c.buy_signal.target_2_price) }}</strong></span>{% endif %}
+          </div>
+        {% endif %}
         {% if c.components.llm.reasoning %}
           <div class="llm-box">
             <strong>LLM:</strong> {{ c.components.llm.reasoning }}

@@ -6,7 +6,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <style>
   body { font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif; background:#f4f4f4; margin:0; padding:20px; color:#222; }
-  .wrap { max-width:980px; margin:0 auto; background:#fff; padding:28px 32px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+  .wrap { max-width:1000px; margin:0 auto; background:#fff; padding:28px 32px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
   h1 { font-size:22px; margin:0 0 6px; }
   .meta { color:#666; font-size:13px; margin-bottom:18px; }
   .intro { background:#fffbe8; border-left:4px solid #f0d969; padding:12px 16px; border-radius:4px; margin:0 0 18px; font-size:12px; color:#444; line-height:1.5; }
@@ -25,19 +25,30 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .tier-B { background:#4a90e2; }
   .tier-C { background:#999; }
   .tier-D { background:#c94545; }
+  .conf-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; letter-spacing:0.4px; }
+  .conf-HIGH { background:#0d7b34; color:#fff; }
+  .conf-MEDIUM { background:#f0ad4e; color:#fff; }
+  .conf-LOW { background:#999; color:#fff; }
   .score-box { background:#0052cc; color:#fff; padding:6px 12px; border-radius:6px; font-weight:700; font-size:14px; }
   .score-box.strong { background:#0d7b34; }
   .score-box.watch { background:#4a90e2; }
+  .pctile { font-size:9px; color:rgba(255,255,255,0.85); }
   .sector-badge { display:inline-block; padding:2px 8px; border-radius:3px; font-size:10px; font-weight:600; background:#eef2f7; color:#384766; text-transform:uppercase; letter-spacing:0.3px; }
   .price-row { font-size:12px; color:#444; margin:6px 0 8px; }
   .price-row strong { color:#0052cc; font-size:13px; }
   .price-row span { margin-right:14px; }
   .catalyst-line { font-size:12px; margin:6px 0; padding:6px 10px; background:#f0f7ff; border-left:3px solid #4a90e2; border-radius:3px; }
   .catalyst-line strong { color:#0052cc; }
-  .factors-list { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
-  .factor-chip { font-size:10px; padding:2px 7px; border-radius:11px; background:#e8f5e9; color:#1a6e2c; border:1px solid #c8e6c9; }
-  .factor-chip.neg { background:#fdecea; color:#a02c2c; border-color:#f5b7b1; }
-  .factor-chip.neutral { background:#eef2f7; color:#555; border-color:#dce4ed; }
+  .breakdown { display:grid; grid-template-columns: repeat(3, 1fr); gap:6px 14px; margin-top:8px; padding:8px 10px; background:#fafafa; border-radius:4px; font-size:10px; }
+  .bd-item { display:flex; justify-content:space-between; }
+  .bd-label { color:#888; }
+  .bd-pts { font-weight:600; color:#333; font-variant-numeric:tabular-nums; }
+  .bd-pts.pos { color:#0d7b34; }
+  .bd-pts.neg { color:#c94545; }
+  .llm-box { margin-top:8px; padding:8px 10px; background:#f5f3ff; border-left:3px solid #8b5cf6; border-radius:3px; font-size:11px; color:#444; }
+  .llm-box strong { color:#5b21b6; }
+  .news-box { margin-top:8px; padding:6px 10px; background:#f9f9f9; border-radius:3px; font-size:10px; color:#666; }
+  .news-headline { padding:2px 0; }
   .source-row { font-size:10px; color:#888; margin-top:6px; }
   .legend { background:#f7f9fc; border:1px solid #e0e6ef; border-radius:8px; padding:14px 16px; margin:18px 0 22px; font-size:11px; }
   .legend h3 { margin:0 0 10px; font-size:13px; color:#384766; }
@@ -46,53 +57,66 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .legend-title { font-weight:700; color:#0052cc; font-size:11px; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.4px; }
   .legend-row { font-size:11px; color:#444; line-height:1.5; padding:2px 0; }
   .footer { margin-top:30px; font-size:11px; color:#999; text-align:center; }
-  table.cohorts { width:100%; border-collapse:collapse; font-size:11px; margin-top:8px; }
-  table.cohorts th { background:#f4f6fa; text-align:left; padding:6px 8px; border-bottom:1px solid #ddd; }
-  table.cohorts td { padding:5px 8px; border-bottom:1px solid #f0f0f0; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Catalyst Watchlist &mdash; {{ scan_date }}</h1>
-  <div class="meta">Pre-close scan for tomorrow's overnight catalysts &middot; Universe: {{ candidates_total }} candidates &middot; Enriched: {{ enriched_total }} &middot; Scored: {{ scored_total }} &middot; Passed >= {{ "%.1f"|format(score_cutoff) }}: {{ passed_cutoff }} &middot; EODHD: {{ eodhd_calls }} &middot; EDGAR: {{ edgar_calls }}</div>
+  <h1>Catalyst Watchlist v2 &mdash; {{ scan_date }}</h1>
+  <div class="meta">Pre-close scan for tomorrow's overnight catalysts &middot; Multi-source scoring &middot; Universe: {{ candidates_total }} candidates &middot; Enriched: {{ enriched_total }} &middot; LLM-graded: {{ llm_graded }} &middot; STRONG: {{ strong|length }} &middot; WATCH: {{ watch|length }} &middot; EODHD: {{ eodhd_calls }} &middot; EDGAR: {{ edgar_calls }}</div>
 
   <div class="intro">
-    <strong>How to use this email.</strong> Every name below has a known or filed catalyst expected to move the stock overnight or pre-market tomorrow. Buy at today's close (or in late session) to capture the gap. Score &ge; 8 = STRONG. Score 6-7.9 = WATCH (smaller size, confirmation buy). Tier S/A = highest-conviction catalyst type. Quality modifiers (green chips = positive, red = negative) tell you whether the surrounding setup supports the move.
+    <strong>How to use this email.</strong> Each name has a multi-source score combining catalyst tier, liquidity setup, news sentiment, pre-event price drift, historical earnings reaction, catalyst freshness, sector peer confirmation, and LLM-read of the actual filing/news content. Confidence label (HIGH/MEDIUM/LOW) reflects how many sources independently corroborate the bullish setup. Buckets are percentile-ranked: top 5% = STRONG, top 5-15% = WATCH. Buy at today's close, sell into tomorrow's gap.
   </div>
 
   <div class="legend">
-    <h3>Catalyst tier reference</h3>
+    <h3>Score components reference (each ticker is graded across all of these)</h3>
     <div class="legend-grid">
       <div class="legend-block">
-        <div class="legend-title"><span class="tier-badge tier-S">S</span> &nbsp; Highest-conviction catalysts</div>
-        <div class="legend-row">FDA PDUFA decision, cash buyout, earnings BMO with established beat streak, major contract win &gt; $100M.</div>
+        <div class="legend-title">Catalyst Quality (max ~40pts)</div>
+        <div class="legend-row">Primary catalyst tier × 8 + secondary stack at 25%. S = exceptional, A = strong, B = moderate, C = lower-prob, D = speculative.</div>
       </div>
       <div class="legend-block">
-        <div class="legend-title"><span class="tier-badge tier-A">A</span> &nbsp; High-probability event-driven</div>
-        <div class="legend-row">Earnings BMO tomorrow, asset purchase agreement, merger agreement, Phase 1/2/3 milestone, FDA event filed, material definitive agreement.</div>
+        <div class="legend-title">LLM Grade (max 30pts)</div>
+        <div class="legend-row">Claude reads the actual catalyst content + recent news, grades 0-10 for next-day bullish strength. Considers deal size, premium, dilution, surprise factor.</div>
       </div>
       <div class="legend-block">
-        <div class="legend-title"><span class="tier-badge tier-B">B</span> &nbsp; Moderate setups</div>
-        <div class="legend-row">Private placement, covenant relief, strategic partnership, contract or tender award, activist 13D stake.</div>
+        <div class="legend-title">Liquidity Setup (max 25pts)</div>
+        <div class="legend-row">Dollar volume, market cap sweet spot ($200M-$5B), trend vs 200dMA, institutional ownership, short interest squeeze fuel.</div>
       </div>
       <div class="legend-block">
-        <div class="legend-title"><span class="tier-badge tier-C">C</span> &nbsp; Lower-prob signals</div>
-        <div class="legend-row">Form 4 insider cluster, Lazar Capital cohort, crypto-treasury cohort, biotech binary cohort, prediction market cohort, buyback announcement.</div>
+        <div class="legend-title">News Sentiment (max 15pts)</div>
+        <div class="legend-row">Tone of last 7 days of headlines via keyword scoring. Positive = beat / approval / win / surge. Negative = miss / lawsuit / dilution / delay.</div>
       </div>
       <div class="legend-block">
-        <div class="legend-title"><span class="tier-badge tier-D">D</span> &nbsp; Speculative cohort-only</div>
-        <div class="legend-row">Cannabis basket, AI rebrand cohort, name change, small-cap China ADR. Trade only when paired with another higher-tier signal.</div>
+        <div class="legend-title">Pre-event Drift (max 10pts)</div>
+        <div class="legend-row">5-day price ROC into the catalyst. Stock drifting up = positive flow / smart money positioning. Drifting down = bearish.</div>
       </div>
       <div class="legend-block">
-        <div class="legend-title">Quality modifiers (cap &plusmn;3)</div>
-        <div class="legend-row">Liquidity (&plusmn;2), mcap sweet-spot (&plusmn;1), trend vs 200dMA (&plusmn;1), institutional held (&plusmn;0.5), short interest 15-30% (&plusmn;1), going concern (&minus;2), recent dilution (&minus;1), sector tailwind (+0.5), multi-cohort stack (+1).</div>
+        <div class="legend-title">Historical Reaction (max 10pts)</div>
+        <div class="legend-row">For earnings catalysts: median next-day move of last 4 earnings reports. Companies with consistent positive reactions are more reliable.</div>
+      </div>
+      <div class="legend-block">
+        <div class="legend-title">Catalyst Freshness (max 5pts)</div>
+        <div class="legend-row">Hours since the 8-K was filed. Fresh = more alpha left. Older filings may have already been priced in.</div>
+      </div>
+      <div class="legend-block">
+        <div class="legend-title">Peer Confirmation (max 5pts)</div>
+        <div class="legend-row">3+ peers in same sector also have catalysts = sector wave. Confirms the play is not isolated noise.</div>
+      </div>
+      <div class="legend-block">
+        <div class="legend-title">Confidence label</div>
+        <div class="legend-row"><strong>HIGH</strong> = 5+ components positive. <strong>MEDIUM</strong> = 3-4. <strong>LOW</strong> = 1-2. The label indicates how many independent sources agree on the bullish call.</div>
+      </div>
+      <div class="legend-block">
+        <div class="legend-title">Red Flags (deductions)</div>
+        <div class="legend-row">Going-concern language (-8), recent S-3 shelf / dilution (-4). Names with red flags can still score if other signals are strong, but will be downgraded.</div>
       </div>
     </div>
   </div>
 
   {% if strong %}
-    <h2 style="color:#0d7b34;">STRONG &mdash; Score &ge; 8 ({{ strong|length }})</h2>
-    <div style="font-size:11px; color:#666; margin:-4px 0 12px;">High-conviction catalyst + clean quality setup. Position at today's close.</div>
+    <h2 style="color:#0d7b34;">STRONG &mdash; Top 5% by multi-source score ({{ strong|length }})</h2>
+    <div style="font-size:11px; color:#666; margin:-4px 0 12px;">Highest conviction. Multiple independent signals confirming the setup. Position at today's close.</div>
     {% for c in strong %}
       <div class="card strong">
         <div class="card-head">
@@ -101,8 +125,12 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <span class="name">{{ (c.name or c.company)[:50] }}</span>
             {% if c.sector %}<span class="sector-badge">{{ c.sector }}</span>{% endif %}
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
+            <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
           </div>
-          <div class="score-box strong">{{ "%.1f"|format(c.score) }}/10</div>
+          <div class="score-box strong">
+            {{ "%.0f"|format(c.score) }}
+            <div class="pctile">top {{ "%.0f"|format(100 - c.percentile) }}%</div>
+          </div>
         </div>
         <div class="price-row">
           <span>Price <strong>${{ "%.2f"|format(c.price) if c.price else "n/a" }}</strong></span>
@@ -110,26 +138,42 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
           {% if c.dollar_volume_20d %}<span>$Vol ${{ "%.1f"|format(c.dollar_volume_20d/1e6) }}M</span>{% endif %}
           {% if c.short_pct_float %}<span>SI {{ "%.0f"|format(c.short_pct_float) }}%</span>{% endif %}
         </div>
-        {% for cat in c.catalysts %}
+        {% for cat in c.catalysts[:3] %}
           <div class="catalyst-line">
             <strong>{{ cat.label }}</strong> &middot; {{ cat.details }}
           </div>
         {% endfor %}
-        <div class="factors-list">
-          {% for f in c.factors %}
-            <span class="factor-chip {% if f.points < 0 %}neg{% elif f.points == 0 %}neutral{% endif %}">{{ "%+.1f"|format(f.points) }} {{ f.label }}</span>
-          {% endfor %}
+        {% if c.components.llm.reasoning %}
+          <div class="llm-box">
+            <strong>LLM read:</strong> {{ c.components.llm.reasoning }}
+            {% if c.components.llm.key_signal %}<br><strong>Key signal:</strong> {{ c.components.llm.key_signal }}{% endif %}
+          </div>
+        {% endif %}
+        <div class="breakdown">
+          <div class="bd-item"><span class="bd-label">Catalyst tier</span><span class="bd-pts pos">+{{ "%.0f"|format(c.components.catalyst_quality.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">LLM grade</span><span class="bd-pts {% if c.components.llm.points > 0 %}pos{% elif c.components.llm.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.llm.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Liquidity</span><span class="bd-pts {% if c.components.liquidity_setup.points > 0 %}pos{% elif c.components.liquidity_setup.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.liquidity_setup.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">News</span><span class="bd-pts {% if c.components.news.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.news.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Drift 5d</span><span class="bd-pts {% if c.components.drift.points > 0 %}pos{% elif c.components.drift.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.drift.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">History</span><span class="bd-pts {% if c.components.historical.points > 0 %}pos{% elif c.components.historical.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.historical.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Freshness</span><span class="bd-pts {% if c.components.freshness.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.freshness.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Peers</span><span class="bd-pts {% if c.components.peer.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.peer.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Red flags</span><span class="bd-pts {% if c.components.red_flags.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.red_flags.points) }}</span></div>
         </div>
-        {% if c.sources %}
-          <div class="source-row">Sources: {{ c.sources|unique|join(', ') }}</div>
+        {% if c.news and c.news.headlines %}
+          <div class="news-box">
+            {% for h in c.news.headlines[:3] %}
+              <div class="news-headline">[{{ h.date }}] {{ h.title }}</div>
+            {% endfor %}
+          </div>
         {% endif %}
       </div>
     {% endfor %}
   {% endif %}
 
   {% if watch %}
-    <h2 style="color:#4a90e2;">WATCH &mdash; Score 6.0 - 7.9 ({{ watch|length }})</h2>
-    <div style="font-size:11px; color:#666; margin:-4px 0 12px;">Catalyst present but quality setup mixed. Smaller size, wait for confirmation move on open.</div>
+    <h2 style="color:#4a90e2;">WATCH &mdash; Top 5-15% by multi-source score ({{ watch|length }})</h2>
+    <div style="font-size:11px; color:#666; margin:-4px 0 12px;">Solid setup with fewer corroborating signals. Smaller size, wait for confirmation move on open.</div>
     {% for c in watch %}
       <div class="card watch">
         <div class="card-head">
@@ -138,8 +182,12 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <span class="name">{{ (c.name or c.company)[:50] }}</span>
             {% if c.sector %}<span class="sector-badge">{{ c.sector }}</span>{% endif %}
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
+            <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
           </div>
-          <div class="score-box watch">{{ "%.1f"|format(c.score) }}/10</div>
+          <div class="score-box watch">
+            {{ "%.0f"|format(c.score) }}
+            <div class="pctile">top {{ "%.0f"|format(100 - c.percentile) }}%</div>
+          </div>
         </div>
         <div class="price-row">
           <span>Price <strong>${{ "%.2f"|format(c.price) if c.price else "n/a" }}</strong></span>
@@ -147,41 +195,49 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
           {% if c.dollar_volume_20d %}<span>$Vol ${{ "%.1f"|format(c.dollar_volume_20d/1e6) }}M</span>{% endif %}
           {% if c.short_pct_float %}<span>SI {{ "%.0f"|format(c.short_pct_float) }}%</span>{% endif %}
         </div>
-        {% for cat in c.catalysts %}
+        {% for cat in c.catalysts[:2] %}
           <div class="catalyst-line">
             <strong>{{ cat.label }}</strong> &middot; {{ cat.details }}
           </div>
         {% endfor %}
-        <div class="factors-list">
-          {% for f in c.factors %}
-            <span class="factor-chip {% if f.points < 0 %}neg{% elif f.points == 0 %}neutral{% endif %}">{{ "%+.1f"|format(f.points) }} {{ f.label }}</span>
-          {% endfor %}
-        </div>
-        {% if c.sources %}
-          <div class="source-row">Sources: {{ c.sources|unique|join(', ') }}</div>
+        {% if c.components.llm.reasoning %}
+          <div class="llm-box">
+            <strong>LLM:</strong> {{ c.components.llm.reasoning }}
+          </div>
         {% endif %}
+        <div class="breakdown">
+          <div class="bd-item"><span class="bd-label">Catalyst</span><span class="bd-pts pos">+{{ "%.0f"|format(c.components.catalyst_quality.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">LLM</span><span class="bd-pts {% if c.components.llm.points > 0 %}pos{% endif %}">{{ "%+.0f"|format(c.components.llm.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Liquidity</span><span class="bd-pts {% if c.components.liquidity_setup.points > 0 %}pos{% elif c.components.liquidity_setup.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.liquidity_setup.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">News</span><span class="bd-pts {% if c.components.news.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.news.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Drift</span><span class="bd-pts {% if c.components.drift.points > 0 %}pos{% elif c.components.drift.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.drift.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">History</span><span class="bd-pts {% if c.components.historical.points > 0 %}pos{% elif c.components.historical.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.historical.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Fresh</span><span class="bd-pts {% if c.components.freshness.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.freshness.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Peers</span><span class="bd-pts {% if c.components.peer.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.peer.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Red flags</span><span class="bd-pts {% if c.components.red_flags.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.red_flags.points) }}</span></div>
+        </div>
       </div>
     {% endfor %}
   {% endif %}
 
   {% if not strong and not watch %}
-    <div class="empty">No catalysts scored above {{ "%.1f"|format(score_cutoff) }} today. {{ scored_total }} candidates evaluated. Check back tomorrow.</div>
+    <div class="empty">No catalysts ranked above the percentile thresholds today. {{ scored_total }} candidates evaluated.</div>
   {% endif %}
 
-  <div class="footer">catalyst-watchlist &middot; pre-close scan &middot; aim: capture overnight gap on tomorrow's catalyst</div>
+  <div class="footer">catalyst-watchlist v2 &middot; multi-source scoring &middot; LLM-read of actual filings &middot; pre-close scan</div>
 </div>
 </body>
 </html>"""
 
 
-def render_catalyst_email(scan, max_strong=30, max_watch=30):
+def render_catalyst_email(scan, max_strong=20, max_watch=20):
     candidates = scan.get("candidates", [])
     strong = sorted(
-        [c for c in candidates if c["bucket"] == "STRONG"],
+        [c for c in candidates if c.get("bucket") == "STRONG"],
         key=lambda c: c["score"], reverse=True,
     )[:max_strong]
     watch = sorted(
-        [c for c in candidates if c["bucket"] == "WATCH"],
+        [c for c in candidates if c.get("bucket") == "WATCH"],
         key=lambda c: c["score"], reverse=True,
     )[:max_watch]
 
@@ -192,7 +248,7 @@ def render_catalyst_email(scan, max_strong=30, max_watch=30):
         enriched_total=scan.get("enriched_total", 0),
         scored_total=scan.get("scored_total", 0),
         passed_cutoff=scan.get("passed_cutoff", 0),
-        score_cutoff=scan.get("score_cutoff", 6.0),
+        llm_graded=scan.get("llm_graded", 0),
         eodhd_calls=scan.get("eodhd_calls", 0),
         edgar_calls=scan.get("edgar_calls", 0),
         strong=strong,

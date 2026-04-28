@@ -7,8 +7,8 @@ on:
         description: "Override target date (YYYY-MM-DD). Leave blank for today."
         required: false
         default: ""
-      cutoff:
-        description: "Score cutoff for email (default 6.0)"
+      llm_max:
+        description: "Max tickers to LLM-grade (default 50, set 0 to skip)"
         required: false
         default: ""
   schedule:
@@ -30,8 +30,9 @@ jobs:
           EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CATALYST_DATE: ${{ inputs.target_date }}
-          CATALYST_CUTOFF: ${{ inputs.cutoff }}
+          CATALYST_LLM_MAX: ${{ inputs.llm_max }}
         run: python scripts/run_catalyst_scan.py
       - name: Upload scan result
         if: always()

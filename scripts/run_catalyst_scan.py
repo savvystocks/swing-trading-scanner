@@ -12,12 +12,12 @@ from src.email_report import send_email
 
 def main():
     target_date = os.environ.get("CATALYST_DATE") or None
-    cutoff_env = os.environ.get("CATALYST_CUTOFF", "").strip()
-    cutoff = float(cutoff_env) if cutoff_env else 6.0
+    llm_max_env = os.environ.get("CATALYST_LLM_MAX", "").strip()
+    llm_max = int(llm_max_env) if llm_max_env.isdigit() else 50
 
-    print(f"Starting catalyst scan (target_date={target_date}, cutoff={cutoff})")
+    print(f"Starting catalyst scan v2 (target_date={target_date}, llm_max={llm_max})")
 
-    scan = run_catalyst_scan(target_date=target_date, score_cutoff=cutoff)
+    scan = run_catalyst_scan(target_date=target_date, llm_max_grade=llm_max)
 
     results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "results")
     os.makedirs(results_dir, exist_ok=True)

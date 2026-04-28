@@ -1,3 +1,4 @@
+import os
 import time
 import traceback
 from datetime import datetime, timedelta
@@ -9,19 +10,21 @@ from src.catalyst.edgar import (
 )
 from src.catalyst.calendar import earnings_signals_for_tomorrow
 from src.catalyst.cohorts import cohort_signals
-from src.catalyst.scoring import score_ticker, max_possible_score, CATALYST_TIERS
+from src.catalyst.scoring import (
+    score_ticker, max_possible_base, assign_buckets, CATALYST_TIERS,
+)
+from src.catalyst.news import news_score, fetch_recent_news
+from src.catalyst.drift import compute_drift, drift_score
+from src.catalyst.historical import historical_earnings_reaction, historical_score
+from src.catalyst.peers import peer_signals, peer_confirmation_score
+from src.catalyst.freshness import freshness_score
+from src.catalyst.llm_grader import grade_candidates, llm_score_to_points
 
 
 def _normalize(t):
     if "." in t:
         return t.split(".")[0]
     return t
-
-
-def _suffix_for(ticker_short, eodhd_universe_lookup=None):
-    if eodhd_universe_lookup and ticker_short in eodhd_universe_lookup:
-        return eodhd_universe_lookup[ticker_short]
-    return f"{ticker_short}.US"
 
 
 def gather_catalysts(client, edgar, target_date=None):
@@ -97,7 +100,7 @@ def build_signals_per_ticker(catalysts):
             out[ts]["company"] = info.get("company", "")
         out[ts]["signals"].append({
             "key": "activist_stake",
-            "details": f"13D filing {info['filings'][0].get('date')}",
+            "details": f"13D filed {info['filings'][0].get('date')}",
         })
         out[ts]["sources"].append("edgar_13d")
 
@@ -157,42 +160,7 @@ def _detect_recent_shelf(fundamentals):
     return False
 
 
-def _detect_beat_streak(fundamentals, min_streak=3, min_surprise=2.0):
-    if not fundamentals:
-        return False
-    earnings = fundamentals.get("Earnings") or {}
-    history = earnings.get("History") or {}
-    if not history:
-        return False
-    rows = []
-    for date, row in history.items():
-        try:
-            d = datetime.strptime(date, "%Y-%m-%d").date()
-        except Exception:
-            continue
-        sp = row.get("surprisePercent")
-        if sp is None:
-            continue
-        try:
-            sp = float(sp)
-        except Exception:
-            continue
-        rows.append((d, sp))
-    if not rows:
-        return False
-    rows.sort(reverse=True)
-    streak = 0
-    for d, sp in rows[:8]:
-        if sp >= min_surprise:
-            streak += 1
-            if streak >= min_streak:
-                return True
-        else:
-            break
-    return False
-
-
-def enrich_ticker(client, ticker_short, signals, suffix_hint=None):
+def enrich_ticker(client, ticker_short, signals, suffix_hint=None, fetch_news=False):
     candidates = []
     if suffix_hint:
         candidates.append(suffix_hint)
@@ -237,16 +205,12 @@ def enrich_ticker(client, ticker_short, signals, suffix_hint=None):
     if "going concern" in desc_lower or "substantial doubt" in desc_lower:
         going_concern = True
 
-    cohort_count = sum(1 for s in signals if s.get("key", "").startswith("cohort_"))
-    has_fresh_filing = any(
-        s.get("key", "") in ("definitive_agreement", "private_placement", "merger", "asset_sale",
-                              "covenant_relief", "fda_event", "clinical_milestone", "strategic_partnership",
-                              "contract_win", "buyback")
-        for s in signals
-    )
+    drift = compute_drift(df)
+    hist_reaction = historical_earnings_reaction(fund, df)
 
-    has_earnings_signal = any(s.get("key", "").startswith("earnings_") for s in signals)
-    beat_streak = _detect_beat_streak(fund) if has_earnings_signal else False
+    news_data = None
+    if fetch_news:
+        news_data = news_score(client, ticker_short, eodhd_ticker)
 
     return {
         "ticker": ticker_short,
@@ -263,31 +227,22 @@ def enrich_ticker(client, ticker_short, signals, suffix_hint=None):
         "above_200dma": _detect_above_200dma(df),
         "going_concern": going_concern,
         "recent_shelf": _detect_recent_shelf(fund),
-        "sector_tailwind": False,
-        "cohort_stack": cohort_count >= 2 or (cohort_count >= 1 and has_fresh_filing),
-        "beat_streak": beat_streak,
+        "drift": drift,
+        "hist_reaction": hist_reaction,
+        "news": news_data,
+        "df": df,
+        "fundamentals": fund,
     }
 
 
-def apply_sector_tailwind(scored, sector_perf):
-    perf_map = {}
-    for s in sector_perf or []:
-        if s.get("ret_5d") and s["ret_5d"] >= 2.0:
-            perf_map[s["sector"]] = s["ret_5d"]
-    for r in scored:
-        sector = r.get("sector")
-        if sector and sector in perf_map:
-            r["data"]["sector_tailwind"] = True
-            r["sector_5d"] = perf_map[sector]
-
-
-def run_catalyst_scan(target_date=None, score_cutoff=6.0, verbose=True):
+def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
+                       news_max_fetch=150, llm_max_grade=50, min_base_pts=2.0, verbose=True):
     client = EODHDClient()
     edgar = EDGARClient()
 
     if verbose:
-        print(f"=== Catalyst Scan ({target_date or datetime.utcnow().date()}) ===")
-        print(f"Step 1/4: gather catalyst signals")
+        print(f"=== Catalyst Scan v2 ({target_date or datetime.utcnow().date()}) ===")
+        print(f"Step 1/6: gather catalyst signals")
 
     catalysts = gather_catalysts(client, edgar, target_date=target_date)
     per_ticker = build_signals_per_ticker(catalysts)
@@ -296,11 +251,11 @@ def run_catalyst_scan(target_date=None, score_cutoff=6.0, verbose=True):
 
     pre_filtered = {
         t: info for t, info in per_ticker.items()
-        if max_possible_score(info["signals"]) >= score_cutoff
+        if max_possible_base(info["signals"]) >= min_base_pts
     }
     if verbose:
-        print(f"  passing max-possible-score >= {score_cutoff}: {len(pre_filtered)}")
-        print(f"Step 2/4: enrich {len(pre_filtered)} unique tickers with quality data")
+        print(f"  passing min base catalyst >= {min_base_pts}: {len(pre_filtered)}")
+        print(f"Step 2/6: enrich {len(pre_filtered)} tickers (OHLCV + fundamentals)")
     per_ticker = pre_filtered
 
     enriched = []
@@ -335,52 +290,102 @@ def run_catalyst_scan(target_date=None, score_cutoff=6.0, verbose=True):
 
     if verbose:
         print(f"  enriched: {len(enriched)}, skipped: {skipped}")
-        print(f"Step 3/4: score and rank")
+        print(f"Step 3/6: initial score (no news, no LLM yet)")
 
-    try:
-        from src.sectors import fetch_sector_performance
-        spy_df = to_dataframe(client.ohlcv("SPY.US", from_date=(datetime.utcnow().date() - timedelta(days=200)).strftime("%Y-%m-%d")))
-        sector_perf = fetch_sector_performance(client, spy_df, (datetime.utcnow().date() - timedelta(days=200)).strftime("%Y-%m-%d"))
-    except Exception as e:
-        if verbose:
-            print(f"  sector performance unavailable: {e}")
-        sector_perf = []
+    sector_map = peer_signals([
+        {"ticker": r["ticker"], "sector": r["sector"], "catalysts": r["signals"]}
+        for r in enriched
+    ])
 
-    apply_sector_tailwind(enriched, sector_perf)
-
-    scored = []
+    pre_scored = []
     for r in enriched:
-        s = score_ticker(r["ticker"], r["signals"], r["data"])
+        data = r["data"]
+        peer_data = peer_confirmation_score(r["ticker"], r.get("sector"), sector_map)
+        drift_pts = drift_score(data.get("drift"))
+        hist_pts = historical_score(data.get("hist_reaction"))
+        fresh_pts = freshness_score(r["signals"])
+
+        s = score_ticker(
+            r["ticker"], r["signals"], data,
+            news_data=None,
+            drift_data=drift_pts,
+            historical_data=hist_pts,
+            freshness_data=fresh_pts,
+            peer_data=peer_data,
+            llm_data=None,
+        )
         s["company"] = r["company"]
         s["name"] = r.get("name")
         s["sector"] = r.get("sector")
-        s["price"] = r["data"].get("price")
-        s["market_cap"] = r["data"].get("market_cap")
-        s["dollar_volume_20d"] = r["data"].get("dollar_volume_20d")
-        s["short_pct_float"] = r["data"].get("short_pct_float")
+        s["price"] = data.get("price")
+        s["market_cap"] = data.get("market_cap")
+        s["dollar_volume_20d"] = data.get("dollar_volume_20d")
+        s["short_pct_float"] = data.get("short_pct_float")
         s["sources"] = r.get("sources", [])
-        s["eodhd_ticker"] = r["data"].get("eodhd_ticker")
-        scored.append(s)
+        s["eodhd_ticker"] = data.get("eodhd_ticker")
+        s["news"] = None
+        s["_enriched_data"] = data
+        s["base_points"] = s["components"]["catalyst_quality"]["points"]
+        s["modifier_points"] = sum(
+            s["components"][k].get("points", 0)
+            for k in ("liquidity_setup", "drift", "historical", "freshness", "peer")
+        )
+        pre_scored.append(s)
 
-    scored.sort(key=lambda x: x["score"], reverse=True)
+    pre_scored.sort(key=lambda x: x["score"], reverse=True)
+    if verbose:
+        print(f"  pre-scored: {len(pre_scored)}")
+        print(f"Step 4/6: fetch news for top {min(news_max_fetch, len(pre_scored))} candidates")
 
-    cut = [s for s in scored if s["score"] >= score_cutoff]
+    top_for_news = pre_scored[:news_max_fetch]
+    for i, s in enumerate(top_for_news):
+        if verbose and i > 0 and i % 30 == 0:
+            print(f"  [news {i}/{len(top_for_news)}]")
+        try:
+            news_data = news_score(client, s["ticker"], s.get("eodhd_ticker"))
+            s["news"] = news_data
+            s["components"]["news"] = news_data
+            s["score"] = round(s["score"] + news_data["points"], 2)
+        except Exception as e:
+            if verbose:
+                print(f"  news fetch failed for {s['ticker']}: {type(e).__name__}")
+
+    if verbose:
+        print(f"Step 5/6: LLM grading top {llm_max_grade} candidates")
+
+    llm_grades = grade_candidates(pre_scored, max_grade=llm_max_grade, verbose=verbose)
+
+    final_scored = []
+    from src.catalyst.scoring import confidence_label
+    for s in pre_scored:
+        grade = llm_grades.get(s["ticker"])
+        llm_pts = llm_score_to_points(grade) if grade else {"points": 0.0, "label": "not LLM-graded"}
+        s["components"]["llm"] = llm_pts
+        s["score"] = round(s["score"] + llm_pts["points"], 2)
+        s["confidence"] = confidence_label(s["components"])
+        s.pop("_enriched_data", None)
+        final_scored.append(s)
+
+    final_scored = assign_buckets(final_scored, top_pct_strong=top_pct_strong, top_pct_watch=top_pct_watch)
     if verbose:
         from collections import Counter
-        buckets = Counter(s["bucket"] for s in scored)
-        print(f"  scored: {len(scored)}  STRONG: {buckets.get('STRONG',0)}  WATCH: {buckets.get('WATCH',0)}  SPEC: {buckets.get('SPECULATIVE',0)}")
-        print(f"  passing cutoff (>= {score_cutoff}): {len(cut)}")
-        print(f"Step 4/4: done. Total API: EODHD={client.calls_made}  EDGAR={edgar.calls_made}")
+        buckets = Counter(s.get("bucket") for s in final_scored)
+        print(f"  STRONG: {buckets.get('STRONG',0)}  WATCH: {buckets.get('WATCH',0)}  SPEC: {buckets.get('SPECULATIVE',0)}")
+        print(f"Step 6/6: done. EODHD={client.calls_made}  EDGAR={edgar.calls_made}")
+
+    candidates = [s for s in final_scored if s.get("bucket") in ("STRONG", "WATCH")]
 
     return {
         "scan_date": (target_date if isinstance(target_date, str) else (target_date or datetime.utcnow().date()).strftime("%Y-%m-%d")),
         "candidates_total": len(per_ticker),
         "enriched_total": len(enriched),
-        "scored_total": len(scored),
-        "passed_cutoff": len(cut),
-        "score_cutoff": score_cutoff,
-        "candidates": cut,
-        "all_scored": scored,
+        "scored_total": len(final_scored),
+        "passed_cutoff": len(candidates),
+        "top_pct_strong": top_pct_strong,
+        "top_pct_watch": top_pct_watch,
+        "candidates": candidates,
+        "all_scored": final_scored,
         "eodhd_calls": client.calls_made,
         "edgar_calls": edgar.calls_made,
+        "llm_graded": len(llm_grades),
     }

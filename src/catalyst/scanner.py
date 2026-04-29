@@ -27,6 +27,7 @@ from src.catalyst.risk_audit import audit_risks
 from src.catalyst.insider_depth import analyze_insider
 from src.catalyst.options_check import implied_move, options_check_score
 from src.catalyst.deep_research import deep_research
+from src.catalyst.paper_trading import simulate_outcomes as simulate_paper, get_paper_stats
 
 
 def _normalize(t):
@@ -263,6 +264,13 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         except Exception as e:
             if verbose:
                 print(f"  outcome measure failed for {prior}: {e}")
+    try:
+        new_paper, total_paper = simulate_paper(client)
+        if verbose:
+            print(f"  paper trading: simulated {new_paper} new trades, {total_paper} total")
+    except Exception as e:
+        if verbose:
+            print(f"  paper trading sim failed: {e}")
     if verbose:
         print(f"  measured outcomes for {measured_total} prior predictions")
         print(f"Step 1/6: gather catalyst signals")
@@ -459,9 +467,12 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         print(f"  saved {snap_count} predictions to tracker")
 
     tracker_stats = get_recent_stats(days=30)
+    paper_stats = get_paper_stats(days=30)
     if verbose and tracker_stats and tracker_stats.get("BUY"):
         b = tracker_stats["BUY"]
         print(f"  tracker BUY 30d: n={b['n']} hit_t1={b['hit_t1_pct']}% avg_high={b['avg_next_high_pct']}%")
+    if verbose and paper_stats:
+        print(f"  paper P&L 30d: ${paper_stats['total_pnl_usd']:+.2f} on {paper_stats['n']} trades, {paper_stats['win_rate_pct']}% wins, ROI {paper_stats['roi_pct']}%")
     if verbose:
         print(f"Step 6/6: done. EODHD={client.calls_made}  EDGAR={edgar.calls_made}")
 
@@ -470,6 +481,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
     return {
         "scan_date": scan_date_str,
         "tracker_stats": tracker_stats,
+        "paper_stats": paper_stats,
         "candidates_total": len(per_ticker),
         "enriched_total": len(enriched),
         "scored_total": len(final_scored),

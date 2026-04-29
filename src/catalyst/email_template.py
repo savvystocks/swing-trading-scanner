@@ -87,6 +87,27 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     <br><br><em style="color:#866;">Probability disclaimer: heuristic from catalyst-type base rates + quality factors, NOT backtested. Use for relative ranking and sizing, not as literal hit-rate. Real measured stats below build up as the tracker runs.</em>
   </div>
 
+  {% if paper_stats and paper_stats.n > 0 %}
+  <div class="legend" style="background:#f0fdf4; border-color:#86efac;">
+    <h3 style="color:#14532d;">Paper trading P&amp;L (${{ "%.0f"|format(paper_stats.position_size_usd) }}/ticker, last {{ paper_stats.lookback_days }}d, n={{ paper_stats.n }} trades)</h3>
+    <div class="legend-grid">
+      <div class="legend-block">
+        <div class="legend-title">Total P&amp;L</div>
+        <div class="legend-row" style="font-size:18px; font-weight:700; color:{% if paper_stats.total_pnl_usd >= 0 %}#0d7b34{% else %}#c94545{% endif %};">${{ "%+.2f"|format(paper_stats.total_pnl_usd) }}</div>
+        <div class="legend-row">ROI: <strong>{{ "%+.2f"|format(paper_stats.roi_pct) }}%</strong> on ${{ "%.0f"|format(paper_stats.capital_deployed_usd) }} deployed</div>
+        <div class="legend-row">Fees deducted: ${{ "%.2f"|format(paper_stats.total_fees_usd) }} (FX 0.5% round trip assumed)</div>
+      </div>
+      <div class="legend-block">
+        <div class="legend-title">Win rate &amp; sizing</div>
+        <div class="legend-row"><strong>Wins:</strong> {{ paper_stats.wins }} ({{ paper_stats.win_rate_pct }}%) &middot; <strong>Losses:</strong> {{ paper_stats.losses }}</div>
+        <div class="legend-row"><strong>Avg win:</strong> {{ "%+.2f"|format(paper_stats.avg_win_pct) }}% &middot; <strong>Avg loss:</strong> {{ "%+.2f"|format(paper_stats.avg_loss_pct) }}%</div>
+        <div class="legend-row"><strong>Biggest win:</strong> ${{ "%+.2f"|format(paper_stats.biggest_win_usd) }} &middot; <strong>Biggest loss:</strong> ${{ "%+.2f"|format(paper_stats.biggest_loss_usd) }}</div>
+      </div>
+    </div>
+    <div style="font-size:10px; color:#555; margin-top:8px;"><em>Simulated $100 entry per BUY signal at close, exit half at T1 / rest at T2 / stop / next-day close. Assumes Trading 212-style 0% commissions + 0.5% FX spread round trip. Real broker fees may differ.</em></div>
+  </div>
+  {% endif %}
+
   {% if tracker_stats and tracker_stats.BUY and tracker_stats.BUY.n > 0 %}
   <div class="legend" style="background:#f0fdf4; border-color:#bbf7d0;">
     <h3 style="color:#166534;">Real-money tracker (last {{ tracker_stats.lookback_days }}d, n={{ tracker_stats.total_measured }})</h3>
@@ -379,6 +400,7 @@ def render_catalyst_email(scan, max_strong=20, max_watch=20):
         eodhd_calls=scan.get("eodhd_calls", 0),
         edgar_calls=scan.get("edgar_calls", 0),
         tracker_stats=scan.get("tracker_stats"),
+        paper_stats=scan.get("paper_stats"),
         strong=strong,
         watch=watch,
     )

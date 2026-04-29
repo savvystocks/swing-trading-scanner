@@ -50,7 +50,7 @@ def load_universe(limit=None):
     return tickers
 
 
-def fast_filter(client, ticker_row, spy_df, vix_pillar, ftse_df):
+def fast_filter(client, ticker_row, spy_df, vix_pillar, ftse_df, sector_perf=None):
     ticker = ticker_row["ticker"]
     is_us = ticker.endswith(".US")
 
@@ -66,7 +66,7 @@ def fast_filter(client, ticker_row, spy_df, vix_pillar, ftse_df):
 
     benchmark_df = ftse_df if ticker.endswith(".LSE") else spy_df
 
-    short_sig = short_score(ind, benchmark_df)
+    short_sig = short_score(ind, benchmark_df, sector_hint=ticker_row.get("sector"), sector_perf=sector_perf)
     short_candidate = None
     if short_sig and short_sig["qualified"]:
         short_candidate = {
@@ -214,7 +214,7 @@ def run_scan(universe_limit=None, verbose=True):
             eta = (len(universe) - i) / rate
             print(f"  [{i}/{len(universe)}] kept={len(candidates)} rejected={fast_rejected} err={errors} rate={rate:.1f}/s eta={eta/60:.1f}m")
         try:
-            c, sc, reason = fast_filter(client, row, spy_df, vix_pillar, vuke_df)
+            c, sc, reason = fast_filter(client, row, spy_df, vix_pillar, vuke_df, sector_perf=sector_perf)
             if c:
                 candidates.append(c)
             else:

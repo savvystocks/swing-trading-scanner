@@ -89,7 +89,107 @@ def breakdown_through_50d(df):
     return bool(crossed_below), float(diff_pct)
 
 
-def short_score(df_ind, benchmark_df, fundamentals=None):
+def up_down_volume_ratio(df, lookback=50):
+    if len(df) < lookback + 1:
+        return None
+    up_vol = 0.0
+    down_vol = 0.0
+    for i in range(len(df) - lookback, len(df)):
+        if i == 0:
+            continue
+        chg = df["close"].iloc[i] - df["close"].iloc[i - 1]
+        v = df["volume"].iloc[i] or 0
+        if chg > 0:
+            up_vol += v
+        elif chg < 0:
+            down_vol += v
+    if down_vol == 0:
+        return None
+    return float(up_vol / down_vol)
+
+
+def failed_rally_check(df, lookback=30):
+    if len(df) < lookback + 50:
+        return {"failed": False, "details": ""}
+    if "sma_50" not in df.columns or "sma_200" not in df.columns:
+        return {"failed": False, "details": ""}
+
+    recent = df.iloc[-lookback:].reset_index(drop=False)
+    high_idx_pos = int(recent["high"].idxmax())
+    high_price = float(recent.loc[high_idx_pos, "high"])
+    sma50_at_high = recent.loc[high_idx_pos, "sma_50"]
+    sma200_at_high = recent.loc[high_idx_pos, "sma_200"]
+
+    near_50 = (
+        pd.notna(sma50_at_high)
+        and sma50_at_high > 0
+        and high_price <= sma50_at_high * 1.03
+        and high_price >= sma50_at_high * 0.95
+    )
+    near_200 = (
+        pd.notna(sma200_at_high)
+        and sma200_at_high > 0
+        and high_price <= sma200_at_high * 1.03
+        and high_price >= sma200_at_high * 0.95
+    )
+    if not (near_50 or near_200):
+        return {"failed": False, "details": "no rally to MA found"}
+
+    current = float(df["close"].iloc[-1])
+    if high_price <= 0:
+        return {"failed": False, "details": ""}
+    decline_pct = (current / high_price - 1) * 100
+    if decline_pct < -3:
+        ma_label = "50d" if near_50 else "200d"
+        return {
+            "failed": True,
+            "details": f"failed rally to {ma_label} MA, now {decline_pct:.1f}% below",
+            "rally_high": high_price,
+            "decline_pct": decline_pct,
+        }
+    return {"failed": False, "details": "rally not yet failed"}
+
+
+GICS_TO_SECTOR_ETF = {
+    "Information Technology": "XLK",
+    "Technology": "XLK",
+    "Health Care": "XLV",
+    "Healthcare": "XLV",
+    "Financials": "XLF",
+    "Financial Services": "XLF",
+    "Consumer Discretionary": "XLY",
+    "Consumer Cyclical": "XLY",
+    "Consumer Staples": "XLP",
+    "Consumer Defensive": "XLP",
+    "Industrials": "XLI",
+    "Energy": "XLE",
+    "Utilities": "XLU",
+    "Real Estate": "XLRE",
+    "Materials": "XLB",
+    "Basic Materials": "XLB",
+    "Communication Services": "XLC",
+}
+
+
+def sector_in_decline(sector_hint, sector_perf_list):
+    if not sector_hint or not sector_perf_list:
+        return False, None, None
+    etf = GICS_TO_SECTOR_ETF.get(sector_hint)
+    if not etf:
+        return False, None, None
+    for sp in sector_perf_list:
+        symbol = (sp.get("ticker") or sp.get("symbol") or "").upper().replace(".US", "")
+        if symbol == etf:
+            close = sp.get("close") or sp.get("last")
+            sma200 = sp.get("sma_200") or sp.get("ma200") or sp.get("sma200")
+            if close and sma200 and close < sma200:
+                pct = (close / sma200 - 1) * 100
+                return True, etf, pct
+            return False, etf, None
+    return False, etf, None
+
+
+def short_score(df_ind, benchmark_df, fundamentals=None, sector_hint=None, sector_perf=None):
     if df_ind is None or len(df_ind) < 200:
         return None
 
@@ -148,6 +248,25 @@ def short_score(df_ind, benchmark_df, fundamentals=None):
             score += 5
             reasons.append(f"analyst revisions {revs_down_total:.0f} down vs {revs_up_total:.0f} up")
 
+    udvr = up_down_volume_ratio(df_ind, lookback=50)
+    if udvr is not None:
+        if udvr < 0.7:
+            score += 15
+            reasons.append(f"U/D vol ratio {udvr:.2f} (heavy distribution)")
+        elif udvr < 0.85:
+            score += 8
+            reasons.append(f"U/D vol ratio {udvr:.2f} (mild distribution)")
+
+    failed_rally = failed_rally_check(df_ind, lookback=30)
+    if failed_rally["failed"]:
+        score += 12
+        reasons.append(failed_rally["details"])
+
+    sector_in_st4, sector_etf, sector_pct = sector_in_decline(sector_hint, sector_perf)
+    if sector_in_st4:
+        score += 8
+        reasons.append(f"sector {sector_etf} also breaking down ({sector_pct:.1f}% below 200d)")
+
     return {
         "score": min(100, int(score)),
         "qualified": score >= 50,
@@ -158,4 +277,11 @@ def short_score(df_ind, benchmark_df, fundamentals=None):
         "inverse_rs_20d": float(irs_20) if irs_20 is not None else None,
         "inverse_rs_60d": float(irs_60) if irs_60 is not None else None,
         "below_50d_pct": float(diff_pct) if crossed or diff_pct < 0 else None,
+        "up_down_vol_ratio_50d": float(udvr) if udvr is not None else None,
+        "failed_rally": failed_rally,
+        "sector_in_decline": {
+            "in_decline": sector_in_st4,
+            "etf": sector_etf,
+            "pct_below_200d": sector_pct,
+        },
     }

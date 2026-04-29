@@ -7,12 +7,12 @@ try:
 except ImportError:
     ANTHROPIC_AVAILABLE = False
 
-MODEL = os.environ.get("OPTIONS_LLM_MODEL", "claude-opus-4-7")
+MODEL = os.environ.get("OPTIONS_LLM_MODEL", "claude-sonnet-4-6")
 TOP_N_DEFAULT = 5
 
 SYSTEM_PROMPT = """You are a swing trading analyst writing trade theses for one trader's personal options book.
 
-Audience: the trader himself. Non-coder. Runs a quantitative scanner that pre-filters everything before it reaches him. He reads each card on his phone before deciding to act. He wants the WHY in plain English, fast.
+Audience: the trader himself. Non-coder. Runs a quantitative scanner that pre-filters everything before it reaches him. He reads each card on his phone before deciding to act. He wants the WHY in plain English, fast. He thinks in letter grades - his first live trade was self-rated C+ because the size was over cap and DTE was inside 21.
 
 For each pick you receive:
 - Hunter score 0-100 (validated pre-50%-mover signature: P7 short squeeze x2, P6 earnings revisions x2, earnings sweet-spot 11-21d, proximity to 52w high, sector tilt)
@@ -25,28 +25,42 @@ For each pick you receive:
 - Move ETA
 - Options contract chosen
 
-Produce two outputs per pick:
-1. THESIS: 2-3 sentences on why this fires NOW. Lead with the strongest single driver. Translate numbers into meaning - "Hunter 78" alone is data, "78/100 because P6 shows 5 consecutive beats and P7 has 18% short interest" is a thesis. Past tense for what already happened, present for the current setup.
-2. RISK: ONE sentence on the main thing to size around. Specific - "earnings 8 days out, IV could collapse 30 points" beats "earnings risk".
+Produce three outputs per pick:
+1. RATING: a single letter grade for the overall trade setup quality.
+   A+ = exceptional, top 1% of universe. Multiple high-conviction signals stacked, clean Stage 2, near 52w high, low IV, clean earnings window.
+   A  = strong, top 5%. Most signals firing, no major caveats.
+   A- = strong with one minor caveat (tight DTE, modest IV, etc).
+   B+ = solid, tradeable, multiple confirmations but missing one or two ideal traits.
+   B  = decent, average for what makes it through the scanner.
+   B- = tradeable but not the strongest in today's list - size smaller.
+   C+ = mediocre, takes a leap of faith on one pillar; only if better is unavailable.
+   C  = weak, only if conviction is high on a non-quant factor.
+   D  = skip. Setup is broken or the options structure is poor (wide spread, IV crush risk, OI thin).
+2. THESIS: 2-3 sentences on why this fires NOW. Lead with the strongest single driver. Translate numbers into meaning - "Hunter 78" alone is data, "78/100 because P6 shows 5 consecutive beats and P7 has 18% short interest" is a thesis. Past tense for what already happened, present for the current setup.
+3. RISK: ONE sentence on the main thing to size around. Specific - "earnings 8 days out, IV could collapse 30 points" beats "earnings risk".
 
 Style rules:
 - Direct. He knows the system, you don't need to teach him basics.
 - Quantify when you can. "Doubled volume on the breakout" not "strong volume".
-- Honest. If a setup is mediocre, say so. He has a $1,500 per-position cap and trusts you to flag weakness.
+- Honest. Half the picks should grade B+ or below. If everything reads A, the rating is useless.
 - Specific to THIS ticker. Avoid generic phrases like "growth name in a hot sector" or "interesting setup worth watching".
 - No fluff: skip "this looks interesting", "could see momentum", "watch for follow-through", "worth keeping on the radar".
 - Plain text. No emojis. No markdown.
 
-Output ONLY a JSON object: {"thesis": "...", "risk": "..."}"""
+Output ONLY a JSON object: {"rating": "B+", "thesis": "...", "risk": "..."}"""
 
 
 JSON_SCHEMA = {
     "type": "object",
     "properties": {
+        "rating": {
+            "type": "string",
+            "enum": ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "D"],
+        },
         "thesis": {"type": "string"},
         "risk": {"type": "string"},
     },
-    "required": ["thesis", "risk"],
+    "required": ["rating", "thesis", "risk"],
     "additionalProperties": False,
 }
 
@@ -136,10 +150,10 @@ def commentary_one(client, ticket):
     try:
         response = client.messages.create(
             model=MODEL,
-            max_tokens=1024,
+            max_tokens=4096,
             thinking={"type": "adaptive"},
             output_config={
-                "effort": "high",
+                "effort": "medium",
                 "format": {"type": "json_schema", "schema": JSON_SCHEMA},
             },
             system=[{
@@ -150,8 +164,14 @@ def commentary_one(client, ticket):
             messages=[{"role": "user", "content": user_prompt}],
         )
         text = next((b.text for b in response.content if b.type == "text"), "")
+        if not text.strip():
+            return {
+                "rating": "", "thesis": "", "risk": "",
+                "error": f"empty text block (stop_reason={response.stop_reason}, content types={[b.type for b in response.content]})",
+            }
         data = json.loads(text)
         return {
+            "rating": (data.get("rating") or "").strip()[:3],
             "thesis": (data.get("thesis") or "")[:600],
             "risk": (data.get("risk") or "")[:300],
             "input_tokens": response.usage.input_tokens,
@@ -161,6 +181,7 @@ def commentary_one(client, ticket):
         }
     except Exception as e:
         return {
+            "rating": "",
             "thesis": "",
             "risk": "",
             "error": f"{type(e).__name__}: {str(e)[:200]}",
@@ -202,6 +223,7 @@ def add_commentary(tickets, top_n=TOP_N_DEFAULT, verbose=True):
             if verbose:
                 print(f"  llm_commentary: {t.get('ticker')} failed: {result['error']}")
             continue
+        t["llm_rating"] = result["rating"]
         t["llm_thesis"] = result["thesis"]
         t["llm_risk"] = result["risk"]
         total_in += result.get("input_tokens", 0)
@@ -209,9 +231,9 @@ def add_commentary(tickets, top_n=TOP_N_DEFAULT, verbose=True):
         total_cached += result.get("cache_read", 0)
 
     if verbose:
-        cost_fresh = max(0, total_in - total_cached) * 5.0 / 1_000_000
-        cost_cached = total_cached * 0.5 / 1_000_000
-        cost_out = total_out * 25.0 / 1_000_000
+        cost_fresh = max(0, total_in - total_cached) * 3.0 / 1_000_000
+        cost_cached = total_cached * 0.3 / 1_000_000
+        cost_out = total_out * 15.0 / 1_000_000
         total_cost = cost_fresh + cost_cached + cost_out
         successes = len(top) - errors
         print(f"  llm_commentary: {successes}/{len(top)} picks. tokens in={total_in} cached={total_cached} out={total_out}. ~${total_cost:.3f}")

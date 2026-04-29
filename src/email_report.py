@@ -563,8 +563,20 @@ OPTIONS_EMAIL_TEMPLATE = """<!DOCTYPE html>
           </div>
         {% endif %}
         {% if t.llm_thesis %}
+          {% set _rating_colors = {
+            'A+':'#0d7b34','A':'#0d7b34','A-':'#1a9850',
+            'B+':'#4a90e2','B':'#4a90e2','B-':'#7aa9d4',
+            'C+':'#e67e22','C':'#e67e22',
+            'D':'#c94545'
+          } %}
+          {% set _rating_color = _rating_colors.get(t.llm_rating, '#888') %}
           <div style="margin-top:10px; padding:10px 12px; background:#f5f0fa; border-left:3px solid #8e44ad; border-radius:4px; font-size:12px; line-height:1.5;">
-            <div style="font-size:10px; font-weight:700; color:#8e44ad; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:4px;">Analyst note &middot; Claude Opus</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div style="font-size:10px; font-weight:700; color:#8e44ad; letter-spacing:0.5px; text-transform:uppercase;">Analyst note &middot; Claude Sonnet</div>
+              {% if t.llm_rating %}
+                <span style="display:inline-block; padding:3px 10px; border-radius:4px; background:{{ _rating_color }}; color:#fff; font-size:13px; font-weight:700; letter-spacing:0.5px;">{{ t.llm_rating }}</span>
+              {% endif %}
+            </div>
             <div style="color:#333;">{{ t.llm_thesis }}</div>
             {% if t.llm_risk %}
               <div style="margin-top:6px; color:#a8431a; font-size:11px;"><strong>Risk:</strong> {{ t.llm_risk }}</div>

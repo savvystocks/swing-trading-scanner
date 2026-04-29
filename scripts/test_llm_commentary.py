@@ -84,7 +84,7 @@ add_commentary(mock_tickets, top_n=2, verbose=True)
 print()
 for t in mock_tickets:
     print("-" * 80)
-    print(f"{t['ticker']}  hunter {t['hunter']['score']}/100")
+    print(f"{t['ticker']}  hunter {t['hunter']['score']}/100  ->  RATING: {t.get('llm_rating', '(none)')}")
     print(f"  THESIS: {t.get('llm_thesis', '(none)')}")
     print(f"  RISK:   {t.get('llm_risk', '(none)')}")
 print("-" * 80)

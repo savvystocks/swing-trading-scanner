@@ -7,7 +7,7 @@ try:
 except ImportError:
     ANTHROPIC_AVAILABLE = False
 
-DEEP_MODEL = os.environ.get("CATALYST_DEEP_MODEL", "claude-opus-4-7")
+DEEP_MODEL = os.environ.get("CATALYST_DEEP_MODEL", "claude-sonnet-4-6")
 
 DEEP_SYSTEM = """You are a senior swing-trading analyst writing a 200-word research note for tomorrow's overnight trade. You can use web_search to verify facts, find recent analyst takes, and cross-check news.
 
@@ -112,9 +112,17 @@ def deep_research(top_candidates, max_tickers=5, verbose=True):
                 print(f"    deep research failed for {c['ticker']}: {type(e).__name__}: {e}")
 
     if verbose and results:
-        cost_in = total_in * 5.0 / 1_000_000
-        cost_out = total_out * 25.0 / 1_000_000
-        print(f"  deep research: {len(results)} notes, tokens in={total_in} out={total_out}, ~${cost_in + cost_out:.3f}")
+        if "opus" in DEEP_MODEL.lower():
+            in_rate, out_rate = 5.0, 25.0
+        elif "sonnet" in DEEP_MODEL.lower():
+            in_rate, out_rate = 3.0, 15.0
+        elif "haiku" in DEEP_MODEL.lower():
+            in_rate, out_rate = 1.0, 5.0
+        else:
+            in_rate, out_rate = 3.0, 15.0
+        cost_in = total_in * in_rate / 1_000_000
+        cost_out = total_out * out_rate / 1_000_000
+        print(f"  deep research ({DEEP_MODEL}): {len(results)} notes, tokens in={total_in} out={total_out}, ~${cost_in + cost_out:.3f}")
     return results
 
 

@@ -562,6 +562,15 @@ OPTIONS_EMAIL_TEMPLATE = """<!DOCTYPE html>
             <div class="payoff">If stock hits Phase 1 target: contract ~${{ "%.2f"|format(t.options_trade.projected_value_at_target) }} ({{ "%+.0f"|format(t.options_trade.projected_roi_pct) }}% return on premium)</div>
           </div>
         {% endif %}
+        {% if t.llm_thesis %}
+          <div style="margin-top:10px; padding:10px 12px; background:#f5f0fa; border-left:3px solid #8e44ad; border-radius:4px; font-size:12px; line-height:1.5;">
+            <div style="font-size:10px; font-weight:700; color:#8e44ad; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:4px;">Analyst note &middot; Claude Opus</div>
+            <div style="color:#333;">{{ t.llm_thesis }}</div>
+            {% if t.llm_risk %}
+              <div style="margin-top:6px; color:#a8431a; font-size:11px;"><strong>Risk:</strong> {{ t.llm_risk }}</div>
+            {% endif %}
+          </div>
+        {% endif %}
       </div>
     {% endfor %}
   {% else %}
@@ -708,6 +717,11 @@ def build_priority_options(tickets, slot_plan=None):
 def render_options_email(scan):
     tickets = scan.get("tickets") or [r["ticket"] for r in scan.get("results", [])]
     priority_options = build_priority_options(tickets)
+    try:
+        from src.llm_commentary import add_commentary
+        add_commentary(priority_options, top_n=5)
+    except Exception as e:
+        print(f"  llm_commentary: import/run failed: {type(e).__name__}: {e}")
     regime = scan.get("vix_regime") or {}
     vix_val = regime.get("vix")
     paper = scan.get("paper_trader") or {}

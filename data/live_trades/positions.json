@@ -72,6 +72,24 @@
       "trim_trigger_on_klac_pop": 32.00,
       "trim_action": "Sell entire position if AMAT $390C hits $32 on KLAC sympathy"
     },
+    "stop_loss_order": {
+      "active": true,
+      "type": "stop_limit_sell",
+      "limit_price": 13.00,
+      "time_in_force": "GTC",
+      "broker_order_status": "placed",
+      "estimated_credit_at_fill": 1299.96,
+      "max_loss_if_filled_at_limit_usd": -1175.58,
+      "max_loss_if_filled_at_limit_pct": -47.5,
+      "set_at": "2026-04-29",
+      "note": "Stop-limit sell order live as overnight/weekend gap protection. Will fire if option premium hits stop trigger. Floor at $13 prevents catastrophic slippage on illiquid contract (OI 25). If premium gaps below $13, order will not fill - manual exit needed."
+    },
+    "manual_monitoring_required": [
+      "Daily: glance at AMAT spot. If < $360 close, exit immediately at next open.",
+      "Friday 2026-05-02 close: check AMAT. If < $370, sell next session.",
+      "Monday 2026-05-12 close: HARD CLOSE entire position regardless of P&L (IV crush rule).",
+      "Wed 2026-04-30 morning: check KLAC reaction. If AMAT premium pops to $32+, sell on the pop."
+    ],
     "status": "OPEN",
     "journal_paths": [
       "journal/2026-04-29_AMAT_390C_29May.md"

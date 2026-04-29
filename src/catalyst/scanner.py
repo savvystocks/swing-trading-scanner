@@ -23,6 +23,10 @@ from src.catalyst.buy_signal import buy_signal
 from src.catalyst.tracker import (
     snapshot_predictions, measure_outcomes, get_recent_stats,
 )
+from src.catalyst.risk_audit import audit_risks
+from src.catalyst.insider_depth import analyze_insider
+from src.catalyst.options_check import implied_move, options_check_score
+from src.catalyst.deep_research import deep_research
 
 
 def _normalize(t):
@@ -240,7 +244,8 @@ def enrich_ticker(client, ticker_short, signals, suffix_hint=None, fetch_news=Fa
 
 
 def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
-                       news_max_fetch=150, llm_max_grade=50, min_base_pts=2.0, verbose=True):
+                       news_max_fetch=150, llm_max_grade=50, deep_research_max=5,
+                       insider_max_fetch=80, options_max_fetch=30, min_base_pts=2.0, verbose=True):
     client = EODHDClient()
     edgar = EDGARClient()
 
@@ -369,6 +374,47 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  news fetch failed for {s['ticker']}: {type(e).__name__}")
 
     if verbose:
+        print(f"  running risk audit + insider depth on top {insider_max_fetch} candidates")
+    for i, s in enumerate(pre_scored[:insider_max_fetch]):
+        data = s.get("_enriched_data") or {}
+        fund = data.get("fundamentals")
+        news_headlines = (s.get("news") or {}).get("headlines") or []
+        try:
+            risk = audit_risks(fund, news_headlines, signals=s.get("catalysts"))
+            s["risk_audit"] = risk
+            s["components"]["risk_flags"] = {"points": risk["penalty_points"], "label": f"{len(risk['flags'])} risk flag(s)", "flags": risk["flags"]}
+            s["score"] = round(s["score"] + risk["penalty_points"], 2)
+        except Exception:
+            s["risk_audit"] = {"flags": [], "penalty_points": 0, "high_severity_count": 0}
+        try:
+            insider = analyze_insider(client, s.get("eodhd_ticker"))
+            if insider:
+                s["insider_depth"] = insider
+                s["components"]["insider"] = {"points": insider["points"], "label": ", ".join(insider["signals"][:2]) or "no insider activity"}
+                s["score"] = round(s["score"] + insider["points"], 2)
+        except Exception:
+            pass
+
+    if verbose:
+        print(f"  running options reality check on top {options_max_fetch}")
+    pre_scored_sorted_temp = sorted(pre_scored, key=lambda x: x["score"], reverse=True)
+    for i, s in enumerate(pre_scored_sorted_temp[:options_max_fetch]):
+        if not s.get("eodhd_ticker", "").endswith(".US"):
+            continue
+        try:
+            symbol = s["eodhd_ticker"].replace(".US", "")
+            opts = implied_move(symbol, s.get("price"))
+            if opts:
+                from src.catalyst.buy_signal import buy_signal as _bs_fn
+                placeholder_bs = _bs_fn({"price": s.get("price")}, s["components"], df=(s.get("_enriched_data") or {}).get("df"), catalyst_tier=s.get("catalyst_tier", "-"), confidence=s.get("confidence", "MEDIUM"))
+                check = options_check_score(placeholder_bs, opts)
+                s["options_check"] = check
+                s["components"]["options"] = {"points": check["points"], "label": check["label"]}
+                s["score"] = round(s["score"] + check["points"], 2)
+        except Exception:
+            pass
+
+    if verbose:
         print(f"Step 5/6: LLM grading top {llm_max_grade} candidates")
 
     llm_grades = grade_candidates(pre_scored, max_grade=llm_max_grade, verbose=verbose)
@@ -397,6 +443,15 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         from collections import Counter
         buckets = Counter(s.get("bucket") for s in final_scored)
         print(f"  STRONG: {buckets.get('STRONG',0)}  WATCH: {buckets.get('WATCH',0)}  SPEC: {buckets.get('SPECULATIVE',0)}")
+
+    if deep_research_max > 0:
+        if verbose:
+            print(f"  running deep research (Opus + web search) on top {deep_research_max}")
+        top_for_deep = sorted(final_scored, key=lambda x: x["score"], reverse=True)[:deep_research_max]
+        deep_results = deep_research(top_for_deep, max_tickers=deep_research_max, verbose=verbose)
+        for s in final_scored:
+            if s["ticker"] in deep_results:
+                s["deep_research"] = deep_results[s["ticker"]]
 
     scan_date_str = (target_date if isinstance(target_date, str) else (target_date or datetime.utcnow().date()).strftime("%Y-%m-%d"))
     snap_count, _ = snapshot_predictions(scan_date_str, final_scored)

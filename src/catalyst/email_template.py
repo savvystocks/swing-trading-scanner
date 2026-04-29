@@ -36,6 +36,17 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .signal-prob { font-size:10px; opacity:0.9; margin-top:2px; }
   .trade-row { display:flex; flex-wrap:wrap; gap:14px; padding:8px 12px; background:#fafafa; border-radius:4px; margin-top:8px; font-size:11px; color:#444; }
   .trade-row strong { color:#222; }
+  .risk-row { margin-top:8px; padding:6px 10px; background:#fef2f2; border-left:3px solid #c94545; border-radius:3px; font-size:11px; color:#7f1d1d; }
+  .risk-chip { display:inline-block; padding:1px 6px; margin:1px 3px 1px 0; border-radius:10px; font-size:10px; background:#fee; border:1px solid #fcc; color:#a02c2c; }
+  .risk-chip.high { background:#fcc; border-color:#f99; color:#7f1d1d; font-weight:700; }
+  .insider-row { margin-top:6px; padding:5px 10px; background:#f0fdf4; border-left:3px solid #16a34a; border-radius:3px; font-size:11px; color:#166534; }
+  .options-row { margin-top:6px; padding:5px 10px; background:#fefce8; border-left:3px solid #ca8a04; border-radius:3px; font-size:11px; color:#713f12; }
+  .deep-box { margin-top:10px; padding:10px 12px; background:#eff6ff; border-left:3px solid #1d4ed8; border-radius:4px; font-size:12px; color:#1e3a8a; line-height:1.5; }
+  .deep-box .verdict-tag { display:inline-block; padding:2px 8px; border-radius:3px; font-weight:700; font-size:10px; color:#fff; margin-right:6px; letter-spacing:0.4px; }
+  .verdict-STRONG-BUY { background:#0d7b34; }
+  .verdict-BUY { background:#1a9850; }
+  .verdict-HOLD { background:#999; }
+  .verdict-SKIP { background:#c94545; }
   .score-box { background:#0052cc; color:#fff; padding:6px 12px; border-radius:6px; font-weight:700; font-size:14px; }
   .score-box.strong { background:#0d7b34; }
   .score-box.watch { background:#4a90e2; }
@@ -196,6 +207,33 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if c.buy_signal.atr_pct %}<span style="color:#888;">ATR {{ "%.1f"|format(c.buy_signal.atr_pct) }}%</span>{% endif %}
           </div>
         {% endif %}
+        {% if c.deep_research %}
+          <div class="deep-box">
+            <span class="verdict-tag verdict-{{ c.deep_research.verdict|replace(' ', '-') }}">{{ c.deep_research.verdict }}</span>
+            <strong>Deep research ({{ c.deep_research.confidence_pct }}% conf):</strong> {{ c.deep_research.research_note }}
+            {% if c.deep_research.reason_to_buy %}<br><strong>Bull case:</strong> {{ c.deep_research.reason_to_buy }}{% endif %}
+            {% if c.deep_research.reason_to_avoid %}<br><strong>Bear case:</strong> {{ c.deep_research.reason_to_avoid }}{% endif %}
+            {% if c.deep_research.red_flags_found %}<br><strong>Risks found:</strong> {{ c.deep_research.red_flags_found|join(' &middot; ') }}{% endif %}
+          </div>
+        {% endif %}
+        {% if c.risk_audit and c.risk_audit.flags %}
+          <div class="risk-row">
+            <strong>Risk flags:</strong>
+            {% for flag in c.risk_audit.flags %}
+              <span class="risk-chip {{ 'high' if flag.severity == 'HIGH' else '' }}">{{ flag.label }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% if c.insider_depth and c.insider_depth.signals %}
+          <div class="insider-row">
+            <strong>Insider:</strong> {{ c.insider_depth.signals|join(' &middot; ') }}
+          </div>
+        {% endif %}
+        {% if c.options_check and c.options_check.implied_move_1d_pct %}
+          <div class="options-row">
+            <strong>Options:</strong> {{ c.options_check.label }}
+          </div>
+        {% endif %}
         {% if c.components.llm.reasoning %}
           <div class="llm-box">
             <strong>LLM read:</strong> {{ c.components.llm.reasoning }}
@@ -269,6 +307,24 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if c.buy_signal.stop_price %}<span>Stop <strong>${{ "%.2f"|format(c.buy_signal.stop_price) }}</strong></span>{% endif %}
             {% if c.buy_signal.target_1_price %}<span>T1 <strong>${{ "%.2f"|format(c.buy_signal.target_1_price) }}</strong></span>{% endif %}
             {% if c.buy_signal.target_2_price %}<span>T2 <strong>${{ "%.2f"|format(c.buy_signal.target_2_price) }}</strong></span>{% endif %}
+          </div>
+        {% endif %}
+        {% if c.risk_audit and c.risk_audit.flags %}
+          <div class="risk-row">
+            <strong>Risk:</strong>
+            {% for flag in c.risk_audit.flags %}
+              <span class="risk-chip {{ 'high' if flag.severity == 'HIGH' else '' }}">{{ flag.label }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% if c.insider_depth and c.insider_depth.signals %}
+          <div class="insider-row">
+            <strong>Insider:</strong> {{ c.insider_depth.signals|join(' &middot; ') }}
+          </div>
+        {% endif %}
+        {% if c.options_check and c.options_check.implied_move_1d_pct %}
+          <div class="options-row">
+            <strong>Options:</strong> {{ c.options_check.label }}
           </div>
         {% endif %}
         {% if c.components.llm.reasoning %}

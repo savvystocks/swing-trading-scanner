@@ -18,6 +18,26 @@ def main():
     scan = run_scan(universe_limit=limit)
     save_results(scan)
 
+    short_watchlist_for_email = []
+    for sc in scan.get("short_watchlist", []):
+        ss = sc["short_signal"]
+        short_watchlist_for_email.append({
+            "ticker": sc["ticker"],
+            "name": sc.get("name", ""),
+            "sector_hint": sc.get("sector_hint", ""),
+            "is_us": sc.get("is_us"),
+            "last_close": sc.get("last_close"),
+            "score": ss["score"],
+            "reasons": ss["reasons"],
+            "stage_4_passes": ss["stage_4_check"]["passes"],
+            "stage_4_total": ss["stage_4_check"]["total"],
+            "distribution_count_25d": ss["distribution_count_25d"],
+            "accumulation_count_25d": ss["accumulation_count_25d"],
+            "inverse_rs_20d": ss["inverse_rs_20d"],
+            "inverse_rs_60d": ss["inverse_rs_60d"],
+            "pct_from_high": ss["stage_4_check"].get("pct_from_high"),
+        })
+
     scan_for_email = {
         "scan_date": scan["scan_date"],
         "universe_size": scan["universe_size"],
@@ -26,7 +46,9 @@ def main():
         "api_calls": scan["api_calls"],
         "vix_regime": scan["vix_regime"],
         "sector_performance": scan.get("sector_performance", []),
+        "breadth": scan.get("breadth", {}),
         "tickets": [r["ticket"] for r in scan["results"]],
+        "short_watchlist": short_watchlist_for_email,
     }
 
     html_main = render_email(scan_for_email)

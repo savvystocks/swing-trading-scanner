@@ -31,6 +31,7 @@ from src.lane_b import run_all_lane_b, compute_peer_pack_rotation, lane_b_signal
 from src.opportunity import opportunity_score, classify_lane
 from src.options_hunter import classify_hunters
 from src.paper_trader import run_daily_cycle as run_paper_trader_cycle
+from src.short_signals import short_score
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 UNIVERSE_PATH = PROJECT_ROOT / "data" / "universe" / "universe.json"
@@ -55,22 +56,36 @@ def fast_filter(client, ticker_row, spy_df, vix_pillar, ftse_df):
 
     ohlcv = client.ohlcv(ticker, from_date=FROM_DATE)
     if not ohlcv or len(ohlcv) < 210:
-        return None, "insufficient ohlcv history"
+        return None, None, "insufficient ohlcv history"
 
     df = to_dataframe(ohlcv)
     ind = compute_all(df)
     last_close = float(ind["close"].iloc[-1])
     if last_close < 5:
-        return None, "sub-$5 price filter"
+        return None, None, "sub-$5 price filter"
+
+    benchmark_df = ftse_df if ticker.endswith(".LSE") else spy_df
+
+    short_sig = short_score(ind, benchmark_df)
+    short_candidate = None
+    if short_sig and short_sig["qualified"]:
+        short_candidate = {
+            "ticker": ticker,
+            "name": ticker_row.get("name", ""),
+            "index": ticker_row.get("index", ""),
+            "sector_hint": ticker_row.get("sector", ""),
+            "is_us": is_us,
+            "last_close": last_close,
+            "short_signal": short_sig,
+        }
 
     p1 = pillar_1_trend_following(ind)
     if p1["verdict"] == "FAIL":
-        return None, f"p1 fail: {p1['trend_template_passed']}/7 template, stage {p1['stage']}"
+        return None, short_candidate, f"p1 fail: {p1['trend_template_passed']}/7 template, stage {p1['stage']}"
 
-    benchmark_df = ftse_df if ticker.endswith(".LSE") else spy_df
     p4 = pillar_4_statarb(ind, benchmark_df, lookback=20)
     if p4["verdict"] == "FAIL":
-        return None, f"p4 fail: rs={p4.get('rs_score', 0):.2f}"
+        return None, short_candidate, f"p4 fail: rs={p4.get('rs_score', 0):.2f}"
 
     return {
         "ticker": ticker,
@@ -82,7 +97,7 @@ def fast_filter(client, ticker_row, spy_df, vix_pillar, ftse_df):
         "ind": ind,
         "p1": p1,
         "p4": p4,
-    }, None
+    }, short_candidate, None
 
 
 def full_score(client, candidate, vix_pillar):
@@ -188,6 +203,7 @@ def run_scan(universe_limit=None, verbose=True):
         print(f"Scanning {len(universe)} tickers...")
 
     candidates = []
+    short_candidates = []
     fast_rejected = 0
     errors = 0
     start = time.time()
@@ -198,18 +214,21 @@ def run_scan(universe_limit=None, verbose=True):
             eta = (len(universe) - i) / rate
             print(f"  [{i}/{len(universe)}] kept={len(candidates)} rejected={fast_rejected} err={errors} rate={rate:.1f}/s eta={eta/60:.1f}m")
         try:
-            c, reason = fast_filter(client, row, spy_df, vix_pillar, vuke_df)
+            c, sc, reason = fast_filter(client, row, spy_df, vix_pillar, vuke_df)
             if c:
                 candidates.append(c)
             else:
                 fast_rejected += 1
+            if sc:
+                short_candidates.append(sc)
         except Exception as e:
             errors += 1
             if verbose and errors < 5:
                 print(f"  error on {row['ticker']}: {type(e).__name__}: {e}")
 
     if verbose:
-        print(f"\nFast filter: {len(candidates)} candidates survived, {fast_rejected} rejected, {errors} errors")
+        print(f"\nFast filter: {len(candidates)} long candidates survived, {fast_rejected} rejected, {errors} errors")
+        print(f"Short candidates (Stage 4 / breakdown): {len(short_candidates)}")
         print(f"Running full scoring on {len(candidates)} candidates...")
 
     scored = []
@@ -374,6 +393,14 @@ def run_scan(universe_limit=None, verbose=True):
                 print(f"  {r['ticket']['ticker']:12s} T{r['tier_info']['tier']} conv={cs['score']}/100 stress={st['overall']}")
         print(f"Total API calls: {client.calls_made}")
 
+    short_candidates.sort(key=lambda c: c["short_signal"]["score"], reverse=True)
+    short_top = short_candidates[:15]
+    if verbose:
+        print(f"\nShort watchlist top 15 (Stage 4 / breakdown signal score):")
+        for sc in short_top[:10]:
+            ss = sc["short_signal"]
+            print(f"  {sc['ticker']:12s} score={ss['score']}  reasons: {'; '.join(ss['reasons'][:3])}")
+
     return {
         "scan_date": time.strftime("%Y-%m-%d"),
         "vix_regime": vix_pillar,
@@ -384,12 +411,33 @@ def run_scan(universe_limit=None, verbose=True):
         "scored_total": len(scored),
         "api_calls": client.calls_made,
         "results": scored,
+        "short_watchlist": short_top,
         "paper_trader": paper,
     }
 
 
 def save_results(scan, path=None):
     out_path = path or RESULTS_DIR / f"scan_{scan['scan_date']}.json"
+    short_serializable = []
+    for sc in scan.get("short_watchlist", []):
+        ss = sc["short_signal"]
+        short_serializable.append({
+            "ticker": sc["ticker"],
+            "name": sc.get("name", ""),
+            "sector_hint": sc.get("sector_hint", ""),
+            "is_us": sc.get("is_us"),
+            "last_close": sc.get("last_close"),
+            "score": ss["score"],
+            "reasons": ss["reasons"],
+            "stage_4_passes": ss["stage_4_check"]["passes"],
+            "stage_4_total": ss["stage_4_check"]["total"],
+            "distribution_count_25d": ss["distribution_count_25d"],
+            "accumulation_count_25d": ss["accumulation_count_25d"],
+            "inverse_rs_20d": ss["inverse_rs_20d"],
+            "inverse_rs_60d": ss["inverse_rs_60d"],
+            "pct_from_high": ss["stage_4_check"].get("pct_from_high"),
+        })
+
     serializable = {
         "scan_date": scan["scan_date"],
         "vix_regime": scan["vix_regime"],
@@ -399,6 +447,7 @@ def save_results(scan, path=None):
         "scored_total": scan["scored_total"],
         "api_calls": scan["api_calls"],
         "tickets": [r["ticket"] for r in scan["results"]],
+        "short_watchlist": short_serializable,
     }
     with open(out_path, "w") as f:
         json.dump(serializable, f, indent=2, default=str)

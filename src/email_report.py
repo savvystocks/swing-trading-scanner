@@ -453,7 +453,42 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     </table>
   {% endif %}
 
-  <div class="footer">swing-trading-scanner &middot; v3.1 spec &middot; long equity only, 1-3 month horizon</div>
+  {% if short_watchlist %}
+    <h2 style="margin-top:32px; padding-top:18px; border-top:2px solid #eee;">Stage 4 Shorts &mdash; Watchlist</h2>
+    <div style="font-size:12px; color:#555; margin-bottom:12px;">
+      Names breaking down: Stage 4 trend, distribution days clustering, weak relative strength, or breakdown through 50d MA. Score 0-100 (qualified at 50+). No put-trade tickets yet &mdash; this is detection only, you decide whether to act.
+    </div>
+    <table style="width:100%; border-collapse:collapse; font-size:11px;">
+      <thead><tr style="background:#f4f4f4;">
+        <th align="left" style="padding:5px 8px;">Ticker</th>
+        <th align="left" style="padding:5px 8px;">Name</th>
+        <th align="left" style="padding:5px 8px;">Sector</th>
+        <th align="right" style="padding:5px 8px;">Last</th>
+        <th align="right" style="padding:5px 8px;">vs 52w high</th>
+        <th align="right" style="padding:5px 8px;">RS 20d</th>
+        <th align="right" style="padding:5px 8px;">Dist/Acc 25d</th>
+        <th align="right" style="padding:5px 8px;">Score</th>
+        <th align="left" style="padding:5px 8px;">Why</th>
+      </tr></thead>
+      <tbody>
+      {% for s in short_watchlist %}
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:5px 8px; font-weight:600;">{{ s.ticker }}</td>
+          <td style="padding:5px 8px;">{{ s.name[:24] }}</td>
+          <td style="padding:5px 8px; color:#555;">{{ (s.sector_hint or '')[:18] }}</td>
+          <td align="right" style="padding:5px 8px;">${{ "%.2f"|format(s.last_close or 0) }}</td>
+          <td align="right" style="padding:5px 8px; color:#c94545;">{% if s.pct_from_high is not none %}{{ "%.0f"|format(s.pct_from_high) }}%{% endif %}</td>
+          <td align="right" style="padding:5px 8px; color:{% if s.inverse_rs_20d and s.inverse_rs_20d < -10 %}#c94545{% else %}#888{% endif %};">{% if s.inverse_rs_20d is not none %}{{ "%+.1f"|format(s.inverse_rs_20d) }}%{% endif %}</td>
+          <td align="right" style="padding:5px 8px;"><span style="color:#c94545; font-weight:600;">{{ s.distribution_count_25d }}</span>/<span style="color:#888;">{{ s.accumulation_count_25d }}</span></td>
+          <td align="right" style="padding:5px 8px; font-weight:700; color:{% if s.score >= 70 %}#c94545{% elif s.score >= 60 %}#e67e22{% else %}#888{% endif %};">{{ s.score }}</td>
+          <td style="padding:5px 8px; color:#555; font-size:10px;">{{ s.reasons|join(' &middot; ') }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <div class="footer">swing-trading-scanner &middot; v3.1 spec &middot; long + short detection</div>
 </div>
 </body>
 </html>"""
@@ -830,6 +865,7 @@ def render_email(scan):
         lane_b=lane_b,
         lane_c=lane_c,
         theme_summary=theme_summary,
+        short_watchlist=scan.get("short_watchlist", []),
     )
 
 

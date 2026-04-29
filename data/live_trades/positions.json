@@ -1,1 +1,80 @@
-[]
+[
+  {
+    "id": "AMAT_2026-04-29_C390_20260529",
+    "ticker": "AMAT.US",
+    "broker": "robinhood",
+    "account": "individual_0598",
+    "instrument_type": "option",
+    "opened_at": "2026-04-29",
+    "opened_at_spot": 379.59,
+    "contract": {
+      "strike": 390.0,
+      "expiration": "2026-05-29",
+      "right": "call",
+      "dte_at_open": 30
+    },
+    "entry_mid": 24.75,
+    "entry_bid": 23.55,
+    "entry_ask": 25.25,
+    "entry_iv_pct": 65.51,
+    "entry_delta": 0.4865,
+    "entry_theta_per_day": -0.4893,
+    "entry_vega": 0.4345,
+    "size_contracts": 1,
+    "cost_basis_usd": 2475.54,
+    "breakeven_at_expiry": 414.75,
+    "breakeven_pct_move_required": 9.3,
+    "earnings_date_in_window": "2026-05-13",
+    "earnings_inside_option_window": true,
+    "rating_at_open": "B-",
+    "tier_at_open": 5,
+    "hunter_score_at_open": 69,
+    "conviction_score_at_open": 55.9,
+    "discipline_break": "CAP_VIOLATION_PLUS_65PCT",
+    "discipline_break_note": "Position cost $2,475 vs $1,500 cap = +65% over. Trade #1 PUMP was +22% over. Closing journal recommended cap discipline for trade #2 onwards. User chose to override and use buying power.",
+    "thesis_at_open": [
+      "Tier 5 stock, Hunter 69 (highest in scan)",
+      "P3 EPS YoY +75%, ROE 39% - excellent fundamentals",
+      "P6 PASS_BONUS - 3 consecutive beats, 5 up revisions vs 1 down",
+      "G3 PASS - RVOL 1.83x institutional buying confirmed",
+      "G7 PASS - earnings sweet spot 14d (Hunter signature)",
+      "Lane B peer_pack FIRED - leader of 13/18 in semicap industry",
+      "KLAC reports 4/30 PM - semicap sympathy catalyst",
+      "Sector: Semiconductor Equipment - AI capex tailwind"
+    ],
+    "concerns_at_open": [
+      "Cap break +65%",
+      "5d cooling -3.4% (no obvious near-term catalyst until KLAC tomorrow)",
+      "P7 FAIL - SI 1.7% (no squeeze fuel - opposite of PUMP)",
+      "Stress WARN - gap_frequency_1y",
+      "IV 65.5% pricing earnings premium (post-print crush ~25 pts = ~$1,086 vega loss)",
+      "Volume 0 today on this strike (illiquid contract)",
+      "OI only 25 (thin)",
+      "Spread 4.9-7% (acceptable but not great)"
+    ],
+    "exit_plan": {
+      "hard_stop_premium": 14.00,
+      "hard_stop_pnl_pct": -43,
+      "trim_50_at_premium": 36.00,
+      "trim_50_at_pnl_pct": 47,
+      "trim_75_at_premium": 46.00,
+      "trim_75_at_pnl_pct": 87,
+      "must_close_by_date": "2026-05-12",
+      "must_close_reason": "earnings 5/13 - IV crush + binary risk one day after option holding window. Vega 0.43 x ~25pt IV crush = ~$1,086 loss even on flat reaction.",
+      "underlying_break_below": 370.00,
+      "underlying_break_below_note": "if AMAT closes < $370 by Fri 5/2, sell - momentum failure",
+      "underlying_break_below_hard": 360.00,
+      "underlying_break_below_hard_note": "any close below $360, hard stop"
+    },
+    "klac_sympathy_play": {
+      "klac_earnings_date": "2026-04-30",
+      "expected_sympathy_move_if_klac_beats": "AMAT premium +10-20% next morning",
+      "trim_trigger_on_klac_pop": 32.00,
+      "trim_action": "Sell entire position if AMAT $390C hits $32 on KLAC sympathy"
+    },
+    "status": "OPEN",
+    "journal_paths": [
+      "journal/2026-04-29_AMAT_390C_29May.md"
+    ]
+  }
+]

@@ -23,6 +23,63 @@ HFCAA_PATTERNS = [
     r"\bPCAOB.*denied\b", r"\bdelisting risk\b",
 ]
 
+DEAL_CLOSED_PATTERNS = [
+    r"\bcompletion of (the )?acquisition\b",
+    r"\bacquisition (has )?closed\b",
+    r"\bmerger (has )?closed\b",
+    r"\btransaction (has )?closed\b",
+    r"\bdeal (has )?closed\b",
+    r"\bclosing of (the )?merger\b",
+    r"\bclosing of (the )?acquisition\b",
+    r"\bclosing of (the )?transaction\b",
+    r"\bsuccessfully completed\b",
+    r"\bdeal completion\b",
+    r"\bclosed today\b",
+]
+
+
+M_AND_A_CATALYST_KEYS = {"merger", "asset_sale", "definitive_agreement", "merger_cash_buyout"}
+
+
+def detect_deal_closed(signals, atr_pct, news_headlines):
+    has_ma_catalyst = False
+    if signals:
+        for s in signals:
+            if s.get("key") in M_AND_A_CATALYST_KEYS:
+                has_ma_catalyst = True
+                break
+
+    if not has_ma_catalyst:
+        return None
+
+    headline_blob = " ".join(
+        f"{h.get('title','')} {h.get('content','')}"
+        for h in (news_headlines or [])
+    )
+    headline_match = _scan_text(headline_blob, DEAL_CLOSED_PATTERNS)
+
+    atr_locked = atr_pct is not None and atr_pct < 0.7
+
+    if headline_match and atr_locked:
+        return {
+            "deal_closed": True,
+            "reason": f"M&A catalyst + locked ATR {atr_pct:.2f}% + news mentions completion",
+            "severity": "HIGH",
+        }
+    if atr_locked:
+        return {
+            "deal_closed": True,
+            "reason": f"M&A catalyst + locked ATR {atr_pct:.2f}% (price frozen at deal close price)",
+            "severity": "HIGH",
+        }
+    if headline_match:
+        return {
+            "deal_closed": True,
+            "reason": "M&A catalyst + news mentions deal completion",
+            "severity": "MEDIUM",
+        }
+    return None
+
 
 def _scan_text(text, patterns):
     if not text:

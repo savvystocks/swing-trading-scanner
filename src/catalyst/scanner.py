@@ -23,7 +23,7 @@ from src.catalyst.buy_signal import buy_signal
 from src.catalyst.tracker import (
     snapshot_predictions, measure_outcomes, get_recent_stats,
 )
-from src.catalyst.risk_audit import audit_risks
+from src.catalyst.risk_audit import audit_risks, detect_deal_closed
 from src.catalyst.insider_depth import analyze_insider
 from src.catalyst.options_check import implied_move, options_check_score
 from src.catalyst.deep_research import deep_research
@@ -394,6 +394,19 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             s["score"] = round(s["score"] + risk["penalty_points"], 2)
         except Exception:
             s["risk_audit"] = {"flags": [], "penalty_points": 0, "high_severity_count": 0}
+
+        try:
+            atr_pct = (data.get("atr_pct") if isinstance(data.get("atr_pct"), (int, float)) else None)
+            if atr_pct is None and data.get("df") is not None:
+                from src.catalyst.buy_signal import compute_atr_pct
+                atr_pct = compute_atr_pct(data["df"])
+            deal_closed = detect_deal_closed(s.get("catalysts"), atr_pct, news_headlines)
+            if deal_closed:
+                s["deal_closed"] = deal_closed
+                s["components"]["deal_closed"] = {"points": -50, "label": deal_closed["reason"]}
+                s["score"] = round(s["score"] - 50, 2)
+        except Exception:
+            pass
         try:
             insider = analyze_insider(client, s.get("eodhd_ticker"))
             if insider:
@@ -443,6 +456,11 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             catalyst_tier=s.get("catalyst_tier", "-"),
             confidence=s.get("confidence", "MEDIUM"),
         )
+        if s.get("deal_closed"):
+            s["buy_signal"]["signal"] = "SKIP"
+            s["buy_signal"]["signal_color"] = "#c94545"
+            s["buy_signal"]["probability_pct"] = max(5, s["buy_signal"]["probability_pct"] - 50)
+            s["buy_signal"]["deal_closed_reason"] = s["deal_closed"]["reason"]
         s.pop("_enriched_data", None)
         final_scored.append(s)
 
@@ -455,7 +473,8 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
     if deep_research_max > 0:
         if verbose:
             print(f"  running deep research (Opus + web search) on top {deep_research_max}")
-        top_for_deep = sorted(final_scored, key=lambda x: x["score"], reverse=True)[:deep_research_max]
+        eligible_for_deep = [s for s in final_scored if not s.get("deal_closed")]
+        top_for_deep = sorted(eligible_for_deep, key=lambda x: x["score"], reverse=True)[:deep_research_max]
         deep_results = deep_research(top_for_deep, max_tickers=deep_research_max, verbose=verbose)
         for s in final_scored:
             if s["ticker"] in deep_results:

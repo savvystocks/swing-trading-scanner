@@ -31,6 +31,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .conf-LOW { background:#999; color:#fff; }
   .extended-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#c94545; color:#fff; letter-spacing:0.4px; }
   .priced-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#e67e22; color:#fff; letter-spacing:0.4px; }
+  .closed-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#7c2d12; color:#fff; letter-spacing:0.4px; }
   .signal-box { display:flex; flex-direction:column; align-items:center; padding:8px 12px; border-radius:6px; margin:0 0 0 8px; min-width:90px; color:#fff; }
   .signal-action { font-weight:700; font-size:14px; letter-spacing:0.6px; }
   .signal-prob { font-size:10px; opacity:0.9; margin-top:2px; }
@@ -192,6 +193,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if c.sector %}<span class="sector-badge">{{ c.sector }}</span>{% endif %}
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
             <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
+            {% if c.deal_closed %}<span class="closed-badge">DEAL CLOSED &mdash; do not trade</span>{% endif %}
             {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
             {% if c.components.drift.pre_priced %}<span class="priced-badge">PRE-PRICED &mdash; sell-the-news risk</span>{% endif %}
           </div>
@@ -295,6 +297,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if c.sector %}<span class="sector-badge">{{ c.sector }}</span>{% endif %}
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
             <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
+            {% if c.deal_closed %}<span class="closed-badge">DEAL CLOSED &mdash; do not trade</span>{% endif %}
             {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
             {% if c.components.drift.pre_priced %}<span class="priced-badge">PRE-PRICED &mdash; sell-the-news risk</span>{% endif %}
           </div>

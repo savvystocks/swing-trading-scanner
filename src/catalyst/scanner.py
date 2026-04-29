@@ -400,7 +400,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             if atr_pct is None and data.get("df") is not None:
                 from src.catalyst.buy_signal import compute_atr_pct
                 atr_pct = compute_atr_pct(data["df"])
-            deal_closed = detect_deal_closed(s.get("catalysts"), atr_pct, news_headlines)
+            deal_closed = detect_deal_closed(s.get("catalysts"), atr_pct, news_headlines, dollar_volume=s.get("dollar_volume_20d"))
             if deal_closed:
                 s["deal_closed"] = deal_closed
                 s["components"]["deal_closed"] = {"points": -50, "label": deal_closed["reason"]}

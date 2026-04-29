@@ -35,13 +35,21 @@ DEAL_CLOSED_PATTERNS = [
     r"\bsuccessfully completed\b",
     r"\bdeal completion\b",
     r"\bclosed today\b",
+    r"\btender offer\b",
+    r"\bHSR.*(cleared|expired|expiration)\b",
+    r"\bantitrust.*(cleared|approved)\b",
+    r"\bshareholders approved\b",
+    r"\bagreed to acquire\b",
+    r"\bacquisition agreement\b",
+    r"\bmerger consummated\b",
+    r"\bdefinitive merger\b",
 ]
 
 
 M_AND_A_CATALYST_KEYS = {"merger", "asset_sale", "definitive_agreement", "merger_cash_buyout"}
 
 
-def detect_deal_closed(signals, atr_pct, news_headlines):
+def detect_deal_closed(signals, atr_pct, news_headlines, dollar_volume=None):
     has_ma_catalyst = False
     if signals:
         for s in signals:
@@ -49,35 +57,51 @@ def detect_deal_closed(signals, atr_pct, news_headlines):
                 has_ma_catalyst = True
                 break
 
-    if not has_ma_catalyst:
-        return None
-
     headline_blob = " ".join(
         f"{h.get('title','')} {h.get('content','')}"
         for h in (news_headlines or [])
     )
     headline_match = _scan_text(headline_blob, DEAL_CLOSED_PATTERNS)
 
-    atr_locked = atr_pct is not None and atr_pct < 0.7
+    is_liquid = dollar_volume is not None and dollar_volume > 20_000_000
+    tape_frozen = atr_pct is not None and atr_pct < 0.5
+    tape_locked_loose = atr_pct is not None and atr_pct < 0.7
 
-    if headline_match and atr_locked:
+    if tape_frozen and is_liquid:
         return {
             "deal_closed": True,
-            "reason": f"M&A catalyst + locked ATR {atr_pct:.2f}% + news mentions completion",
+            "reason": f"Tape frozen ATR {atr_pct:.2f}% on liquid ${dollar_volume/1e6:.0f}M $vol = pinned at deal price",
             "severity": "HIGH",
         }
-    if atr_locked:
+
+    if has_ma_catalyst and tape_locked_loose:
         return {
             "deal_closed": True,
             "reason": f"M&A catalyst + locked ATR {atr_pct:.2f}% (price frozen at deal close price)",
             "severity": "HIGH",
         }
-    if headline_match:
+
+    if has_ma_catalyst and headline_match:
         return {
             "deal_closed": True,
-            "reason": "M&A catalyst + news mentions deal completion",
+            "reason": "M&A catalyst + news indicates deal in close-out (tender offer / HSR / shareholder vote)",
+            "severity": "HIGH",
+        }
+
+    if headline_match and tape_locked_loose:
+        return {
+            "deal_closed": True,
+            "reason": f"News mentions M&A close-out + locked ATR {atr_pct:.2f}%",
+            "severity": "HIGH",
+        }
+
+    if has_ma_catalyst and atr_pct is not None and atr_pct < 1.0:
+        return {
+            "deal_closed": True,
+            "reason": f"M&A catalyst + low-vol ATR {atr_pct:.2f}% (likely arb spread, not swing)",
             "severity": "MEDIUM",
         }
+
     return None
 
 

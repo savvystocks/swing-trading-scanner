@@ -84,8 +84,11 @@ def deep_research(top_candidates, max_tickers=5, verbose=True):
                 tools=[{"type": "web_search_20250305", "name": "web_search"}],
             )
             text_blocks = [b.text for b in response.content if b.type == "text"]
-            full_text = "\n".join(text_blocks).strip()
-            data = _extract_json(full_text)
+            joined_no_breaks = "".join(text_blocks).strip()
+            data = _extract_json(joined_no_breaks)
+            if not data:
+                joined_with_breaks = "\n".join(text_blocks).strip()
+                data = _extract_json(joined_with_breaks)
             if data:
                 results[c["ticker"]] = {
                     "verdict": data.get("verdict", "HOLD"),

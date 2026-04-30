@@ -197,6 +197,73 @@ def _stress_label(t):
     return ""
 
 
+def send_catalyst_alert(scan, max_picks=5):
+    candidates = scan.get("candidates", [])
+    strong = sorted(
+        [c for c in candidates if c.get("bucket") == "STRONG"],
+        key=lambda c: c["score"], reverse=True,
+    )[:max_picks]
+    if not strong:
+        text = (
+            f"<b>CATALYST SCAN {scan.get('scan_date', '')}</b>\n"
+            f"No STRONG picks today. {scan.get('scored_total', 0)} names scored, "
+            f"{scan.get('passed_cutoff', 0)} above WATCH threshold.\n"
+            f"Check email for the WATCH list."
+        )
+        return send_alert(text)
+
+    lines = [f"<b>CATALYST SCAN {scan.get('scan_date', '')} — top {len(strong)}</b>"]
+    paper = scan.get("paper_stats")
+    if paper and paper.get("n", 0) > 0:
+        lines.append(
+            f"\n<i>Paper P&amp;L 30d: ${paper['total_pnl_usd']:+.0f} on {paper['n']} trades, "
+            f"win rate {paper['win_rate_pct']}%</i>"
+        )
+
+    for c in strong:
+        bs = c.get("buy_signal") or {}
+        signal = bs.get("signal", "?")
+        prob = bs.get("probability_pct", 0)
+        entry = bs.get("entry_price", 0)
+        t1 = bs.get("target_1_price", 0)
+        t2 = bs.get("target_2_price", 0)
+        stop = bs.get("stop_price", 0)
+
+        flags = []
+        if c.get("deal_closed"):
+            flags.append("DEAL CLOSED")
+        if (c.get("components", {}).get("drift") or {}).get("extended"):
+            flags.append("EXTENDED")
+        if (c.get("components", {}).get("drift") or {}).get("pre_priced"):
+            flags.append("PRE-PRICED")
+        flag_str = f" [{' · '.join(flags)}]" if flags else ""
+
+        deep = c.get("deep_research") or {}
+        verdict = deep.get("verdict", "")
+        verdict_str = f" → {verdict}" if verdict else ""
+
+        cats = c.get("catalysts") or []
+        primary = cats[0]["label"][:35] if cats else ""
+
+        lines.append(
+            f"\n<b>{c['ticker']}</b> · {signal} {prob}%{verdict_str}{flag_str}\n"
+            f"  {primary}\n"
+            f"  Entry ${entry:.2f} · Stop ${stop:.2f} · T1 ${t1:.2f} · T2 ${t2:.2f}"
+        )
+
+    lines.append(f"\n<i>Full email + deep research notes in your inbox.</i>")
+    return send_alert("\n".join(lines))
+
+
+def send_failure_alert(scan_date, error_msg):
+    text = (
+        f"<b>CATALYST SCAN FAILED — {scan_date}</b>\n\n"
+        f"<code>{error_msg[:500]}</code>\n\n"
+        f"Check GitHub Actions logs."
+    )
+    return send_alert(text)
+
+
 def send_swing_alerts(tickets, min_tier=4, tier4_min_conviction=70):
     def _qualifies(t):
         tier = t.get("tier")

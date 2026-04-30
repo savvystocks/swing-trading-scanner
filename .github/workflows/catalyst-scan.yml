@@ -11,8 +11,11 @@ on:
         description: "Max tickers to LLM-grade (default 50, set 0 to skip)"
         required: false
         default: ""
-  schedule:
-    - cron: "0 19 * * 1-5"
+  # Schedule disabled 2026-04-30: VPS cron at 14:45 UTC is now primary scheduler.
+  # Manual workflow_dispatch still available as fallback. To re-enable scheduled
+  # GitHub run, uncomment below:
+  # schedule:
+  #   - cron: "0 19 * * 1-5"
 
 jobs:
   scan:

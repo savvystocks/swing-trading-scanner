@@ -7,11 +7,10 @@ on:
         description: "Limit universe size (leave blank for full 3089-ticker scan, or enter a number like 50 for a quick test)"
         required: false
         default: ""
-  # Schedule disabled 2026-04-30: VPS cron at 13:38 UTC is now primary scheduler.
-  # GitHub Actions free-tier cron was unreliable (4-6h delays). Manual workflow_dispatch
-  # still available as fallback. To re-enable scheduled GitHub run, uncomment below:
-  # schedule:
-  #   - cron: "43 9 * * 1-5"
+  # Re-enabled 2026-05-04: VPS options chain blocked by Alpaca CDN, awaiting whitelist.
+  # GitHub Actions runners pass Alpaca's IP filter. Accepting 4-6h delay tradeoff.
+  schedule:
+    - cron: "43 9 * * 1-5"
 
 jobs:
   scan:

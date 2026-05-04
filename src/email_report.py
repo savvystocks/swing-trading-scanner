@@ -466,7 +466,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   {% if short_watchlist %}
     <h2 style="margin-top:32px; padding-top:18px; border-top:2px solid #eee;">Stage 4 Shorts &mdash; Watchlist</h2>
     <div style="font-size:12px; color:#555; margin-bottom:12px;">
-      Names breaking down: Stage 4 trend, distribution days clustering, weak relative strength, or breakdown through 50d MA. Score 0-100 (qualified at 50+). No put-trade tickets yet &mdash; this is detection only, you decide whether to act.
+      Names breaking down: Stage 4 trend, distribution days clustering, weak relative strength, or breakdown through 50d MA. Score 0-100 (qualified at 50+). Top 8 candidates get auto-checked for put-trade viability (disqualifiers: high SI = squeeze risk, earnings in 14d = IV crush risk, oversold RSI = bounce risk, mega-cap).
     </div>
     <table style="width:100%; border-collapse:collapse; font-size:11px;">
       <thead><tr style="background:#f4f4f4;">
@@ -496,9 +496,42 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       {% endfor %}
       </tbody>
     </table>
+
+    {% set put_plays = short_watchlist|selectattr('put_trade')|list %}
+    {% if put_plays %}
+      <h2 style="margin-top:24px; padding-top:16px; border-top:2px solid #eee;">Priority Put Plays</h2>
+      <div style="font-size:12px; color:#555; margin-bottom:12px;">
+        Stage 4 candidates with a put contract that passed the disqualifier gates. Each is a potential bear-side options trade. Same risk-management rules as long calls: hard stop at -50% premium, exit before earnings if any, scale out at +100%/+200%.
+      </div>
+      {% for s in put_plays %}
+        {% set p = s.put_trade %}
+        <div style="border:2px solid #c94545; border-left-width:6px; background:#fef9f9; border-radius:6px; padding:12px 16px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+            <div>
+              <span style="font-size:15px; font-weight:700;">{{ s.ticker }} PUT</span>
+              <span style="font-size:11px; color:#555;">{{ s.name[:25] }}</span>
+              <span style="font-size:10px; padding:2px 8px; border-radius:3px; background:#c94545; color:#fff; font-weight:700;">SHORT SCORE {{ s.score }}</span>
+            </div>
+            <div style="font-size:11px; color:#666;">{{ s.sector_hint or '' }}</div>
+          </div>
+          <div style="font-size:11px; color:#444; margin-bottom:4px;">
+            Spot ${{ "%.2f"|format(s.last_close) }} &middot; from 52w high {{ "%.0f"|format(s.pct_from_high or 0) }}% &middot; RS 20d {{ "%+.1f"|format(s.inverse_rs_20d or 0) }}% &middot; Dist/Acc 25d {{ s.distribution_count_25d }}/{{ s.accumulation_count_25d }}
+          </div>
+          <div style="margin-top:8px; padding:10px 12px; background:#fffbf5; border:1px solid #f0d969; border-radius:4px; font-size:12px;">
+            <div style="font-weight:700; color:#6a5300; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Put Trade Suggestion</div>
+            <div style="font-weight:600;">${{ "%.0f"|format(p.strike) }} PUT &middot; exp {{ p.expiration }} ({{ p.dte }}d) &middot; Premium ${{ "%.2f"|format(p.premium_mid) }} (cost ${{ "%.0f"|format(p.cost_per_contract) }}/contract)</div>
+            <div style="color:#555; font-size:11px; margin-top:3px;">Delta {{ p.delta }} &middot; Theta {{ p.theta }} &middot; IV {{ p.iv_pct }}% &middot; Spread {{ p.spread_pct }}% &middot; OI {{ p.open_interest or 'n/a' }}</div>
+            <div style="color:#555; font-size:11px;">Breakeven ${{ "%.2f"|format(p.breakeven) }} ({{ "%+.1f"|format(p.breakeven_pct_move) }}% move)</div>
+            <div style="color:#0d7b34; font-weight:600; margin-top:4px;">If stock drops to target ${{ "%.2f"|format(p.downside_target) }}: contract ~${{ "%.2f"|format(p.projected_value_at_target) }} ({{ "%+.0f"|format(p.projected_roi_pct) }}% on premium)</div>
+          </div>
+          <div style="font-size:11px; color:#8e44ad; margin-top:6px;">{{ s.reasons|join(' &middot; ') }}</div>
+        </div>
+      {% endfor %}
+    {% endif %}
+
   {% endif %}
 
-  <div class="footer">swing-trading-scanner &middot; v3.1 spec &middot; long + short detection</div>
+  <div class="footer">swing-trading-scanner &middot; v3.1 spec &middot; long + short detection &middot; put-trades on Stage 4 watchlist</div>
 </div>
 </body>
 </html>"""

@@ -355,6 +355,54 @@ def run_scan(universe_limit=None, verbose=True):
             if verbose:
                 print(f"  options fetch error on {t['ticker']}: {type(e).__name__}: {e}")
 
+    short_candidates.sort(key=lambda c: c["short_signal"]["score"], reverse=True)
+    short_top = short_candidates[:15]
+
+    if verbose:
+        print(f"\nFetching put-options chains for top {min(len(short_top), 8)} short watchlist candidates (US only)...")
+    try:
+        from src.options_suggest_put import suggest_put_trade
+    except ImportError:
+        suggest_put_trade = None
+    if suggest_put_trade:
+        scored_by_ticker = {r["ticket"]["ticker"]: r for r in scored}
+        for sc in short_top[:8]:
+            tk = sc["ticker"]
+            if not tk.endswith(".US"):
+                continue
+            try:
+                ind = sc.get("ind")
+                fundamentals = None
+                if tk in scored_by_ticker:
+                    fundamentals = scored_by_ticker[tk].get("fundamentals")
+                last_close = sc.get("last_close")
+                ss = sc.get("short_signal") or {}
+                pct_below_50 = ss.get("below_50d_pct")
+                downside_target = last_close * 0.85 if last_close else None
+                if last_close and ss.get("stage_4_check"):
+                    low_52 = (ss["stage_4_check"]).get("pct_above_low")
+                    if low_52 is not None and last_close > 0:
+                        target_drop_to_low = last_close / (1 + low_52/100)
+                        downside_target = max(target_drop_to_low * 1.05, last_close * 0.80)
+                put, fails = suggest_put_trade(
+                    ticker=tk,
+                    downside_target=downside_target,
+                    current_price=last_close,
+                    df_ind=ind,
+                    fundamentals=fundamentals,
+                )
+                sc["put_trade"] = put
+                sc["put_disqualifiers"] = fails
+                if verbose and put:
+                    print(f"  {tk}: {put['strike']:.0f}P {put['expiration']} @ ${put['premium_mid']:.2f} (delta {put['delta']}, ROI to target {put['projected_roi_pct']:.0f}%)")
+                elif verbose and fails:
+                    print(f"  {tk}: SHORT DISQUALIFIED - {'; '.join(fails)}")
+                elif verbose:
+                    print(f"  {tk}: no suitable put contract")
+            except Exception as e:
+                if verbose:
+                    print(f"  put-options error on {tk}: {type(e).__name__}: {e}")
+
     paper = None
     try:
         if verbose:
@@ -394,13 +442,15 @@ def run_scan(universe_limit=None, verbose=True):
                 print(f"  {r['ticket']['ticker']:12s} T{r['tier_info']['tier']} conv={cs['score']}/100 stress={st['overall']}")
         print(f"Total API calls: {client.calls_made}")
 
-    short_candidates.sort(key=lambda c: c["short_signal"]["score"], reverse=True)
-    short_top = short_candidates[:15]
     if verbose:
         print(f"\nShort watchlist top 15 (Stage 4 / breakdown signal score):")
         for sc in short_top[:10]:
             ss = sc["short_signal"]
-            print(f"  {sc['ticker']:12s} score={ss['score']}  reasons: {'; '.join(ss['reasons'][:3])}")
+            put_str = ""
+            if sc.get("put_trade"):
+                p = sc["put_trade"]
+                put_str = f"  [PUT TRADE: {p['strike']:.0f}P {p['expiration']} ${p['premium_mid']:.2f}]"
+            print(f"  {sc['ticker']:12s} score={ss['score']}{put_str}")
 
     return {
         "scan_date": time.strftime("%Y-%m-%d"),
@@ -437,6 +487,8 @@ def save_results(scan, path=None):
             "inverse_rs_20d": ss["inverse_rs_20d"],
             "inverse_rs_60d": ss["inverse_rs_60d"],
             "pct_from_high": ss["stage_4_check"].get("pct_from_high"),
+            "put_trade": sc.get("put_trade"),
+            "put_disqualifiers": sc.get("put_disqualifiers"),
         })
 
     serializable = {

@@ -36,6 +36,8 @@ def main():
             "inverse_rs_20d": ss["inverse_rs_20d"],
             "inverse_rs_60d": ss["inverse_rs_60d"],
             "pct_from_high": ss["stage_4_check"].get("pct_from_high"),
+            "put_trade": sc.get("put_trade"),
+            "put_disqualifiers": sc.get("put_disqualifiers"),
         })
 
     scan_for_email = {

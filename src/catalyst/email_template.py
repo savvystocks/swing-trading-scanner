@@ -32,6 +32,8 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .extended-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#c94545; color:#fff; letter-spacing:0.4px; }
   .priced-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#e67e22; color:#fff; letter-spacing:0.4px; }
   .closed-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#7c2d12; color:#fff; letter-spacing:0.4px; }
+  .ideal-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#0d7b34; color:#fff; letter-spacing:0.4px; box-shadow:0 0 8px rgba(13,123,52,0.4); }
+  .skip-chase-badge { display:inline-block; padding:3px 8px; border-radius:4px; font-weight:700; font-size:11px; background:#b91c1c; color:#fff; letter-spacing:0.4px; }
   .signal-box { display:flex; flex-direction:column; align-items:center; padding:8px 12px; border-radius:6px; margin:0 0 0 8px; min-width:90px; color:#fff; }
   .signal-action { font-weight:700; font-size:14px; letter-spacing:0.6px; }
   .signal-prob { font-size:10px; opacity:0.9; margin-top:2px; }
@@ -84,8 +86,8 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   <div class="meta">Pre-close scan for tomorrow's overnight catalysts &middot; Multi-source scoring &middot; Universe: {{ candidates_total }} candidates &middot; Enriched: {{ enriched_total }} &middot; LLM-graded: {{ llm_graded }} &middot; STRONG: {{ strong|length }} &middot; WATCH: {{ watch|length }} &middot; EODHD: {{ eodhd_calls }} &middot; EDGAR: {{ edgar_calls }}</div>
 
   <div class="intro">
-    <strong>How to use this email.</strong> Each card shows a BUY / WATCH / SKIP signal with a probability of next-day positive move, plus an entry / stop / target ladder (T1 = lower expected, T2 = higher expected). Multi-source score combines catalyst tier, liquidity, news, drift, history, freshness, peers, and LLM read of the filing. Buy at today's close, sell into tomorrow's gap.
-    <br><br><em style="color:#866;">Probability disclaimer: heuristic from catalyst-type base rates + quality factors, NOT backtested. Use for relative ranking and sizing, not as literal hit-rate. Real measured stats below build up as the tracker runs.</em>
+    <strong>How to use this email.</strong> The system is now strictly tuned for ONE play: <strong>buy at today's US close → catch tomorrow's overnight gap on a fresh catalyst</strong>. BUY signals require a SCHEDULED OVERNIGHT catalyst (earnings tomorrow / FDA decision tomorrow) on a stock that hasn't already run. Names with red CATALYST IN MOTION badge mean the move already started today — do not chase. PRIME ENTRY badge = overnight catalyst on a flat stock (the ideal setup).
+    <br><br><em style="color:#866;">Probability is heuristic, not backtested. Real measured hit-rates build up in the tracker section as the system runs.</em>
   </div>
 
   {% if paper_stats and paper_stats.n > 0 %}
@@ -193,6 +195,8 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if c.sector %}<span class="sector-badge">{{ c.sector }}</span>{% endif %}
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
             <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
+            {% if c.ideal_setup %}<span class="ideal-badge">PRIME ENTRY &mdash; overnight catalyst on flat stock</span>{% endif %}
+            {% if c.components.drift.skip_chase %}<span class="skip-chase-badge">CATALYST IN MOTION &mdash; do not chase</span>{% endif %}
             {% if c.deal_closed %}<span class="closed-badge">DEAL CLOSED &mdash; do not trade</span>{% endif %}
             {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
             {% if c.components.drift.pre_priced %}<span class="priced-badge">PRE-PRICED &mdash; sell-the-news risk</span>{% endif %}
@@ -281,6 +285,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
           <div class="bd-item"><span class="bd-label">History</span><span class="bd-pts {% if c.components.historical.points > 0 %}pos{% elif c.components.historical.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.historical.points) }}</span></div>
           <div class="bd-item"><span class="bd-label">Freshness</span><span class="bd-pts {% if c.components.freshness.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.freshness.points) }}</span></div>
           <div class="bd-item"><span class="bd-label">Peers</span><span class="bd-pts {% if c.components.peer.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.peer.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Timing</span><span class="bd-pts {% if c.components.timing and c.components.timing.points > 0 %}pos{% elif c.components.timing and c.components.timing.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.timing.points if c.components.timing else 0) }}</span></div>
           <div class="bd-item"><span class="bd-label">Red flags</span><span class="bd-pts {% if c.components.red_flags.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.red_flags.points) }}</span></div>
         </div>
         {% if c.news and c.news.headlines %}
@@ -306,6 +311,8 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if c.sector %}<span class="sector-badge">{{ c.sector }}</span>{% endif %}
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
             <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
+            {% if c.ideal_setup %}<span class="ideal-badge">PRIME ENTRY &mdash; overnight catalyst on flat stock</span>{% endif %}
+            {% if c.components.drift.skip_chase %}<span class="skip-chase-badge">CATALYST IN MOTION &mdash; do not chase</span>{% endif %}
             {% if c.deal_closed %}<span class="closed-badge">DEAL CLOSED &mdash; do not trade</span>{% endif %}
             {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
             {% if c.components.drift.pre_priced %}<span class="priced-badge">PRE-PRICED &mdash; sell-the-news risk</span>{% endif %}
@@ -383,6 +390,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
           <div class="bd-item"><span class="bd-label">History</span><span class="bd-pts {% if c.components.historical.points > 0 %}pos{% elif c.components.historical.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.historical.points) }}</span></div>
           <div class="bd-item"><span class="bd-label">Fresh</span><span class="bd-pts {% if c.components.freshness.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.freshness.points) }}</span></div>
           <div class="bd-item"><span class="bd-label">Peers</span><span class="bd-pts {% if c.components.peer.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.peer.points) }}</span></div>
+          <div class="bd-item"><span class="bd-label">Timing</span><span class="bd-pts {% if c.components.timing and c.components.timing.points > 0 %}pos{% elif c.components.timing and c.components.timing.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.timing.points if c.components.timing else 0) }}</span></div>
           <div class="bd-item"><span class="bd-label">Red flags</span><span class="bd-pts {% if c.components.red_flags.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.red_flags.points) }}</span></div>
         </div>
       </div>

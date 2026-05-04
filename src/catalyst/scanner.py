@@ -14,7 +14,7 @@ from src.catalyst.scoring import (
     score_ticker, max_possible_base, assign_buckets, CATALYST_TIERS,
 )
 from src.catalyst.news import news_score, fetch_recent_news
-from src.catalyst.drift import compute_drift, drift_score
+from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
 from src.catalyst.peers import peer_signals, peer_confirmation_score
 from src.catalyst.freshness import freshness_score
@@ -356,10 +356,15 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         s["eodhd_ticker"] = data.get("eodhd_ticker")
         s["news"] = None
         s["_enriched_data"] = data
+        catalysts_full = s["components"]["catalyst_quality"].get("catalysts_full") or []
+        timing_pts = timing_bonus(catalysts_full, data.get("drift"))
+        s["components"]["timing"] = timing_pts
+        s["score"] = round(s["score"] + timing_pts["points"], 2)
+        s["ideal_setup"] = timing_pts.get("ideal_setup", False)
         s["base_points"] = s["components"]["catalyst_quality"]["points"]
         s["modifier_points"] = sum(
             s["components"][k].get("points", 0)
-            for k in ("liquidity_setup", "drift", "historical", "freshness", "peer")
+            for k in ("liquidity_setup", "drift", "historical", "freshness", "peer", "timing")
         )
         pre_scored.append(s)
 

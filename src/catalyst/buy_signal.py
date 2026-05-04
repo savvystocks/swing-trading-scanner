@@ -77,16 +77,30 @@ def buy_signal(ticker_data, components, df=None, catalyst_tier="-", confidence="
         expected_high = None
         stop_pct = None
 
-    if drift.get("extended") or red <= -8:
+    catalysts_list = components.get("catalyst_quality", {}).get("catalysts_full") or []
+    has_overnight = any(c.get("event_timing") == "scheduled_overnight" for c in catalysts_list)
+    has_fresh = any(c.get("event_timing") == "fresh_breaking" for c in catalysts_list)
+    has_only_post = (not has_overnight and not has_fresh) and any(c.get("event_timing") == "post_event" for c in catalysts_list)
+
+    if drift.get("skip_chase") or red <= -8:
         signal = "SKIP"
         signal_color = "#c94545"
+    elif drift.get("extended"):
+        signal = "SKIP"
+        signal_color = "#c94545"
+    elif has_only_post:
+        signal = "WATCH" if drift.get("pre_priced") is not True else "SKIP"
+        signal_color = "#999"
     elif drift.get("pre_priced"):
         signal = "WATCH"
         signal_color = "#e67e22"
-    elif prob_pct >= 60 and confidence == "HIGH":
+    elif has_overnight and prob_pct >= 60 and confidence == "HIGH":
         signal = "BUY"
         signal_color = "#0d7b34"
-    elif prob_pct >= 55:
+    elif has_overnight and prob_pct >= 50:
+        signal = "WATCH"
+        signal_color = "#4a90e2"
+    elif has_fresh and prob_pct >= 55 and confidence == "HIGH":
         signal = "WATCH"
         signal_color = "#4a90e2"
     else:

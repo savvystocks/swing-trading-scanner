@@ -650,6 +650,23 @@ OPTIONS_EMAIL_TEMPLATE = """<!DOCTYPE html>
             <div class="payoff">If stock hits Phase 1 target: contract ~${{ "%.2f"|format(t.options_trade.projected_value_at_target) }} ({{ "%+.0f"|format(t.options_trade.projected_roi_pct) }}% return on premium)</div>
           </div>
         {% endif %}
+        {% if t.options_spread %}
+          {% set sp = t.options_spread %}
+          <div style="margin-top:8px; padding:10px 12px; background:#f0f8ff; border:1px solid #4a90e2; border-radius:6px; font-size:11px;">
+            <div style="font-weight:700; color:#1a4d7c; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">
+              Alternative: Bull Call Spread
+              <span style="float:right; font-weight:400; color:#666; font-size:10px;">lower cost / capped upside / less theta</span>
+            </div>
+            <div style="font-weight:600;">{{ "%.0f"|format(sp.long_leg.strike) }}/{{ "%.0f"|format(sp.short_leg.strike) }}C ({{ sp.width }}-wide) &middot; exp {{ sp.expiration }} ({{ sp.dte }}d)</div>
+            <div style="color:#555; margin-top:2px;">
+              Buy {{ "%.0f"|format(sp.long_leg.strike) }}C @ ${{ "%.2f"|format(sp.long_leg.mid) }} (Δ {{ sp.long_leg.delta }})
+              &middot; Sell {{ "%.0f"|format(sp.short_leg.strike) }}C @ ${{ "%.2f"|format(sp.short_leg.mid) }} (Δ {{ sp.short_leg.delta }})
+            </div>
+            <div style="color:#555;">Net debit ${{ "%.2f"|format(sp.net_debit) }} = <strong>${{ "%.0f"|format(sp.cost_per_spread) }}/spread</strong> &middot; Max profit ${{ "%.0f"|format(sp.max_profit_per_spread) }} &middot; R/R {{ sp.risk_reward_ratio }}</div>
+            <div style="color:#555;">Breakeven ${{ "%.2f"|format(sp.breakeven) }} ({{ "%+.1f"|format(sp.breakeven_pct_move) }}% move)</div>
+            <div style="color:#0d7b34; font-weight:600; margin-top:3px;">If stock hits ${{ "%.2f"|format(t.phase1_target) }} target: ${{ "%.0f"|format(sp.profit_at_target) }} ({{ "%+.0f"|format(sp.roi_at_target_pct) }}%)</div>
+          </div>
+        {% endif %}
         {% if t.llm_thesis %}
           {% set _rating_colors = {
             'A+':'#0d7b34','A':'#0d7b34','A-':'#1a9850',

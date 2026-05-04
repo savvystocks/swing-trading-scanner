@@ -351,6 +351,23 @@ def run_scan(universe_limit=None, verbose=True):
                 print(f"  {t['ticker']}: {opt['strike']:.0f}C {opt['expiration']} @ ${opt['premium_mid']:.2f} (delta {opt['delta']}, ROI if target {opt['projected_roi_pct']:.0f}%)")
             elif verbose:
                 print(f"  {t['ticker']}: no suitable contract found")
+            try:
+                from src.options_suggest_spread import suggest_bull_call_spread
+                spread = suggest_bull_call_spread(
+                    ticker=t["ticker"],
+                    phase1_target=t["phase1_target"],
+                    current_price=t["price"],
+                    df_ind=r["ind"],
+                    max_cost_usd=1500,
+                )
+                t["options_spread"] = spread
+                if verbose and spread:
+                    ll = spread["long_leg"]
+                    sl = spread["short_leg"]
+                    print(f"    spread alt: {ll['strike']:.0f}/{sl['strike']:.0f}C {spread['expiration']} debit ${spread['net_debit']:.2f} cost ${spread['cost_per_spread']:.0f} max ${spread['max_profit_per_spread']:.0f} R/R {spread['risk_reward_ratio']}")
+            except Exception as e:
+                if verbose:
+                    print(f"    spread error: {type(e).__name__}: {str(e)[:100]}")
         except Exception as e:
             if verbose:
                 print(f"  options fetch error on {t['ticker']}: {type(e).__name__}: {e}")

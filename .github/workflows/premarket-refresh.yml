@@ -3,7 +3,10 @@ name: premarket-refresh
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 13 * * 1-5"
+    # 8:55 UTC scheduled. With GitHub Actions 3-6h delay observed on this repo,
+    # email lands 12:00-15:00 UTC = 13:00-16:00 user time = mostly pre-US-open
+    # to first hour of session. Was 13:00 UTC but that landed 17:00-20:00 mid-session.
+    - cron: "55 8 * * 1-5"
 
 permissions:
   actions: read

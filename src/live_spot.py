@@ -19,7 +19,15 @@ def enrich_with_live_spots(tickets, verbose=True):
 
     sc = StockHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
 
-    us_tickets = [t for t in tickets if t.get("ticker", "").endswith(".US") and t.get("price")]
+    us_tickets = []
+    for t in tickets:
+        tk = t.get("ticker", "")
+        if not tk or not t.get("price"):
+            continue
+        if tk.endswith(".US"):
+            us_tickets.append(t)
+        elif "." not in tk and tk.replace("-", "").replace(".", "").isalnum():
+            us_tickets.append(t)
     if not us_tickets:
         if verbose:
             print("  live_spot: no US tickets to enrich")

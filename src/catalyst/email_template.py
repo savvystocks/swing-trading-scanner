@@ -212,6 +212,15 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
         </div>
         <div class="price-row">
           <span>Price <strong>${{ "%.2f"|format(c.price) if c.price else "n/a" }}</strong></span>
+          {% if c.live_spot %}
+            {% set lc = '#0d7b34' if c.live_change_pct >= 1 else ('#c94545' if c.live_change_pct <= -1 else '#666') %}
+            {% set lbg = '#e7f5ec' if c.live_change_pct >= 1 else ('#fdecec' if c.live_change_pct <= -1 else '#f0f0f0') %}
+            {% set big = c.live_change_pct >= 3 or c.live_change_pct <= -3 %}
+            <span style="padding:2px 8px; border-radius:3px; background:{{ lbg }}; color:{{ lc }}; font-weight:700; {% if big %}border:2px solid {{ lc }};{% endif %}">
+              LIVE ${{ "%.2f"|format(c.live_spot) }} ({{ "%+.2f"|format(c.live_change_pct) }}%)
+              {% if big %}&middot; verify before entry{% endif %}
+            </span>
+          {% endif %}
           {% if c.market_cap %}<span>Mcap ${{ "%.2f"|format(c.market_cap/1e9) }}B</span>{% endif %}
           {% if c.dollar_volume_20d %}<span>$Vol ${{ "%.1f"|format(c.dollar_volume_20d/1e6) }}M</span>{% endif %}
           {% if c.short_pct_float %}<span>SI {{ "%.0f"|format(c.short_pct_float) }}%</span>{% endif %}
@@ -316,6 +325,15 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
         </div>
         <div class="price-row">
           <span>Price <strong>${{ "%.2f"|format(c.price) if c.price else "n/a" }}</strong></span>
+          {% if c.live_spot %}
+            {% set lc = '#0d7b34' if c.live_change_pct >= 1 else ('#c94545' if c.live_change_pct <= -1 else '#666') %}
+            {% set lbg = '#e7f5ec' if c.live_change_pct >= 1 else ('#fdecec' if c.live_change_pct <= -1 else '#f0f0f0') %}
+            {% set big = c.live_change_pct >= 3 or c.live_change_pct <= -3 %}
+            <span style="padding:2px 8px; border-radius:3px; background:{{ lbg }}; color:{{ lc }}; font-weight:700; {% if big %}border:2px solid {{ lc }};{% endif %}">
+              LIVE ${{ "%.2f"|format(c.live_spot) }} ({{ "%+.2f"|format(c.live_change_pct) }}%)
+              {% if big %}&middot; verify before entry{% endif %}
+            </span>
+          {% endif %}
           {% if c.market_cap %}<span>Mcap ${{ "%.2f"|format(c.market_cap/1e9) }}B</span>{% endif %}
           {% if c.dollar_volume_20d %}<span>$Vol ${{ "%.1f"|format(c.dollar_volume_20d/1e6) }}M</span>{% endif %}
           {% if c.short_pct_float %}<span>SI {{ "%.0f"|format(c.short_pct_float) }}%</span>{% endif %}
@@ -391,6 +409,12 @@ def render_catalyst_email(scan, max_strong=20, max_watch=20):
         [c for c in candidates if c.get("bucket") == "WATCH"],
         key=lambda c: c["score"], reverse=True,
     )[:max_watch]
+
+    try:
+        from src.live_spot import enrich_with_live_spots
+        enrich_with_live_spots(strong + watch)
+    except Exception as e:
+        print(f"  catalyst live_spot: failed: {type(e).__name__}: {e}")
 
     tmpl = Template(EMAIL_TEMPLATE)
     return tmpl.render(

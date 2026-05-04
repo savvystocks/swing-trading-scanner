@@ -464,6 +464,21 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         s.pop("_enriched_data", None)
         final_scored.append(s)
 
+    try:
+        from src.sectors import fetch_sector_performance
+        from src.catalyst.sector_overlay import apply_catalyst_sector_overlay
+        from datetime import datetime, timedelta
+        spy_ohlcv = client.ohlcv("SPY.US", from_date=(datetime.now() - timedelta(days=420)).strftime("%Y-%m-%d"))
+        spy_df = to_dataframe(spy_ohlcv) if spy_ohlcv else None
+        if spy_df is not None:
+            sector_perf = fetch_sector_performance(client, spy_df, from_date=(datetime.now() - timedelta(days=420)).strftime("%Y-%m-%d"))
+            if verbose:
+                print(f"Step 6.5/6: applying sector rotation overlay to catalyst scores...")
+            apply_catalyst_sector_overlay(final_scored, sector_perf, verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  sector overlay skipped: {type(e).__name__}: {e}")
+
     final_scored = assign_buckets(final_scored, top_pct_strong=top_pct_strong, top_pct_watch=top_pct_watch)
     if verbose:
         from collections import Counter

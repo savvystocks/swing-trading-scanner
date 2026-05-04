@@ -246,7 +246,23 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
         {% if c.deep_research %}
           <div class="deep-box">
             <span class="verdict-tag verdict-{{ c.deep_research.verdict|replace(' ', '-') }}">{{ c.deep_research.verdict }}</span>
-            <strong>Deep research ({{ c.deep_research.confidence_pct }}% conf):</strong> {{ c.deep_research.research_note }}
+            <strong>Deep research ({{ c.deep_research.confidence_pct }}% conf):</strong>
+            {% if c.deep_research.outcome_prediction and c.deep_research.outcome_prediction.expected_outcome %}
+              <div style="margin:6px 0; padding:6px 10px; background:#dbeafe; border-radius:4px;">
+                <strong>Expected outcome:</strong> {{ c.deep_research.outcome_prediction.expected_outcome }}
+                ({{ c.deep_research.outcome_prediction.outcome_probability_pct }}% probability)
+                {% if c.deep_research.outcome_prediction.consensus_data %}<br><strong>Consensus:</strong> {{ c.deep_research.outcome_prediction.consensus_data }}{% endif %}
+                {% if c.deep_research.outcome_prediction.outcome_reasoning %}<br><strong>Why:</strong> {{ c.deep_research.outcome_prediction.outcome_reasoning }}{% endif %}
+              </div>
+            {% endif %}
+            {% if c.deep_research.expected_move and c.deep_research.expected_move.if_positive_pct %}
+              <div style="margin:4px 0;">
+                <strong>Expected move:</strong> +{{ c.deep_research.expected_move.if_positive_pct }} if positive
+                / {{ c.deep_research.expected_move.if_negative_pct }} if negative
+                {% if c.deep_research.expected_move.expected_value_pct %} &middot; <strong>EV:</strong> {{ c.deep_research.expected_move.expected_value_pct }}{% endif %}
+              </div>
+            {% endif %}
+            {{ c.deep_research.research_note }}
             {% if c.deep_research.reason_to_buy %}<br><strong>Bull case:</strong> {{ c.deep_research.reason_to_buy }}{% endif %}
             {% if c.deep_research.reason_to_avoid %}<br><strong>Bear case:</strong> {{ c.deep_research.reason_to_avoid }}{% endif %}
             {% if c.deep_research.red_flags_found %}<br><strong>Risks found:</strong> {{ c.deep_research.red_flags_found|join(' &middot; ') }}{% endif %}

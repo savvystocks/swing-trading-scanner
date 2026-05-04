@@ -496,9 +496,33 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         eligible_for_deep = [s for s in final_scored if not s.get("deal_closed")]
         top_for_deep = sorted(eligible_for_deep, key=lambda x: x["score"], reverse=True)[:deep_research_max]
         deep_results = deep_research(top_for_deep, max_tickers=deep_research_max, verbose=verbose)
+        positive_outcomes = {"BEAT", "BEAT_AND_RAISE", "APPROVAL", "DEAL_CLOSE", "DATA_HIT"}
+        negative_outcomes = {"MISS", "CRL", "DEAL_BREAK", "DATA_MISS"}
         for s in final_scored:
             if s["ticker"] in deep_results:
                 s["deep_research"] = deep_results[s["ticker"]]
+                op = (deep_results[s["ticker"]].get("outcome_prediction") or {})
+                outcome_prob = op.get("outcome_probability_pct") or 0
+                expected_outcome = (op.get("expected_outcome") or "").upper()
+                outcome_pts = 0
+                if expected_outcome in positive_outcomes:
+                    if outcome_prob >= 70:
+                        outcome_pts = 15
+                    elif outcome_prob >= 55:
+                        outcome_pts = 8
+                    elif outcome_prob >= 40:
+                        outcome_pts = 2
+                elif expected_outcome in negative_outcomes:
+                    if outcome_prob >= 50:
+                        outcome_pts = -25
+                    elif outcome_prob >= 35:
+                        outcome_pts = -10
+                if outcome_pts != 0:
+                    s["components"]["outcome_conviction"] = {
+                        "points": outcome_pts,
+                        "label": f"{expected_outcome} ({outcome_prob}% prob)",
+                    }
+                    s["score"] = round(s["score"] + outcome_pts, 2)
 
     scan_date_str = (target_date if isinstance(target_date, str) else (target_date or datetime.utcnow().date()).strftime("%Y-%m-%d"))
     snap_count, _ = snapshot_predictions(scan_date_str, final_scored)

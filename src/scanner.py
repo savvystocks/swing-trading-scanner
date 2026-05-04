@@ -368,6 +368,33 @@ def run_scan(universe_limit=None, verbose=True):
             except Exception as e:
                 if verbose:
                     print(f"    spread error: {type(e).__name__}: {str(e)[:100]}")
+            try:
+                from src.lottery_playbook import lottery_score_swing, find_lottery_contract
+                ls = lottery_score_swing(t, sector_perf=sector_perf)
+                t["lottery_score"] = ls
+                if ls["qualified"]:
+                    from alpaca.data.historical.option import OptionHistoricalDataClient
+                    from alpaca.data.requests import OptionChainRequest
+                    from datetime import datetime as _dt, timedelta as _td
+                    if os.environ.get("ALPACA_API_KEY"):
+                        oc = OptionHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+                        underlying = t["ticker"].replace(".US", "")
+                        today_dt = _dt.now()
+                        chain = oc.get_option_chain(OptionChainRequest(
+                            underlying_symbol=underlying,
+                            expiration_date_gte=(today_dt + _td(days=7)).strftime("%Y-%m-%d"),
+                            expiration_date_lte=(today_dt + _td(days=18)).strftime("%Y-%m-%d"),
+                            strike_price_gte=str(round(t["price"] * 1.05, 2)),
+                            strike_price_lte=str(round(t["price"] * 1.40, 2)),
+                            type="call",
+                        ))
+                        contract = find_lottery_contract(chain, t["price"], direction="bull")
+                        t["lottery_contract"] = contract
+                        if verbose and contract:
+                            print(f"    lottery: {contract['strike']:.0f}C {contract['expiration']} ({contract['dte']}d) @ ${contract['mid']:.2f} - needs {contract['required_move_pct']:.0f}% stock move for 500% ROI")
+            except Exception as e:
+                if verbose:
+                    print(f"    lottery error: {type(e).__name__}: {str(e)[:100]}")
         except Exception as e:
             if verbose:
                 print(f"  options fetch error on {t['ticker']}: {type(e).__name__}: {e}")

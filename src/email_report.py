@@ -584,6 +584,55 @@ OPTIONS_EMAIL_TEMPLATE = """<!DOCTYPE html>
     <span class="bucket-chip" style="background:#8e44ad;">EARLY &lt;$2B with signals — 1 slot</span>
   </div>
 
+  {% if lottery_picks %}
+    <h2 style="margin-top:24px; padding-top:14px; border-top:3px solid #f59e0b; color:#92400e;">PRIME LOTTERY SETUPS &mdash; targeting 500% in a week</h2>
+    <div style="font-size:12px; color:#666; margin-bottom:12px; padding:10px 14px; background:#fffbeb; border-left:4px solid #f59e0b; border-radius:4px;">
+      <strong>Reality check:</strong> These contracts can return 500%+ in a week IF the catalyst hits the way it's set up. They can also expire worthless (they expire in 7-14 days). Win rate ~10-25%. Treat as lottery tickets &mdash; size SMALL ($200-500 per trade max), expect to lose 70%+ of the time, but the wins can be life-changing.
+      <br><strong>Setup:</strong> Imminent binary catalyst (earnings/FDA/M&amp;A) + squeeze fuel (high SI) + tight float + hot cohort. Picks must score 50+ on lottery scorer to qualify.
+    </div>
+    {% for t in lottery_picks %}
+      {% set ls = t.lottery_score %}
+      {% set lc = t.lottery_contract %}
+      {% set tier_color = '#0d7b34' if ls.tier == 'PRIME' else '#1a9850' if ls.tier == 'STRONG' else '#4a90e2' %}
+      <div style="border:3px solid {{ tier_color }}; background:linear-gradient(180deg,#fffbeb 0%,#fff 100%); border-radius:8px; padding:14px 18px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+          <div>
+            <span style="font-size:18px; font-weight:700;">{{ t.ticker }}</span>
+            <span style="font-size:11px; color:#666;">{{ (t.name or '')[:28] }}</span>
+            <span style="display:inline-block; padding:3px 10px; border-radius:4px; background:{{ tier_color }}; color:#fff; font-size:11px; font-weight:700; letter-spacing:0.5px;">LOTTERY {{ ls.tier }}</span>
+            <span style="display:inline-block; padding:3px 10px; border-radius:4px; background:#f59e0b; color:#fff; font-size:11px; font-weight:700;">SCORE {{ ls.score }}</span>
+          </div>
+          <div style="text-align:right;">
+            {% if t.live_spot %}
+              <span style="font-size:13px; font-weight:700;">${{ "%.2f"|format(t.live_spot) }}</span>
+              <span style="font-size:11px; color:{{ '#0d7b34' if t.live_change_pct >= 0 else '#c94545' }};">({{ "%+.2f"|format(t.live_change_pct) }}%)</span>
+            {% else %}
+              <span style="font-size:13px; font-weight:700;">${{ "%.2f"|format(t.price) }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div style="margin-top:8px; padding:12px 14px; background:#fff; border:2px solid #f59e0b; border-radius:6px; font-size:13px;">
+          <div style="font-weight:700; color:#92400e; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Lottery Contract</div>
+          <div style="font-size:14px; font-weight:700; color:#111;">${{ "%.0f"|format(lc.strike) }} CALL exp {{ lc.expiration }} ({{ lc.dte }} DTE)</div>
+          <div style="margin-top:4px; color:#444;">Premium <strong>${{ "%.2f"|format(lc.mid) }}</strong> &middot; bid ${{ "%.2f"|format(lc.bid) }} / ask ${{ "%.2f"|format(lc.ask) }} &middot; spread {{ lc.spread_pct }}%</div>
+          <div style="color:#444;">Delta {{ lc.delta }} &middot; IV {{ lc.iv_pct }}% &middot; cost <strong>${{ "%.0f"|format(lc.cost_per_contract) }}/contract</strong></div>
+          <div style="margin-top:6px; padding:6px 10px; background:#fef3c7; border-radius:4px; font-size:12px; color:#92400e;">
+            <strong>For 500% ROI:</strong> need stock to ${{ "%.2f"|format(lc.target_stock_price) }} ({{ "%+.1f"|format(lc.required_move_pct) }}%) within {{ lc.dte }} days
+          </div>
+        </div>
+        <div style="margin-top:8px; font-size:11px; color:#555;">
+          <strong style="color:#92400e;">Why this is a lottery candidate:</strong>
+          <ul style="margin:4px 0 0; padding-left:18px;">
+          {% for r in ls.reasons %}<li>{{ r }}</li>{% endfor %}
+          </ul>
+        </div>
+        <div style="margin-top:6px; padding:5px 10px; background:#fee2e2; border-left:3px solid #c94545; border-radius:3px; font-size:10px; color:#7f1d1d;">
+          <strong>RISK:</strong> ~70-85% chance of -100% (full premium loss). Size for "I can lose this without flinching" tolerance.
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
   {% if priority_options %}
     {% set bucket_colors = {'MEGA':'#0d7b34', 'LARGE':'#1a9850', 'MID':'#0052cc', 'EARLY':'#8e44ad'} %}
     {% set bucket_labels = {'MEGA':'MEGA CAP', 'LARGE':'LARGE CAP', 'MID':'MID CAP', 'EARLY':'EARLY'} %}
@@ -844,6 +893,12 @@ def render_options_email(scan):
         add_commentary(priority_options, top_n=5)
     except Exception as e:
         print(f"  llm_commentary: import/run failed: {type(e).__name__}: {e}")
+
+    lottery_picks = sorted(
+        [t for t in priority_options if t.get("lottery_score", {}).get("qualified") and t.get("lottery_contract")],
+        key=lambda t: t["lottery_score"]["score"],
+        reverse=True,
+    )[:5]
     regime = scan.get("vix_regime") or {}
     vix_val = regime.get("vix")
     paper = scan.get("paper_trader") or {}
@@ -854,6 +909,7 @@ def render_options_email(scan):
         regime=regime.get("regime", "unknown"),
         vix=round(vix_val, 2) if vix_val is not None else "n/a",
         priority_options=priority_options,
+        lottery_picks=lottery_picks,
         paper=paper,
     )
 

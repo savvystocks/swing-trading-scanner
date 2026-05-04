@@ -393,7 +393,45 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     <div class="empty">No catalysts ranked above the percentile thresholds today. {{ scored_total }} candidates evaluated.</div>
   {% endif %}
 
-  <div class="footer">catalyst-watchlist v2 &middot; multi-source scoring &middot; LLM-read of actual filings &middot; pre-close scan</div>
+  {% if bear_picks %}
+    <h2 style="margin-top:30px; padding-top:18px; border-top:3px solid #c94545; color:#7f1d1d;">Bearish Catalyst Plays</h2>
+    <div style="font-size:12px; color:#555; margin-bottom:14px;">
+      Negative catalyst names: going concern flags, missed-and-guided-down earnings, FDA rejections, dilutive offerings, lawsuits, exec departures. These are PUT-SIDE plays (sell short or buy puts). Same risk-management discipline applies.
+    </div>
+    {% for c in bear_picks %}
+      <div style="border:2px solid #c94545; border-left-width:6px; background:#fef9f9; border-radius:6px; padding:12px 16px; margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+          <div>
+            <span style="font-size:15px; font-weight:700;">{{ c.ticker }}</span>
+            <span style="font-size:11px; color:#555;">{{ (c.name or c.company)[:35] }}</span>
+            <span style="font-size:10px; padding:2px 8px; border-radius:3px; background:#c94545; color:#fff; font-weight:700;">BEAR &middot; T{{ c.catalyst_tier }} &middot; SCORE {{ "%.0f"|format(c.score) }}</span>
+          </div>
+          <div style="font-size:11px; color:#666;">{{ c.sector or '' }}</div>
+        </div>
+        <div style="font-size:11px; color:#444; margin-bottom:4px;">
+          Price ${{ "%.2f"|format(c.price) if c.price else "n/a" }}
+          {% if c.live_spot %}
+            {% set lc = '#0d7b34' if c.live_change_pct >= 1 else ('#c94545' if c.live_change_pct <= -1 else '#666') %}
+            &middot; <span style="color:{{ lc }}; font-weight:600;">LIVE ${{ "%.2f"|format(c.live_spot) }} ({{ "%+.2f"|format(c.live_change_pct) }}%)</span>
+          {% endif %}
+          {% if c.market_cap %} &middot; Mcap ${{ "%.2f"|format(c.market_cap/1e9) }}B{% endif %}
+          {% if c.short_pct_float %} &middot; SI {{ "%.0f"|format(c.short_pct_float) }}%{% endif %}
+        </div>
+        {% for cat in c.catalysts[:3] %}
+          <div style="font-size:11px; color:#7f1d1d; margin:3px 0;">
+            <strong>{{ cat.label }}</strong> &middot; {{ cat.details }}
+          </div>
+        {% endfor %}
+        {% if c.short_pct_float and c.short_pct_float >= 25 %}
+          <div style="margin-top:6px; padding:6px 10px; background:#fef2f2; border-left:3px solid #c94545; border-radius:3px; font-size:11px; color:#7f1d1d;">
+            <strong>WARNING:</strong> SI {{ "%.0f"|format(c.short_pct_float) }}% is squeeze risk - puts may not work even on bad news
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="footer">catalyst-watchlist v2 &middot; multi-source scoring &middot; LLM-read of actual filings &middot; bull + bear catalysts</div>
 </div>
 </body>
 </html>"""
@@ -401,18 +439,23 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
 def render_catalyst_email(scan, max_strong=20, max_watch=20):
     candidates = scan.get("candidates", [])
-    strong = sorted(
+    strong_all = sorted(
         [c for c in candidates if c.get("bucket") == "STRONG"],
         key=lambda c: c["score"], reverse=True,
-    )[:max_strong]
-    watch = sorted(
+    )
+    watch_all = sorted(
         [c for c in candidates if c.get("bucket") == "WATCH"],
         key=lambda c: c["score"], reverse=True,
-    )[:max_watch]
+    )
+    strong = [c for c in strong_all if c.get("direction", "bull") == "bull"][:max_strong]
+    watch = [c for c in watch_all if c.get("direction", "bull") == "bull"][:max_watch]
+    bear_strong = [c for c in strong_all if c.get("direction") == "bear"][:max_strong]
+    bear_watch = [c for c in watch_all if c.get("direction") == "bear"][:max_watch]
+    bear_picks = (bear_strong + bear_watch)[:max_strong]
 
     try:
         from src.live_spot import enrich_with_live_spots
-        enrich_with_live_spots(strong + watch)
+        enrich_with_live_spots(strong + watch + bear_picks)
     except Exception as e:
         print(f"  catalyst live_spot: failed: {type(e).__name__}: {e}")
 
@@ -430,4 +473,5 @@ def render_catalyst_email(scan, max_strong=20, max_watch=20):
         paper_stats=scan.get("paper_stats"),
         strong=strong,
         watch=watch,
+        bear_picks=bear_picks,
     )

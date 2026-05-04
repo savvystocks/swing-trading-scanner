@@ -1,34 +1,48 @@
 CATALYST_TIERS = {
-    "earnings_bmo_with_beat_streak": {"tier": "S", "points": 5.0, "label": "Earnings BMO + beat streak"},
-    "fda_pdufa_tomorrow": {"tier": "S", "points": 5.0, "label": "FDA PDUFA decision tomorrow"},
-    "merger_cash_buyout": {"tier": "S", "points": 5.0, "label": "Cash buyout announced"},
-    "major_contract_win": {"tier": "S", "points": 5.0, "label": "Material contract win"},
+    "earnings_bmo_with_beat_streak": {"tier": "S", "points": 5.0, "label": "Earnings BMO + beat streak", "direction": "bull"},
+    "fda_pdufa_tomorrow": {"tier": "S", "points": 5.0, "label": "FDA PDUFA decision tomorrow", "direction": "bull"},
+    "merger_cash_buyout": {"tier": "S", "points": 5.0, "label": "Cash buyout announced", "direction": "bull"},
+    "major_contract_win": {"tier": "S", "points": 5.0, "label": "Material contract win", "direction": "bull"},
 
-    "earnings_bmo_tomorrow": {"tier": "A", "points": 4.0, "label": "Earnings tomorrow before open"},
-    "earnings_amc_today": {"tier": "A", "points": 4.0, "label": "Earnings tonight after close"},
-    "asset_sale": {"tier": "A", "points": 4.0, "label": "Asset purchase agreement"},
-    "merger": {"tier": "A", "points": 4.0, "label": "Merger agreement filed"},
-    "fda_event": {"tier": "A", "points": 4.0, "label": "FDA / PDUFA event filed"},
-    "clinical_milestone": {"tier": "A", "points": 4.0, "label": "Clinical milestone (Phase 1/2/3)"},
-    "definitive_agreement": {"tier": "A", "points": 3.5, "label": "Material definitive agreement"},
+    "earnings_bmo_tomorrow": {"tier": "A", "points": 4.0, "label": "Earnings tomorrow before open", "direction": "bull"},
+    "earnings_amc_today": {"tier": "A", "points": 4.0, "label": "Earnings tonight after close", "direction": "bull"},
+    "asset_sale": {"tier": "A", "points": 4.0, "label": "Asset purchase agreement", "direction": "bull"},
+    "merger": {"tier": "A", "points": 4.0, "label": "Merger agreement filed", "direction": "bull"},
+    "fda_event": {"tier": "A", "points": 4.0, "label": "FDA / PDUFA event filed", "direction": "bull"},
+    "clinical_milestone": {"tier": "A", "points": 4.0, "label": "Clinical milestone (Phase 1/2/3)", "direction": "bull"},
+    "definitive_agreement": {"tier": "A", "points": 3.5, "label": "Material definitive agreement", "direction": "bull"},
 
-    "private_placement": {"tier": "B", "points": 3.0, "label": "Private placement filed"},
-    "covenant_relief": {"tier": "B", "points": 3.0, "label": "Forbearance / covenant relief"},
-    "strategic_partnership": {"tier": "B", "points": 3.0, "label": "Strategic partnership"},
-    "contract_win": {"tier": "B", "points": 3.0, "label": "Contract or tender award"},
-    "activist_stake": {"tier": "B", "points": 3.0, "label": "Activist 13D stake disclosed"},
+    "private_placement": {"tier": "B", "points": 3.0, "label": "Private placement filed", "direction": "bull"},
+    "covenant_relief": {"tier": "B", "points": 3.0, "label": "Forbearance / covenant relief", "direction": "bull"},
+    "strategic_partnership": {"tier": "B", "points": 3.0, "label": "Strategic partnership", "direction": "bull"},
+    "contract_win": {"tier": "B", "points": 3.0, "label": "Contract or tender award", "direction": "bull"},
+    "activist_stake": {"tier": "B", "points": 3.0, "label": "Activist 13D stake disclosed", "direction": "bull"},
 
-    "insider_cluster": {"tier": "C", "points": 2.0, "label": "Form 4 insider buying cluster"},
-    "cohort_lazar_plays": {"tier": "C", "points": 2.0, "label": "Lazar Capital portfolio name"},
-    "cohort_crypto_treasury": {"tier": "C", "points": 2.0, "label": "Crypto-treasury cohort"},
-    "cohort_prediction_markets": {"tier": "C", "points": 2.0, "label": "Prediction market cohort"},
-    "cohort_biotech_binary": {"tier": "C", "points": 2.0, "label": "Biotech binary catalyst cohort"},
-    "buyback": {"tier": "C", "points": 1.5, "label": "Buyback program announced"},
+    "insider_cluster": {"tier": "C", "points": 2.0, "label": "Form 4 insider buying cluster", "direction": "bull"},
+    "cohort_lazar_plays": {"tier": "C", "points": 2.0, "label": "Lazar Capital portfolio name", "direction": "bull"},
+    "cohort_crypto_treasury": {"tier": "C", "points": 2.0, "label": "Crypto-treasury cohort", "direction": "bull"},
+    "cohort_prediction_markets": {"tier": "C", "points": 2.0, "label": "Prediction market cohort", "direction": "bull"},
+    "cohort_biotech_binary": {"tier": "C", "points": 2.0, "label": "Biotech binary catalyst cohort", "direction": "bull"},
+    "buyback": {"tier": "C", "points": 1.5, "label": "Buyback program announced", "direction": "bull"},
 
-    "rebrand": {"tier": "D", "points": 1.0, "label": "Rebrand / name change"},
-    "cohort_ai_rebrand": {"tier": "D", "points": 1.0, "label": "AI rebrand cohort"},
-    "cohort_cannabis_basket": {"tier": "D", "points": 1.0, "label": "Cannabis sector cohort"},
-    "cohort_small_cap_china_adr": {"tier": "D", "points": 0.5, "label": "Small-cap China ADR cohort"},
+    "rebrand": {"tier": "D", "points": 1.0, "label": "Rebrand / name change", "direction": "bull"},
+    "cohort_ai_rebrand": {"tier": "D", "points": 1.0, "label": "AI rebrand cohort", "direction": "bull"},
+    "cohort_cannabis_basket": {"tier": "D", "points": 1.0, "label": "Cannabis sector cohort", "direction": "bull"},
+    "cohort_small_cap_china_adr": {"tier": "D", "points": 0.5, "label": "Small-cap China ADR cohort", "direction": "bull"},
+
+    "going_concern": {"tier": "S", "points": 5.0, "label": "Going concern language in 10-Q/K", "direction": "bear"},
+    "earnings_miss_with_guide_down": {"tier": "S", "points": 5.0, "label": "Earnings miss + guidance lowered", "direction": "bear"},
+    "fda_rejection": {"tier": "S", "points": 5.0, "label": "FDA CRL / drug rejection", "direction": "bear"},
+    "merger_terminated": {"tier": "A", "points": 4.0, "label": "M&A deal terminated", "direction": "bear"},
+    "dilutive_offering": {"tier": "A", "points": 4.0, "label": "Dilutive share offering at discount", "direction": "bear"},
+    "reverse_stock_split": {"tier": "A", "points": 4.0, "label": "Reverse stock split announced", "direction": "bear"},
+    "lawsuit_material": {"tier": "A", "points": 3.5, "label": "Material lawsuit / SEC inquiry", "direction": "bear"},
+    "downgrade_cluster": {"tier": "B", "points": 3.0, "label": "Multiple analyst downgrades 30d", "direction": "bear"},
+    "auditor_change": {"tier": "B", "points": 3.0, "label": "Auditor resignation", "direction": "bear"},
+    "delisting_warning": {"tier": "B", "points": 3.0, "label": "Exchange delisting notice", "direction": "bear"},
+    "restatement": {"tier": "B", "points": 3.0, "label": "Financial restatement", "direction": "bear"},
+    "executive_departure": {"tier": "C", "points": 2.0, "label": "CEO/CFO departure", "direction": "bear"},
+    "insider_selling_cluster": {"tier": "C", "points": 2.0, "label": "Heavy insider selling cluster", "direction": "bear"},
 }
 
 WEIGHT_CATALYST = 8.0
@@ -86,6 +100,7 @@ def base_catalyst_score(signals):
             "points": meta["points"],
             "label": meta["label"],
             "details": s.get("details", ""),
+            "direction": meta.get("direction", "bull"),
         })
     if not chosen:
         return 0.0, []
@@ -242,17 +257,37 @@ def score_ticker(ticker, signals, ticker_data, news_data=None, drift_data=None,
     primary_catalyst = catalysts[0] if catalysts else None
     catalyst_tier = primary_catalyst["tier"] if primary_catalyst else "-"
 
+    direction = "bull"
+    if primary_catalyst:
+        direction = primary_catalyst.get("direction", "bull")
+
     return {
         "ticker": ticker,
         "score": round(final, 2),
         "confidence": confidence,
         "catalyst_tier": catalyst_tier,
+        "direction": direction,
         "components": components,
         "catalysts": catalysts,
     }
 
 
-def assign_buckets(scored_list, top_pct_strong=5, top_pct_watch=15):
+TIER_RANK = {"S": 5, "A": 4, "B": 3, "C": 2, "D": 1, "-": 0}
+
+
+def _has_tier_min(candidate, min_tier_letter):
+    min_rank = TIER_RANK.get(min_tier_letter, 0)
+    catalysts = candidate.get("catalysts") or []
+    for cat in catalysts:
+        tier = cat.get("tier", "-")
+        if TIER_RANK.get(tier, 0) >= min_rank:
+            return True
+    primary = candidate.get("catalyst_tier", "-")
+    return TIER_RANK.get(primary, 0) >= min_rank
+
+
+def assign_buckets(scored_list, top_pct_strong=5, top_pct_watch=15,
+                   strong_min_tier="B", watch_min_tier="C", emit_d_tier=False):
     if not scored_list:
         return scored_list
     sorted_list = sorted(scored_list, key=lambda x: x["score"], reverse=True)
@@ -260,20 +295,41 @@ def assign_buckets(scored_list, top_pct_strong=5, top_pct_watch=15):
     strong_n = max(1, int(n * top_pct_strong / 100))
     watch_n = max(1, int(n * top_pct_watch / 100))
 
-    threshold_strong = sorted_list[strong_n - 1]["score"] if n >= strong_n else float("inf")
-    threshold_watch = sorted_list[min(watch_n - 1, n - 1)]["score"] if n >= watch_n else 0
+    promoted_to_strong = 0
+    blocked_strong = 0
+    d_tier_filtered = 0
 
     for i, c in enumerate(sorted_list):
-        if i < strong_n and c["score"] > 0:
-            c["bucket"] = "STRONG"
-            c["percentile"] = round((1 - i / n) * 100, 1)
-        elif i < watch_n and c["score"] > 0:
-            c["bucket"] = "WATCH"
-            c["percentile"] = round((1 - i / n) * 100, 1)
-        elif c["score"] > 0:
-            c["bucket"] = "SPECULATIVE"
-            c["percentile"] = round((1 - i / n) * 100, 1)
-        else:
+        if c["score"] <= 0:
             c["bucket"] = "BELOW_THRESHOLD"
             c["percentile"] = 0
+            continue
+
+        if not emit_d_tier and not _has_tier_min(c, "C"):
+            c["bucket"] = "BELOW_THRESHOLD"
+            c["percentile"] = round((1 - i / n) * 100, 1)
+            c["filter_reason"] = "D-tier-only catalyst"
+            d_tier_filtered += 1
+            continue
+
+        if i < strong_n:
+            if _has_tier_min(c, strong_min_tier):
+                c["bucket"] = "STRONG"
+                promoted_to_strong += 1
+            else:
+                c["bucket"] = "WATCH"
+                c["filter_reason"] = f"score top-{top_pct_strong}% but no {strong_min_tier}+ tier catalyst"
+                blocked_strong += 1
+            c["percentile"] = round((1 - i / n) * 100, 1)
+        elif i < watch_n:
+            if _has_tier_min(c, watch_min_tier):
+                c["bucket"] = "WATCH"
+            else:
+                c["bucket"] = "SPECULATIVE"
+                c["filter_reason"] = f"top-{top_pct_watch}% but no {watch_min_tier}+ tier catalyst"
+            c["percentile"] = round((1 - i / n) * 100, 1)
+        else:
+            c["bucket"] = "SPECULATIVE"
+            c["percentile"] = round((1 - i / n) * 100, 1)
+
     return sorted_list

@@ -249,6 +249,16 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
         <div style="font-size:12px; color:#333; margin-bottom:4px;">
           Entry ${{ "%.2f"|format(t.price) }} &middot; Stop ${{ "%.2f"|format(t.stop_loss) }} &middot; Phase 1 ${{ "%.2f"|format(t.phase1_target) }} &middot; Runner ${{ "%.2f"|format(t.runner_target) }} &middot; R/R {{ t.risk_reward }}
         </div>
+        {% if t.live_spot %}
+          {% set live_color = '#0d7b34' if t.live_change_pct >= 1 else ('#c94545' if t.live_change_pct <= -1 else '#666') %}
+          {% set live_bg = '#e7f5ec' if t.live_change_pct >= 1 else ('#fdecec' if t.live_change_pct <= -1 else '#f0f0f0') %}
+          {% set big_move = t.live_change_pct >= 3 or t.live_change_pct <= -3 %}
+          <div style="font-size:11px; color:{{ live_color }}; margin:4px 0; padding:4px 8px; background:{{ live_bg }}; border-radius:4px; display:inline-block; {% if big_move %}border:2px solid {{ live_color }};{% endif %}">
+            <strong>LIVE:</strong> ${{ "%.2f"|format(t.live_spot) }}
+            ({{ "%+.2f"|format(t.live_change_pct) }}% vs scan close ${{ "%.2f"|format(t.price) }})
+            {% if big_move %}&middot; <strong>BIG MOVE — verify before entering</strong>{% endif %}
+          </div>
+        {% endif %}
         {% if t.lane_b_signal_count and t.lane_b_signal_count > 0 %}
           <div style="font-size:11px; color:#0d7b34; margin-top:4px;">Early signals firing:
           {% if t.lane_b.pocket_pivot.fired %}[Pocket Pivot] {% endif %}
@@ -572,6 +582,16 @@ OPTIONS_EMAIL_TEMPLATE = """<!DOCTYPE html>
         <div style="font-size:12px; color:#333; margin-bottom:4px;">
           Entry ${{ "%.2f"|format(t.price) }} &middot; Stop ${{ "%.2f"|format(t.stop_loss) }} &middot; Phase 1 ${{ "%.2f"|format(t.phase1_target) }} &middot; Runner ${{ "%.2f"|format(t.runner_target) }} &middot; R/R {{ t.risk_reward }}
         </div>
+        {% if t.live_spot %}
+          {% set live_color = '#0d7b34' if t.live_change_pct >= 1 else ('#c94545' if t.live_change_pct <= -1 else '#666') %}
+          {% set live_bg = '#e7f5ec' if t.live_change_pct >= 1 else ('#fdecec' if t.live_change_pct <= -1 else '#f0f0f0') %}
+          {% set big_move = t.live_change_pct >= 3 or t.live_change_pct <= -3 %}
+          <div style="font-size:11px; color:{{ live_color }}; margin:4px 0; padding:4px 8px; background:{{ live_bg }}; border-radius:4px; display:inline-block; {% if big_move %}border:2px solid {{ live_color }};{% endif %}">
+            <strong>LIVE:</strong> ${{ "%.2f"|format(t.live_spot) }}
+            ({{ "%+.2f"|format(t.live_change_pct) }}% vs scan close ${{ "%.2f"|format(t.price) }})
+            {% if big_move %}&middot; <strong>BIG MOVE — verify before entering</strong>{% endif %}
+          </div>
+        {% endif %}
         {% if t.lane_b_signal_count and t.lane_b_signal_count > 0 %}
           <div style="font-size:11px; color:#0d7b34; margin-top:4px;">Early signals firing:
           {% if t.lane_b.pocket_pivot.fired %}[Pocket Pivot] {% endif %}
@@ -765,6 +785,11 @@ def render_options_email(scan):
     tickets = scan.get("tickets") or [r["ticket"] for r in scan.get("results", [])]
     priority_options = build_priority_options(tickets)
     try:
+        from src.live_spot import enrich_with_live_spots
+        enrich_with_live_spots(priority_options)
+    except Exception as e:
+        print(f"  live_spot: failed: {type(e).__name__}: {e}")
+    try:
         from src.llm_commentary import add_commentary
         add_commentary(priority_options, top_n=5)
     except Exception as e:
@@ -808,6 +833,13 @@ def render_email(scan):
     top = actionable[:30]
     watchlist = []
     rejected = [t for t in tickets if not t.get("tier") or t["tier"] == 0][:15]
+
+    enrich_set = list({id(t): t for t in (top + lane_a + lane_b + lane_c + conviction_picks)}.values())
+    try:
+        from src.live_spot import enrich_with_live_spots
+        enrich_with_live_spots(enrich_set)
+    except Exception as e:
+        print(f"  live_spot: failed in render_email: {type(e).__name__}: {e}")
 
     theme_buckets = {}
     for t in (lane_a + lane_b):

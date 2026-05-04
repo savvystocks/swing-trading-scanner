@@ -161,7 +161,7 @@ def options_hunter_score(ticket, pillars_raw, gates_raw, ind, fundamentals):
 
     eta_days, eta_label = _compute_eta(p2, days_until, earnings_bucket, lb_signals)
 
-    qualified = score >= 45
+    qualified = score >= 50
 
     return {
         "qualified": qualified,
@@ -285,6 +285,12 @@ def classify_hunters(scored_results, slot_plan=None, sector_perf=None):
             apply_sector_overlay_to_hunter(scored_results, sector_perf, verbose=False)
         except Exception as e:
             print(f"  sector_rotation overlay failed: {type(e).__name__}: {e}")
+
+    try:
+        from src.multi_timeframe import apply_multi_timeframe_to_hunter
+        apply_multi_timeframe_to_hunter(scored_results, verbose=False)
+    except Exception as e:
+        print(f"  multi_timeframe overlay failed: {type(e).__name__}: {e}")
 
     qualified = [r for r in scored_results if r["ticket"]["hunter"]["qualified"]]
     qualified.sort(key=lambda r: r["ticket"]["hunter"]["score"], reverse=True)

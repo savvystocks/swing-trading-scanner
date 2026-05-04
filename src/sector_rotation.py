@@ -77,7 +77,7 @@ def apply_sector_overlay_to_hunter(scored_results, sector_perf_list, verbose=Tru
             "adjustment": adjustment,
         }
 
-        if new_score < 45 and h.get("qualified"):
+        if new_score < 50 and h.get("qualified"):
             h["qualified"] = False
             h.setdefault("disqualified", []).append("sector_rotation_filter")
             disqualified += 1

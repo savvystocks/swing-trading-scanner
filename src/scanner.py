@@ -32,6 +32,7 @@ from src.opportunity import opportunity_score, classify_lane
 from src.options_hunter import classify_hunters
 from src.paper_trader import run_daily_cycle as run_paper_trader_cycle
 from src.short_signals import short_score
+from src.sector_rotation import apply_sector_overlay_to_hunter
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent
 UNIVERSE_PATH = PROJECT_ROOT / "data" / "universe" / "universe.json"
@@ -321,8 +322,8 @@ def run_scan(universe_limit=None, verbose=True):
         print(f"Lane classification: A={lanes.get('A', 0)}  B={lanes.get('B', 0)}  C={lanes.get('C', 0)}  none={lanes.get(None, 0)}")
 
     if verbose:
-        print(f"\nClassifying Options Hunter Lane (validated signature: 2x P7, 2x P6, 0.5x P3, earnings sweet spot, 52w high proximity, sector tilt)...")
-    hunter_picks = classify_hunters(scored)
+        print(f"\nClassifying Options Hunter Lane (with sector rotation overlay: Stage 2 boost, Stage 4 penalty)...")
+    hunter_picks = classify_hunters(scored, sector_perf=sector_perf)
     if verbose:
         from collections import Counter
         bc = Counter(r["ticket"].get("priority_bucket") for r in hunter_picks)

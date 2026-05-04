@@ -264,7 +264,7 @@ def _compute_eta(p2, earnings_days, earnings_bucket, lb_signals):
     return 25, "~3-4wk (momentum)"
 
 
-def classify_hunters(scored_results, slot_plan=None):
+def classify_hunters(scored_results, slot_plan=None, sector_perf=None):
     if slot_plan is None:
         slot_plan = [("MEGA", 1), ("LARGE", 3), ("MID", 4), ("EARLY", 1)]
 
@@ -278,6 +278,13 @@ def classify_hunters(scored_results, slot_plan=None):
             r.get("fundamentals"),
         )
         ticket["hunter"] = hunter
+
+    if sector_perf:
+        try:
+            from src.sector_rotation import apply_sector_overlay_to_hunter
+            apply_sector_overlay_to_hunter(scored_results, sector_perf, verbose=False)
+        except Exception as e:
+            print(f"  sector_rotation overlay failed: {type(e).__name__}: {e}")
 
     qualified = [r for r in scored_results if r["ticket"]["hunter"]["qualified"]]
     qualified.sort(key=lambda r: r["ticket"]["hunter"]["score"], reverse=True)

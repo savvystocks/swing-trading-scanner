@@ -253,11 +253,20 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
           {% set live_color = '#0d7b34' if t.live_change_pct >= 1 else ('#c94545' if t.live_change_pct <= -1 else '#666') %}
           {% set live_bg = '#e7f5ec' if t.live_change_pct >= 1 else ('#fdecec' if t.live_change_pct <= -1 else '#f0f0f0') %}
           {% set big_move = t.live_change_pct >= 3 or t.live_change_pct <= -3 %}
+          {% set chase = t.live_change_pct >= 5 %}
           <div style="font-size:11px; color:{{ live_color }}; margin:4px 0; padding:4px 8px; background:{{ live_bg }}; border-radius:4px; display:inline-block; {% if big_move %}border:2px solid {{ live_color }};{% endif %}">
             <strong>LIVE:</strong> ${{ "%.2f"|format(t.live_spot) }}
+            {% if t.live_bid and t.live_ask %}(bid ${{ "%.2f"|format(t.live_bid) }}/ask ${{ "%.2f"|format(t.live_ask) }}){% endif %}
             ({{ "%+.2f"|format(t.live_change_pct) }}% vs scan close ${{ "%.2f"|format(t.price) }})
-            {% if big_move %}&middot; <strong>BIG MOVE — verify before entering</strong>{% endif %}
+            {% if t.live_session %}&middot; <span style="font-size:10px; padding:1px 6px; border-radius:3px; background:#fff; color:#555;">{{ t.live_session }}{% if t.live_age_min and t.live_age_min > 30 %} - {{ "%.0f"|format(t.live_age_min) }}min ago{% endif %}</span>{% endif %}
+            {% if chase %}<br><strong style="color:#7c2d12;">CHASE RISK: stock already up {{ "%+.1f"|format(t.live_change_pct) }}% - half size or wait for pullback</strong>
+            {% elif big_move %}<br><strong>BIG MOVE - verify before entering</strong>{% endif %}
           </div>
+          {% if t.options_trade and t.options_trade.breakeven_pct_from_live %}
+            <div style="font-size:11px; color:#444; margin:2px 0 4px; padding:3px 8px; background:#f8f8f8; border-radius:3px; display:inline-block;">
+              Breakeven from LIVE ${{ "%.2f"|format(t.options_trade.breakeven) }}: <strong>{{ "%+.2f"|format(t.options_trade.breakeven_pct_from_live) }}%</strong> needed (vs {{ "%+.2f"|format(t.options_trade.breakeven_pct_move) }}% from scan close)
+            </div>
+          {% endif %}
         {% endif %}
         {% if t.lane_b_signal_count and t.lane_b_signal_count > 0 %}
           <div style="font-size:11px; color:#0d7b34; margin-top:4px;">Early signals firing:
@@ -668,11 +677,20 @@ OPTIONS_EMAIL_TEMPLATE = """<!DOCTYPE html>
           {% set live_color = '#0d7b34' if t.live_change_pct >= 1 else ('#c94545' if t.live_change_pct <= -1 else '#666') %}
           {% set live_bg = '#e7f5ec' if t.live_change_pct >= 1 else ('#fdecec' if t.live_change_pct <= -1 else '#f0f0f0') %}
           {% set big_move = t.live_change_pct >= 3 or t.live_change_pct <= -3 %}
+          {% set chase = t.live_change_pct >= 5 %}
           <div style="font-size:11px; color:{{ live_color }}; margin:4px 0; padding:4px 8px; background:{{ live_bg }}; border-radius:4px; display:inline-block; {% if big_move %}border:2px solid {{ live_color }};{% endif %}">
             <strong>LIVE:</strong> ${{ "%.2f"|format(t.live_spot) }}
+            {% if t.live_bid and t.live_ask %}(bid ${{ "%.2f"|format(t.live_bid) }}/ask ${{ "%.2f"|format(t.live_ask) }}){% endif %}
             ({{ "%+.2f"|format(t.live_change_pct) }}% vs scan close ${{ "%.2f"|format(t.price) }})
-            {% if big_move %}&middot; <strong>BIG MOVE — verify before entering</strong>{% endif %}
+            {% if t.live_session %}&middot; <span style="font-size:10px; padding:1px 6px; border-radius:3px; background:#fff; color:#555;">{{ t.live_session }}{% if t.live_age_min and t.live_age_min > 30 %} - {{ "%.0f"|format(t.live_age_min) }}min ago{% endif %}</span>{% endif %}
+            {% if chase %}<br><strong style="color:#7c2d12;">CHASE RISK: stock already up {{ "%+.1f"|format(t.live_change_pct) }}% - half size or wait for pullback</strong>
+            {% elif big_move %}<br><strong>BIG MOVE - verify before entering</strong>{% endif %}
           </div>
+          {% if t.options_trade and t.options_trade.breakeven_pct_from_live %}
+            <div style="font-size:11px; color:#444; margin:2px 0 4px; padding:3px 8px; background:#f8f8f8; border-radius:3px; display:inline-block;">
+              Breakeven from LIVE ${{ "%.2f"|format(t.options_trade.breakeven) }}: <strong>{{ "%+.2f"|format(t.options_trade.breakeven_pct_from_live) }}%</strong> needed (vs {{ "%+.2f"|format(t.options_trade.breakeven_pct_move) }}% from scan close)
+            </div>
+          {% endif %}
         {% endif %}
         {% if t.lane_b_signal_count and t.lane_b_signal_count > 0 %}
           <div style="font-size:11px; color:#0d7b34; margin-top:4px;">Early signals firing:

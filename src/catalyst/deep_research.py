@@ -1,11 +1,15 @@
 import os
 import json
+import time
 
 try:
     import anthropic
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     ANTHROPIC_AVAILABLE = False
+
+DEEP_INTER_CALL_SLEEP_SEC = int(os.environ.get("CATALYST_DEEP_SLEEP", "60"))
+DEEP_RATE_LIMIT_RETRY_SEC = int(os.environ.get("CATALYST_DEEP_RETRY", "75"))
 
 DEEP_MODEL = os.environ.get("CATALYST_DEEP_MODEL", "claude-sonnet-4-6")
 
@@ -112,15 +116,33 @@ def deep_research(top_candidates, max_tickers=5, verbose=True):
     for i, c in enumerate(top_candidates[:max_tickers]):
         if verbose:
             print(f"  [deep {i+1}/{min(max_tickers, len(top_candidates))}] researching {c['ticker']}...")
+        if i > 0 and DEEP_INTER_CALL_SLEEP_SEC > 0:
+            if verbose:
+                print(f"    sleeping {DEEP_INTER_CALL_SLEEP_SEC}s to respect Anthropic rate limit (30K tok/min)...")
+            time.sleep(DEEP_INTER_CALL_SLEEP_SEC)
+        attempt = 0
+        response = None
+        while attempt < 3:
+            try:
+                user_prompt = _build_user_prompt(c)
+                response = client.messages.create(
+                    model=DEEP_MODEL,
+                    max_tokens=4000,
+                    system=DEEP_SYSTEM,
+                    messages=[{"role": "user", "content": user_prompt}],
+                    tools=[{"type": "web_search_20250305", "name": "web_search"}],
+                )
+                break
+            except anthropic.RateLimitError as e:
+                attempt += 1
+                if attempt >= 3:
+                    raise
+                if verbose:
+                    print(f"    rate-limited, sleeping {DEEP_RATE_LIMIT_RETRY_SEC}s (attempt {attempt}/3)...")
+                time.sleep(DEEP_RATE_LIMIT_RETRY_SEC)
         try:
-            user_prompt = _build_user_prompt(c)
-            response = client.messages.create(
-                model=DEEP_MODEL,
-                max_tokens=4000,
-                system=DEEP_SYSTEM,
-                messages=[{"role": "user", "content": user_prompt}],
-                tools=[{"type": "web_search_20250305", "name": "web_search"}],
-            )
+            if response is None:
+                raise RuntimeError("response not set after retries")
             text_blocks = [b.text for b in response.content if b.type == "text"]
             joined_no_breaks = "".join(text_blocks).strip()
             data = _extract_json(joined_no_breaks)

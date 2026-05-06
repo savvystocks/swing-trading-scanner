@@ -1,6 +1,7 @@
 from jinja2 import Template
 
 from src.catalyst.lottery import build_lottery_ticket, get_account_settings
+from src.catalyst.option_grader import grade_option_picks
 
 
 CATALYST_OPTIONS_TEMPLATE = """<!DOCTYPE html>
@@ -96,6 +97,55 @@ CATALYST_OPTIONS_TEMPLATE = """<!DOCTYPE html>
                 <div>{{ "%.0f"|format(sp.long_leg.strike) }}/{{ "%.0f"|format(sp.short_leg.strike) }}C ({{ sp.width }}-wide) exp {{ sp.expiration }} ({{ sp.dte }}d)</div>
                 <div style="color:#555;">Net debit ${{ "%.2f"|format(sp.net_debit) }} = <strong>${{ "%.0f"|format(sp.cost_per_spread) }}/spread</strong> &middot; Max profit ${{ "%.0f"|format(sp.max_profit_per_spread) }} &middot; R/R {{ sp.risk_reward_ratio }}</div>
                 <div style="color:#555;">Breakeven ${{ "%.2f"|format(sp.breakeven) }} ({{ "%+.1f"|format(sp.breakeven_pct_move) }}%)</div>
+              </div>
+            {% endif %}
+
+            {% if lt.llm_option_grade %}
+              {% set og = lt.llm_option_grade %}
+              {% set v_color = '#0d7b34' if og.verdict == 'BUY_AS_IS' else '#1a9850' if og.verdict == 'GO_CLOSER_ATM' or og.verdict == 'GO_FURTHER_OTM' else '#e67e22' if og.verdict == 'PREFER_SPREAD' else '#c94545' %}
+              <div style="margin-top:10px; padding:10px 12px; background:#fef2f2; border:2px solid {{ v_color }}; border-radius:6px; font-size:11px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                  <div>
+                    <strong style="color:#7c2d12; font-size:11px; text-transform:uppercase;">LLM option grade</strong>
+                    <span style="display:inline-block; padding:2px 8px; margin-left:6px; border-radius:3px; background:{{ v_color }}; color:#fff; font-size:11px; font-weight:700;">{{ og.verdict }}</span>
+                  </div>
+                  {% if og.buy_score is defined %}<span style="font-size:14px; font-weight:700; color:{{ v_color }};">{{ og.buy_score }}/100</span>{% endif %}
+                </div>
+                <div style="color:#1f2937; margin-bottom:6px;">{{ og.verdict_reasoning }}</div>
+                {% if og.suggested_alternative %}
+                  <div style="margin-bottom:6px; padding:4px 8px; background:#fff7ed; border-left:3px solid #d97706; border-radius:3px; color:#7c2d12;">
+                    <strong>Alternative:</strong> {{ og.suggested_alternative }}
+                  </div>
+                {% endif %}
+                <table style="width:100%; font-size:10px; margin-top:4px; border-collapse:collapse;">
+                  <tbody>
+                    {% if og.iv_assessment %}
+                      <tr style="border-bottom:1px solid #fecaca;"><td style="padding:3px 6px; font-weight:600;">IV</td>
+                      <td style="padding:3px 6px;"><span style="padding:1px 6px; border-radius:3px; background:{% if og.iv_assessment.level == 'COMPRESSED' %}#0d7b34{% elif og.iv_assessment.level == 'FAIR' %}#4a90e2{% else %}#c94545{% endif %}; color:#fff;">{{ og.iv_assessment.level }}</span> {{ og.iv_assessment.iv_pct }}%</td>
+                      <td style="padding:3px 6px; color:#444;">{{ og.iv_assessment.interpretation }}</td></tr>
+                    {% endif %}
+                    {% if og.iv_crush_risk %}
+                      <tr style="border-bottom:1px solid #fecaca;"><td style="padding:3px 6px; font-weight:600;">IV crush</td>
+                      <td style="padding:3px 6px;"><span style="padding:1px 6px; border-radius:3px; background:{% if og.iv_crush_risk.concern_level == 'LOW' %}#0d7b34{% elif og.iv_crush_risk.concern_level == 'MEDIUM' %}#e67e22{% else %}#c94545{% endif %}; color:#fff;">{{ og.iv_crush_risk.concern_level }}</span></td>
+                      <td style="padding:3px 6px; color:#444;">est crush {{ og.iv_crush_risk.estimated_crush_pct }}% &middot; premium loss {{ og.iv_crush_risk.post_event_premium_loss_pct }}%</td></tr>
+                    {% endif %}
+                    {% if og.strike_efficiency %}
+                      <tr style="border-bottom:1px solid #fecaca;"><td style="padding:3px 6px; font-weight:600;">Strike</td>
+                      <td style="padding:3px 6px;"><span style="padding:1px 6px; border-radius:3px; background:{% if og.strike_efficiency.rating == 'GOOD' %}#0d7b34{% elif og.strike_efficiency.rating == 'OK' %}#4a90e2{% else %}#c94545{% endif %}; color:#fff;">{{ og.strike_efficiency.rating }}</span> Δ {{ og.strike_efficiency.delta }}</td>
+                      <td style="padding:3px 6px; color:#444;">{{ og.strike_efficiency.comment }}</td></tr>
+                    {% endif %}
+                    {% if og.spread_quality %}
+                      <tr style="border-bottom:1px solid #fecaca;"><td style="padding:3px 6px; font-weight:600;">Spread</td>
+                      <td style="padding:3px 6px;"><span style="padding:1px 6px; border-radius:3px; background:{% if og.spread_quality.rating == 'TIGHT' %}#0d7b34{% elif og.spread_quality.rating == 'FAIR' %}#4a90e2{% else %}#c94545{% endif %}; color:#fff;">{{ og.spread_quality.rating }}</span> {{ og.spread_quality.spread_pct }}%</td>
+                      <td style="padding:3px 6px; color:#444;">round-trip {{ og.spread_quality.round_trip_slippage_pct }}%</td></tr>
+                    {% endif %}
+                    {% if og.theta_burn %}
+                      <tr><td style="padding:3px 6px; font-weight:600;">Theta</td>
+                      <td style="padding:3px 6px;">{{ og.theta_burn.per_day_pct }}%/day</td>
+                      <td style="padding:3px 6px; color:#444;">{{ og.theta_burn.warning }}</td></tr>
+                    {% endif %}
+                  </tbody>
+                </table>
               </div>
             {% endif %}
           </div>
@@ -303,6 +353,11 @@ def render_catalyst_options_email(scan):
         print(f"  live_spot enrichment error: {type(e).__name__}: {e}")
 
     enrich_with_live_options(picks, verbose=True)
+
+    try:
+        grade_option_picks(picks, verbose=True)
+    except Exception as e:
+        print(f"  option_grader: skipped: {type(e).__name__}: {e}")
 
     settings = get_account_settings()
     tmpl = Template(CATALYST_OPTIONS_TEMPLATE)

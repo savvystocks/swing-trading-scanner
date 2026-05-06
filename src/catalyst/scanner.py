@@ -547,11 +547,25 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
     if deep_research_max > 0:
         if verbose:
-            print(f"  running deep research (Opus + web search) on top {deep_research_max}")
+            print(f"  running deep research (Sonnet + web search) — Tier S (5) only, max {deep_research_max}")
         try:
-            eligible_for_deep = [s for s in final_scored if not s.get("deal_closed")]
-            top_for_deep = sorted(eligible_for_deep, key=lambda x: x["score"], reverse=True)[:deep_research_max]
-            deep_results = deep_research(top_for_deep, max_tickers=deep_research_max, verbose=verbose)
+            tier_s_eligible = [
+                s for s in final_scored
+                if s.get("catalyst_tier") == "S" and not s.get("deal_closed")
+            ]
+            if not tier_s_eligible:
+                if verbose:
+                    print(f"    no Tier S candidates today — skipping deep research entirely")
+                top_for_deep = []
+            else:
+                top_for_deep = sorted(tier_s_eligible, key=lambda x: x["score"], reverse=True)[:deep_research_max]
+                if verbose:
+                    print(f"    {len(tier_s_eligible)} Tier S candidates, researching top {len(top_for_deep)}")
+            eligible_for_deep = top_for_deep
+            if top_for_deep:
+                deep_results = deep_research(top_for_deep, max_tickers=deep_research_max, verbose=verbose)
+            else:
+                deep_results = {}
         except Exception as e:
             if verbose:
                 print(f"  deep_research failed (non-fatal): {type(e).__name__}: {str(e)[:200]}")

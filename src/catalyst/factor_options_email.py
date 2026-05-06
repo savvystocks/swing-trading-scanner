@@ -347,6 +347,20 @@ def grade_factor_options(picks, verbose=True):
             orig["options"]["llm_option_grade"] = w["lottery"]["llm_option_grade"]
 
 
+def _load_universe_factor_screen(scan_date):
+    import os, json
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    path = os.path.join(project_root, "data", "results", f"factor_screen_{scan_date}.json")
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        return data.get("matches") or []
+    except Exception:
+        return []
+
+
 def render_factor_options_email(scan):
     scored = scan.get("all_scored") or scan.get("candidates") or []
     picks = build_factor_options_picks(scored, max_picks=8)
@@ -417,8 +431,14 @@ def render_factor_options_email(scan):
         except Exception as e:
             print(f"  factor_screener backfill error: {type(e).__name__}: {e}")
 
-        factor_matches = screen_lower_caps(scored, mcap_max=5_000_000_000, mcap_min=300_000_000, min_factor_count=2)
-        factor_matches = factor_matches[:20]
+        universe_matches = _load_universe_factor_screen(scan.get("scan_date"))
+        if universe_matches:
+            print(f"  factor_screener: using universe-wide factor screen ({len(universe_matches)} matches)")
+            factor_matches = universe_matches[:25]
+        else:
+            print(f"  factor_screener: no universe screen file found, falling back to catalyst-pipeline names")
+            factor_matches = screen_lower_caps(scored, mcap_max=5_000_000_000, mcap_min=300_000_000, min_factor_count=2)
+            factor_matches = factor_matches[:20]
         if factor_matches:
             try:
                 from src.live_spot import enrich_with_live_spots

@@ -47,6 +47,12 @@ jobs:
           STOP_LOSS_PCT: ${{ secrets.STOP_LOSS_PCT }}
           MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
         run: python scripts/run_catalyst_scan.py
+      - name: Run universe-wide factor screen
+        if: always()
+        env:
+          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+          CATALYST_DATE: ${{ inputs.target_date }}
+        run: python scripts/run_factor_universe_scan.py
       - name: Commit tracker data + scan JSON for email job
         if: always()
         run: |

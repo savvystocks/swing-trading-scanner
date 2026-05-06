@@ -11,10 +11,12 @@ on:
         description: "Max tickers to LLM-grade (default 50, set 0 to skip)"
         required: false
         default: ""
-  # Re-enabled 2026-05-04: VPS options blocked by Alpaca CDN, reverting to GitHub
-  # Actions while waiting for whitelist. Accepts 4-6h delay tradeoff.
+  # Two-pass architecture: heavy scan at 02:00 UTC (10pm ET previous evening),
+  # saves JSON. Email job (catalyst-email.yml) runs at 13:55 UTC the next day to
+  # refresh live prices and send. Decouples scan duration from email timing so
+  # GitHub Actions cron delay never holds up the email.
   schedule:
-    - cron: "0 15 * * 1-5"
+    - cron: "0 2 * * 1-5"
 
 jobs:
   scan:
@@ -39,6 +41,11 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           CATALYST_DATE: ${{ inputs.target_date }}
           CATALYST_LLM_MAX: ${{ inputs.llm_max }}
+          SKIP_EMAIL: "1"
+          ACCOUNT_SIZE_USD: ${{ secrets.ACCOUNT_SIZE_USD }}
+          POSITION_SIZE_PCT: ${{ secrets.POSITION_SIZE_PCT }}
+          STOP_LOSS_PCT: ${{ secrets.STOP_LOSS_PCT }}
+          MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
         run: python scripts/run_catalyst_scan.py
       - name: Commit tracker data
         if: always()

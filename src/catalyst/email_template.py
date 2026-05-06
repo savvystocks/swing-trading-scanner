@@ -247,6 +247,18 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
           <div class="deep-box">
             <span class="verdict-tag verdict-{{ c.deep_research.verdict|replace(' ', '-') }}">{{ c.deep_research.verdict }}</span>
             <strong>Deep research ({{ c.deep_research.confidence_pct }}% conf):</strong>
+
+            {% if c.deep_research.catalyst_status and c.deep_research.catalyst_status.status %}
+              {% set cs = c.deep_research.catalyst_status %}
+              {% set status_color = '#0d7b34' if cs.status == 'HAPPENED' else '#1a9850' if cs.status == 'SCHEDULED' else '#e67e22' if cs.status == 'EXPECTED' else '#888' %}
+              <div style="margin:6px 0; padding:8px 10px; background:#fff; border:2px solid {{ status_color }}; border-radius:6px;">
+                <span style="display:inline-block; padding:3px 10px; border-radius:3px; background:{{ status_color }}; color:#fff; font-size:12px; font-weight:700;">{{ cs.status }}</span>
+                {% if cs.countdown_label %}<strong style="margin-left:8px;">{{ cs.countdown_label }}</strong>{% endif %}
+                {% if cs.event_date and cs.event_date != 'null' %}<span style="margin-left:6px; color:#666;">({{ cs.event_date }})</span>{% endif %}
+                {% if cs.verified_via %}<br><span style="font-size:10px; color:#888;">verified via {{ cs.verified_via }}</span>{% endif %}
+              </div>
+            {% endif %}
+
             {% if c.deep_research.outcome_prediction and c.deep_research.outcome_prediction.expected_outcome %}
               <div style="margin:6px 0; padding:6px 10px; background:#dbeafe; border-radius:4px;">
                 <strong>Expected outcome:</strong> {{ c.deep_research.outcome_prediction.expected_outcome }}
@@ -255,14 +267,61 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
                 {% if c.deep_research.outcome_prediction.outcome_reasoning %}<br><strong>Why:</strong> {{ c.deep_research.outcome_prediction.outcome_reasoning }}{% endif %}
               </div>
             {% endif %}
+
             {% if c.deep_research.expected_move and c.deep_research.expected_move.if_positive_pct %}
               <div style="margin:4px 0;">
-                <strong>Expected move:</strong> +{{ c.deep_research.expected_move.if_positive_pct }} if positive
-                / {{ c.deep_research.expected_move.if_negative_pct }} if negative
+                <strong>Expected move:</strong> +{{ c.deep_research.expected_move.if_positive_pct }}% if positive
+                / {{ c.deep_research.expected_move.if_negative_pct }}% if negative
                 {% if c.deep_research.expected_move.expected_value_pct %} &middot; <strong>EV:</strong> {{ c.deep_research.expected_move.expected_value_pct }}{% endif %}
               </div>
             {% endif %}
-            {{ c.deep_research.research_note }}
+
+            {% if c.deep_research.analog_precedent and c.deep_research.analog_precedent.similar_setups %}
+              {% set ap = c.deep_research.analog_precedent %}
+              <div style="margin:8px 0; padding:8px 10px; background:#f5f3ff; border-left:3px solid #8b5cf6; border-radius:4px;">
+                <strong>Analog precedents</strong>
+                {% if ap.win_rate_pct is defined %} &middot; win rate <strong>{{ ap.win_rate_pct }}%</strong>{% endif %}
+                {% if ap.median_next_day_pct is defined %} &middot; median next-day <strong>{{ ap.median_next_day_pct }}%</strong>{% endif %}
+                <table style="width:100%; font-size:10px; margin-top:4px; border-collapse:collapse;">
+                  <thead><tr style="background:#ede9fe;"><th align="left" style="padding:3px 6px;">Ticker</th><th align="left" style="padding:3px 6px;">Date</th><th align="left" style="padding:3px 6px;">Catalyst</th><th align="right" style="padding:3px 6px;">Next-day</th><th align="right" style="padding:3px 6px;">1-week</th></tr></thead>
+                  <tbody>
+                  {% for a in ap.similar_setups[:3] %}
+                    <tr style="border-bottom:1px solid #e9d5ff;">
+                      <td style="padding:3px 6px; font-weight:600;">{{ a.ticker }}</td>
+                      <td style="padding:3px 6px; color:#666;">{{ a.date }}</td>
+                      <td style="padding:3px 6px; color:#444;">{{ a.catalyst }}</td>
+                      <td align="right" style="padding:3px 6px; color:{% if a.next_day_pct >= 0 %}#0d7b34{% else %}#c94545{% endif %}; font-weight:600;">{{ "%+.1f"|format(a.next_day_pct) }}%</td>
+                      <td align="right" style="padding:3px 6px; color:{% if a.one_week_pct >= 0 %}#0d7b34{% else %}#c94545{% endif %};">{{ "%+.1f"|format(a.one_week_pct) }}%</td>
+                    </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+                {% if ap.summary %}<div style="margin-top:4px; font-style:italic; color:#5a3690;">{{ ap.summary }}</div>{% endif %}
+              </div>
+            {% endif %}
+
+            {% if c.deep_research.stacking_analysis and c.deep_research.stacking_analysis.compounding_effect %}
+              {% set sa = c.deep_research.stacking_analysis %}
+              <div style="margin:8px 0; padding:8px 10px; background:#fef3c7; border-left:3px solid #d97706; border-radius:4px; font-size:11px;">
+                <strong>Catalyst stacking</strong>
+                {% if sa.amplification_factor %} &middot; amp <strong>{{ sa.amplification_factor }}x</strong>{% endif %}
+                {% if sa.stacked_catalysts %}<br><span style="color:#444;">{{ sa.stacked_catalysts|join(' + ') }}</span>{% endif %}
+                <br>{{ sa.compounding_effect }}
+              </div>
+            {% endif %}
+
+            {% if c.deep_research.lottery_thesis and c.deep_research.lottery_thesis.thesis_paragraph %}
+              {% set lt = c.deep_research.lottery_thesis %}
+              <div style="margin:8px 0; padding:10px 12px; background:#fefce8; border:2px solid #eab308; border-radius:6px;">
+                <strong style="color:#854d0e;">Lottery thesis</strong>
+                {% if lt.best_strike_otm_pct %} &middot; <strong>{{ lt.best_strike_otm_pct }}% OTM</strong>{% endif %}
+                {% if lt.best_dte_days %} &middot; <strong>{{ lt.best_dte_days }} DTE</strong>{% endif %}
+                {% if lt.expected_premium_500pct_target_move_pct %} &middot; needs <strong>+{{ lt.expected_premium_500pct_target_move_pct }}% stock move</strong> for 500%{% endif %}
+                <div style="margin-top:4px; color:#1f2937;">{{ lt.thesis_paragraph }}</div>
+              </div>
+            {% endif %}
+
+            <div style="margin-top:6px;">{{ c.deep_research.research_note }}</div>
             {% if c.deep_research.reason_to_buy %}<br><strong>Bull case:</strong> {{ c.deep_research.reason_to_buy }}{% endif %}
             {% if c.deep_research.reason_to_avoid %}<br><strong>Bear case:</strong> {{ c.deep_research.reason_to_avoid }}{% endif %}
             {% if c.deep_research.red_flags_found %}<br><strong>Risks found:</strong> {{ c.deep_research.red_flags_found|join(' &middot; ') }}{% endif %}

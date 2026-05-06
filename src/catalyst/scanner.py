@@ -11,9 +11,13 @@ from src.catalyst.edgar import (
 from src.catalyst.calendar import earnings_signals_for_tomorrow
 from src.catalyst.cohorts import cohort_signals
 from src.catalyst.scoring import (
-    score_ticker, max_possible_base, assign_buckets, CATALYST_TIERS,
+    score_ticker, max_possible_base, assign_buckets, CATALYST_TIERS, WEIGHT_CATALYST,
 )
 from src.catalyst.news import news_score, fetch_recent_news
+from src.catalyst.signals import (
+    run_all_catalyst_detectors, detector_hits_to_signal_entries, append_signals_and_rescore,
+)
+from src.catalyst.inflection import inflection_readiness_score
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
 from src.catalyst.peers import peer_signals, peer_confirmation_score
@@ -374,9 +378,10 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         print(f"Step 4/6: fetch news for top {min(news_max_fetch, len(pre_scored))} candidates")
 
     top_for_news = pre_scored[:news_max_fetch]
+    new_signals_added_total = 0
     for i, s in enumerate(top_for_news):
         if verbose and i > 0 and i % 30 == 0:
-            print(f"  [news {i}/{len(top_for_news)}]")
+            print(f"  [news {i}/{len(top_for_news)}]  new_signals_added={new_signals_added_total}")
         try:
             news_data = news_score(client, s["ticker"], s.get("eodhd_ticker"))
             s["news"] = news_data
@@ -385,6 +390,30 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         except Exception as e:
             if verbose:
                 print(f"  news fetch failed for {s['ticker']}: {type(e).__name__}")
+            continue
+        try:
+            raw_headlines = fetch_recent_news(
+                client,
+                s.get("eodhd_ticker") or s["ticker"],
+                max_age_days=21,
+                limit=30,
+            )
+            fund = (s.get("_enriched_data") or {}).get("fundamentals")
+            detectors = run_all_catalyst_detectors(raw_headlines, fund)
+            new_entries = detector_hits_to_signal_entries(detectors)
+            if new_entries:
+                changed = append_signals_and_rescore(s, new_entries, CATALYST_TIERS, WEIGHT_CATALYST)
+                if changed:
+                    new_signals_added_total += len(s.get("_signals_added") or [])
+                    s["new_signal_detectors"] = {
+                        k: {kk: vv for kk, vv in v.items() if kk != "evidence"}
+                        for k, v in detectors.items() if v.get("fired")
+                    }
+        except Exception as e:
+            if verbose:
+                print(f"  signal detector failed for {s['ticker']}: {type(e).__name__}: {e}")
+    if verbose:
+        print(f"  new catalyst signals appended: {new_signals_added_total}")
 
     if verbose:
         print(f"  running risk audit + insider depth on top {insider_max_fetch} candidates")
@@ -420,6 +449,23 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 s["score"] = round(s["score"] + insider["points"], 2)
         except Exception:
             pass
+
+    if verbose:
+        print(f"  running inflection readiness scorer on top {min(insider_max_fetch, len(pre_scored))}")
+    for i, s in enumerate(pre_scored[:insider_max_fetch]):
+        data = s.get("_enriched_data") or {}
+        df = data.get("df")
+        try:
+            inf = inflection_readiness_score(df)
+            s["inflection"] = inf
+            s["components"]["inflection"] = {
+                "points": inf["points"],
+                "label": inf["label"],
+                "components_fired": inf["components_fired"],
+            }
+            s["score"] = round(s.get("score", 0) + inf["points"], 2)
+        except Exception:
+            s["inflection"] = None
 
     if verbose:
         print(f"  running options reality check on top {options_max_fetch}")
@@ -483,6 +529,14 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         if verbose:
             print(f"  sector overlay skipped: {type(e).__name__}: {e}")
 
+    from src.catalyst.scoring import cross_confirmation_score
+    for s in final_scored:
+        catalysts_full = (s.get("components", {}).get("catalyst_quality", {}) or {}).get("catalysts_full") or []
+        xconf = cross_confirmation_score(catalysts_full)
+        s["components"]["cross_confirmation"] = xconf
+        s["score"] = round(s["score"] + xconf["points"], 2)
+        s["cross_confirmation"] = xconf
+
     final_scored = assign_buckets(final_scored, top_pct_strong=top_pct_strong, top_pct_watch=top_pct_watch)
     if verbose:
         from collections import Counter
@@ -492,9 +546,15 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
     if deep_research_max > 0:
         if verbose:
             print(f"  running deep research (Opus + web search) on top {deep_research_max}")
-        eligible_for_deep = [s for s in final_scored if not s.get("deal_closed")]
-        top_for_deep = sorted(eligible_for_deep, key=lambda x: x["score"], reverse=True)[:deep_research_max]
-        deep_results = deep_research(top_for_deep, max_tickers=deep_research_max, verbose=verbose)
+        try:
+            eligible_for_deep = [s for s in final_scored if not s.get("deal_closed")]
+            top_for_deep = sorted(eligible_for_deep, key=lambda x: x["score"], reverse=True)[:deep_research_max]
+            deep_results = deep_research(top_for_deep, max_tickers=deep_research_max, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  deep_research failed (non-fatal): {type(e).__name__}: {str(e)[:200]}")
+                print(f"  continuing without deep research outcome conviction adjustments")
+            deep_results = {}
         positive_outcomes = {"BEAT", "BEAT_AND_RAISE", "APPROVAL", "DEAL_CLOSE", "DATA_HIT"}
         negative_outcomes = {"MISS", "CRL", "DEAL_BREAK", "DATA_MISS"}
         for s in final_scored:

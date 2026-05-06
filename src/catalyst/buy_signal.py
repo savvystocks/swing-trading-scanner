@@ -82,6 +82,9 @@ def buy_signal(ticker_data, components, df=None, catalyst_tier="-", confidence="
     has_fresh = any(c.get("event_timing") == "fresh_breaking" for c in catalysts_list)
     has_only_post = (not has_overnight and not has_fresh) and any(c.get("event_timing") == "post_event" for c in catalysts_list)
 
+    catalysts_count = len(catalysts_list)
+    has_cross_confirmation = catalysts_count >= 3
+
     if drift.get("skip_chase") or red <= -8:
         signal = "SKIP"
         signal_color = "#c94545"
@@ -94,13 +97,16 @@ def buy_signal(ticker_data, components, df=None, catalyst_tier="-", confidence="
     elif drift.get("pre_priced"):
         signal = "WATCH"
         signal_color = "#e67e22"
-    elif has_overnight and prob_pct >= 60 and confidence == "HIGH":
+    elif has_overnight and prob_pct >= 65 and confidence == "HIGH" and has_cross_confirmation:
         signal = "BUY"
         signal_color = "#0d7b34"
-    elif has_overnight and prob_pct >= 50:
+    elif has_overnight and prob_pct >= 70 and confidence == "HIGH":
+        signal = "BUY"
+        signal_color = "#0d7b34"
+    elif has_overnight and prob_pct >= 55:
         signal = "WATCH"
         signal_color = "#4a90e2"
-    elif has_fresh and prob_pct >= 55 and confidence == "HIGH":
+    elif has_fresh and prob_pct >= 60 and confidence == "HIGH" and has_cross_confirmation:
         signal = "WATCH"
         signal_color = "#4a90e2"
     else:

@@ -1,0 +1,47 @@
+name: catalyst-email
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: "Scan date to load (YYYY-MM-DD). Leave blank for latest."
+        required: false
+        default: ""
+  schedule:
+    - cron: "55 13 * * 1-5"
+
+jobs:
+  email:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Render and send catalyst emails (live Alpaca chain at send-time)
+        env:
+          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          CATALYST_DATE: ${{ inputs.target_date }}
+          ACCOUNT_SIZE_USD: ${{ secrets.ACCOUNT_SIZE_USD }}
+          POSITION_SIZE_PCT: ${{ secrets.POSITION_SIZE_PCT }}
+          STOP_LOSS_PCT: ${{ secrets.STOP_LOSS_PCT }}
+          MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
+        run: python scripts/run_catalyst_email.py
+      - name: Upload rendered HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalyst-emails
+          path: data/results/catalyst_*email*.html

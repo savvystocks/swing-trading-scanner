@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.catalyst.scanner import run_catalyst_scan
 from src.catalyst.email_template import render_catalyst_email
+from src.catalyst.options_email import render_catalyst_options_email
 from src.email_report import send_email
 
 
@@ -33,24 +34,43 @@ def main():
         json.dump(scan, f, indent=2, default=str)
     print(f"Wrote {json_path}")
 
-    html = render_catalyst_email(scan)
+    html_main = render_catalyst_email(scan)
+    try:
+        html_options = render_catalyst_options_email(scan)
+    except Exception as e:
+        print(f"Options email render failed: {type(e).__name__}: {e}")
+        traceback.print_exc()
+        html_options = None
 
     if os.environ.get("SKIP_EMAIL"):
         print("SKIP_EMAIL set -- not sending")
-        html_path = os.path.join(results_dir, f"catalyst_email_{scan['scan_date']}.html")
-        with open(html_path, "w", encoding="utf-8") as f:
-            f.write(html)
-        print(f"Wrote {html_path}")
+        main_path = os.path.join(results_dir, f"catalyst_email_{scan['scan_date']}.html")
+        with open(main_path, "w", encoding="utf-8") as f:
+            f.write(html_main)
+        print(f"Wrote {main_path}")
+        if html_options:
+            opts_path = os.path.join(results_dir, f"catalyst_options_email_{scan['scan_date']}.html")
+            with open(opts_path, "w", encoding="utf-8") as f:
+                f.write(html_options)
+            print(f"Wrote {opts_path}")
         return
 
     email_sent = False
     try:
-        send_email(html, scan["scan_date"], subject=f"Catalyst Watchlist {scan['scan_date']}")
+        send_email(html_main, scan["scan_date"], subject=f"Catalyst Watchlist {scan['scan_date']}")
         print("Catalyst email sent")
         email_sent = True
     except Exception as e:
         print(f"Catalyst email send failed: {type(e).__name__}: {e}")
         traceback.print_exc()
+
+    if html_options:
+        try:
+            send_email(html_options, scan["scan_date"], subject=f"Catalyst Options Plays {scan['scan_date']}")
+            print("Catalyst options email sent")
+        except Exception as e:
+            print(f"Catalyst options email send failed: {type(e).__name__}: {e}")
+            traceback.print_exc()
 
     try:
         from src.telegram import send_catalyst_alert

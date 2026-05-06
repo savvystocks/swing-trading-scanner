@@ -12,6 +12,12 @@ CATALYST_TIERS = {
     "clinical_milestone": {"tier": "A", "points": 4.0, "label": "Clinical milestone (Phase 1/2/3)", "direction": "bull", "event_timing": "fresh_breaking"},
     "definitive_agreement": {"tier": "A", "points": 3.5, "label": "Material definitive agreement", "direction": "bull", "event_timing": "post_event"},
 
+    "strategic_investment": {"tier": "S", "points": 5.0, "label": "Strategic investment from hyperscaler/NVIDIA", "direction": "bull", "event_timing": "post_event"},
+    "capex_echo": {"tier": "A", "points": 4.0, "label": "Hyperscaler capex echo (named customer)", "direction": "bull", "event_timing": "ongoing"},
+    "revision_spike": {"tier": "A", "points": 4.0, "label": "EPS revision spike (estimates raised)", "direction": "bull", "event_timing": "ongoing"},
+    "backlog_surge": {"tier": "A", "points": 3.5, "label": "Record backlog / RPO surge", "direction": "bull", "event_timing": "ongoing"},
+    "spinoff_catalyst": {"tier": "B", "points": 3.0, "label": "Spinoff / separation catalyst", "direction": "bull", "event_timing": "scheduled_overnight"},
+
     "private_placement": {"tier": "B", "points": 3.0, "label": "Private placement filed", "direction": "bull", "event_timing": "post_event"},
     "covenant_relief": {"tier": "B", "points": 3.0, "label": "Forbearance / covenant relief", "direction": "bull", "event_timing": "post_event"},
     "strategic_partnership": {"tier": "B", "points": 3.0, "label": "Strategic partnership", "direction": "bull", "event_timing": "post_event"},
@@ -191,6 +197,19 @@ def red_flags_score(ticker_data):
         points -= 4
         flags.append("-4 recent shelf / dilution")
     return {"points": round(points, 2), "flags": flags}
+
+
+def cross_confirmation_score(catalysts_full):
+    if not catalysts_full:
+        return {"points": 0.0, "label": "no catalysts", "count": 0, "multiplier_label": "NONE"}
+    n = len(catalysts_full)
+    if n >= 4:
+        return {"points": 15.0, "label": f"HIGH conviction ({n} catalysts cross-confirm)", "count": n, "multiplier_label": "HIGH"}
+    if n >= 3:
+        return {"points": 10.0, "label": f"STRONG ({n} catalysts cross-confirm)", "count": n, "multiplier_label": "STRONG"}
+    if n == 2:
+        return {"points": 5.0, "label": "MODERATE (2 catalysts)", "count": n, "multiplier_label": "MODERATE"}
+    return {"points": 0.0, "label": "single catalyst", "count": n, "multiplier_label": "SINGLE"}
 
 
 def confidence_label(components):

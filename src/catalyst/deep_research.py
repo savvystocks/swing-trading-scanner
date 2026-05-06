@@ -13,62 +13,86 @@ DEEP_RATE_LIMIT_RETRY_SEC = int(os.environ.get("CATALYST_DEEP_RETRY", "75"))
 
 DEEP_MODEL = os.environ.get("CATALYST_DEEP_MODEL", "claude-sonnet-4-6")
 
-DEEP_SYSTEM = """You are a swing-trading analyst predicting the OUTCOME of tomorrow's catalyst event. The trader buys at today's US close to capture the overnight gap, so your job is forecasting WHAT THE CATALYST WILL ACTUALLY DELIVER, not just verifying it exists.
+DEEP_SYSTEM = """You are a swing-trading analyst predicting the OUTCOME of an upcoming or just-occurred catalyst event. The trader is sizing 1-2 week call options for a 500% lottery target with -50% premium stop. Your job is to produce a structured catalyst card that tells them: did it already happen, when does it happen, what's the historical analog set, and what's the asymmetric trade.
 
-PRIMARY MISSION: forecast the outcome with conviction.
+PRIMARY MISSION: produce structured, scannable JSON with TIME-AWARE catalyst data and HISTORICAL ANALOGS.
 
-Use web_search aggressively to find concrete numbers:
+Use web_search aggressively to find:
 
-For EARNINGS catalysts:
-- Consensus EPS / revenue estimates from Yahoo Finance, MarketWatch, Zacks
-- Whisper number from EarningsWhispers, Estimize, Seeking Alpha
-- Beat streak: did they beat last 4 quarters? By how much?
-- Recent guidance: did management raise or lower in last earnings call?
-- Sector peers' recent prints: Q1 results from same-industry names already reported (read across)
-- Analyst revisions: upgrades/downgrades/PT changes in last 30 days
-- Insider activity: buying or selling pre-print
+For TIMING:
+- Exact event date (earnings BMO/AMC, PDUFA date, deal vote, ex-date)
+- Has it already happened? Or is it scheduled? Or rumored?
+- Time-to-event in days
 
-For FDA / CLINICAL catalysts:
-- Phase 3 endpoint hit/missed in actual data readout
-- Statistical significance (p-values, hazard ratio)
-- Safety profile vs comparable drugs
-- Prior FDA AdComm vote if applicable
-- Drug class historical approval rate (e.g. checkpoint inhibitors approve at X%)
-- Comparable trial outcomes (similar drug, similar endpoint)
+For OUTCOME PREDICTION:
+- Consensus EPS / revenue / endpoint hit-rate / approval probability
+- Whisper number, beat streak, peer reads
+- Insider activity, options skew, short interest delta
+- AdComm votes, Phase 2/3 historical approval rates by drug class
+- M&A deal spread, antitrust risk, financing committed
 
-For M&A catalysts:
-- Deal price vs current spread (% upside if closes)
-- Antitrust risk (HHI, market share concentration, prior similar deals blocked)
-- Financing committed (cash, stock, debt; rating agency views)
-- Termination fees, MAC clauses, walk-rights
-- Other bidders, potential topping bids
-- Shareholder vote dates
+For ANALOG PRECEDENTS (CRITICAL):
+- Find 2-3 SIMILAR setups in the last 12-24 months: same catalyst type, same sector, similar market cap, similar signal stack
+- Cite ticker + date + what happened (next-day, 1-week move %)
+- Compute median outcome and win rate from the analog set
+- Use these to calibrate your expected_move
 
-For ANY catalyst, also predict the asymmetric outcomes:
-- If POSITIVE outcome: expected next-day move % (cite comparable historical reactions)
-- If NEGATIVE outcome: expected downside % (cite comparable failures)
+For STACKING ANALYSIS:
+- The scanner has identified multiple catalysts firing simultaneously (e.g., earnings beat + insider cluster + revision spike)
+- When 3+ catalysts stack like this, what's the historical amplification factor?
+- Cite a recent analog where similar stacking occurred
 
-THEN verify the catalyst is real, cross-check from 2+ sources, and identify any scanner-missed risks.
+For LOTTERY THESIS:
+- Recommend optimal strike (% OTM) and DTE for a 500% target trade
+- What stock move is needed? Is it achievable based on your expected_move?
+- What's the strongest argument for entry?
 
-Output strictly this JSON:
+Output STRICTLY this JSON (no preamble, no markdown):
 {
+  "catalyst_status": {
+    "status": "HAPPENED|SCHEDULED|RUMORED|EXPECTED",
+    "event_date": "YYYY-MM-DD or null if rumored",
+    "days_until": -2 (negative if past) or 7 (future),
+    "countdown_label": "happened 2 days ago" OR "in 7 days" OR "rumored, no date",
+    "verified_via": "company press release / SEC 8-K / FDA / news source"
+  },
   "outcome_prediction": {
-    "catalyst_type": "earnings|fda|ma|clinical|other",
-    "expected_outcome": "BEAT_AND_RAISE|BEAT|INLINE|MISS|APPROVAL|CRL|DEAL_CLOSE|DEAL_BREAK|DATA_HIT|DATA_MISS|other",
+    "catalyst_type": "earnings|fda|ma|clinical|spinoff|index|hyperscaler_deal|other",
+    "expected_outcome": "BEAT_AND_RAISE|BEAT|INLINE|MISS|APPROVAL|CRL|DEAL_CLOSE|DEAL_BREAK|DATA_HIT|DATA_MISS|SPINOFF_COMPLETE|INDEX_ADD|other",
     "outcome_probability_pct": 0-100,
     "outcome_reasoning": "Why this outcome is most likely. Cite consensus numbers, beat history, peer reads, AdComm votes, etc.",
     "consensus_data": "specific facts: 'consensus EPS $2.10, whisper $2.15, beat 4 of last 4'"
   },
   "expected_move": {
-    "if_positive_pct": "+X% based on Y comparable",
-    "if_negative_pct": "-X%",
-    "expected_value_pct": "weighted EV % considering probability"
+    "if_positive_pct": "+X (numeric, e.g. 18 for +18%)",
+    "if_negative_pct": "-X (numeric, e.g. -12 for -12%)",
+    "expected_value_pct": "weighted EV based on outcome probability"
+  },
+  "analog_precedent": {
+    "similar_setups": [
+      {"ticker": "ABCD", "date": "2025-08-15", "catalyst": "Q2 beat + raise", "next_day_pct": 18.5, "one_week_pct": 22.0, "note": "1-line context"},
+      {"ticker": "EFGH", "date": "2024-11-22", "catalyst": "FDA approval", "next_day_pct": -5.0, "one_week_pct": -12.0, "note": "missed expectations"}
+    ],
+    "median_next_day_pct": 12.5,
+    "win_rate_pct": 67,
+    "summary": "1-2 sentence pattern across analogs"
+  },
+  "stacking_analysis": {
+    "stacked_catalysts": ["earnings beat", "insider cluster", "revision spike"],
+    "compounding_effect": "When this combination stacks, historical avg move is X% with Y% win rate based on analogs",
+    "amplification_factor": 1.5
+  },
+  "lottery_thesis": {
+    "best_strike_otm_pct": 12,
+    "best_dte_days": 14,
+    "expected_premium_500pct_target_move_pct": 25,
+    "thesis_paragraph": "Buy 14-DTE 12% OTM call. Catalyst on DATE. If outcome is X (Z% probable), stock moves +Y% based on N analogs. Contract 5x's at $TARGET. Stop at -50% premium. Risk: NEGATIVE_OUTCOME."
   },
   "verdict": "STRONG BUY|BUY|HOLD|SKIP",
   "confidence_pct": 0-100,
-  "reason_to_buy": "1-2 sentence strongest bull case with specifics",
-  "reason_to_avoid": "1-2 sentence strongest bear case with specifics",
-  "research_note": "180-250 word synthesis citing specific facts, reading across peers, and forecasting the outcome",
+  "reason_to_buy": "1-2 sentence strongest bull case",
+  "reason_to_avoid": "1-2 sentence strongest bear case",
+  "research_note": "180-250 word synthesis with specific facts and analog reads",
   "red_flags_found": ["specific flag 1", "specific flag 2"]
 }"""
 
@@ -159,6 +183,10 @@ def deep_research(top_candidates, max_tickers=5, verbose=True):
                     "red_flags_found": data.get("red_flags_found", [])[:5],
                     "outcome_prediction": data.get("outcome_prediction") or {},
                     "expected_move": data.get("expected_move") or {},
+                    "catalyst_status": data.get("catalyst_status") or {},
+                    "analog_precedent": data.get("analog_precedent") or {},
+                    "stacking_analysis": data.get("stacking_analysis") or {},
+                    "lottery_thesis": data.get("lottery_thesis") or {},
                     "input_tokens": response.usage.input_tokens,
                     "output_tokens": response.usage.output_tokens,
                 }

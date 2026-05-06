@@ -47,13 +47,14 @@ jobs:
           STOP_LOSS_PCT: ${{ secrets.STOP_LOSS_PCT }}
           MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
         run: python scripts/run_catalyst_scan.py
-      - name: Commit tracker data
+      - name: Commit tracker data + scan JSON for email job
         if: always()
         run: |
           git config user.name "catalyst-tracker-bot"
           git config user.email "noreply@github.com"
           git add data/catalyst/predictions/ data/catalyst/history.json data/catalyst/paper_trades.json 2>/dev/null || true
-          git diff --cached --quiet || git commit -m "tracker: update predictions, history, paper trades [skip ci]"
+          git add -f data/results/catalyst_*.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "tracker: update predictions, history, paper trades, scan JSON [skip ci]"
           git push || true
       - name: Upload scan result
         if: always()

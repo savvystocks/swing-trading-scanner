@@ -164,6 +164,41 @@ def parse_contract(contract_symbol, snapshot):
     }
 
 
+BINARY_CATALYST_TYPES = {"earnings", "fda", "ma", "clinical", "data_readout", "pdufa"}
+
+
+def estimate_iv_crush_pct(iv_pct, days_until_event, dte, catalyst_type=None):
+    if iv_pct is None or iv_pct <= 0:
+        return 0
+    if days_until_event is None or dte is None:
+        return 0
+    if days_until_event > dte:
+        return 0
+    is_binary = (catalyst_type or "").lower() in BINARY_CATALYST_TYPES
+    if not is_binary and iv_pct < 60:
+        return 0
+    if iv_pct >= 100:
+        base = 50
+    elif iv_pct >= 80:
+        base = 40
+    elif iv_pct >= 60:
+        base = 30
+    elif iv_pct >= 40:
+        base = 20
+    else:
+        base = 10
+    if is_binary:
+        return base
+    return base // 2
+
+
+def adjusted_required_move_pct(base_move_pct, iv_crush_pct):
+    if iv_crush_pct <= 0:
+        return base_move_pct
+    factor = 100 / max(50, 100 - iv_crush_pct)
+    return base_move_pct * factor
+
+
 def required_stock_price_for_target_roi(strike, premium, target_roi_pct=500):
     target_premium = premium * (1 + target_roi_pct / 100)
     return strike + target_premium
@@ -411,17 +446,45 @@ def build_lottery_ticket(symbol, current_price, deep_research_data=None,
     p_outcome = 0.55
     expected_high = None
     expected_low = None
+    catalyst_type = None
+    days_until_event = None
     if deep_research_data:
         op = deep_research_data.get("outcome_prediction") or {}
         em = deep_research_data.get("expected_move") or {}
+        cs = deep_research_data.get("catalyst_status") or {}
         prob = _parse_pct_number(op.get("outcome_probability_pct"))
         if prob is not None:
             p_outcome = prob / 100
         expected_high = _parse_pct_number(em.get("if_positive_pct"))
         expected_low = _parse_pct_number(em.get("if_negative_pct"))
+        catalyst_type = op.get("catalyst_type")
+        days_until_event = cs.get("days_until")
+        if isinstance(days_until_event, str):
+            try:
+                days_until_event = int(days_until_event)
+            except (TypeError, ValueError):
+                days_until_event = None
+
+    iv_crush = estimate_iv_crush_pct(
+        contract.get("iv_pct"),
+        days_until_event,
+        contract.get("dte"),
+        catalyst_type,
+    )
+    if iv_crush > 0:
+        adjusted_move = adjusted_required_move_pct(contract["required_move_pct"], iv_crush)
+        contract["iv_crush_estimated_pct"] = iv_crush
+        contract["required_move_pct_iv_adjusted"] = round(adjusted_move, 1)
+        contract["target_stock_price_iv_adjusted"] = round(
+            current_price * (1 + adjusted_move / 100), 2
+        )
+    else:
+        contract["iv_crush_estimated_pct"] = 0
+        contract["required_move_pct_iv_adjusted"] = contract["required_move_pct"]
+        contract["target_stock_price_iv_adjusted"] = contract["target_stock_price"]
 
     p_win = profit_probability(
-        contract["required_move_pct"],
+        contract["required_move_pct_iv_adjusted"],
         contract["dte"],
         expected_move_pct=expected_high,
         p_outcome=p_outcome,

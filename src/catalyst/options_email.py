@@ -285,8 +285,7 @@ def enrich_with_live_options(picks, verbose=True):
         print(f"  options enrichment: {enriched}/{len(picks)} picks have qualified lottery contract")
 
 
-def build_picks_for_options_email(scored_results, max_picks=8):
-    settings = get_account_settings()
+def build_picks_for_options_email(scored_results, max_picks=3):
     candidates = [
         s for s in scored_results
         if s.get("buy_signal", {}).get("signal") == "BUY"
@@ -294,8 +293,7 @@ def build_picks_for_options_email(scored_results, max_picks=8):
         and not s.get("deal_closed")
     ]
     candidates.sort(key=lambda s: (s.get("score", 0), s.get("buy_signal", {}).get("probability_pct", 0)), reverse=True)
-    cutoff = max(max_picks, settings["max_concurrent"])
-    candidates = candidates[:cutoff]
+    candidates = candidates[:max_picks]
 
     picks = []
     for s in candidates:

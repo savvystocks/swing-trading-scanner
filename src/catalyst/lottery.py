@@ -216,7 +216,8 @@ def breakeven(strike, premium):
 
 def select_best_lottery_contract(snapshots, current_price, target_roi_pct=500,
                                   max_cost_per_contract_usd=None, max_pct_of_budget=1.0,
-                                  position_budget_usd=None):
+                                  position_budget_usd=None,
+                                  delta_min=0.08, delta_max=0.50, max_spread_pct=30):
     if not snapshots:
         return None, "empty"
     if max_cost_per_contract_usd is None and position_budget_usd:
@@ -231,13 +232,13 @@ def select_best_lottery_contract(snapshots, current_price, target_roi_pct=500,
             rejects["parse"] += 1
             continue
         abs_delta = abs(c["delta"])
-        if abs_delta < 0.08 or abs_delta > 0.50:
+        if abs_delta < delta_min or abs_delta > delta_max:
             rejects["delta"] += 1
             continue
         if c["cost_per_contract"] > max_cost_per_contract_usd:
             rejects["cost"] += 1
             continue
-        if c["spread_pct"] > 30:
+        if c["spread_pct"] > max_spread_pct:
             rejects["spread_too_wide"] += 1
             continue
         target_stock = required_stock_price_for_target_roi(c["strike"], c["mid"], target_roi_pct)
@@ -411,10 +412,12 @@ def select_bull_call_spread(snapshots, current_price, max_cost_usd=400, target_r
 
 def build_lottery_ticket(symbol, current_price, deep_research_data=None,
                           dte_min=DEFAULT_DTE_MIN, dte_max=DEFAULT_DTE_MAX,
-                          otm_pct_min=DEFAULT_OTM_PCT_MIN, otm_pct_max=DEFAULT_OTM_PCT_MAX):
+                          otm_pct_min=DEFAULT_OTM_PCT_MIN, otm_pct_max=DEFAULT_OTM_PCT_MAX,
+                          target_return_pct=None, stop_loss_pct=None,
+                          delta_min=0.08, delta_max=0.50):
     settings = get_account_settings()
-    target_roi = settings["target_return_pct"]
-    stop_loss = settings["stop_loss_pct"]
+    target_roi = target_return_pct if target_return_pct is not None else settings["target_return_pct"]
+    stop_loss = stop_loss_pct if stop_loss_pct is not None else settings["stop_loss_pct"]
 
     snapshots, fetch_err = fetch_lottery_chain(symbol, current_price, dte_min, dte_max, otm_pct_min, otm_pct_max)
     if not snapshots:
@@ -426,6 +429,8 @@ def build_lottery_ticket(symbol, current_price, deep_research_data=None,
         current_price,
         target_roi_pct=target_roi,
         position_budget_usd=position_budget_usd,
+        delta_min=delta_min,
+        delta_max=delta_max,
     )
 
     if not contract:
@@ -436,6 +441,8 @@ def build_lottery_ticket(symbol, current_price, deep_research_data=None,
                 current_price,
                 target_roi_pct=target_roi,
                 position_budget_usd=position_budget_usd,
+                delta_min=delta_min,
+                delta_max=delta_max,
             )
             if contract:
                 contract["fallback_range_used"] = "0-25% OTM, +7d DTE"

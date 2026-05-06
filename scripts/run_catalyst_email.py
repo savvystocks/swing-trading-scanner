@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.catalyst.email_template import render_catalyst_email
 from src.catalyst.options_email import render_catalyst_options_email
+from src.catalyst.factor_options_email import render_factor_options_email
 from src.email_report import send_email
 
 
@@ -50,42 +51,62 @@ def main():
     html_main = render_catalyst_email(scan)
 
     try:
-        html_options = render_catalyst_options_email(scan)
+        html_lottery = render_catalyst_options_email(scan)
     except Exception as e:
-        print(f"Options email render failed: {type(e).__name__}: {e}")
+        print(f"Lottery email render failed: {type(e).__name__}: {e}")
         traceback.print_exc()
-        html_options = None
+        html_lottery = None
+
+    try:
+        html_factors = render_factor_options_email(scan)
+    except Exception as e:
+        print(f"Factor options email render failed: {type(e).__name__}: {e}")
+        traceback.print_exc()
+        html_factors = None
+
+    suffix = scan.get("scan_date", datetime.utcnow().strftime("%Y-%m-%d"))
 
     if os.environ.get("SKIP_EMAIL"):
         print("SKIP_EMAIL set -- writing HTML, not sending")
-        suffix = scan.get("scan_date", datetime.utcnow().strftime("%Y-%m-%d"))
         main_path = os.path.join(RESULTS_DIR, f"catalyst_email_morning_{suffix}.html")
         with open(main_path, "w", encoding="utf-8") as f:
             f.write(html_main)
         print(f"Wrote {main_path}")
-        if html_options:
+        if html_lottery:
             opts_path = os.path.join(RESULTS_DIR, f"catalyst_options_email_morning_{suffix}.html")
             with open(opts_path, "w", encoding="utf-8") as f:
-                f.write(html_options)
+                f.write(html_lottery)
             print(f"Wrote {opts_path}")
+        if html_factors:
+            factor_path = os.path.join(RESULTS_DIR, f"factor_options_email_morning_{suffix}.html")
+            with open(factor_path, "w", encoding="utf-8") as f:
+                f.write(html_factors)
+            print(f"Wrote {factor_path}")
         return
 
-    scan_date = scan.get("scan_date", datetime.utcnow().strftime("%Y-%m-%d"))
     email_sent = False
     try:
-        send_email(html_main, scan_date, subject=f"Catalyst Watchlist {scan_date}")
+        send_email(html_main, suffix, subject=f"Catalyst Watchlist {suffix}")
         print("Catalyst email sent")
         email_sent = True
     except Exception as e:
         print(f"Catalyst email send failed: {type(e).__name__}: {e}")
         traceback.print_exc()
 
-    if html_options:
+    if html_lottery:
         try:
-            send_email(html_options, scan_date, subject=f"Catalyst Options Plays {scan_date}")
-            print("Catalyst options email sent")
+            send_email(html_lottery, suffix, subject=f"Catalyst Lottery Options {suffix}")
+            print("Catalyst lottery options email sent")
         except Exception as e:
-            print(f"Catalyst options email send failed: {type(e).__name__}: {e}")
+            print(f"Catalyst lottery options email send failed: {type(e).__name__}: {e}")
+            traceback.print_exc()
+
+    if html_factors:
+        try:
+            send_email(html_factors, suffix, subject=f"Top Factors Options {suffix}")
+            print("Top factors options email sent")
+        except Exception as e:
+            print(f"Top factors options email send failed: {type(e).__name__}: {e}")
             traceback.print_exc()
 
     if not email_sent:

@@ -222,7 +222,18 @@ def select_best_lottery_contract(snapshots, current_price, target_roi_pct=500,
         c["_score"] = score
         candidates.append(c)
     if not candidates:
-        return None, f"no contracts passed filters: {rejects}"
+        total = sum(rejects.values())
+        if rejects.get("parse") == total:
+            reason = f"chain too thin ({total} contracts, none parseable)"
+        elif rejects.get("cost") == total:
+            reason = f"all {total} contracts above ${max_cost_per_contract_usd:.0f} budget"
+        elif rejects.get("delta") + rejects.get("parse") == total:
+            reason = f"no contracts in delta 0.08-0.50 range (extended OTM or deep ITM only)"
+        elif rejects.get("spread_too_wide") + rejects.get("parse") == total:
+            reason = f"all contracts spread >30% (illiquid name)"
+        else:
+            reason = f"no contracts passed: parse={rejects['parse']} delta={rejects['delta']} cost={rejects['cost']} spread={rejects['spread_too_wide']}"
+        return None, reason
     candidates.sort(key=lambda c: c["_score"], reverse=True)
     best = candidates[0]
     best.pop("_score", None)
@@ -372,7 +383,7 @@ def build_lottery_ticket(symbol, current_price, deep_research_data=None,
 
     snapshots, fetch_err = fetch_lottery_chain(symbol, current_price, dte_min, dte_max, otm_pct_min, otm_pct_max)
     if not snapshots:
-        return {"qualified": False, "reason": fetch_err or "no chain"}
+        return {"qualified": False, "reason": fetch_err or "no chain available"}
 
     position_budget_usd = settings["account_size_usd"] * settings["position_size_pct"] / 100
     contract, sel_err = select_best_lottery_contract(
@@ -381,8 +392,21 @@ def build_lottery_ticket(symbol, current_price, deep_research_data=None,
         target_roi_pct=target_roi,
         position_budget_usd=position_budget_usd,
     )
+
     if not contract:
-        return {"qualified": False, "reason": sel_err or "no contract"}
+        snapshots_wide, _ = fetch_lottery_chain(symbol, current_price, dte_min, dte_max + 7, 0, 25)
+        if snapshots_wide and snapshots_wide is not snapshots:
+            contract, sel_err_wide = select_best_lottery_contract(
+                snapshots_wide,
+                current_price,
+                target_roi_pct=target_roi,
+                position_budget_usd=position_budget_usd,
+            )
+            if contract:
+                contract["fallback_range_used"] = "0-25% OTM, +7d DTE"
+
+    if not contract:
+        return {"qualified": False, "reason": sel_err or "no qualifying contract"}
 
     p_outcome = 0.55
     expected_high = None

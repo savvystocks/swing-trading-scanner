@@ -3,6 +3,7 @@ from jinja2 import Template
 from src.catalyst.lottery import build_lottery_ticket, get_account_settings
 from src.catalyst.option_grader import grade_option_picks
 from src.catalyst.factor_screener import screen_lower_caps, FACTOR_DEFINITIONS
+from src.catalyst.factor_research import research_factor_finds
 
 
 TOP_20_FACTOR_TICKERS = (
@@ -34,6 +35,100 @@ FACTOR_OPTIONS_TEMPLATE = """<!DOCTYPE html>
     <strong>How this email differs from Catalyst Email:</strong>
     Catalyst email targets binary events (earnings/FDA/M&A) with 500%-target lottery options (1-2 weeks, 5-18% OTM). This email targets ongoing factor exposure with calmer 150%-target options (1-1.5 months, 0-10% OTM). Money is made riding trends, not just betting on binary surprises.
   </div>
+
+  {% if factor_research_results %}
+    <h2 style="font-size:15px; margin-top:20px; padding-top:12px; border-top:3px solid #d97706; color:#7c2d12;">Top 5 Factor Finds — Deep Research + Options</h2>
+    <div style="font-size:12px; color:#555; margin-bottom:14px;">
+      Sonnet 4.6 + web_search analysis on the highest-conviction lower-cap factor matches. Each card shows theme exposure, upcoming catalysts, historical analog precedent, position-in-theme, and recommended options structure.
+    </div>
+    {% for m in factor_research_picks %}
+      {% set r = factor_research_results.get(m.ticker) %}
+      {% if r %}
+        {% set v_color = '#0d7b34' if r.verdict == 'STRONG BUY' else '#1a9850' if r.verdict == 'BUY' else '#888' if r.verdict == 'HOLD' else '#c94545' %}
+        <div style="border:2px solid {{ v_color }}; border-radius:8px; padding:14px 16px; margin-bottom:14px; background:#fffbf5;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+            <div>
+              <span style="font-size:18px; font-weight:700;">{{ m.ticker }}</span>
+              <span style="font-size:11px; color:#555;">{{ (m.name or '')[:32] }}</span>
+              <span style="display:inline-block; padding:3px 10px; margin-left:6px; border-radius:3px; background:{{ v_color }}; color:#fff; font-size:11px; font-weight:700;">{{ r.verdict }}</span>
+              <span style="font-size:10px; color:#666;">{{ r.confidence_pct }}% conf</span>
+            </div>
+            <div style="text-align:right;">
+              {% if m.live_spot %}
+                <span style="font-size:14px; font-weight:700;">${{ "%.2f"|format(m.live_spot) }}</span>
+              {% elif m.price %}
+                <span style="font-size:14px; font-weight:700;">${{ "%.2f"|format(m.price) }}</span>
+              {% endif %}
+              <div style="font-size:10px; color:#666;">${{ "%.1f"|format((m.market_cap or 0) / 1e9) }}B mcap</div>
+            </div>
+          </div>
+
+          {% if r.theme_exposure %}
+            <div style="margin-bottom:8px; padding:8px 10px; background:#fef3c7; border-left:3px solid #d97706; border-radius:4px; font-size:12px;">
+              <strong style="color:#7c2d12;">Theme exposure:</strong> {{ r.theme_exposure.primary_theme }}
+              {% if r.theme_exposure.thesis_strength %} &middot; <strong>{{ r.theme_exposure.thesis_strength }}</strong>{% endif %}
+              {% if r.theme_exposure.exposure_pct %} &middot; {{ r.theme_exposure.exposure_pct }} of revenue{% endif %}
+              <div style="margin-top:4px; color:#444;">{{ r.theme_exposure.summary }}</div>
+              {% if r.theme_exposure.key_customers %}
+                <div style="margin-top:4px; font-size:10px;"><strong>Key customers:</strong> {{ r.theme_exposure.key_customers|join(', ') }}</div>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          {% if r.next_catalyst and r.next_catalyst.type %}
+            <div style="margin-bottom:8px; padding:6px 10px; background:#dbeafe; border-radius:4px; font-size:11px;">
+              <strong>Next catalyst:</strong> {{ r.next_catalyst.type }}
+              {% if r.next_catalyst.expected_date %} &middot; {{ r.next_catalyst.expected_date }}{% endif %}
+              {% if r.next_catalyst.days_until is defined and r.next_catalyst.days_until is not none %} &middot; {% if r.next_catalyst.days_until > 0 %}in {{ r.next_catalyst.days_until }}d{% elif r.next_catalyst.days_until < 0 %}{{ -r.next_catalyst.days_until }}d ago{% else %}today{% endif %}{% endif %}
+              <div style="margin-top:3px; color:#444;">{{ r.next_catalyst.description }}</div>
+            </div>
+          {% endif %}
+
+          {% if r.analog_precedent and r.analog_precedent.similar_setup %}
+            <div style="margin-bottom:8px; padding:6px 10px; background:#f5f3ff; border-left:3px solid #8b5cf6; border-radius:4px; font-size:11px;">
+              <strong style="color:#5a3690;">Analog:</strong>
+              {{ r.analog_precedent.similar_setup.ticker }} ({{ r.analog_precedent.similar_setup.date }}) — {{ "%+.0f"|format(r.analog_precedent.similar_setup.return_pct) }}% on {{ r.analog_precedent.similar_setup.reason }}
+              {% if r.analog_precedent.summary %}<div style="margin-top:3px; color:#444;">{{ r.analog_precedent.summary }}</div>{% endif %}
+            </div>
+          {% endif %}
+
+          {% if r.position_in_theme %}
+            <div style="margin-bottom:8px; padding:6px 10px; background:#ecfeff; border-left:3px solid #0891b2; border-radius:4px; font-size:11px;">
+              <strong>Position-in-theme:</strong>
+              <span style="display:inline-block; padding:1px 6px; margin-left:4px; border-radius:3px; background:{% if r.position_in_theme.rank == 'laggard' %}#0d7b34{% elif r.position_in_theme.rank == 'mid' %}#4a90e2{% else %}#888{% endif %}; color:#fff; font-size:10px; font-weight:700;">{{ r.position_in_theme.rank|upper }}</span>
+              {% if r.position_in_theme.asymmetry_score %} &middot; asymmetry <strong>{{ r.position_in_theme.asymmetry_score }}</strong>{% endif %}
+              {% if r.position_in_theme.ytd_return_estimate_pct is defined and r.position_in_theme.ytd_return_estimate_pct is not none %} &middot; YTD est {{ "%+.0f"|format(r.position_in_theme.ytd_return_estimate_pct) }}%{% endif %}
+              {% if r.position_in_theme.comment %}<div style="margin-top:3px; color:#444;">{{ r.position_in_theme.comment }}</div>{% endif %}
+            </div>
+          {% endif %}
+
+          {% if r.options_thesis and r.options_thesis.thesis_paragraph %}
+            <div style="margin-bottom:8px; padding:10px 12px; background:#fefce8; border:2px solid #eab308; border-radius:6px;">
+              <div style="font-weight:700; color:#854d0e; font-size:11px; text-transform:uppercase; margin-bottom:4px;">Options thesis</div>
+              <div style="font-size:11px;">
+                {% if r.options_thesis.best_strike_otm_pct %}<strong>{{ r.options_thesis.best_strike_otm_pct }}% OTM</strong>{% endif %}
+                {% if r.options_thesis.best_dte_days %} &middot; <strong>{{ r.options_thesis.best_dte_days }} DTE</strong>{% endif %}
+                {% if r.options_thesis.target_return_pct %} &middot; target <strong>{{ r.options_thesis.target_return_pct }}% premium ROI</strong>{% endif %}
+                {% if r.options_thesis.expected_premium_target_move_pct %} &middot; needs <strong>+{{ r.options_thesis.expected_premium_target_move_pct }}% stock move</strong>{% endif %}
+              </div>
+              <div style="margin-top:6px; color:#1f2937; font-size:11px;">{{ r.options_thesis.thesis_paragraph }}</div>
+            </div>
+          {% endif %}
+
+          <div style="font-size:11px; color:#444; margin-bottom:6px;"><strong>Research:</strong> {{ r.research_note }}</div>
+          {% if r.red_flags_found %}
+            <div style="font-size:10px; color:#7f1d1d; margin-top:4px;"><strong>Red flags:</strong> {{ r.red_flags_found|join(' &middot; ') }}</div>
+          {% endif %}
+          <div style="margin-top:6px; font-size:10px; color:#5a3690;">
+            <strong>Matched factors:</strong>
+            {% for f in m.matched_factors[:8] %}
+              <span style="display:inline-block; padding:1px 5px; margin:1px 2px 0 0; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:3px;">{{ f.factor_name|truncate(28) }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
 
   {% if factor_matches %}
     <h2 style="font-size:15px; margin-top:20px; padding-top:12px; border-top:2px solid #5a3690; color:#5a3690;">Lower-Cap Factor Matches ($300M-$5B mcap)</h2>
@@ -406,6 +501,8 @@ def render_factor_options_email(scan):
         print(f"  factor option grader: skipped: {type(e).__name__}: {e}")
 
     factor_matches = []
+    factor_research_results = {}
+    factor_research_picks = []
     try:
         try:
             from src.eodhd import EODHDClient
@@ -445,6 +542,13 @@ def render_factor_options_email(scan):
                 enrich_with_live_spots(factor_matches, verbose=False)
             except Exception as e:
                 print(f"  factor_matches live_spot: {type(e).__name__}: {e}")
+
+            factor_research_picks = factor_matches[:5]
+            try:
+                factor_research_results = research_factor_finds(factor_research_picks, max_tickers=5, verbose=True)
+            except Exception as e:
+                print(f"  factor_research failed (non-fatal): {type(e).__name__}: {str(e)[:200]}")
+                factor_research_results = {}
     except Exception as e:
         print(f"  factor screener error: {type(e).__name__}: {e}")
 
@@ -459,4 +563,6 @@ def render_factor_options_email(scan):
         target_return_pct=FACTOR_TARGET_RETURN_PCT,
         picks=picks,
         factor_matches=factor_matches,
+        factor_research_results=factor_research_results,
+        factor_research_picks=factor_research_picks,
     )

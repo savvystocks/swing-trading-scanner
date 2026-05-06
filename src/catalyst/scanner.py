@@ -18,6 +18,10 @@ from src.catalyst.signals import (
     run_all_catalyst_detectors, detector_hits_to_signal_entries, append_signals_and_rescore,
 )
 from src.catalyst.inflection import inflection_readiness_score
+from src.catalyst.options_flow import detect_unusual_options_activity
+from src.catalyst.position_in_theme import annotate_with_position_in_theme
+from src.catalyst.smart_money import days_to_cover, short_squeeze_setup_score, beneish_m_score
+from src.catalyst.macro_indicators import fetch_macro_snapshot, macro_regime_summary, index_rebalance_candidates
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
 from src.catalyst.peers import peer_signals, peer_confirmation_score
@@ -256,7 +260,18 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
     if verbose:
         print(f"=== Catalyst Scan v2 ({target_date or datetime.utcnow().date()}) ===")
-        print(f"Step 0/6: measure outcomes for prior predictions")
+        print(f"Step 0/6: macro snapshot + measure outcomes for prior predictions")
+    macro = None
+    try:
+        macro_snap = fetch_macro_snapshot(client)
+        macro = macro_regime_summary(macro_snap)
+        if verbose:
+            print(f"  macro: regime={macro.get('regime')} vix={macro.get('vix')}")
+            for flag in (macro.get("flags") or [])[:3]:
+                print(f"    - {flag}")
+    except Exception as e:
+        if verbose:
+            print(f"  macro snapshot failed: {type(e).__name__}: {e}")
     today = (target_date if isinstance(target_date, str) else (target_date or datetime.utcnow().date()).strftime("%Y-%m-%d"))
     today_dt = datetime.strptime(today, "%Y-%m-%d").date()
     measured_total = 0
@@ -470,13 +485,25 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             s["inflection"] = None
 
     if verbose:
-        print(f"  running options reality check on top {options_max_fetch}")
+        print(f"  running options reality check + unusual flow on top {options_max_fetch}")
     pre_scored_sorted_temp = sorted(pre_scored, key=lambda x: x["score"], reverse=True)
     for i, s in enumerate(pre_scored_sorted_temp[:options_max_fetch]):
         if not s.get("eodhd_ticker", "").endswith(".US"):
             continue
         try:
             symbol = s["eodhd_ticker"].replace(".US", "")
+            try:
+                flow = detect_unusual_options_activity(symbol, s.get("price"))
+                if flow:
+                    s["options_flow"] = flow
+                    if flow.get("sentiment") == "BULLISH":
+                        s["score"] = round(s.get("score", 0) + 5, 2)
+                        s["components"]["options_flow"] = {"points": 5, "label": f"BULLISH flow: {', '.join(flow.get('bullish_signals', [])[:2])}"}
+                    elif flow.get("sentiment") == "BEARISH":
+                        s["score"] = round(s.get("score", 0) - 5, 2)
+                        s["components"]["options_flow"] = {"points": -5, "label": f"BEARISH flow: {', '.join(flow.get('bearish_signals', [])[:2])}"}
+            except Exception:
+                pass
             opts = implied_move(symbol, s.get("price"))
             if opts:
                 from src.catalyst.buy_signal import buy_signal as _bs_fn
@@ -538,6 +565,19 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         s["components"]["cross_confirmation"] = xconf
         s["score"] = round(s["score"] + xconf["points"], 2)
         s["cross_confirmation"] = xconf
+
+    if verbose:
+        print(f"  annotating position-in-theme across all scored names...")
+    try:
+        annotate_with_position_in_theme(final_scored)
+        for s in final_scored:
+            pos = s.get("position_in_theme")
+            if pos and pos.get("rank") in ("laggard", "deep_laggard"):
+                s["score"] = round(s.get("score", 0) + 4, 2)
+                s["components"]["position_in_theme"] = {"points": 4, "label": f"{pos['rank']} in theme — asymmetric setup"}
+    except Exception as e:
+        if verbose:
+            print(f"  position_in_theme failed: {type(e).__name__}: {e}")
 
     final_scored = assign_buckets(final_scored, top_pct_strong=top_pct_strong, top_pct_watch=top_pct_watch)
     if verbose:
@@ -616,8 +656,15 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
     candidates = [s for s in final_scored if s.get("bucket") in ("STRONG", "WATCH")]
 
+    rebalance = {}
+    try:
+        rebalance = index_rebalance_candidates(final_scored)
+    except Exception:
+        rebalance = {}
+
     return {
         "scan_date": scan_date_str,
+        "macro": macro,
         "tracker_stats": tracker_stats,
         "paper_stats": paper_stats,
         "candidates_total": len(per_ticker),
@@ -628,6 +675,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         "top_pct_watch": top_pct_watch,
         "candidates": candidates,
         "all_scored": final_scored,
+        "rebalance_candidates": rebalance,
         "eodhd_calls": client.calls_made,
         "edgar_calls": edgar.calls_made,
         "llm_graded": len(llm_grades),

@@ -2,6 +2,7 @@ from jinja2 import Template
 
 from src.catalyst.lottery import build_lottery_ticket, get_account_settings
 from src.catalyst.option_grader import grade_option_picks
+from src.catalyst.factor_screener import screen_lower_caps, FACTOR_DEFINITIONS
 
 
 TOP_20_FACTOR_TICKERS = (
@@ -26,13 +27,46 @@ FACTOR_OPTIONS_TEMPLATE = """<!DOCTYPE html>
 <div style="max-width:920px; margin:0 auto; background:#fff; padding:24px;">
   <h1 style="font-size:18px; margin:0 0 4px;">Top Factors Options — {{ scan_date }}</h1>
   <div style="color:#666; font-size:11px; margin-bottom:16px;">
-    Standard call options on the 20 best-performing US stocks of the last year + names with strong inflection signals. NOT lottery setups — target {{ target_return_pct }}% in 30-45 days, OTM 0-10%, position sized 20% of ${{ "%.0f"|format(settings.account_size_usd) }} = ${{ "%.0f"|format(position_budget) }} max per trade with -{{ stop_loss_pct }}% premium stop. Deeper delta = higher win rate, lower asymmetry than lottery picks.
+    Standard call options on names matching the 20 factors that drove last year's top 20 movers. NOT lottery setups — target {{ target_return_pct }}% in 30-45 days, OTM 0-10%, position sized 20% of ${{ "%.0f"|format(settings.account_size_usd) }} = ${{ "%.0f"|format(position_budget) }} max per trade with -{{ stop_loss_pct }}% premium stop.
   </div>
 
   <div style="background:#dbeafe; border:1px solid #4a90e2; border-radius:6px; padding:10px 12px; margin-bottom:16px; font-size:11px; color:#1a4d7c;">
     <strong>How this email differs from Catalyst Email:</strong>
-    Catalyst email targets binary events (earnings/FDA/M&A) with 500%-target lottery options (1-2 weeks, 5-18% OTM). This email targets ongoing themes (AI infrastructure / data center / memory / semicap) with calmer 150%-target options (1-1.5 months, 0-10% OTM). Money is made riding trends, not just betting on binary surprises.
+    Catalyst email targets binary events (earnings/FDA/M&A) with 500%-target lottery options (1-2 weeks, 5-18% OTM). This email targets ongoing factor exposure with calmer 150%-target options (1-1.5 months, 0-10% OTM). Money is made riding trends, not just betting on binary surprises.
   </div>
+
+  {% if factor_matches %}
+    <h2 style="font-size:15px; margin-top:20px; padding-top:12px; border-top:2px solid #5a3690; color:#5a3690;">Lower-Cap Factor Matches ($300M-$5B mcap)</h2>
+    <div style="font-size:11px; color:#555; margin-bottom:12px;">
+      Lower-cap names matching 2+ of the 20 factors that drove last year's top 20 movers. These are the next generation candidates — businesses sitting in the right themes with smaller market caps where re-rating is still possible. Sorted by factor count.
+    </div>
+    <table style="width:100%; font-size:11px; border-collapse:collapse; margin-bottom:18px;">
+      <thead><tr style="background:#ede9fe;">
+        <th align="left" style="padding:6px 8px;">Ticker</th>
+        <th align="left" style="padding:6px 8px;">Name</th>
+        <th align="right" style="padding:6px 8px;">Mcap</th>
+        <th align="right" style="padding:6px 8px;">Price</th>
+        <th align="right" style="padding:6px 8px;">Factors</th>
+        <th align="left" style="padding:6px 8px;">Matched factors</th>
+      </tr></thead>
+      <tbody>
+      {% for m in factor_matches %}
+        <tr style="border-bottom:1px solid #ddd6fe;">
+          <td style="padding:5px 8px; font-weight:700;">{{ m.ticker }}</td>
+          <td style="padding:5px 8px; color:#444; font-size:10px;">{{ (m.name or '')[:24] }}</td>
+          <td align="right" style="padding:5px 8px;">${{ "%.1f"|format((m.market_cap or 0) / 1e9) }}B</td>
+          <td align="right" style="padding:5px 8px;">{% if m.live_spot %}<strong>${{ "%.2f"|format(m.live_spot) }}</strong>{% elif m.price %}${{ "%.2f"|format(m.price) }}{% else %}-{% endif %}</td>
+          <td align="right" style="padding:5px 8px; font-weight:700; color:#5a3690;">{{ m.factor_count }}</td>
+          <td style="padding:5px 8px; font-size:10px; color:#444;">
+            {% for f in m.matched_factors[:6] %}
+              <span style="display:inline-block; padding:1px 5px; margin:1px 2px 0 0; background:#f5f3ff; border:1px solid #ddd6fe; border-radius:3px;" title="{{ f.evidence|join(', ') }}">{{ f.factor_name|truncate(30) }}</span>
+            {% endfor %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
 
   {% if picks %}
     {% for p in picks %}
@@ -357,6 +391,43 @@ def render_factor_options_email(scan):
     except Exception as e:
         print(f"  factor option grader: skipped: {type(e).__name__}: {e}")
 
+    factor_matches = []
+    try:
+        try:
+            from src.eodhd import EODHDClient
+            client = EODHDClient()
+            small_caps = [s for s in scored if 300_000_000 <= (s.get("market_cap") or 0) <= 5_000_000_000]
+            backfilled = 0
+            for s in small_caps:
+                if s.get("industry") and s.get("description"):
+                    continue
+                tk = s.get("eodhd_ticker") or (f"{s.get('ticker')}.US" if s.get("ticker") else None)
+                if not tk:
+                    continue
+                try:
+                    fund = client.fundamentals(tk)
+                    if fund:
+                        general = fund.get("General", {}) or {}
+                        s["industry"] = s.get("industry") or general.get("Industry", "") or ""
+                        s["description"] = s.get("description") or (general.get("Description", "") or "")[:600]
+                        backfilled += 1
+                except Exception:
+                    pass
+            print(f"  factor_screener: backfilled industry+description for {backfilled} small-caps")
+        except Exception as e:
+            print(f"  factor_screener backfill error: {type(e).__name__}: {e}")
+
+        factor_matches = screen_lower_caps(scored, mcap_max=5_000_000_000, mcap_min=300_000_000, min_factor_count=2)
+        factor_matches = factor_matches[:20]
+        if factor_matches:
+            try:
+                from src.live_spot import enrich_with_live_spots
+                enrich_with_live_spots(factor_matches, verbose=False)
+            except Exception as e:
+                print(f"  factor_matches live_spot: {type(e).__name__}: {e}")
+    except Exception as e:
+        print(f"  factor screener error: {type(e).__name__}: {e}")
+
     settings = get_account_settings()
     position_budget = settings["account_size_usd"] * settings["position_size_pct"] / 100
     tmpl = Template(FACTOR_OPTIONS_TEMPLATE)
@@ -367,4 +438,5 @@ def render_factor_options_email(scan):
         stop_loss_pct=int(settings["stop_loss_pct"]),
         target_return_pct=FACTOR_TARGET_RETURN_PCT,
         picks=picks,
+        factor_matches=factor_matches,
     )

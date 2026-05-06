@@ -352,6 +352,8 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         s["company"] = r["company"]
         s["name"] = r.get("name")
         s["sector"] = r.get("sector")
+        s["industry"] = data.get("industry") or ""
+        s["description"] = data.get("description") or ""
         s["price"] = data.get("price")
         s["market_cap"] = data.get("market_cap")
         s["dollar_volume_20d"] = data.get("dollar_volume_20d")

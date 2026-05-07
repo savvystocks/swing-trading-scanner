@@ -2,11 +2,12 @@ name: premarket-refresh
 
 on:
   workflow_dispatch:
-  schedule:
-    # 8:55 UTC scheduled. With GitHub Actions 3-6h delay observed on this repo,
-    # email lands 12:00-15:00 UTC = 13:00-16:00 user time = mostly pre-US-open
-    # to first hour of session. Was 13:00 UTC but that landed 17:00-20:00 mid-session.
-    - cron: "55 8 * * 1-5"
+  # Cron disabled: this workflow uses OLD swing-scanner data (daily-scan
+  # artifact). User now runs the catalyst system which has its own
+  # email pipeline (catalyst-email.yml at 13:55 UTC). The old pre-market
+  # refresh email arrived 3-6h late on stale swing-scanner data.
+  # schedule:
+  #   - cron: "55 8 * * 1-5"
 
 permissions:
   actions: read

@@ -204,18 +204,9 @@ CATALYST_OPTIONS_TEMPLATE = """<!DOCTYPE html>
             </div>
           {% endif %}
 
-          {% if dr.research_note %}
-            <div style="margin-top:6px; padding:8px 10px; background:#f5f0fa; border-left:3px solid #8e44ad; border-radius:4px; font-size:11px; color:#333;">
-              <strong style="color:#8e44ad;">Research:</strong> {{ dr.research_note[:400] }}
-            </div>
-          {% endif %}
-        {% elif p.thesis %}
-          <div style="margin-top:8px; padding:8px 10px; background:#f5f0fa; border-left:3px solid #8e44ad; border-radius:4px; font-size:11px; color:#333;">
-            <strong style="color:#8e44ad;">Thesis:</strong> {{ p.thesis }}
-          </div>
         {% endif %}
 
-        {% if p.inflection %}
+        {% if false and p.inflection %}
           {% set inf = p.inflection %}
           <div style="margin-top:6px; font-size:10px; color:#555;">
             <strong>Inflection:</strong> {{ inf.label }}

@@ -82,105 +82,17 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
 <div class="wrap">
-  <h1>Catalyst Watchlist v2 &mdash; {{ scan_date }}</h1>
-  <div class="meta">Pre-close scan for tomorrow's overnight catalysts &middot; Multi-source scoring &middot; Universe: {{ candidates_total }} candidates &middot; Enriched: {{ enriched_total }} &middot; LLM-graded: {{ llm_graded }} &middot; STRONG: {{ strong|length }} &middot; WATCH: {{ watch|length }} &middot; EODHD: {{ eodhd_calls }} &middot; EDGAR: {{ edgar_calls }}</div>
+  <h1>Catalyst Watchlist &mdash; {{ scan_date }}</h1>
+  <div class="meta">{{ strong|length }} STRONG &middot; {{ watch|length }} WATCH &middot; LLM-graded {{ llm_graded }} &middot; Universe {{ candidates_total }}</div>
 
-  <div class="intro">
-    <strong>How to use this email.</strong> The system is now strictly tuned for ONE play: <strong>buy at today's US close → catch tomorrow's overnight gap on a fresh catalyst</strong>. BUY signals require a SCHEDULED OVERNIGHT catalyst (earnings tomorrow / FDA decision tomorrow) on a stock that hasn't already run. Names with red CATALYST IN MOTION badge mean the move already started today — do not chase. PRIME ENTRY badge = overnight catalyst on a flat stock (the ideal setup).
-    <br><br><em style="color:#866;">Probability is heuristic, not backtested. Real measured hit-rates build up in the tracker section as the system runs.</em>
-  </div>
-
-  {% if paper_stats and paper_stats.n > 0 %}
-  <div class="legend" style="background:#f0fdf4; border-color:#86efac;">
-    <h3 style="color:#14532d;">Paper trading P&amp;L (${{ "%.0f"|format(paper_stats.position_size_usd) }}/ticker, last {{ paper_stats.lookback_days }}d, n={{ paper_stats.n }} trades)</h3>
-    <div class="legend-grid">
-      <div class="legend-block">
-        <div class="legend-title">Total P&amp;L</div>
-        <div class="legend-row" style="font-size:18px; font-weight:700; color:{% if paper_stats.total_pnl_usd >= 0 %}#0d7b34{% else %}#c94545{% endif %};">${{ "%+.2f"|format(paper_stats.total_pnl_usd) }}</div>
-        <div class="legend-row">ROI: <strong>{{ "%+.2f"|format(paper_stats.roi_pct) }}%</strong> on ${{ "%.0f"|format(paper_stats.capital_deployed_usd) }} deployed</div>
-        <div class="legend-row">Fees deducted: ${{ "%.2f"|format(paper_stats.total_fees_usd) }} (FX 0.5% round trip assumed)</div>
-      </div>
-      <div class="legend-block">
-        <div class="legend-title">Win rate &amp; sizing</div>
-        <div class="legend-row"><strong>Wins:</strong> {{ paper_stats.wins }} ({{ paper_stats.win_rate_pct }}%) &middot; <strong>Losses:</strong> {{ paper_stats.losses }}</div>
-        <div class="legend-row"><strong>Avg win:</strong> {{ "%+.2f"|format(paper_stats.avg_win_pct) }}% &middot; <strong>Avg loss:</strong> {{ "%+.2f"|format(paper_stats.avg_loss_pct) }}%</div>
-        <div class="legend-row"><strong>Biggest win:</strong> ${{ "%+.2f"|format(paper_stats.biggest_win_usd) }} &middot; <strong>Biggest loss:</strong> ${{ "%+.2f"|format(paper_stats.biggest_loss_usd) }}</div>
-      </div>
-    </div>
-    <div style="font-size:10px; color:#555; margin-top:8px;"><em>Simulated $100 entry per BUY signal at close, exit half at T1 / rest at T2 / stop / next-day close. Assumes Trading 212-style 0% commissions + 0.5% FX spread round trip. Real broker fees may differ.</em></div>
-  </div>
-  {% endif %}
-
-  {% if tracker_stats and tracker_stats.BUY and tracker_stats.BUY.n > 0 %}
-  <div class="legend" style="background:#f0fdf4; border-color:#bbf7d0;">
-    <h3 style="color:#166534;">Real-money tracker (last {{ tracker_stats.lookback_days }}d, n={{ tracker_stats.total_measured }})</h3>
-    <div class="legend-grid">
-      {% if tracker_stats.BUY %}
-      <div class="legend-block">
-        <div class="legend-title" style="color:#0d7b34;">BUY signal outcomes (n={{ tracker_stats.BUY.n }})</div>
-        <div class="legend-row"><strong>Hit T1:</strong> {{ tracker_stats.BUY.hit_t1_pct }}% &middot; <strong>Hit T2:</strong> {{ tracker_stats.BUY.hit_t2_pct }}% &middot; <strong>Hit stop:</strong> {{ tracker_stats.BUY.hit_stop_pct }}%</div>
-        <div class="legend-row"><strong>Gap up next day:</strong> {{ tracker_stats.BUY.gap_up_pct }}% &middot; <strong>Avg high:</strong> {{ "%+.2f"|format(tracker_stats.BUY.avg_next_high_pct) }}% &middot; <strong>Avg close:</strong> {{ "%+.2f"|format(tracker_stats.BUY.avg_next_close_pct) }}%</div>
-      </div>
-      {% endif %}
-      {% if tracker_stats.WATCH %}
-      <div class="legend-block">
-        <div class="legend-title" style="color:#0052cc;">WATCH signal outcomes (n={{ tracker_stats.WATCH.n }})</div>
-        <div class="legend-row"><strong>Hit T1:</strong> {{ tracker_stats.WATCH.hit_t1_pct }}% &middot; <strong>Hit T2:</strong> {{ tracker_stats.WATCH.hit_t2_pct }}% &middot; <strong>Hit stop:</strong> {{ tracker_stats.WATCH.hit_stop_pct }}%</div>
-        <div class="legend-row"><strong>Gap up next day:</strong> {{ tracker_stats.WATCH.gap_up_pct }}% &middot; <strong>Avg high:</strong> {{ "%+.2f"|format(tracker_stats.WATCH.avg_next_high_pct) }}% &middot; <strong>Avg close:</strong> {{ "%+.2f"|format(tracker_stats.WATCH.avg_next_close_pct) }}%</div>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-  {% else %}
-  <div class="intro" style="background:#f0f7ff; border-color:#93c5fd;">
-    <strong>Tracker building up.</strong> Real-money outcome stats appear here once the scanner has accumulated measured next-day results from prior BUY/WATCH signals. Today's predictions are saved and will be measured tomorrow.
-  </div>
-  {% endif %}
-
-  <div class="legend">
-    <h3>Score components reference (each ticker is graded across all of these)</h3>
-    <div class="legend-grid">
-      <div class="legend-block">
-        <div class="legend-title">Catalyst Quality (max ~40pts)</div>
-        <div class="legend-row">Primary catalyst tier × 8 + secondary stack at 25%. S = exceptional, A = strong, B = moderate, C = lower-prob, D = speculative.</div>
-      </div>
-      <div class="legend-block">
-        <div class="legend-title">LLM Grade (max 30pts)</div>
-        <div class="legend-row">Claude reads the actual catalyst content + recent news, grades 0-10 for next-day bullish strength. Considers deal size, premium, dilution, surprise factor.</div>
-      </div>
-      <div class="legend-block">
-        <div class="legend-title">Liquidity Setup (max 25pts)</div>
-        <div class="legend-row">Dollar volume, market cap sweet spot ($200M-$5B), trend vs 200dMA, institutional ownership, short interest squeeze fuel.</div>
-      </div>
-      <div class="legend-block">
-        <div class="legend-title">News Sentiment (max 15pts)</div>
-        <div class="legend-row">Tone of last 7 days of headlines via keyword scoring. Positive = beat / approval / win / surge. Negative = miss / lawsuit / dilution / delay.</div>
-      </div>
-      <div class="legend-block">
-        <div class="legend-title">Pre-event Drift (range -15 to +10pts)</div>
-        <div class="legend-row">5-day price ROC. For SCHEDULED events with drift &lt;15% = positive flow, +10pts. Drift 15-25% = PRE-PRICED warning (-5pts, sell-the-news risk). Drift &gt;25% = -10pts. For POST-EVENT catalysts already filed: drift &gt;8% = EXTENDED warning, -8 to -15pts.</div>
-      </div>
-      <div class="legend-block">
-        <div class="legend-title">Historical Reaction (max 10pts)</div>
-        <div class="legend-row">For earnings catalysts: median next-day move of last 4 earnings reports. Companies with consistent positive reactions are more reliable.</div>
-      </div>
-      <div class="legend-block">
-        <div class="legend-title">Catalyst Freshness (max 5pts)</div>
-        <div class="legend-row">Hours since the 8-K was filed. Fresh = more alpha left. Older filings may have already been priced in.</div>
-      </div>
-      <div class="legend-block">
-        <div class="legend-title">Peer Confirmation (max 5pts)</div>
-        <div class="legend-row">3+ peers in same sector also have catalysts = sector wave. Confirms the play is not isolated noise.</div>
-      </div>
-      <div class="legend-block">
-        <div class="legend-title">Confidence label</div>
-        <div class="legend-row"><strong>HIGH</strong> = 5+ components positive. <strong>MEDIUM</strong> = 3-4. <strong>LOW</strong> = 1-2. The label indicates how many independent sources agree on the bullish call.</div>
-      </div>
-      <div class="legend-block">
-        <div class="legend-title">Red Flags (deductions)</div>
-        <div class="legend-row">Going-concern language (-8), recent S-3 shelf / dilution (-4). Names with red flags can still score if other signals are strong, but will be downgraded.</div>
-      </div>
-    </div>
+  <div class="intro" style="background:#dbeafe; border-color:#4a90e2;">
+    <strong>Top {{ [strong|length, 3]|min }} BUYs:</strong>
+    {% set buys = [] %}{% for c in strong %}{% if c.buy_signal and c.buy_signal.signal == 'BUY' and buys|length < 3 %}{% set _ = buys.append(c) %}{% endif %}{% endfor %}
+    {% if buys %}
+      {% for c in buys %}<strong>{{ c.ticker }}</strong> ({{ c.buy_signal.probability_pct }}%){% if not loop.last %} &middot; {% endif %}{% endfor %}
+    {% else %}
+      <em>No BUY-tier setups today. WATCH list below.</em>
+    {% endif %}
   </div>
 
   {% if strong %}
@@ -234,15 +146,6 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <strong>{{ cat.label }}</strong> &middot; {{ cat.details }}
           </div>
         {% endfor %}
-        {% if c.buy_signal and c.buy_signal.entry_price %}
-          <div class="trade-row">
-            <span>Entry <strong>${{ "%.2f"|format(c.buy_signal.entry_price) }}</strong></span>
-            {% if c.buy_signal.stop_price %}<span>Stop <strong>${{ "%.2f"|format(c.buy_signal.stop_price) }}</strong> ({{ "%.1f"|format(c.buy_signal.stop_pct) }}%)</span>{% endif %}
-            {% if c.buy_signal.target_1_price %}<span>T1 <strong>${{ "%.2f"|format(c.buy_signal.target_1_price) }}</strong> (+{{ "%.1f"|format(c.buy_signal.expected_move_low_pct) }}%)</span>{% endif %}
-            {% if c.buy_signal.target_2_price %}<span>T2 <strong>${{ "%.2f"|format(c.buy_signal.target_2_price) }}</strong> (+{{ "%.1f"|format(c.buy_signal.expected_move_high_pct) }}%)</span>{% endif %}
-            {% if c.buy_signal.atr_pct %}<span style="color:#888;">ATR {{ "%.1f"|format(c.buy_signal.atr_pct) }}%</span>{% endif %}
-          </div>
-        {% endif %}
         {% if c.deep_research %}
           <div class="deep-box">
             <span class="verdict-tag verdict-{{ c.deep_research.verdict|replace(' ', '-') }}">{{ c.deep_research.verdict }}</span>
@@ -425,14 +328,6 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <strong>{{ cat.label }}</strong> &middot; {{ cat.details }}
           </div>
         {% endfor %}
-        {% if c.buy_signal and c.buy_signal.entry_price %}
-          <div class="trade-row">
-            <span>Entry <strong>${{ "%.2f"|format(c.buy_signal.entry_price) }}</strong></span>
-            {% if c.buy_signal.stop_price %}<span>Stop <strong>${{ "%.2f"|format(c.buy_signal.stop_price) }}</strong></span>{% endif %}
-            {% if c.buy_signal.target_1_price %}<span>T1 <strong>${{ "%.2f"|format(c.buy_signal.target_1_price) }}</strong></span>{% endif %}
-            {% if c.buy_signal.target_2_price %}<span>T2 <strong>${{ "%.2f"|format(c.buy_signal.target_2_price) }}</strong></span>{% endif %}
-          </div>
-        {% endif %}
         {% if c.risk_audit and c.risk_audit.flags %}
           <div class="risk-row">
             <strong>Risk:</strong>

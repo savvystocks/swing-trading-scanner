@@ -163,8 +163,36 @@ FACTOR_OPTIONS_TEMPLATE = """<!DOCTYPE html>
     </table>
   {% endif %}
 
-  {% if picks %}
-    {% for p in picks %}
+  {% set actionable = [] %}
+  {% set above_budget = [] %}
+  {% set thin_chain = [] %}
+  {% for p in picks %}
+    {% if p.options and p.options.qualified %}
+      {% set _ = actionable.append(p) %}
+    {% elif p.options and 'budget' in (p.options.reason or '') %}
+      {% set _ = above_budget.append(p) %}
+    {% else %}
+      {% set _ = thin_chain.append(p) %}
+    {% endif %}
+  {% endfor %}
+
+  {% if above_budget %}
+    <div style="background:#fef3c7; border:1px solid #d97706; border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:11px; color:#7c2d12;">
+      <strong>Above $800 single-contract budget — use bull call spreads:</strong>
+      {% for p in above_budget %}{{ p.ticket.ticker }}{% if not loop.last %}, {% endif %}{% endfor %}
+      &middot; <em>These megacaps trade $200+; ATM calls cost $1000-2000 each. Spread plays cost $50-200 and capture upside with defined risk. Spread engine to be added next.</em>
+    </div>
+  {% endif %}
+  {% if thin_chain %}
+    <div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:6px; padding:8px 10px; margin-bottom:14px; font-size:11px; color:#7f1d1d;">
+      <strong>No tradeable options chain today:</strong>
+      {% for p in thin_chain %}{{ p.ticket.ticker }}{% if not loop.last %}, {% endif %}{% endfor %}
+      &middot; <em>Thin liquidity / wide spreads / chain not available.</em>
+    </div>
+  {% endif %}
+
+  {% if actionable %}
+    {% for p in actionable %}
       {% set t = p.ticket %}
       {% set lt = p.options %}
       {% set live = p.live %}
@@ -270,14 +298,10 @@ FACTOR_OPTIONS_TEMPLATE = """<!DOCTYPE html>
               </div>
             {% endif %}
           </div>
-        {% else %}
-          <div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:6px; padding:8px 10px; margin-top:6px; font-size:11px; color:#7f1d1d;">
-            No qualifying options contract: {{ lt.reason if lt else 'no chain' }}
-          </div>
         {% endif %}
       </div>
     {% endfor %}
-  {% else %}
+  {% elif not above_budget and not thin_chain %}
     <div style="padding:30px; text-align:center; color:#888;">No qualifying factor options today.</div>
   {% endif %}
 

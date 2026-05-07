@@ -237,6 +237,11 @@ FACTOR_OPTIONS_TEMPLATE = """<!DOCTYPE html>
               &middot; Δ {{ c.delta }} &middot; IV {{ c.iv_pct }}%
               &middot; <strong>${{ "%.0f"|format(c.cost_per_contract) }}/contract</strong>
             </div>
+            {% if c.iv_crush_estimated_pct and c.iv_crush_estimated_pct > 0 %}
+              <div style="margin-top:6px; padding:6px 10px; background:#fee2e2; border:1px solid #c94545; border-radius:4px; font-size:11px; color:#7f1d1d;">
+                <strong>IV CRUSH:</strong> est {{ c.iv_crush_estimated_pct }}% drop. True required move = <strong>{{ "%+.1f"|format(c.required_move_pct_iv_adjusted) }}%</strong>
+              </div>
+            {% endif %}
             <div style="margin-top:6px; padding:6px 10px; background:#fff; border-radius:4px; font-size:12px;">
               <strong>Position:</strong> {{ pos.contracts }} contract(s) = <strong>${{ "%.0f"|format(pos.total_cost_usd) }}</strong> ({{ pos.pct_of_account }}% of account)
               &middot; Stop @ ${{ "%.2f"|format(lt.stop_premium) }} (-{{ "%.0f"|format(lt.settings.stop_loss_pct) }}%) &rarr; max loss ${{ "%.0f"|format(lt.stop_dollars) }}
@@ -245,11 +250,6 @@ FACTOR_OPTIONS_TEMPLATE = """<!DOCTYPE html>
               <strong>{{ "%.0f"|format(lt.settings.target_return_pct if lt.settings else target_return_pct) }}% target:</strong> stock to ${{ "%.2f"|format(c.target_stock_price) }} ({{ "%+.1f"|format(c.required_move_pct) }}%)
               &middot; Breakeven ${{ "%.2f"|format(c.breakeven) }} ({{ "%+.1f"|format(c.breakeven_pct_move) }}%)
             </div>
-            {% if c.iv_crush_estimated_pct and c.iv_crush_estimated_pct > 0 %}
-              <div style="margin-top:6px; padding:6px 10px; background:#fee2e2; border:1px solid #c94545; border-radius:4px; font-size:11px; color:#7f1d1d;">
-                <strong>IV CRUSH:</strong> est {{ c.iv_crush_estimated_pct }}% drop. True required move = {{ "%+.1f"|format(c.required_move_pct_iv_adjusted) }}%
-              </div>
-            {% endif %}
             <div style="margin-top:6px; padding:6px 10px; background:#f0f9ff; border-radius:4px; font-size:11px;">
               <strong>Profit Probability:</strong> {{ lt.profit_probability_pct }}%
               &middot; <strong>Expected Value:</strong> {{ "%+.1f"|format(lt.expected_value_pct) }}%
@@ -338,42 +338,10 @@ THEME_NOTES = {
 
 
 def build_factor_options_picks(scored_results, max_picks=8):
-    by_ticker = {s.get("ticker"): s for s in scored_results if s.get("ticker")}
-
     picks = []
     used = set()
 
-    for tk in TOP_20_FACTOR_TICKERS:
-        if tk in used:
-            continue
-        s = by_ticker.get(tk) or {}
-        ticket = {
-            "ticker": tk,
-            "name": s.get("name") or s.get("company") or "",
-            "eodhd_ticker": s.get("eodhd_ticker") or f"{tk}.US",
-            "sector": s.get("sector"),
-            "industry": s.get("industry"),
-            "market_cap": s.get("market_cap"),
-            "price": s.get("price"),
-            "live_spot": s.get("live_spot"),
-            "live_change_pct": s.get("live_change_pct"),
-            "live_session": s.get("live_session"),
-            "live_age_min": s.get("live_age_min"),
-            "deep_research": s.get("deep_research"),
-        }
-        picks.append({
-            "ticket": ticket,
-            "options": None,
-            "live": None,
-            "source": "top_20_mover",
-            "source_label": "TOP 20 MOVER",
-            "theme_note": THEME_NOTES.get(tk, ""),
-        })
-        used.add(tk)
-        if len(picks) >= max_picks:
-            break
-
-    if len(picks) < max_picks:
+    if True:
         for s in scored_results:
             tk = s.get("ticker")
             if not tk or tk in used:

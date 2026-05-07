@@ -75,6 +75,13 @@ CATALYST_OPTIONS_TEMPLATE = """<!DOCTYPE html>
               &middot; Δ {{ c.delta }} &middot; IV {{ c.iv_pct }}%
               &middot; <strong>${{ "%.0f"|format(c.cost_per_contract) }}/contract</strong>
             </div>
+            {% if c.iv_crush_estimated_pct and c.iv_crush_estimated_pct > 0 %}
+              <div style="margin-top:6px; padding:6px 10px; background:#fee2e2; border:1px solid #c94545; border-radius:4px; font-size:11px; color:#7f1d1d;">
+                <strong>IV CRUSH adjustment:</strong> est {{ c.iv_crush_estimated_pct }}% IV drop post-event.
+                True required move = <strong>{{ "%+.1f"|format(c.required_move_pct_iv_adjusted) }}%</strong> (stock to ${{ "%.2f"|format(c.target_stock_price_iv_adjusted) }})
+                — premium also loses {{ c.iv_crush_estimated_pct }}% to vega alone, regardless of stock move.
+              </div>
+            {% endif %}
             <div style="margin-top:6px; padding:6px 10px; background:#fff; border-radius:4px; font-size:12px;">
               <strong>Position:</strong> {{ pos.contracts }} contract(s) = <strong>${{ "%.0f"|format(pos.total_cost_usd) }}</strong> ({{ pos.pct_of_account }}% of account)
               &middot; Stop @ ${{ "%.2f"|format(lt.stop_premium) }} (-{{ "%.0f"|format(lt.settings.stop_loss_pct) }}%) &rarr; max loss ${{ "%.0f"|format(lt.stop_dollars) }}
@@ -83,13 +90,6 @@ CATALYST_OPTIONS_TEMPLATE = """<!DOCTYPE html>
               <strong>500% target:</strong> stock to ${{ "%.2f"|format(c.target_stock_price) }} ({{ "%+.1f"|format(c.required_move_pct) }}%)
               &middot; Breakeven ${{ "%.2f"|format(c.breakeven) }} ({{ "%+.1f"|format(c.breakeven_pct_move) }}%)
             </div>
-            {% if c.iv_crush_estimated_pct and c.iv_crush_estimated_pct > 0 %}
-              <div style="margin-top:6px; padding:6px 10px; background:#fee2e2; border:1px solid #c94545; border-radius:4px; font-size:11px; color:#7f1d1d;">
-                <strong>IV CRUSH adjustment:</strong> est {{ c.iv_crush_estimated_pct }}% IV drop post-event.
-                True required move = <strong>{{ "%+.1f"|format(c.required_move_pct_iv_adjusted) }}%</strong> (stock to ${{ "%.2f"|format(c.target_stock_price_iv_adjusted) }})
-                — original {{ "%+.1f"|format(c.required_move_pct) }}% understates the bar because the option also loses {{ c.iv_crush_estimated_pct }}% of its premium to vega alone.
-              </div>
-            {% endif %}
             <div style="margin-top:6px; padding:6px 10px; background:#f0f9ff; border-radius:4px; font-size:11px;">
               <strong>Profit Probability:</strong> {{ lt.profit_probability_pct }}%
               &middot; <strong>Expected Value:</strong> {{ "%+.1f"|format(lt.expected_value_pct) }}% per trade

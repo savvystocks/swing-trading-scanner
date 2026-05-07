@@ -371,38 +371,6 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     <div class="empty">No catalysts ranked above the percentile thresholds today. {{ scored_total }} candidates evaluated.</div>
   {% endif %}
 
-  {% if long_term_holds %}
-    <h2 style="margin-top:32px; padding-top:18px; border-top:3px solid #0d7b34; color:#14532d;">Long-Term Hold Watchlist (Top 20 1-Year Performers)</h2>
-    <div style="font-size:12px; color:#555; margin-bottom:14px;">
-      The 20 highest 1-year total return names (May 2025 - May 2026), riding ongoing themes — AI infrastructure / data center power / memory & storage / semicap / cycle plays. Always tracked daily for fresh signals even when no other catalyst fires. These are core long-term holds; trim only on theme exhaustion or single-stock fundamental break, not on weekly noise.
-    </div>
-    <table style="width:100%; font-size:11px; border-collapse:collapse; margin-bottom:18px;">
-      <thead><tr style="background:#dcfce7;">
-        <th align="left" style="padding:6px 8px;">Ticker</th>
-        <th align="left" style="padding:6px 8px;">Name</th>
-        <th align="right" style="padding:6px 8px;">Price</th>
-        <th align="right" style="padding:6px 8px;">vs scan</th>
-        <th align="left" style="padding:6px 8px;">Sector</th>
-        <th align="left" style="padding:6px 8px;">Active catalysts</th>
-        <th align="right" style="padding:6px 8px;">Score</th>
-        <th align="left" style="padding:6px 8px;">Bucket</th>
-      </tr></thead>
-      <tbody>
-      {% for h in long_term_holds %}
-        <tr style="border-bottom:1px solid #d1fae5;">
-          <td style="padding:5px 8px; font-weight:700;">{{ h.ticker }}</td>
-          <td style="padding:5px 8px; color:#444;">{{ (h.name or '')[:24] }}</td>
-          <td align="right" style="padding:5px 8px;">{% if h.live_spot %}<strong>${{ "%.2f"|format(h.live_spot) }}</strong>{% elif h.price %}${{ "%.2f"|format(h.price) }}{% else %}-{% endif %}</td>
-          <td align="right" style="padding:5px 8px; color:{% if h.live_change_pct and h.live_change_pct >= 0 %}#0d7b34{% elif h.live_change_pct %}#c94545{% else %}#888{% endif %};">{% if h.live_change_pct is defined and h.live_change_pct is not none %}{{ "%+.2f"|format(h.live_change_pct) }}%{% else %}-{% endif %}</td>
-          <td style="padding:5px 8px; color:#666; font-size:10px;">{{ (h.sector or '')[:18] }}</td>
-          <td style="padding:5px 8px; color:#5a3690; font-size:10px;">{% for c in h.catalysts[:3] %}<span style="display:inline-block; padding:1px 5px; margin:1px 2px 0 0; background:#f3f0fa; border-radius:3px;">{{ c.key }}</span>{% endfor %}{% if not h.catalysts %}<span style="color:#999;">-</span>{% endif %}</td>
-          <td align="right" style="padding:5px 8px; font-weight:600;">{{ "%.0f"|format(h.score or 0) }}</td>
-          <td style="padding:5px 8px; font-size:10px;"><span style="padding:1px 6px; border-radius:3px; background:{% if h.bucket == 'STRONG' %}#0d7b34{% elif h.bucket == 'WATCH' %}#4a90e2{% else %}#888{% endif %}; color:#fff;">{{ h.bucket or 'TRACK' }}</span></td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  {% endif %}
 
   {% if bear_picks %}
     <h2 style="margin-top:30px; padding-top:18px; border-top:3px solid #c94545; color:#7f1d1d;">Bearish Catalyst Plays</h2>
@@ -448,15 +416,8 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 </html>"""
 
 
-TOP_20_LONG_TERM_HOLDS = (
-    "SNDK", "LITE", "WDC", "STX", "CIEN", "MU", "SATS", "INTC", "COHR", "TER",
-    "FIX", "AMD", "GLW", "LRCX", "VRT", "ALB", "WBD", "CAT", "GEV", "AMAT",
-)
-
-
 def render_catalyst_email(scan, max_strong=20, max_watch=20):
     candidates = scan.get("candidates", [])
-    all_scored = scan.get("all_scored", [])
     strong_all = sorted(
         [c for c in candidates if c.get("bucket") == "STRONG"],
         key=lambda c: c["score"], reverse=True,
@@ -471,18 +432,9 @@ def render_catalyst_email(scan, max_strong=20, max_watch=20):
     bear_watch = [c for c in watch_all if c.get("direction") == "bear"][:max_watch]
     bear_picks = (bear_strong + bear_watch)[:max_strong]
 
-    by_ticker = {c.get("ticker"): c for c in all_scored if c.get("ticker")}
-    long_term_holds = []
-    for tk in TOP_20_LONG_TERM_HOLDS:
-        c = by_ticker.get(tk)
-        if c:
-            long_term_holds.append(c)
-        else:
-            long_term_holds.append({"ticker": tk, "name": "", "sector": "", "price": None, "catalysts": [], "score": 0, "bucket": "TRACK"})
-
     try:
         from src.live_spot import enrich_with_live_spots
-        enrich_with_live_spots(strong + watch + bear_picks + long_term_holds)
+        enrich_with_live_spots(strong + watch + bear_picks)
     except Exception as e:
         print(f"  catalyst live_spot: failed: {type(e).__name__}: {e}")
 
@@ -501,5 +453,4 @@ def render_catalyst_email(scan, max_strong=20, max_watch=20):
         strong=strong,
         watch=watch,
         bear_picks=bear_picks,
-        long_term_holds=long_term_holds,
     )

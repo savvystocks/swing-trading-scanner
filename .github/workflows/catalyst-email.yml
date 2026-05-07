@@ -8,7 +8,12 @@ on:
         required: false
         default: ""
   schedule:
-    - cron: "55 13 * * 1-5"
+    # 14:30 UTC = 15:30 BST in DST (summer) / 14:30 GMT in winter.
+    # Scan kicks off at 15:30 BST. Light refresh + render + LLM grader +
+    # send takes ~10-12 min. GitHub cron delay ~5-10 min typical.
+    # Email lands inbox ~15:45-16:00 BST = 75-90 min after US market open.
+    # Spreads tight, IV settled, post-open volatility worked out.
+    - cron: "30 14 * * 1-5"
 
 jobs:
   email:

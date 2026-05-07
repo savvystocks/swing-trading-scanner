@@ -11,10 +11,10 @@ on:
         description: "Max tickers to LLM-grade (default 50, set 0 to skip)"
         required: false
         default: ""
-  # Two-pass architecture: heavy scan at 02:00 UTC (10pm ET previous evening),
-  # saves JSON. Email job (catalyst-email.yml) runs at 13:55 UTC the next day to
-  # refresh live prices and send. Decouples scan duration from email timing so
-  # GitHub Actions cron delay never holds up the email.
+  repository_dispatch:
+    types: [run-catalyst-scan]
+  # External cron-job.org POSTs run-catalyst-scan at 02:00 UTC for SLA-
+  # reliable timing. GitHub schedule below is fallback only.
   schedule:
     - cron: "0 2 * * 1-5"
 

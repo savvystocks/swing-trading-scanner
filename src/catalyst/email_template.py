@@ -254,18 +254,6 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             {% if c.components.llm.key_signal %}<br><strong>Key signal:</strong> {{ c.components.llm.key_signal }}{% endif %}
           </div>
         {% endif %}
-        <div class="breakdown">
-          <div class="bd-item"><span class="bd-label">Catalyst tier</span><span class="bd-pts pos">+{{ "%.0f"|format(c.components.catalyst_quality.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">LLM grade</span><span class="bd-pts {% if c.components.llm.points > 0 %}pos{% elif c.components.llm.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.llm.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Liquidity</span><span class="bd-pts {% if c.components.liquidity_setup.points > 0 %}pos{% elif c.components.liquidity_setup.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.liquidity_setup.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">News</span><span class="bd-pts {% if c.components.news.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.news.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Drift 5d</span><span class="bd-pts {% if c.components.drift.points > 0 %}pos{% elif c.components.drift.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.drift.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">History</span><span class="bd-pts {% if c.components.historical.points > 0 %}pos{% elif c.components.historical.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.historical.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Freshness</span><span class="bd-pts {% if c.components.freshness.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.freshness.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Peers</span><span class="bd-pts {% if c.components.peer.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.peer.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Timing</span><span class="bd-pts {% if c.components.timing and c.components.timing.points > 0 %}pos{% elif c.components.timing and c.components.timing.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.timing.points if c.components.timing else 0) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Red flags</span><span class="bd-pts {% if c.components.red_flags.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.red_flags.points) }}</span></div>
-        </div>
         {% if c.news and c.news.headlines %}
           <div class="news-box">
             {% for h in c.news.headlines[:3] %}
@@ -352,16 +340,6 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
           </div>
         {% endif %}
         <div class="breakdown">
-          <div class="bd-item"><span class="bd-label">Catalyst</span><span class="bd-pts pos">+{{ "%.0f"|format(c.components.catalyst_quality.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">LLM</span><span class="bd-pts {% if c.components.llm.points > 0 %}pos{% endif %}">{{ "%+.0f"|format(c.components.llm.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Liquidity</span><span class="bd-pts {% if c.components.liquidity_setup.points > 0 %}pos{% elif c.components.liquidity_setup.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.liquidity_setup.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">News</span><span class="bd-pts {% if c.components.news.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.news.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Drift</span><span class="bd-pts {% if c.components.drift.points > 0 %}pos{% elif c.components.drift.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.drift.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">History</span><span class="bd-pts {% if c.components.historical.points > 0 %}pos{% elif c.components.historical.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.historical.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Fresh</span><span class="bd-pts {% if c.components.freshness.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.freshness.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Peers</span><span class="bd-pts {% if c.components.peer.points > 0 %}pos{% endif %}">{{ "%+.1f"|format(c.components.peer.points) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Timing</span><span class="bd-pts {% if c.components.timing and c.components.timing.points > 0 %}pos{% elif c.components.timing and c.components.timing.points < 0 %}neg{% endif %}">{{ "%+.1f"|format(c.components.timing.points if c.components.timing else 0) }}</span></div>
-          <div class="bd-item"><span class="bd-label">Red flags</span><span class="bd-pts {% if c.components.red_flags.points < 0 %}neg{% endif %}">{{ "%+.0f"|format(c.components.red_flags.points) }}</span></div>
         </div>
       </div>
     {% endfor %}

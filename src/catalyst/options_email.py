@@ -25,6 +25,20 @@ CATALYST_OPTIONS_TEMPLATE = """<!DOCTYPE html>
     </div>
   {% endif %}
 
+  {% if skipped_tickers %}
+    <div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:6px; padding:10px 12px; margin-bottom:16px; font-size:11px; color:#7f1d1d;">
+      <strong>LLM rated SKIP today (not shown):</strong>
+      {% for tk in skipped_tickers %}{{ tk }}{% if not loop.last %}, {% endif %}{% endfor %}
+      &middot; <em>IV/strike/spread misaligned for 500% target. Spread alternatives may still work — see Top Factors Options email.</em>
+    </div>
+  {% endif %}
+
+  {% if not picks and not skipped_tickers %}
+    <div style="padding:30px; text-align:center; color:#888;">No qualifying lottery setups today.</div>
+  {% elif not picks %}
+    <div style="padding:30px; text-align:center; color:#666;">All lottery picks today rated SKIP by LLM grader. See above for tickers and Top Factors Options email for tradeable alternatives.</div>
+  {% endif %}
+
   {% if picks %}
     {% for p in picks %}
       {% set t = p.ticket %}
@@ -355,10 +369,24 @@ def render_catalyst_options_email(scan):
     except Exception as e:
         print(f"  option_grader: skipped: {type(e).__name__}: {e}")
 
+    actionable_picks = []
+    skipped_tickers = []
+    for p in picks:
+        lottery = p.get("lottery") or {}
+        if not lottery.get("qualified"):
+            continue
+        grade = lottery.get("llm_option_grade") or {}
+        verdict = grade.get("verdict", "")
+        if verdict == "SKIP":
+            skipped_tickers.append(p.get("ticket", {}).get("ticker"))
+        else:
+            actionable_picks.append(p)
+
     settings = get_account_settings()
     tmpl = Template(CATALYST_OPTIONS_TEMPLATE)
     return tmpl.render(
         scan_date=scan.get("scan_date"),
         settings=settings,
-        picks=picks,
+        picks=actionable_picks,
+        skipped_tickers=skipped_tickers,
     )

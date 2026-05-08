@@ -587,20 +587,33 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
     if deep_research_max > 0:
         if verbose:
-            print(f"  running deep research (Sonnet + web search) — Tier S (5) only, max {deep_research_max}")
+            print(f"  running deep research (Sonnet + web search) — Tier S OR Tier A+stacked (3+ catalysts), max {deep_research_max}")
         try:
-            tier_s_eligible = [
-                s for s in final_scored
-                if s.get("catalyst_tier") == "S" and not s.get("deal_closed")
-            ]
-            if not tier_s_eligible:
+            def _is_deep_eligible(s):
+                if s.get("deal_closed"):
+                    return False
+                tier = s.get("catalyst_tier")
+                if tier == "S":
+                    return True
+                if tier == "A":
+                    xconf = s.get("cross_confirmation") or {}
+                    multiplier = xconf.get("multiplier_label", "")
+                    if multiplier in ("STRONG", "HIGH"):
+                        return True
+                return False
+
+            eligible_for_deep_all = [s for s in final_scored if _is_deep_eligible(s)]
+            tier_s_count = sum(1 for s in eligible_for_deep_all if s.get("catalyst_tier") == "S")
+            tier_a_stacked = len(eligible_for_deep_all) - tier_s_count
+
+            if not eligible_for_deep_all:
                 if verbose:
-                    print(f"    no Tier S candidates today — skipping deep research entirely")
+                    print(f"    no Tier S or Tier A+stacked candidates today — skipping deep research entirely")
                 top_for_deep = []
             else:
-                top_for_deep = sorted(tier_s_eligible, key=lambda x: x["score"], reverse=True)[:deep_research_max]
+                top_for_deep = sorted(eligible_for_deep_all, key=lambda x: x["score"], reverse=True)[:deep_research_max]
                 if verbose:
-                    print(f"    {len(tier_s_eligible)} Tier S candidates, researching top {len(top_for_deep)}")
+                    print(f"    {tier_s_count} Tier S + {tier_a_stacked} Tier A+stacked, researching top {len(top_for_deep)}")
             eligible_for_deep = top_for_deep
             if top_for_deep:
                 deep_results = deep_research(top_for_deep, max_tickers=deep_research_max, verbose=verbose)

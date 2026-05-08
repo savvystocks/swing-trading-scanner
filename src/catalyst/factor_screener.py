@@ -220,7 +220,7 @@ def compute_factor_matches(ticker_data):
     }
 
 
-def screen_lower_caps(scored_results, mcap_max=5_000_000_000, mcap_min=300_000_000,
+def screen_lower_caps(scored_results, mcap_max=50_000_000_000, mcap_min=300_000_000,
                       min_factor_count=2, require_theme_match=True):
     out = []
     for s in scored_results:

@@ -131,7 +131,7 @@ FACTOR_OPTIONS_TEMPLATE = """<!DOCTYPE html>
   {% endif %}
 
   {% if factor_matches %}
-    <h2 style="font-size:15px; margin-top:20px; padding-top:12px; border-top:2px solid #5a3690; color:#5a3690;">Lower-Cap Factor Matches ($300M-$5B mcap)</h2>
+    <h2 style="font-size:15px; margin-top:20px; padding-top:12px; border-top:2px solid #5a3690; color:#5a3690;">Factor Matches ($300M-$50B mcap)</h2>
     <div style="font-size:11px; color:#555; margin-bottom:12px;">
       Lower-cap names matching 2+ of the 20 factors that drove last year's top 20 movers. These are the next generation candidates — businesses sitting in the right themes with smaller market caps where re-rating is still possible. Sorted by factor count.
     </div>
@@ -499,7 +499,7 @@ def render_factor_options_email(scan):
         try:
             from src.eodhd import EODHDClient
             client = EODHDClient()
-            small_caps = [s for s in scored if 300_000_000 <= (s.get("market_cap") or 0) <= 5_000_000_000]
+            small_caps = [s for s in scored if 300_000_000 <= (s.get("market_cap") or 0) <= 50_000_000_000]
             backfilled = 0
             for s in small_caps:
                 if s.get("industry") and s.get("description"):
@@ -526,7 +526,7 @@ def render_factor_options_email(scan):
             factor_matches = universe_matches[:25]
         else:
             print(f"  factor_screener: no universe screen file found, falling back to catalyst-pipeline names")
-            factor_matches = screen_lower_caps(scored, mcap_max=5_000_000_000, mcap_min=300_000_000, min_factor_count=2)
+            factor_matches = screen_lower_caps(scored, mcap_max=50_000_000_000, mcap_min=300_000_000, min_factor_count=2)
             factor_matches = factor_matches[:20]
         if factor_matches:
             try:

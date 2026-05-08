@@ -16,7 +16,7 @@ RESULTS_DIR = os.path.join(PROJECT_ROOT, "data", "results")
 MCAP_CACHE_PATH = os.path.join(PROJECT_ROOT, "data", "universe", "factor_universe_mcap_cache.json")
 
 MCAP_MIN = 300_000_000
-MCAP_MAX = 5_000_000_000
+MCAP_MAX = 50_000_000_000
 
 
 def load_mcap_cache():

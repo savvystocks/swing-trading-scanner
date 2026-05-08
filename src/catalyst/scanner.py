@@ -22,6 +22,9 @@ from src.catalyst.options_flow import detect_unusual_options_activity
 from src.catalyst.position_in_theme import annotate_with_position_in_theme
 from src.catalyst.smart_money import days_to_cover, short_squeeze_setup_score, beneish_m_score
 from src.catalyst.macro_indicators import fetch_macro_snapshot, macro_regime_summary, index_rebalance_candidates
+from src.catalyst.pre_catalyst import (
+    build_pre_catalyst_watchlist, get_upcoming_conferences, get_high_momentum_tickers,
+)
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
 from src.catalyst.peers import peer_signals, peer_confirmation_score
@@ -592,6 +595,8 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             def _is_deep_eligible(s):
                 if s.get("deal_closed"):
                     return False
+                if s.get("pre_catalyst_high_conviction"):
+                    return True
                 tier = s.get("catalyst_tier")
                 if tier == "S":
                     return True
@@ -675,6 +680,34 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
     except Exception:
         rebalance = {}
 
+    pre_catalyst_watchlist = []
+    upcoming_conferences = []
+    if verbose:
+        print(f"  building pre-catalyst watchlist (5-45 day forward earnings + signal stack)...")
+    try:
+        cohort_tickers = get_high_momentum_tickers()
+        pre_catalyst_watchlist = build_pre_catalyst_watchlist(
+            client, final_scored, cohort_tickers,
+            days_min=5, days_max=45, verbose=verbose,
+        )
+        upcoming_conferences = get_upcoming_conferences(days_max=60)
+        scored_by_ticker = {s.get("ticker"): s for s in final_scored}
+        for w in pre_catalyst_watchlist:
+            if w["pre_catalyst_verdict"] in ("HIGH_CONVICTION", "STRONG"):
+                target = scored_by_ticker.get(w["ticker"])
+                if target:
+                    target["pre_catalyst_high_conviction"] = True
+                    target["pre_catalyst_score"] = w["pre_catalyst_score"]
+                    target["pre_catalyst_event_date"] = w["event_date"]
+                    target["pre_catalyst_days_until"] = w["days_until"]
+        if verbose:
+            high_conv = sum(1 for w in pre_catalyst_watchlist if w["pre_catalyst_verdict"] == "HIGH_CONVICTION")
+            strong = sum(1 for w in pre_catalyst_watchlist if w["pre_catalyst_verdict"] == "STRONG")
+            print(f"  pre-catalyst watchlist: {len(pre_catalyst_watchlist)} names with earnings 5-45d out — {high_conv} HIGH_CONVICTION, {strong} STRONG")
+    except Exception as e:
+        if verbose:
+            print(f"  pre-catalyst watchlist failed: {type(e).__name__}: {e}")
+
     return {
         "scan_date": scan_date_str,
         "macro": macro,
@@ -689,6 +722,8 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         "candidates": candidates,
         "all_scored": final_scored,
         "rebalance_candidates": rebalance,
+        "pre_catalyst_watchlist": pre_catalyst_watchlist,
+        "upcoming_conferences": upcoming_conferences,
         "eodhd_calls": client.calls_made,
         "edgar_calls": edgar.calls_made,
         "llm_graded": len(llm_grades),

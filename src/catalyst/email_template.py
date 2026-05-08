@@ -95,6 +95,51 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     {% endif %}
   </div>
 
+  {% if pre_catalyst_watchlist %}
+    <h2 style="margin-top:24px; padding-top:14px; border-top:3px solid #0891b2; color:#155e75;">Pre-Catalyst Watchlist (5-45 days)</h2>
+    <div style="font-size:11px; color:#555; margin-bottom:12px;">
+      Forward earnings + signal stack. Names with upcoming events where pre-event signals (revision spike, insider cluster, options flow, news drift) are firing NOW. Highest scores = consider entering options before the event, not waiting for the catalyst day. HIGH_CONVICTION setups also get Sonnet+web research below.
+    </div>
+    <table style="width:100%; font-size:11px; border-collapse:collapse; margin-bottom:18px;">
+      <thead><tr style="background:#cffafe;">
+        <th align="left" style="padding:6px 8px;">Ticker</th>
+        <th align="left" style="padding:6px 8px;">Name</th>
+        <th align="right" style="padding:6px 8px;">Mcap</th>
+        <th align="right" style="padding:6px 8px;">Days</th>
+        <th align="left" style="padding:6px 8px;">Event</th>
+        <th align="right" style="padding:6px 8px;">Score</th>
+        <th align="left" style="padding:6px 8px;">Verdict</th>
+        <th align="left" style="padding:6px 8px;">Signals firing pre-event</th>
+      </tr></thead>
+      <tbody>
+      {% for w in pre_catalyst_watchlist[:25] %}
+        {% set v_color = '#0d7b34' if w.pre_catalyst_verdict == 'HIGH_CONVICTION' else '#1a9850' if w.pre_catalyst_verdict == 'STRONG' else '#4a90e2' if w.pre_catalyst_verdict == 'MODERATE' else '#888' %}
+        <tr style="border-bottom:1px solid #cffafe;">
+          <td style="padding:5px 8px; font-weight:700;">{{ w.ticker }}</td>
+          <td style="padding:5px 8px; color:#444; font-size:10px;">{{ (w.name or '')[:22] }}</td>
+          <td align="right" style="padding:5px 8px;">{% if w.market_cap %}${{ "%.1f"|format(w.market_cap/1e9) }}B{% else %}-{% endif %}</td>
+          <td align="right" style="padding:5px 8px; font-weight:600;">{{ w.days_until }}d</td>
+          <td style="padding:5px 8px; font-size:10px; color:#666;">{{ w.event_type }} {{ w.event_date }}{% if w.before_after_market %} {{ w.before_after_market }}{% endif %}</td>
+          <td align="right" style="padding:5px 8px; font-weight:700; color:{{ v_color }};">{{ w.pre_catalyst_score }}</td>
+          <td style="padding:5px 8px; font-size:10px;"><span style="padding:1px 6px; border-radius:3px; background:{{ v_color }}; color:#fff; font-weight:700;">{{ w.pre_catalyst_verdict }}</span></td>
+          <td style="padding:5px 8px; font-size:10px; color:#155e75;">
+            {% for f in w.pre_catalyst_flags[:3] %}{{ f }}{% if not loop.last %} &middot; {% endif %}{% endfor %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if upcoming_conferences %}
+    <div style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:6px; padding:8px 12px; margin-bottom:18px; font-size:11px; color:#5a3690;">
+      <strong>Upcoming industry conferences (60d):</strong>
+      {% for c in upcoming_conferences %}
+        {{ c.name }} ({{ c.days_until }}d, {{ c.category }}){% if not loop.last %} &middot; {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+
   {% if strong %}
     <h2 style="color:#0d7b34;">STRONG &mdash; Top 5% by multi-source score ({{ strong|length }})</h2>
     <div style="font-size:11px; color:#666; margin:-4px 0 12px;">Highest conviction. Multiple independent signals confirming the setup. Position at today's close.</div>
@@ -431,4 +476,6 @@ def render_catalyst_email(scan, max_strong=20, max_watch=20):
         strong=strong,
         watch=watch,
         bear_picks=bear_picks,
+        pre_catalyst_watchlist=scan.get("pre_catalyst_watchlist") or [],
+        upcoming_conferences=scan.get("upcoming_conferences") or [],
     )

@@ -25,6 +25,7 @@ CATALYST_TIERS = {
     "activist_stake": {"tier": "B", "points": 3.0, "label": "Activist 13D stake disclosed", "direction": "bull", "event_timing": "post_event"},
 
     "insider_cluster": {"tier": "C", "points": 2.0, "label": "Form 4 insider buying cluster", "direction": "bull", "event_timing": "ongoing"},
+    "cohort_high_momentum_runners": {"tier": "B", "points": 3.0, "label": "High-momentum mid-cap (space/quantum/nuclear/AI/robotics)", "direction": "bull", "event_timing": "ongoing"},
     "cohort_lazar_plays": {"tier": "C", "points": 2.0, "label": "Lazar Capital portfolio name", "direction": "bull", "event_timing": "ongoing"},
     "cohort_crypto_treasury": {"tier": "C", "points": 2.0, "label": "Crypto-treasury cohort", "direction": "bull", "event_timing": "ongoing"},
     "cohort_prediction_markets": {"tier": "C", "points": 2.0, "label": "Prediction market cohort", "direction": "bull", "event_timing": "ongoing"},

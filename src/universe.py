@@ -51,8 +51,7 @@ def fetch_sp400():
     return []
 
 
-def fetch_russell2000():
-    url = "https://www.ishares.com/us/products/239710/ishares-russell-2000-etf/1467271812596.ajax?fileType=csv&fileName=IWM_holdings&dataType=fund"
+def _fetch_ishares_holdings(url, index_label):
     r = requests.get(url, headers={"User-Agent": UA}, timeout=60)
     r.raise_for_status()
     text = r.text
@@ -75,9 +74,23 @@ def fetch_russell2000():
             "ticker": f"{t.replace('.', '-')}.US",
             "name": str(row.get("Name", "")),
             "sector": str(row.get("Sector", "")),
-            "index": "RUSSELL2000",
+            "index": index_label,
         })
     return rows
+
+
+def fetch_russell2000():
+    return _fetch_ishares_holdings(
+        "https://www.ishares.com/us/products/239710/ishares-russell-2000-etf/1467271812596.ajax?fileType=csv&fileName=IWM_holdings&dataType=fund",
+        "RUSSELL2000",
+    )
+
+
+def fetch_russell1000():
+    return _fetch_ishares_holdings(
+        "https://www.ishares.com/us/products/239707/ishares-russell-1000-etf/1467271812596.ajax?fileType=csv&fileName=IWB_holdings&dataType=fund",
+        "RUSSELL1000",
+    )
 
 
 def _fetch_ftse_wiki(url, index_label):
@@ -120,6 +133,7 @@ def build_universe():
     for loader, label in [
         (fetch_sp500, "S&P 500"),
         (fetch_sp400, "S&P 400 MidCap"),
+        (fetch_russell1000, "Russell 1000"),
         (fetch_russell2000, "Russell 2000"),
         (fetch_ftse100, "FTSE 100"),
         (fetch_ftse250, "FTSE 250"),

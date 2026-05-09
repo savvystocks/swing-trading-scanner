@@ -121,7 +121,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
           <td align="right" style="padding:5px 8px; font-weight:600;">{{ w.days_until }}d</td>
           <td style="padding:5px 8px; font-size:10px; color:#666;">{{ w.event_type }} {{ w.event_date }}{% if w.before_after_market %} {{ w.before_after_market }}{% endif %}</td>
           <td align="right" style="padding:5px 8px; font-weight:700; color:{{ v_color }};">{{ w.pre_catalyst_score }}</td>
-          <td style="padding:5px 8px; font-size:10px;"><span style="padding:1px 6px; border-radius:3px; background:{{ v_color }}; color:#fff; font-weight:700;">{{ w.pre_catalyst_verdict }}</span></td>
+          <td style="padding:5px 8px; font-size:10px;"><span style="padding:1px 6px; border-radius:3px; background:{{ v_color }}; color:#fff; font-weight:700;">{{ w.pre_catalyst_verdict | humanize_conviction }}</span></td>
           <td style="padding:5px 8px; font-size:10px; color:#155e75;">
             {% for f in w.pre_catalyst_flags[:3] %}{{ f }}{% if not loop.last %} &middot; {% endif %}{% endfor %}
           </td>
@@ -461,7 +461,11 @@ def render_catalyst_email(scan, max_strong=20, max_watch=20):
     except Exception as e:
         print(f"  catalyst live_spot: failed: {type(e).__name__}: {e}")
 
-    tmpl = Template(EMAIL_TEMPLATE)
+    from jinja2 import Environment, BaseLoader
+    from src.catalyst.humanize import register_jinja_filters
+    env = Environment(loader=BaseLoader())
+    register_jinja_filters(env)
+    tmpl = env.from_string(EMAIL_TEMPLATE)
     return tmpl.render(
         scan_date=scan.get("scan_date"),
         candidates_total=scan.get("candidates_total", 0),

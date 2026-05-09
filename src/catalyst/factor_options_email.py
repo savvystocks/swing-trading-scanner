@@ -272,7 +272,7 @@ FACTOR_OPTIONS_TEMPLATE = """<!DOCTYPE html>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                   <div>
                     <strong style="color:#7c2d12; font-size:11px; text-transform:uppercase;">LLM option grade</strong>
-                    <span style="display:inline-block; padding:2px 8px; margin-left:6px; border-radius:3px; background:{{ v_color }}; color:#fff; font-size:11px; font-weight:700;">{{ og.verdict }}</span>
+                    <span style="display:inline-block; padding:2px 8px; margin-left:6px; border-radius:3px; background:{{ v_color }}; color:#fff; font-size:11px; font-weight:700;">{{ og.verdict | humanize_verdict }}</span>
                   </div>
                   {% if og.buy_score is defined %}<span style="font-size:14px; font-weight:700; color:{{ v_color }};">{{ og.buy_score }}/100</span>{% endif %}
                 </div>
@@ -546,7 +546,11 @@ def render_factor_options_email(scan):
 
     settings = get_account_settings()
     position_budget = settings["account_size_usd"] * settings["position_size_pct"] / 100
-    tmpl = Template(FACTOR_OPTIONS_TEMPLATE)
+    from jinja2 import Environment, BaseLoader
+    from src.catalyst.humanize import register_jinja_filters
+    env = Environment(loader=BaseLoader())
+    register_jinja_filters(env)
+    tmpl = env.from_string(FACTOR_OPTIONS_TEMPLATE)
     return tmpl.render(
         scan_date=scan.get("scan_date"),
         settings=settings,

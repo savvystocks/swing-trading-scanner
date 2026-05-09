@@ -46,6 +46,7 @@ jobs:
           POSITION_SIZE_PCT: ${{ secrets.POSITION_SIZE_PCT }}
           STOP_LOSS_PCT: ${{ secrets.STOP_LOSS_PCT }}
           MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
+          SAM_GOV_API_KEY: ${{ secrets.SAM_GOV_API_KEY }}
         run: python scripts/run_catalyst_scan.py
       - name: Run universe-wide factor screen
         if: always()

@@ -25,6 +25,7 @@ from src.catalyst.macro_indicators import fetch_macro_snapshot, macro_regime_sum
 from src.catalyst.pre_catalyst import (
     build_pre_catalyst_watchlist, get_upcoming_conferences, get_high_momentum_tickers,
 )
+from src.catalyst.sam_gov import fetch_recent_contract_awards, map_awardees_to_tickers
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
 from src.catalyst.peers import peer_signals, peer_confirmation_score
@@ -679,6 +680,51 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         rebalance = index_rebalance_candidates(final_scored)
     except Exception:
         rebalance = {}
+
+    if verbose:
+        print(f"  fetching SAM.gov contract awards (last 2 days, high-value keywords)...")
+    sam_awards_by_ticker = {}
+    try:
+        awards, sam_err = fetch_recent_contract_awards(days_back=3, limit=200)
+        if sam_err:
+            if verbose:
+                print(f"    SAM.gov: {sam_err}")
+        elif awards:
+            ticker_companies = {s.get("ticker"): s.get("name") for s in final_scored if s.get("ticker") and s.get("name")}
+            sam_awards_by_ticker = map_awardees_to_tickers(awards, ticker_companies)
+            for ticker, ticker_awards in sam_awards_by_ticker.items():
+                target = next((s for s in final_scored if s.get("ticker") == ticker), None)
+                if target:
+                    catalysts_full = (target.get("components", {}).get("catalyst_quality", {}) or {}).get("catalysts_full") or []
+                    existing_keys = {c.get("key") for c in catalysts_full}
+                    if "major_contract_win" not in existing_keys:
+                        award = ticker_awards[0]
+                        catalysts_full.append({
+                            "key": "major_contract_win",
+                            "tier": "S",
+                            "points": 5.0,
+                            "label": "Government contract win (SAM.gov)",
+                            "details": f"{award.get('agency','?')} — {award.get('title','')[:80]}",
+                            "direction": "bull",
+                            "event_timing": "post_event",
+                        })
+                        catalysts_full.sort(key=lambda x: x["points"], reverse=True)
+                        primary = catalysts_full[0]["points"]
+                        secondary_bonus = sum(c["points"] for c in catalysts_full[1:]) * 0.25
+                        base = min(primary + secondary_bonus, 5.0)
+                        old_pts = target["components"]["catalyst_quality"].get("points", 0) or 0
+                        new_pts = base * WEIGHT_CATALYST
+                        target["components"]["catalyst_quality"]["points"] = round(new_pts, 2)
+                        target["components"]["catalyst_quality"]["catalysts_full"] = catalysts_full
+                        target["catalysts"] = catalysts_full
+                        target["catalyst_tier"] = catalysts_full[0]["tier"]
+                        target["score"] = round(target.get("score", 0) - old_pts + new_pts, 2)
+                        target["sam_gov_awards"] = ticker_awards
+            if verbose:
+                print(f"    SAM.gov: {len(awards)} awards in window, matched to {len(sam_awards_by_ticker)} tickers in scan")
+    except Exception as e:
+        if verbose:
+            print(f"    SAM.gov fetch failed: {type(e).__name__}: {str(e)[:100]}")
 
     pre_catalyst_watchlist = []
     upcoming_conferences = []

@@ -1,0 +1,32 @@
+name: premarket-alerts
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [run-premarket-alerts]
+  schedule:
+    # 13:00 UTC = 14:00 BST = 9:00am ET = 30 min before US market open
+    - cron: "0 13 * * 1-5"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  premarket:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Pre-market spike detection
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/run_premarket_alerts.py

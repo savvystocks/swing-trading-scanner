@@ -4,12 +4,7 @@ from src.catalyst.lottery import build_lottery_ticket, get_account_settings
 from src.catalyst.option_grader import grade_option_picks
 from src.catalyst.factor_screener import screen_lower_caps, FACTOR_DEFINITIONS
 from src.catalyst.factor_research import research_factor_finds
-
-
-TOP_20_FACTOR_TICKERS = (
-    "SNDK", "LITE", "WDC", "STX", "CIEN", "MU", "SATS", "INTC", "COHR", "TER",
-    "FIX", "AMD", "GLW", "LRCX", "VRT", "ALB", "WBD", "CAT", "GEV", "AMAT",
-)
+from src.catalyst.portfolio_context import get_position_summary
 
 
 FACTOR_TARGET_RETURN_PCT = 150
@@ -27,13 +22,34 @@ FACTOR_OPTIONS_TEMPLATE = """<!DOCTYPE html>
 <body style="font-family:Arial,Helvetica,sans-serif; background:#fafafa; margin:0; padding:0;">
 <div style="max-width:920px; margin:0 auto; background:#fff; padding:24px;">
   <h1 style="font-size:18px; margin:0 0 4px;">Top Factors Options — {{ scan_date }}</h1>
-  <div style="color:#666; font-size:11px; margin-bottom:16px;">
+  <div style="color:#666; font-size:11px; margin-bottom:12px;">
     Standard call options on names matching the 20 factors that drove last year's top 20 movers. NOT lottery setups — target {{ target_return_pct }}% in 30-45 days, OTM 0-10%, position sized 20% of ${{ "%.0f"|format(settings.account_size_usd) }} = ${{ "%.0f"|format(position_budget) }} max per trade with -{{ stop_loss_pct }}% premium stop.
   </div>
 
-  <div style="background:#dbeafe; border:1px solid #4a90e2; border-radius:6px; padding:10px 12px; margin-bottom:16px; font-size:11px; color:#1a4d7c;">
-    <strong>How this email differs from Catalyst Email:</strong>
-    Catalyst email targets binary events (earnings/FDA/M&A) with 500%-target lottery options (1-2 weeks, 5-18% OTM). This email targets ongoing factor exposure with calmer 150%-target options (1-1.5 months, 0-10% OTM). Money is made riding trends, not just betting on binary surprises.
+  {% if macro %}
+    {% set rg = macro.regime %}
+    {% set rg_color = '#0d7b34' if rg == 'low_vol' else '#4a90e2' if rg == 'normal' else '#e67e22' if rg == 'elevated' else '#c94545' %}
+    <div style="background:#f0f9ff; border:1px solid #4a90e2; border-radius:6px; padding:6px 10px; margin-bottom:8px; font-size:11px;">
+      <strong>Macro:</strong>
+      <span style="display:inline-block; padding:1px 6px; border-radius:3px; background:{{ rg_color }}; color:#fff; font-weight:700;">{{ rg|upper }}</span>
+      {% if macro.vix %}&middot; VIX {{ "%.1f"|format(macro.vix) }}{% endif %}
+    </div>
+  {% endif %}
+
+  {% if portfolio_summary %}
+    {% set ps = portfolio_summary %}
+    {% set slot_color = '#0d7b34' if ps.n_free >= 2 else '#e67e22' if ps.n_free == 1 else '#c94545' %}
+    <div style="background:#fefce8; border:1px solid #eab308; border-radius:6px; padding:6px 10px; margin-bottom:8px; font-size:11px;">
+      <strong>Portfolio:</strong>
+      <span style="display:inline-block; padding:1px 6px; border-radius:3px; background:{{ slot_color }}; color:#fff; font-weight:700;">{{ ps.n_open }}/{{ ps.max_concurrent }}</span>
+      {% if ps.n_free > 0 %}{{ ps.n_free }} slot(s) free{% else %}<strong style="color:#c94545;">FULL</strong>{% endif %}
+      {% if ps.tickers %}&middot; held: {{ ps.tickers|join(', ') }}{% endif %}
+    </div>
+  {% endif %}
+
+  <div style="background:#dbeafe; border:1px solid #4a90e2; border-radius:6px; padding:8px 12px; margin-bottom:14px; font-size:11px; color:#1a4d7c;">
+    <strong>How this differs from Catalyst Email:</strong>
+    Catalyst = binary events (earnings/FDA/M&A) with 500%-target lottery options (1-2 weeks, 5-18% OTM). Factor = ongoing theme exposure with calmer 150%-target options (1-1.5 months, 0-10% OTM). Money is made riding trends, not just betting on surprises.
   </div>
 
   {% if factor_research_results %}
@@ -145,7 +161,7 @@ FACTOR_OPTIONS_TEMPLATE = """<!DOCTYPE html>
         <th align="left" style="padding:6px 8px;">Matched factors</th>
       </tr></thead>
       <tbody>
-      {% for m in factor_matches %}
+      {% for m in factor_matches[:10] %}
         <tr style="border-bottom:1px solid #ddd6fe;">
           <td style="padding:5px 8px; font-weight:700;">{{ m.ticker }}</td>
           <td style="padding:5px 8px; color:#444; font-size:10px;">{{ (m.name or '')[:24] }}</td>
@@ -311,30 +327,6 @@ FACTOR_OPTIONS_TEMPLATE = """<!DOCTYPE html>
 </div>
 </body>
 </html>"""
-
-
-THEME_NOTES = {
-    "SNDK": "AI-driven NAND shortage + spinoff pure-play premium. Datacenter rev +645% YoY.",
-    "LITE": "NVIDIA $2B strategic stake + 1.6T optical transceiver order book booked into 2028.",
-    "WDC": "Hyperscaler nearline HDD demand for AI training data. Capacity sold through 2026.",
-    "STX": "Mozaic HAMR drives sold out through 2027. Q4 guide above Street.",
-    "CIEN": "WaveLogic 6 winning AI long-haul/DCI builds. Cloud-direct rev +76% YoY.",
-    "MU": "HBM3E/HBM4 sold out through 2026 to NVIDIA + AMD. Memory pricing cycle.",
-    "SATS": "Spectrum monetization (sold to AT&T + SpaceX). 52M SpaceX shares = IPO proxy.",
-    "INTC": "Foundry pipeline LTV >$15B (Microsoft 18A, AWS, Tesla 14A). Turnaround.",
-    "COHR": "NVIDIA $2B strategic. Datacom rev +36% YoY. Optical interconnects.",
-    "TER": "Magnum EPIC = industry-standard HBM tester. Won share back from Advantest.",
-    "FIX": "Mechanical contractor for AI data center construction. Backlog >$11.94B.",
-    "AMD": "OpenAI 6 GW MI400/450 deal (~$100B+) + Meta multi-GW. 2nm AI accelerator.",
-    "GLW": "$6B Meta optical fiber deal + 2 more hyperscalers at similar scale.",
-    "LRCX": "HBM4 ramp + GAA transition. WFE forecast raised to $140B.",
-    "VRT": "Liquid cooling for high-density AI racks. Backlog doubled to $15B+.",
-    "ALB": "Lithium recovery. EV PHEV +33%, BESS +40% YoY. China cuts tightened market.",
-    "WBD": "Paramount Skydance $110.9B takeover bid (Feb 2026). HBO Max growth.",
-    "CAT": "Power & Energy data center generators. Backlog $63B record. AIP 2 GW.",
-    "GEV": "Gas turbine backlog 100 GW (up from 83 GW). $2.4B Q1 electrification orders.",
-    "AMAT": "DRAM equipment for HBM packaging. Semicap >20% growth guide CY26.",
-}
 
 
 def build_factor_options_picks(scored_results, max_picks=8):
@@ -546,6 +538,14 @@ def render_factor_options_email(scan):
 
     settings = get_account_settings()
     position_budget = settings["account_size_usd"] * settings["position_size_pct"] / 100
+
+    portfolio_summary = scan.get("portfolio_summary")
+    if not portfolio_summary:
+        try:
+            portfolio_summary = get_position_summary()
+        except Exception:
+            portfolio_summary = None
+
     from jinja2 import Environment, BaseLoader
     from src.catalyst.humanize import register_jinja_filters
     env = Environment(loader=BaseLoader())
@@ -561,4 +561,6 @@ def render_factor_options_email(scan):
         factor_matches=factor_matches,
         factor_research_results=factor_research_results,
         factor_research_picks=factor_research_picks,
+        macro=scan.get("macro"),
+        portfolio_summary=portfolio_summary,
     )

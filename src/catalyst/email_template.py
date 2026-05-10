@@ -85,6 +85,71 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   <h1>Catalyst Watchlist &mdash; {{ scan_date }}</h1>
   <div class="meta">{{ strong|length }} STRONG &middot; {{ watch|length }} WATCH &middot; LLM-graded {{ llm_graded }} &middot; Universe {{ candidates_total }}</div>
 
+  {% if macro %}
+    {% set rg = macro.regime %}
+    {% set rg_color = '#0d7b34' if rg == 'low_vol' else '#4a90e2' if rg == 'normal' else '#e67e22' if rg == 'elevated' else '#c94545' %}
+    <div style="background:#f0f9ff; border:1px solid #4a90e2; border-radius:6px; padding:8px 12px; margin-bottom:12px; font-size:11px;">
+      <strong>Macro regime:</strong>
+      <span style="display:inline-block; padding:2px 8px; border-radius:3px; background:{{ rg_color }}; color:#fff; font-weight:700; text-transform:uppercase;">{{ rg }}</span>
+      {% if macro.vix %}&middot; VIX <strong>{{ "%.1f"|format(macro.vix) }}</strong>{% endif %}
+      {% if rg == 'elevated' %}&middot; <em>tighten stops to -40%</em>{% elif rg == 'stressed' %}&middot; <em>reduce size 50%, consider spreads only</em>{% endif %}
+      {% if macro.flags %}<br>{% for f in macro.flags[:4] %}{{ f }}{% if not loop.last %} &middot; {% endif %}{% endfor %}{% endif %}
+    </div>
+  {% endif %}
+
+  {% if portfolio_summary %}
+    {% set ps = portfolio_summary %}
+    {% set slot_color = '#0d7b34' if ps.n_free >= 2 else '#e67e22' if ps.n_free == 1 else '#c94545' %}
+    <div style="background:#fefce8; border:1px solid #eab308; border-radius:6px; padding:8px 12px; margin-bottom:12px; font-size:11px;">
+      <strong>Portfolio:</strong>
+      <span style="display:inline-block; padding:2px 8px; border-radius:3px; background:{{ slot_color }}; color:#fff; font-weight:700;">{{ ps.n_open }}/{{ ps.max_concurrent }} slots used</span>
+      {% if ps.n_free > 0 %}&middot; <strong>{{ ps.n_free }} free</strong>{% else %}&middot; <strong style="color:#c94545;">FULL — close before adding</strong>{% endif %}
+      {% if ps.tickers %}&middot; held: {{ ps.tickers|join(', ') }}{% endif %}
+      {% if ps.open_pnl_usd is defined %}&middot; mark-to-market PnL <strong style="color:{% if ps.open_pnl_usd >= 0 %}#0d7b34{% else %}#c94545{% endif %};">${{ "%+.0f"|format(ps.open_pnl_usd) }}</strong>{% endif %}
+      {% if ps.sector_breakdown %}<br>sector mix: {% for s, n in ps.sector_breakdown.items() %}{{ s }} {{ n }}{% if not loop.last %} &middot; {% endif %}{% endfor %}{% endif %}
+    </div>
+  {% endif %}
+
+  {% if win_rate_stats %}
+    {% set ws = win_rate_stats %}
+    {% set wr_color = '#0d7b34' if ws.win_rate_pct >= 55 else '#4a90e2' if ws.win_rate_pct >= 45 else '#c94545' %}
+    <div style="background:#f5f3ff; border:1px solid #8b5cf6; border-radius:6px; padding:8px 12px; margin-bottom:12px; font-size:11px;">
+      <strong>Last {{ ws.lookback_days }}d:</strong>
+      <span style="color:{{ wr_color }}; font-weight:700;">{{ ws.win_rate_pct }}% win rate</span>
+      &middot; {{ ws.n_wins }}W / {{ ws.n_losses }}L of {{ ws.n_trades }}
+      &middot; avg <strong>{{ "%+.2f"|format(ws.avg_pnl_pct) }}%</strong>
+      &middot; best <strong style="color:#0d7b34;">{{ "%+.1f"|format(ws.best_pct) }}%</strong>
+      &middot; worst <strong style="color:#c94545;">{{ "%+.1f"|format(ws.worst_pct) }}%</strong>
+      &middot; total PnL <strong style="color:{% if ws.total_pnl_usd >= 0 %}#0d7b34{% else %}#c94545{% endif %};">${{ "%+.0f"|format(ws.total_pnl_usd) }}</strong>
+    </div>
+  {% endif %}
+
+  {% if yesterdays_followup %}
+    <div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:6px; padding:8px 12px; margin-bottom:12px; font-size:11px; color:#7c2d12;">
+      <strong>Recently closed (yesterday/today):</strong>
+      {% for f in yesterdays_followup[:6] %}
+        <div style="margin-top:3px;">
+          {{ f.ticker }} {% if f.strike %}${{ "%.0f"|format(f.strike) }}C exp {{ f.expiration }}{% endif %}:
+          <span style="color:{% if f.realized_pnl_pct and f.realized_pnl_pct >= 0 %}#0d7b34{% else %}#c94545{% endif %}; font-weight:700;">{{ "%+.1f"|format(f.realized_pnl_pct or 0) }}%</span>
+          ({{ "%+.0f"|format(f.realized_pnl_usd or 0) }} USD)
+          {% if f.exit_reason %} &middot; {{ f.exit_reason }}{% endif %}
+          {% if f.days_held is defined %} &middot; held {{ f.days_held }}d{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if forward_calendar %}
+    {% set fc = forward_calendar %}
+    {% set ec = fc.earnings or {} %}
+    <div style="background:#ecfdf5; border:1px solid #10b981; border-radius:6px; padding:8px 12px; margin-bottom:12px; font-size:11px;">
+      <strong>This week (next {{ fc.days_ahead }}d):</strong>
+      {{ ec.total_earnings or 0 }} earnings ({{ ec.on_watchlist_count or 0 }} on watchlist)
+      {% if fc.macro_events %}&middot; {{ fc.macro_events|length }} macro: {% for m in fc.macro_events %}{{ m.label }} ({{ m.days_until }}d){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
+      {% if ec.on_watchlist %}<br><strong>Watchlist earnings:</strong> {% for e in ec.on_watchlist[:10] %}{{ e.ticker }} ({{ e.report_date }}{% if e.before_after_market %} {{ e.before_after_market }}{% endif %}){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
+    </div>
+  {% endif %}
+
   <div class="intro" style="background:#dbeafe; border-color:#4a90e2;">
     <strong>Top {{ [strong|length, 3]|min }} BUYs:</strong>
     {% set buys = [] %}{% for c in strong %}{% if c.buy_signal and c.buy_signal.signal == 'BUY' and buys|length < 3 %}{% set _ = buys.append(c) %}{% endif %}{% endfor %}
@@ -151,12 +216,10 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <span class="name">{{ (c.name or c.company)[:50] }}</span>
             {% if c.sector %}<span class="sector-badge">{{ c.sector }}</span>{% endif %}
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
-            <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
-            {% if c.ideal_setup %}<span class="ideal-badge">PRIME ENTRY &mdash; overnight catalyst on flat stock</span>{% endif %}
-            {% if c.components.drift.skip_chase %}<span class="skip-chase-badge">CATALYST IN MOTION &mdash; do not chase</span>{% endif %}
+            {% if c.ideal_setup %}<span class="ideal-badge">PRIME ENTRY</span>{% endif %}
             {% if c.deal_closed %}<span class="closed-badge">DEAL CLOSED &mdash; do not trade</span>{% endif %}
-            {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
-            {% if c.components.drift.pre_priced %}<span class="priced-badge">PRE-PRICED &mdash; sell-the-news risk</span>{% endif %}
+            {% set is_chase = c.components.drift.skip_chase or c.components.drift.extended or c.components.drift.pre_priced %}
+            {% if is_chase and not c.deal_closed %}<span class="skip-chase-badge">DO NOT CHASE &mdash; already moved</span>{% endif %}
           </div>
           <div style="display:flex; align-items:center;">
             <div class="score-box strong">
@@ -293,17 +356,22 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <strong>Options:</strong> {{ c.options_check.label }}
           </div>
         {% endif %}
+        {% if c.options_flow and c.options_flow.sentiment and c.options_flow.sentiment != 'NEUTRAL' %}
+          {% set of = c.options_flow %}
+          {% set of_color = '#0d7b34' if of.sentiment == 'BULLISH' else '#c94545' %}
+          <div style="margin-top:6px; padding:6px 10px; background:#f9fafb; border-left:3px solid {{ of_color }}; border-radius:3px; font-size:11px;">
+            <strong style="color:{{ of_color }};">Unusual flow ({{ of.sentiment }}):</strong>
+            {% if of.call_put_ratio %}C/P {{ of.call_put_ratio }}x{% endif %}
+            {% if of.atm_iv_skew_pct is not none %} &middot; skew {{ "%+.1f"|format(of.atm_iv_skew_pct) }}%{% endif %}
+            {% if of.block_trade_count %} &middot; {{ of.block_trade_count }} block trades{% endif %}
+            {% if of.bullish_signals %} &middot; {{ of.bullish_signals[0] }}{% endif %}
+            {% if of.bearish_signals %} &middot; {{ of.bearish_signals[0] }}{% endif %}
+          </div>
+        {% endif %}
         {% if c.components.llm.reasoning %}
           <div class="llm-box">
             <strong>LLM read:</strong> {{ c.components.llm.reasoning }}
             {% if c.components.llm.key_signal %}<br><strong>Key signal:</strong> {{ c.components.llm.key_signal }}{% endif %}
-          </div>
-        {% endif %}
-        {% if c.news and c.news.headlines %}
-          <div class="news-box">
-            {% for h in c.news.headlines[:3] %}
-              <div class="news-headline">[{{ h.date }}] {{ h.title }}</div>
-            {% endfor %}
           </div>
         {% endif %}
       </div>
@@ -321,12 +389,10 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <span class="name">{{ (c.name or c.company)[:50] }}</span>
             {% if c.sector %}<span class="sector-badge">{{ c.sector }}</span>{% endif %}
             <span class="tier-badge tier-{{ c.catalyst_tier }}">Tier {{ c.catalyst_tier }}</span>
-            <span class="conf-badge conf-{{ c.confidence }}">{{ c.confidence }}</span>
-            {% if c.ideal_setup %}<span class="ideal-badge">PRIME ENTRY &mdash; overnight catalyst on flat stock</span>{% endif %}
-            {% if c.components.drift.skip_chase %}<span class="skip-chase-badge">CATALYST IN MOTION &mdash; do not chase</span>{% endif %}
+            {% if c.ideal_setup %}<span class="ideal-badge">PRIME ENTRY</span>{% endif %}
             {% if c.deal_closed %}<span class="closed-badge">DEAL CLOSED &mdash; do not trade</span>{% endif %}
-            {% if c.components.drift.extended %}<span class="extended-badge">EXTENDED &mdash; already moved</span>{% endif %}
-            {% if c.components.drift.pre_priced %}<span class="priced-badge">PRE-PRICED &mdash; sell-the-news risk</span>{% endif %}
+            {% set is_chase = c.components.drift.skip_chase or c.components.drift.extended or c.components.drift.pre_priced %}
+            {% if is_chase and not c.deal_closed %}<span class="skip-chase-badge">DO NOT CHASE</span>{% endif %}
           </div>
           <div style="display:flex; align-items:center;">
             <div class="score-box watch">
@@ -384,8 +450,6 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
             <strong>LLM:</strong> {{ c.components.llm.reasoning }}
           </div>
         {% endif %}
-        <div class="breakdown">
-        </div>
       </div>
     {% endfor %}
   {% endif %}
@@ -461,6 +525,22 @@ def render_catalyst_email(scan, max_strong=20, max_watch=20):
     except Exception as e:
         print(f"  catalyst live_spot: failed: {type(e).__name__}: {e}")
 
+    portfolio_summary = scan.get("portfolio_summary")
+    win_rate_stats = scan.get("win_rate_stats")
+    yesterdays_followup = scan.get("yesterdays_followup") or []
+    try:
+        from src.catalyst.portfolio_context import (
+            get_position_summary, get_recent_paper_trade_stats, yesterdays_lottery_followup,
+        )
+        if not portfolio_summary:
+            portfolio_summary = get_position_summary()
+        if not win_rate_stats:
+            win_rate_stats = get_recent_paper_trade_stats(lookback_days=30)
+        if not yesterdays_followup:
+            yesterdays_followup = yesterdays_lottery_followup()
+    except Exception as e:
+        print(f"  email portfolio refresh failed: {type(e).__name__}: {e}")
+
     from jinja2 import Environment, BaseLoader
     from src.catalyst.humanize import register_jinja_filters
     env = Environment(loader=BaseLoader())
@@ -482,4 +562,9 @@ def render_catalyst_email(scan, max_strong=20, max_watch=20):
         bear_picks=bear_picks,
         pre_catalyst_watchlist=scan.get("pre_catalyst_watchlist") or [],
         upcoming_conferences=scan.get("upcoming_conferences") or [],
+        macro=scan.get("macro"),
+        portfolio_summary=portfolio_summary,
+        win_rate_stats=win_rate_stats,
+        yesterdays_followup=yesterdays_followup,
+        forward_calendar=scan.get("forward_calendar"),
     )

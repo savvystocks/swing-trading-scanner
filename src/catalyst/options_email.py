@@ -2,6 +2,11 @@ from jinja2 import Template
 
 from src.catalyst.lottery import build_lottery_ticket, get_account_settings
 from src.catalyst.option_grader import grade_option_picks
+from src.catalyst.lottery_research import research_lottery_picks
+from src.catalyst.portfolio_context import (
+    get_position_summary, annotate_picks_with_portfolio_warnings,
+)
+from src.catalyst.premarket_tracker import detect_premarket_spikes
 
 
 CATALYST_OPTIONS_TEMPLATE = """<!DOCTYPE html>
@@ -10,13 +15,46 @@ CATALYST_OPTIONS_TEMPLATE = """<!DOCTYPE html>
 <body style="font-family:Arial,Helvetica,sans-serif; background:#fafafa; margin:0; padding:0;">
 <div style="max-width:920px; margin:0 auto; background:#fff; padding:24px;">
   <h1 style="font-size:18px; margin:0 0 4px;">Catalyst Options Plays — {{ scan_date }}</h1>
-  <div style="color:#666; font-size:11px; margin-bottom:16px;">
+  <div style="color:#666; font-size:11px; margin-bottom:12px;">
     Account ${{ "%.0f"|format(settings.account_size_usd) }} &middot;
     {{ settings.position_size_pct|round(0)|int }}% per trade &middot;
     Stop -{{ settings.stop_loss_pct|round(0)|int }}% &middot;
     Max {{ settings.max_concurrent }} concurrent &middot;
     Target {{ settings.target_return_pct|round(0)|int }}% in {{ settings.target_days }}d
   </div>
+
+  {% if macro %}
+    {% set rg = macro.regime %}
+    {% set rg_color = '#0d7b34' if rg == 'low_vol' else '#4a90e2' if rg == 'normal' else '#e67e22' if rg == 'elevated' else '#c94545' %}
+    <div style="background:#f0f9ff; border:1px solid #4a90e2; border-radius:6px; padding:6px 10px; margin-bottom:8px; font-size:11px;">
+      <strong>Macro:</strong>
+      <span style="display:inline-block; padding:1px 6px; border-radius:3px; background:{{ rg_color }}; color:#fff; font-weight:700;">{{ rg|upper }}</span>
+      {% if macro.vix %}&middot; VIX {{ "%.1f"|format(macro.vix) }}{% endif %}
+      {% if rg == 'elevated' %}&middot; <em>tighten stops to -40%</em>{% elif rg == 'stressed' %}&middot; <em>spreads only, half size</em>{% endif %}
+    </div>
+  {% endif %}
+
+  {% if portfolio_summary %}
+    {% set ps = portfolio_summary %}
+    {% set slot_color = '#0d7b34' if ps.n_free >= 2 else '#e67e22' if ps.n_free == 1 else '#c94545' %}
+    <div style="background:#fefce8; border:1px solid #eab308; border-radius:6px; padding:6px 10px; margin-bottom:8px; font-size:11px;">
+      <strong>Portfolio:</strong>
+      <span style="display:inline-block; padding:1px 6px; border-radius:3px; background:{{ slot_color }}; color:#fff; font-weight:700;">{{ ps.n_open }}/{{ ps.max_concurrent }}</span>
+      {% if ps.n_free > 0 %}{{ ps.n_free }} slot(s) free{% else %}<strong style="color:#c94545;">FULL</strong>{% endif %}
+      {% if ps.tickers %}&middot; held: {{ ps.tickers|join(', ') }}{% endif %}
+      {% if ps.open_pnl_usd is defined %}&middot; PnL <strong style="color:{% if ps.open_pnl_usd >= 0 %}#0d7b34{% else %}#c94545{% endif %};">${{ "%+.0f"|format(ps.open_pnl_usd) }}</strong>{% endif %}
+    </div>
+  {% endif %}
+
+  {% if premarket_spikes %}
+    <div style="background:#fff7ed; border:1px solid #f97316; border-radius:6px; padding:6px 10px; margin-bottom:8px; font-size:11px; color:#9a3412;">
+      <strong>Pre-market alert (already moving):</strong>
+      {% for s in premarket_spikes[:8] %}
+        <span style="margin-right:6px;">{{ s.ticker }} <strong style="color:{% if s.direction == 'UP' %}#0d7b34{% else %}#c94545{% endif %};">{{ "%+.1f"|format(s.change_pct) }}%</strong></span>
+      {% endfor %}
+      <em>— check chase risk before entry</em>
+    </div>
+  {% endif %}
 
   {% if picks %}
     <div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:6px; padding:10px 12px; margin-bottom:16px; font-size:11px; color:#92400e;">
@@ -46,6 +84,16 @@ CATALYST_OPTIONS_TEMPLATE = """<!DOCTYPE html>
       {% set live = p.live %}
       {% set conv = p.conviction_label %}
       <div style="border:2px solid {% if conv == 'HIGH' %}#0d7b34{% elif conv == 'MEDIUM' %}#1a9850{% else %}#4a90e2{% endif %}; border-radius:8px; padding:14px 16px; margin-bottom:14px; background:#fff;">
+        {% if p.portfolio_warnings %}
+          <div style="background:#fef2f2; border:2px solid #c94545; border-radius:4px; padding:6px 10px; margin-bottom:8px; font-size:11px; color:#7f1d1d;">
+            <strong>Portfolio:</strong> {% for w in p.portfolio_warnings %}{{ w }}{% if not loop.last %} &middot; {% endif %}{% endfor %}
+          </div>
+        {% endif %}
+        {% if p.premarket_change_pct and (p.premarket_change_pct >= 3 or p.premarket_change_pct <= -3) %}
+          <div style="background:#fff7ed; border:1px solid #f97316; border-radius:4px; padding:6px 10px; margin-bottom:8px; font-size:11px; color:#9a3412;">
+            <strong>Pre-market:</strong> already <strong style="color:{% if p.premarket_change_pct >= 0 %}#0d7b34{% else %}#c94545{% endif %};">{{ "%+.1f"|format(p.premarket_change_pct) }}%</strong> &middot; chase risk
+          </div>
+        {% endif %}
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
           <div>
             <span style="font-size:18px; font-weight:700;">{{ t.ticker }}</span>
@@ -220,17 +268,92 @@ CATALYST_OPTIONS_TEMPLATE = """<!DOCTYPE html>
 
         {% endif %}
 
-        {% if false and p.inflection %}
-          {% set inf = p.inflection %}
-          <div style="margin-top:6px; font-size:10px; color:#555;">
-            <strong>Inflection:</strong> {{ inf.label }}
-            {% set firing = [] %}
-            {% if inf.components.volatility_contraction.fired %}{% set _ = firing.append('vol contraction ' + (inf.components.volatility_contraction.percentile|string) + 'p') %}{% endif %}
-            {% if inf.components.base_length.fired %}{% set _ = firing.append('base ' + (inf.components.base_length.weeks_in_base|string) + 'wk') %}{% endif %}
-            {% if inf.components.higher_low.fired %}{% set _ = firing.append('higher low') %}{% endif %}
-            {% if inf.components.stage_4_turnaround.fired %}{% set _ = firing.append('stage-4 turn ' + (inf.components.stage_4_turnaround.pct_off_low|string) + '% off low') %}{% endif %}
-            {% if inf.components.volume_dry_up.fired %}{% set _ = firing.append('vol dry-up') %}{% endif %}
-            {% if firing %}— {{ firing|join(', ') }}{% endif %}
+        {% if p.lottery_research %}
+          {% set lr = p.lottery_research %}
+          {% set lr_color = '#0d7b34' if lr.contract_verdict == 'STRONG BUY' else '#1a9850' if lr.contract_verdict == 'BUY' else '#888' if lr.contract_verdict == 'HOLD' else '#e67e22' if lr.contract_verdict == 'REPLACE' else '#c94545' %}
+          <div style="margin-top:10px; padding:10px 12px; background:#eef2ff; border:2px solid {{ lr_color }}; border-radius:6px; font-size:11px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <div>
+                <strong style="color:#3730a3; text-transform:uppercase;">Sonnet+web contract review</strong>
+                <span style="display:inline-block; padding:2px 8px; margin-left:6px; border-radius:3px; background:{{ lr_color }}; color:#fff; font-weight:700;">{{ lr.contract_verdict }}</span>
+              </div>
+              {% if lr.buy_score is defined %}<span style="font-size:14px; font-weight:700; color:{{ lr_color }};">{{ lr.buy_score }}/100</span>{% endif %}
+            </div>
+            <div style="color:#1f2937; margin-bottom:6px;">{{ lr.verdict_reasoning }}</div>
+
+            {% if lr.catalyst_timing and lr.catalyst_timing.exact_date %}
+              <div style="margin:4px 0; padding:4px 8px; background:#dbeafe; border-radius:3px;">
+                <strong>Verified timing:</strong> {{ lr.catalyst_timing.exact_date }}
+                {% if lr.catalyst_timing.session %} {{ lr.catalyst_timing.session }}{% endif %}
+                {% if lr.catalyst_timing.days_until is defined %} &middot; {{ lr.catalyst_timing.days_until }}d{% endif %}
+                {% if lr.catalyst_timing.verified_via %} &middot; <em>via {{ lr.catalyst_timing.verified_via }}</em>{% endif %}
+              </div>
+            {% endif %}
+
+            {% if lr.implied_vs_realized and lr.implied_vs_realized.edge_label %}
+              {% set ivr = lr.implied_vs_realized %}
+              {% set edge_color = '#0d7b34' if ivr.edge_label == 'MARKET_UNDERPRICING' else '#888' if ivr.edge_label == 'FAIRLY_PRICED' else '#c94545' %}
+              <div style="margin:4px 0; padding:4px 8px; background:#f0fdf4; border-radius:3px;">
+                <strong>Implied vs analog:</strong>
+                straddle pricing {{ ivr.straddle_implied_move_pct }}% vs analog median {{ ivr.analog_median_move_pct }}%
+                &middot; <span style="padding:1px 6px; border-radius:3px; background:{{ edge_color }}; color:#fff; font-weight:700;">{{ ivr.edge_label|replace('_', ' ') }}</span>
+                {% if ivr.edge_comment %}&middot; {{ ivr.edge_comment }}{% endif %}
+              </div>
+            {% endif %}
+
+            {% if lr.iv_crush_forecast and lr.iv_crush_forecast.expected_crush_pct %}
+              <div style="margin:4px 0; padding:4px 8px; background:#fef2f2; border-radius:3px;">
+                <strong>IV crush forecast:</strong> {{ lr.iv_crush_forecast.expected_crush_pct }}% vega drop &middot; premium loss {{ lr.iv_crush_forecast.premium_loss_from_vega_pct }}%
+                {% if lr.iv_crush_forecast.comment %}&middot; {{ lr.iv_crush_forecast.comment }}{% endif %}
+              </div>
+            {% endif %}
+
+            {% if lr.strike_fit %}
+              {% set sf = lr.strike_fit %}
+              {% set sf_color = '#0d7b34' if sf.achievable_label == 'EASY' else '#1a9850' if sf.achievable_label == 'REACHABLE' else '#e67e22' if sf.achievable_label == 'STRETCH' else '#c94545' %}
+              <div style="margin:4px 0; padding:4px 8px; background:#fefce8; border-radius:3px;">
+                <strong>Strike:</strong> proposed {{ sf.proposed_otm_pct }}% OTM &middot;
+                <span style="padding:1px 6px; border-radius:3px; background:{{ sf_color }}; color:#fff; font-weight:700;">{{ sf.achievable_label }}</span>
+                {% if sf.better_strike_otm_pct and sf.better_strike_otm_pct != sf.proposed_otm_pct %} &middot; suggests <strong>{{ sf.better_strike_otm_pct }}% OTM</strong>{% endif %}
+                {% if sf.comment %}&middot; {{ sf.comment }}{% endif %}
+              </div>
+            {% endif %}
+
+            {% if lr.expiry_fit and lr.expiry_fit.fit_label and lr.expiry_fit.fit_label != 'GOOD' %}
+              {% set ef = lr.expiry_fit %}
+              <div style="margin:4px 0; padding:4px 8px; background:#fef3c7; border-radius:3px;">
+                <strong>Expiry:</strong> {{ ef.proposed_dte }}d is <strong>{{ ef.fit_label|replace('_', ' ')|lower }}</strong>
+                {% if ef.better_dte %} &middot; suggests <strong>{{ ef.better_dte }} DTE</strong>{% endif %}
+                {% if ef.comment %}&middot; {{ ef.comment }}{% endif %}
+              </div>
+            {% endif %}
+
+            {% if lr.post_event_probability and lr.post_event_probability.p_target_hit_pct is defined %}
+              {% set pep = lr.post_event_probability %}
+              <div style="margin:4px 0; padding:4px 8px; background:#f0f9ff; border-radius:3px;">
+                <strong>Post-event probability:</strong>
+                {{ pep.p_target_hit_pct }}% target hit &middot;
+                {{ pep.p_breakeven_pct }}% above breakeven &middot;
+                {{ pep.p_stop_loss_pct }}% stop triggered
+                {% if pep.expected_value_pct %}&middot; <strong>EV {{ pep.expected_value_pct }}</strong>{% endif %}
+              </div>
+            {% endif %}
+
+            {% if lr.alternative_structure and lr.alternative_structure.type %}
+              <div style="margin:4px 0; padding:6px 10px; background:#fff7ed; border-left:3px solid #f97316; border-radius:3px; color:#9a3412;">
+                <strong>Better structure:</strong> {{ lr.alternative_structure.type }} &mdash; {{ lr.alternative_structure.details }}
+              </div>
+            {% endif %}
+
+            {% if lr.between_now_and_catalyst_risks %}
+              <div style="margin-top:4px; font-size:10px; color:#7f1d1d;">
+                <strong>Between-now-and-event risks:</strong> {{ lr.between_now_and_catalyst_risks|join(' &middot; ') }}
+              </div>
+            {% endif %}
+            {% if lr.red_flags %}
+              <div style="font-size:10px; color:#7f1d1d;"><strong>Red flags:</strong> {{ lr.red_flags|join(' &middot; ') }}</div>
+            {% endif %}
+            <div style="margin-top:6px; font-size:11px; color:#444;">{{ lr.research_note }}</div>
           </div>
         {% endif %}
       </div>
@@ -382,6 +505,51 @@ def render_catalyst_options_email(scan):
         else:
             actionable_picks.append(p)
 
+    portfolio_summary = scan.get("portfolio_summary")
+    if not portfolio_summary:
+        try:
+            portfolio_summary = get_position_summary()
+        except Exception:
+            portfolio_summary = None
+    if portfolio_summary:
+        try:
+            annotate_picks_with_portfolio_warnings(actionable_picks, portfolio_summary)
+        except Exception as e:
+            print(f"  portfolio annotate failed: {type(e).__name__}: {e}")
+
+    premarket_spikes = []
+    try:
+        prev_close_lookup = {}
+        spike_input = []
+        for p in actionable_picks:
+            t = p.get("ticket") or {}
+            tk = (t.get("ticker") or "").split(".")[0]
+            if not tk:
+                continue
+            spike_input.append({"ticker": tk})
+            prev_close_lookup[tk] = t.get("price") or t.get("live_spot")
+        if spike_input:
+            premarket_spikes, err = detect_premarket_spikes(spike_input, prev_close_lookup, min_spike_pct=3.0)
+            if err:
+                print(f"  premarket overlay: {err}")
+            else:
+                spike_map = {s["ticker"]: s["change_pct"] for s in premarket_spikes}
+                for p in actionable_picks:
+                    tk = (p.get("ticket") or {}).get("ticker", "").split(".")[0]
+                    if tk in spike_map:
+                        p["premarket_change_pct"] = spike_map[tk]
+    except Exception as e:
+        print(f"  premarket overlay failed: {type(e).__name__}: {e}")
+
+    try:
+        lottery_research_results = research_lottery_picks(actionable_picks, max_tickers=5, verbose=True)
+        for p in actionable_picks:
+            tk = (p.get("ticket") or {}).get("ticker")
+            if tk in lottery_research_results:
+                p["lottery_research"] = lottery_research_results[tk]
+    except Exception as e:
+        print(f"  lottery_research failed (non-fatal): {type(e).__name__}: {e}")
+
     settings = get_account_settings()
     from jinja2 import Environment, BaseLoader
     from src.catalyst.humanize import register_jinja_filters
@@ -393,4 +561,7 @@ def render_catalyst_options_email(scan):
         settings=settings,
         picks=actionable_picks,
         skipped_tickers=skipped_tickers,
+        macro=scan.get("macro"),
+        portfolio_summary=portfolio_summary,
+        premarket_spikes=premarket_spikes,
     )

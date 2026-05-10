@@ -25,6 +25,10 @@ from src.catalyst.macro_indicators import fetch_macro_snapshot, macro_regime_sum
 from src.catalyst.pre_catalyst import (
     build_pre_catalyst_watchlist, get_upcoming_conferences, get_high_momentum_tickers,
 )
+from src.catalyst.forward_calendar import build_forward_calendar
+from src.catalyst.portfolio_context import (
+    get_position_summary, yesterdays_lottery_followup, get_recent_paper_trade_stats,
+)
 from src.catalyst.sam_gov import fetch_recent_contract_awards, map_awardees_to_tickers
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
@@ -591,9 +595,9 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
     if deep_research_max > 0:
         if verbose:
-            print(f"  running deep research (Sonnet + web search) — Tier S OR Tier A+stacked (3+ catalysts), max {deep_research_max}")
+            print(f"  running deep research (Sonnet + web search) — top {deep_research_max} bullish by score")
         try:
-            def _is_deep_eligible(s):
+            def _is_priority(s):
                 if s.get("deal_closed"):
                     return False
                 if s.get("pre_catalyst_high_conviction"):
@@ -603,23 +607,25 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                     return True
                 if tier == "A":
                     xconf = s.get("cross_confirmation") or {}
-                    multiplier = xconf.get("multiplier_label", "")
-                    if multiplier in ("STRONG", "HIGH"):
+                    if xconf.get("multiplier_label", "") in ("STRONG", "HIGH"):
                         return True
                 return False
 
-            eligible_for_deep_all = [s for s in final_scored if _is_deep_eligible(s)]
-            tier_s_count = sum(1 for s in eligible_for_deep_all if s.get("catalyst_tier") == "S")
-            tier_a_stacked = len(eligible_for_deep_all) - tier_s_count
+            bullish_eligible = [s for s in final_scored
+                                if s.get("direction", "bull") == "bull"
+                                and not s.get("deal_closed")]
+            priority = [s for s in bullish_eligible if _is_priority(s)]
+            priority_sorted = sorted(priority, key=lambda x: x["score"], reverse=True)
 
-            if not eligible_for_deep_all:
-                if verbose:
-                    print(f"    no Tier S or Tier A+stacked candidates today — skipping deep research entirely")
-                top_for_deep = []
-            else:
-                top_for_deep = sorted(eligible_for_deep_all, key=lambda x: x["score"], reverse=True)[:deep_research_max]
-                if verbose:
-                    print(f"    {tier_s_count} Tier S + {tier_a_stacked} Tier A+stacked, researching top {len(top_for_deep)}")
+            top_for_deep = priority_sorted[:deep_research_max]
+            if len(top_for_deep) < deep_research_max:
+                priority_tickers = {s["ticker"] for s in top_for_deep}
+                fillers = [s for s in sorted(bullish_eligible, key=lambda x: x["score"], reverse=True)
+                           if s["ticker"] not in priority_tickers]
+                top_for_deep += fillers[:deep_research_max - len(top_for_deep)]
+
+            if verbose:
+                print(f"    {len(priority_sorted)} priority (Tier S/A+stacked/pre-cat), filled to {len(top_for_deep)} with top-by-score")
             eligible_for_deep = top_for_deep
             if top_for_deep:
                 deep_results = deep_research(top_for_deep, max_tickers=deep_research_max, verbose=verbose)
@@ -754,6 +760,34 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         if verbose:
             print(f"  pre-catalyst watchlist failed: {type(e).__name__}: {e}")
 
+    forward_calendar = None
+    try:
+        watchlist_tickers = [c.get("ticker") for c in candidates[:60] if c.get("ticker")]
+        forward_calendar = build_forward_calendar(client, watchlist_tickers, days_ahead=5,
+                                                   target_date=scan_date_str)
+        if verbose:
+            ec = (forward_calendar.get("earnings") or {}).get("on_watchlist_count", 0)
+            mc = len(forward_calendar.get("macro_events") or [])
+            print(f"  forward calendar: {ec} watchlist earnings + {mc} macro events in 5d")
+    except Exception as e:
+        if verbose:
+            print(f"  forward calendar failed: {type(e).__name__}: {e}")
+
+    portfolio_summary = None
+    yesterdays_followup = []
+    win_rate_stats = None
+    try:
+        portfolio_summary = get_position_summary()
+        yesterdays_followup = yesterdays_lottery_followup()
+        win_rate_stats = get_recent_paper_trade_stats(lookback_days=30)
+        if verbose:
+            print(f"  portfolio: {portfolio_summary['n_open']}/{portfolio_summary['max_concurrent']} slots used, "
+                  f"{len(yesterdays_followup)} closed yesterday, "
+                  f"win rate (30d): {win_rate_stats['win_rate_pct'] if win_rate_stats else 'n/a'}%")
+    except Exception as e:
+        if verbose:
+            print(f"  portfolio context failed: {type(e).__name__}: {e}")
+
     return {
         "scan_date": scan_date_str,
         "macro": macro,
@@ -770,6 +804,10 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         "rebalance_candidates": rebalance,
         "pre_catalyst_watchlist": pre_catalyst_watchlist,
         "upcoming_conferences": upcoming_conferences,
+        "forward_calendar": forward_calendar,
+        "portfolio_summary": portfolio_summary,
+        "yesterdays_followup": yesterdays_followup,
+        "win_rate_stats": win_rate_stats,
         "eodhd_calls": client.calls_made,
         "edgar_calls": edgar.calls_made,
         "llm_graded": len(llm_grades),

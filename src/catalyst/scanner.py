@@ -638,31 +638,44 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             deep_results = {}
         positive_outcomes = {"BEAT", "BEAT_AND_RAISE", "APPROVAL", "DEAL_CLOSE", "DATA_HIT"}
         negative_outcomes = {"MISS", "CRL", "DEAL_BREAK", "DATA_MISS"}
+        def _coerce_pct(v):
+            if v is None:
+                return 0
+            try:
+                return float(v)
+            except (TypeError, ValueError):
+                import re as _re
+                m = _re.search(r"-?\d+(?:\.\d+)?", str(v))
+                return float(m.group()) if m else 0
         for s in final_scored:
             if s["ticker"] in deep_results:
-                s["deep_research"] = deep_results[s["ticker"]]
-                op = (deep_results[s["ticker"]].get("outcome_prediction") or {})
-                outcome_prob = op.get("outcome_probability_pct") or 0
-                expected_outcome = (op.get("expected_outcome") or "").upper()
-                outcome_pts = 0
-                if expected_outcome in positive_outcomes:
-                    if outcome_prob >= 70:
-                        outcome_pts = 15
-                    elif outcome_prob >= 55:
-                        outcome_pts = 8
-                    elif outcome_prob >= 40:
-                        outcome_pts = 2
-                elif expected_outcome in negative_outcomes:
-                    if outcome_prob >= 50:
-                        outcome_pts = -25
-                    elif outcome_prob >= 35:
-                        outcome_pts = -10
-                if outcome_pts != 0:
-                    s["components"]["outcome_conviction"] = {
-                        "points": outcome_pts,
-                        "label": f"{expected_outcome} ({outcome_prob}% prob)",
-                    }
-                    s["score"] = round(s["score"] + outcome_pts, 2)
+                try:
+                    s["deep_research"] = deep_results[s["ticker"]]
+                    op = (deep_results[s["ticker"]].get("outcome_prediction") or {})
+                    outcome_prob = _coerce_pct(op.get("outcome_probability_pct"))
+                    expected_outcome = (op.get("expected_outcome") or "").upper()
+                    outcome_pts = 0
+                    if expected_outcome in positive_outcomes:
+                        if outcome_prob >= 70:
+                            outcome_pts = 15
+                        elif outcome_prob >= 55:
+                            outcome_pts = 8
+                        elif outcome_prob >= 40:
+                            outcome_pts = 2
+                    elif expected_outcome in negative_outcomes:
+                        if outcome_prob >= 50:
+                            outcome_pts = -25
+                        elif outcome_prob >= 35:
+                            outcome_pts = -10
+                    if outcome_pts != 0:
+                        s["components"]["outcome_conviction"] = {
+                            "points": outcome_pts,
+                            "label": f"{expected_outcome} ({outcome_prob}% prob)",
+                        }
+                        s["score"] = round(s["score"] + outcome_pts, 2)
+                except Exception as e:
+                    if verbose:
+                        print(f"  outcome_conviction adj failed for {s.get('ticker')}: {type(e).__name__}: {e}")
 
     scan_date_str = (target_date if isinstance(target_date, str) else (target_date or datetime.utcnow().date()).strftime("%Y-%m-%d"))
     snap_count, _ = snapshot_predictions(scan_date_str, final_scored)

@@ -9,7 +9,8 @@ POSITIONS_PATH = os.path.join(PROJECT_ROOT, "data", "paper_trades", "positions.j
 CLOSED_PATH = os.path.join(PROJECT_ROOT, "data", "paper_trades", "closed.json")
 CATALYST_PAPER_PATH = os.path.join(PROJECT_ROOT, "data", "catalyst", "paper_trades.json")
 
-MAX_CONCURRENT = int(os.environ.get("MAX_CONCURRENT_LOTTERY", "4"))
+_max_conc_raw = (os.environ.get("MAX_CONCURRENT_LOTTERY") or "").strip()
+MAX_CONCURRENT = int(_max_conc_raw) if _max_conc_raw.isdigit() else 4
 
 
 def _load_json(path, default=None):

@@ -13,7 +13,7 @@ CONFERENCE_CALENDAR = [
 KNOWN_PDUFA_DATES = {}
 
 
-def get_upcoming_earnings(client, eodhd_tickers, days_min=5, days_max=45, verbose=False):
+def get_upcoming_earnings(client, eodhd_tickers, days_min=1, days_max=45, verbose=False):
     today = datetime.utcnow().date()
     upcoming = {}
     fetched = 0
@@ -151,7 +151,7 @@ def pre_catalyst_signal_score(scored, upcoming_event):
 
 
 def build_pre_catalyst_watchlist(client, scored_results, cohort_tickers,
-                                  days_min=5, days_max=45, verbose=False):
+                                  days_min=1, days_max=45, verbose=False):
     by_ticker = {s.get("ticker"): s for s in scored_results}
 
     candidate_tickers = set(cohort_tickers or [])

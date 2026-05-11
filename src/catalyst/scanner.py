@@ -80,12 +80,22 @@ def gather_catalysts(client, edgar, target_date=None):
     cohorts = cohort_signals()
     print(f"    {len(cohorts)} tickers across all cohorts")
 
+    print(f"  loading index inclusion signals (Nasdaq-100, S&P 500, etc.)...")
+    try:
+        from src.catalyst.index_inclusion import get_index_signals
+        index_signals = get_index_signals(target_date=target_date, max_days_until=14)
+        print(f"    {len(index_signals)} tickers with index inclusion/exit within 14d")
+    except Exception as e:
+        print(f"    index inclusion load failed: {type(e).__name__}: {e}")
+        index_signals = {}
+
     return {
         "earnings": earnings,
         "material": material,
         "activist": activist,
         "insider": insider,
         "cohorts": cohorts,
+        "index_inclusion": index_signals,
     }
 
 
@@ -150,6 +160,15 @@ def build_signals_per_ticker(catalysts):
                 "details": c.get("description", "")[:80],
             })
         out[ts]["sources"].append("cohort")
+
+    for t, info in (catalysts.get("index_inclusion") or {}).items():
+        ts = _normalize(t)
+        out.setdefault(ts, {"signals": [], "company": "", "sources": []})
+        out[ts]["signals"].append({
+            "key": info.get("key", "index_inclusion"),
+            "details": info.get("details", ""),
+        })
+        out[ts]["sources"].append("index_inclusion")
 
     return out
 
@@ -776,12 +795,14 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
     forward_calendar = None
     try:
         watchlist_tickers = [c.get("ticker") for c in candidates[:60] if c.get("ticker")]
+        vix_level = (macro or {}).get("vix") if macro else None
         forward_calendar = build_forward_calendar(client, watchlist_tickers, days_ahead=5,
-                                                   target_date=scan_date_str)
+                                                   target_date=scan_date_str, vix_level=vix_level)
         if verbose:
             ec = (forward_calendar.get("earnings") or {}).get("on_watchlist_count", 0)
             mc = len(forward_calendar.get("macro_events") or [])
-            print(f"  forward calendar: {ec} watchlist earnings + {mc} macro events in 5d")
+            mt = len(forward_calendar.get("macro_trade_suggestions") or [])
+            print(f"  forward calendar: {ec} watchlist earnings + {mc} macro events ({mt} trade plays) in 5d")
     except Exception as e:
         if verbose:
             print(f"  forward calendar failed: {type(e).__name__}: {e}")

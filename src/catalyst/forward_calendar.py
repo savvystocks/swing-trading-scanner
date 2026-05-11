@@ -77,7 +77,61 @@ def get_earnings_this_week(client, watchlist_tickers=None, days_ahead=5, target_
     }
 
 
-def build_forward_calendar(client, watchlist_tickers=None, days_ahead=5, target_date=None):
+MACRO_TRADE_PLAYBOOK = {
+    "CPI release": {
+        "vehicles": ["QQQ", "SPY"],
+        "structure": "long straddle / iron condor depending on IV",
+        "dte_target": "0-3 days",
+        "rationale": "Inflation prints typically move SPY ±0.8-2%. Hot print = AI/growth sells off, cool = rip. Asymmetric on either side.",
+        "specific_strikes": "ATM weekly straddle if QQQ IV percentile < 50, otherwise 1-2% OTM strangle",
+    },
+    "FOMC decision": {
+        "vehicles": ["SPY", "TLT", "XLF"],
+        "structure": "straddle SPY + directional TLT (rate-sensitive)",
+        "dte_target": "0-7 days",
+        "rationale": "Powell pressers tend to whipsaw. SPY ±1.5% typical, TLT moves on dot plot shift. Bank sector follows yields.",
+        "specific_strikes": "ATM SPY weekly straddle, or 25-delta strangle for 2x premium",
+    },
+    "Non-farm payrolls": {
+        "vehicles": ["SPY", "TLT"],
+        "structure": "directional or fade",
+        "dte_target": "0-2 days",
+        "rationale": "Strong jobs = bond selloff (yields up, growth sells off), weak jobs = the reverse. SPY ±0.6-1.5% typical.",
+        "specific_strikes": "5-10% OTM directional based on whisper number",
+    },
+}
+
+
+def build_macro_trade_suggestions(macro_events, vix_level=None):
+    suggestions = []
+    for ev in macro_events:
+        label = ev.get("label", "")
+        playbook = MACRO_TRADE_PLAYBOOK.get(label)
+        if not playbook:
+            continue
+        urgency = "HIGH" if ev["days_until"] <= 1 else ("MEDIUM" if ev["days_until"] <= 3 else "LOW")
+        regime_note = ""
+        if vix_level:
+            if vix_level < 15:
+                regime_note = "VIX low — straddles are cheap, options market underpricing risk"
+            elif vix_level > 25:
+                regime_note = "VIX elevated — straddles expensive, prefer credit spreads"
+        suggestions.append({
+            "event": label,
+            "event_date": ev["date"],
+            "days_until": ev["days_until"],
+            "urgency": urgency,
+            "vehicles": playbook["vehicles"],
+            "structure": playbook["structure"],
+            "dte_target": playbook["dte_target"],
+            "rationale": playbook["rationale"],
+            "specific_strikes": playbook["specific_strikes"],
+            "regime_note": regime_note,
+        })
+    return suggestions
+
+
+def build_forward_calendar(client, watchlist_tickers=None, days_ahead=5, target_date=None, vix_level=None):
     today = datetime.utcnow().date()
     if target_date:
         if isinstance(target_date, str):
@@ -89,9 +143,11 @@ def build_forward_calendar(client, watchlist_tickers=None, days_ahead=5, target_
             today = target_date
     earnings_summary = get_earnings_this_week(client, watchlist_tickers, days_ahead, target_date)
     macro_events = get_macro_events_this_week(today, days_ahead)
+    macro_trades = build_macro_trade_suggestions(macro_events, vix_level=vix_level)
     return {
         "earnings": earnings_summary,
         "macro_events": macro_events,
+        "macro_trade_suggestions": macro_trades,
         "scan_date": today.strftime("%Y-%m-%d"),
         "days_ahead": days_ahead,
     }

@@ -3,6 +3,8 @@ CATALYST_TIERS = {
     "fda_pdufa_tomorrow": {"tier": "S", "points": 5.0, "label": "FDA PDUFA decision tomorrow", "direction": "bull", "event_timing": "scheduled_overnight"},
     "merger_cash_buyout": {"tier": "S", "points": 5.0, "label": "Cash buyout announced", "direction": "bull", "event_timing": "post_event"},
     "major_contract_win": {"tier": "S", "points": 5.0, "label": "Material contract win", "direction": "bull", "event_timing": "post_event"},
+    "index_inclusion": {"tier": "S", "points": 5.0, "label": "Index inclusion announced", "direction": "bull", "event_timing": "scheduled_overnight"},
+    "macro_event_high_impact": {"tier": "A", "points": 4.0, "label": "High-impact macro event within 3d (CPI/FOMC/jobs)", "direction": "neutral", "event_timing": "scheduled_overnight"},
 
     "earnings_bmo_tomorrow": {"tier": "A", "points": 4.0, "label": "Earnings tomorrow before open", "direction": "bull", "event_timing": "scheduled_overnight"},
     "earnings_amc_today": {"tier": "A", "points": 4.0, "label": "Earnings tonight after close", "direction": "bull", "event_timing": "scheduled_overnight"},

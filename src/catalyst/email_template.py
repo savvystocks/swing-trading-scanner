@@ -148,6 +148,22 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       {% if fc.macro_events %}&middot; {{ fc.macro_events|length }} macro: {% for m in fc.macro_events %}{{ m.label }} ({{ m.days_until }}d){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
       {% if ec.on_watchlist %}<br><strong>Watchlist earnings:</strong> {% for e in ec.on_watchlist[:10] %}{{ e.ticker }} ({{ e.report_date }}{% if e.before_after_market %} {{ e.before_after_market }}{% endif %}){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
     </div>
+    {% if fc.macro_trade_suggestions %}
+      <div style="background:#fef2f2; border:1px solid #c94545; border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:11px;">
+        <strong style="color:#7f1d1d; text-transform:uppercase; letter-spacing:0.4px;">Macro lottery plays this week</strong>
+        {% for m in fc.macro_trade_suggestions[:3] %}
+          {% set u_color = '#c94545' if m.urgency == 'HIGH' else '#e67e22' if m.urgency == 'MEDIUM' else '#4a90e2' %}
+          <div style="margin-top:6px; padding:6px 10px; background:#fff; border-left:4px solid {{ u_color }}; border-radius:3px;">
+            <strong>{{ m.event }}</strong> in <strong>{{ m.days_until }}d</strong> ({{ m.event_date }}) &middot;
+            <span style="display:inline-block; padding:1px 6px; border-radius:3px; background:{{ u_color }}; color:#fff; font-size:10px; font-weight:700;">{{ m.urgency }}</span>
+            <div style="margin-top:3px; color:#333;"><strong>Play:</strong> {{ m.vehicles|join(' / ') }} {{ m.structure }} &middot; <strong>DTE:</strong> {{ m.dte_target }}</div>
+            <div style="margin-top:2px; color:#555;"><strong>Strikes:</strong> {{ m.specific_strikes }}</div>
+            <div style="margin-top:2px; color:#666; font-style:italic;">{{ m.rationale }}</div>
+            {% if m.regime_note %}<div style="margin-top:2px; color:#7c2d12;"><strong>Regime:</strong> {{ m.regime_note }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
   {% endif %}
 
   <div class="intro" style="background:#dbeafe; border-color:#4a90e2;">

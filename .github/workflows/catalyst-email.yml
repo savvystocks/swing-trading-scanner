@@ -10,10 +10,10 @@ on:
   repository_dispatch:
     types: [run-catalyst-email]
   schedule:
-    # External cron-job.org POSTs run-catalyst-email at 14:30 UTC for SLA-
-    # reliable timing. GitHub schedule below is fallback only — historical
-    # 3-6h delay observed on free-tier crons makes it unsuitable as primary.
-    - cron: "30 14 * * 1-5"
+    # Email at 14:45 UTC = 15:45 BST = 75min after US summer open. Scan runs
+    # at 14:00 UTC, finishes ~14:21, factor screen ~14:30. Email picks up
+    # fresh JSON + applies opening-action gap boost via Alpaca live quotes.
+    - cron: "45 14 * * 1-5"
 
 jobs:
   email:

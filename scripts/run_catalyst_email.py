@@ -161,6 +161,14 @@ def main():
             print(f"Morning refresh failed (non-fatal): {type(e).__name__}: {e}")
             traceback.print_exc()
 
+        try:
+            print(f"Opening-action boost: fetching live Alpaca quotes for top 200 to score today's gaps...")
+            from src.catalyst.opening_action import apply_opening_action_boost
+            apply_opening_action_boost(scan, top_n=200, verbose=True)
+        except Exception as e:
+            print(f"Opening-action boost failed (non-fatal): {type(e).__name__}: {e}")
+            traceback.print_exc()
+
     print(f"Rendering catalyst email (live spot + options at send-time)...")
     html_main = render_catalyst_email(scan)
 

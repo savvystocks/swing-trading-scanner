@@ -13,10 +13,11 @@ on:
         default: ""
   repository_dispatch:
     types: [run-catalyst-scan]
-  # External cron-job.org POSTs run-catalyst-scan at 02:00 UTC for SLA-
-  # reliable timing. GitHub schedule below is fallback only.
+  # External cron-job.org POSTs run-catalyst-scan at 14:00 UTC (30 min after
+  # US summer open) so scan picks up today's opening action via Alpaca live
+  # quotes baked into morning_refresh. GitHub schedule is fallback only.
   schedule:
-    - cron: "0 2 * * 1-5"
+    - cron: "0 14 * * 1-5"
 
 jobs:
   scan:

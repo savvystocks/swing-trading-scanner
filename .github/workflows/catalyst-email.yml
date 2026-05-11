@@ -18,9 +18,9 @@ on:
 jobs:
   email:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 60
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,6 +28,36 @@ jobs:
           python-version: "3.11"
       - name: Install dependencies
         run: pip install -r requirements.txt
+      - name: Run catalyst scan if today's JSON is missing
+        env:
+          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SAM_GOV_API_KEY: ${{ secrets.SAM_GOV_API_KEY }}
+          SKIP_EMAIL: "1"
+          ACCOUNT_SIZE_USD: ${{ secrets.ACCOUNT_SIZE_USD }}
+          POSITION_SIZE_PCT: ${{ secrets.POSITION_SIZE_PCT }}
+          STOP_LOSS_PCT: ${{ secrets.STOP_LOSS_PCT }}
+          MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          if [ -f "data/results/catalyst_${TODAY}.json" ]; then
+            echo "Found data/results/catalyst_${TODAY}.json — skipping rescan"
+          else
+            echo "No catalyst_${TODAY}.json — running fresh scan"
+            python scripts/run_catalyst_scan.py
+          fi
+      - name: Run universe-wide factor screen if missing
+        if: always()
+        env:
+          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+        run: |
+          TODAY=$(date -u +%Y-%m-%d)
+          if [ ! -f "data/results/factor_screen_${TODAY}.json" ]; then
+            echo "No factor_screen_${TODAY}.json — running fresh"
+            python scripts/run_factor_universe_scan.py || true
+          fi
       - name: Render and send catalyst emails (live Alpaca chain at send-time)
         env:
           EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
@@ -44,6 +74,14 @@ jobs:
           STOP_LOSS_PCT: ${{ secrets.STOP_LOSS_PCT }}
           MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
         run: python scripts/run_catalyst_email.py
+      - name: Commit fresh scan + screen JSON
+        if: always()
+        run: |
+          git config user.name "catalyst-email-bot"
+          git config user.email "noreply@github.com"
+          git add -f data/results/catalyst_*.json data/results/factor_screen_*.json data/catalyst/predictions/ data/catalyst/history.json data/catalyst/paper_trades.json data/universe/factor_universe_mcap_cache.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "email-bot: fresh scan + screen JSON [skip ci]"
+          git push || true
       - name: Upload rendered HTML
         if: always()
         uses: actions/upload-artifact@v4

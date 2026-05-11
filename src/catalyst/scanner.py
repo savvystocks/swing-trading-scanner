@@ -29,6 +29,10 @@ from src.catalyst.forward_calendar import build_forward_calendar
 from src.catalyst.portfolio_context import (
     get_position_summary, yesterdays_lottery_followup, get_recent_paper_trade_stats,
 )
+from src.catalyst.post_earnings_drift import detect_post_earnings_drift, apply_ped_scoring
+from src.catalyst.analyst_changes import detect_analyst_changes, apply_analyst_scoring
+from src.catalyst.sympathy_detector import detect_sympathy_moves, apply_sympathy_scoring
+from src.catalyst.crypto_regime import fetch_crypto_regime, apply_crypto_regime_boost
 from src.catalyst.sam_gov import fetch_recent_contract_awards, map_awardees_to_tickers
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
@@ -592,6 +596,53 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         s["components"]["cross_confirmation"] = xconf
         s["score"] = round(s["score"] + xconf["points"], 2)
         s["cross_confirmation"] = xconf
+
+    try:
+        if verbose:
+            print(f"  post-earnings drift detection (5d lookback)...")
+        ped_signals = detect_post_earnings_drift(final_scored, lookback_days=5)
+        apply_ped_scoring(final_scored, ped_signals)
+        if verbose:
+            print(f"    {len(ped_signals)} names with post-earnings drift (beat + momentum)")
+    except Exception as e:
+        if verbose:
+            print(f"  post_earnings_drift failed: {type(e).__name__}: {e}")
+
+    try:
+        if verbose:
+            print(f"  analyst rating change detection...")
+        analyst_signals = detect_analyst_changes(final_scored)
+        apply_analyst_scoring(final_scored, analyst_signals)
+        if verbose:
+            print(f"    {len(analyst_signals)} names with bullish/bearish analyst consensus")
+    except Exception as e:
+        if verbose:
+            print(f"  analyst_changes failed: {type(e).__name__}: {e}")
+
+    try:
+        if verbose:
+            print(f"  sympathy / sector ripple detection (industry peers ≥+5%/5d)...")
+        sympathy_signals = detect_sympathy_moves(final_scored, min_peers_moved=2, peer_move_threshold=5.0)
+        apply_sympathy_scoring(final_scored, sympathy_signals)
+        if verbose:
+            print(f"    {len(sympathy_signals)} laggard names in sectors-on-the-move")
+    except Exception as e:
+        if verbose:
+            print(f"  sympathy_detector failed: {type(e).__name__}: {e}")
+
+    try:
+        if verbose:
+            print(f"  crypto regime detection (BTC/ETH momentum)...")
+        crypto_regime = fetch_crypto_regime(client)
+        from src.catalyst.cohorts import load_cohorts
+        cohorts_data = load_cohorts()
+        crypto_tickers = (cohorts_data.get("crypto_treasury") or {}).get("tickers", [])
+        apply_crypto_regime_boost(final_scored, crypto_regime, crypto_tickers)
+        if verbose:
+            print(f"    crypto regime: {crypto_regime['regime']} (BTC {crypto_regime.get('btc_7d_pct', 'n/a')}%/7d)")
+    except Exception as e:
+        if verbose:
+            print(f"  crypto_regime failed: {type(e).__name__}: {e}")
 
     if verbose:
         print(f"  annotating position-in-theme across all scored names...")

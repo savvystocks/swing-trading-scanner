@@ -51,8 +51,8 @@ UNIFIED_EMAIL_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
 <div class="wrap">
-  <h1>Catalyst Scanner v4 &mdash; {{ scan_date }}</h1>
-  <div class="meta">{{ total_picks }} qualifying picks (A++ {{ a_plus_plus_count }} &middot; A+ {{ a_plus_count }} &middot; A {{ a_count }}) &middot; {{ rejected_count }} rejected by gates &middot; universe {{ universe_size }}</div>
+  <h1>Micro &middot; Small &middot; Mid Cap Setups &mdash; {{ scan_date }}</h1>
+  <div class="meta">{{ total_picks }} A-grade picks across brackets (A++ {{ a_plus_plus_count }} &middot; A+ {{ a_plus_count }} &middot; A {{ a_count }}) &middot; {{ rejected_count }} rejected by gates &middot; universe {{ universe_size }}</div>
 
   {% if macro %}
     <div class="strip macro">
@@ -246,7 +246,7 @@ UNIFIED_EMAIL_TEMPLATE = """<!DOCTYPE html>
     </div>
   {% endif %}
 
-  <div class="footer">catalyst-scanner v4 elite &middot; bracket-routed · A-grade only · live Alpaca chain · Sonnet+web forensic · {{ scan_date }}</div>
+  <div class="footer">micro/small/mid bracket scanner &middot; A-grade only &middot; live Alpaca chain &middot; Sonnet+web on top pick &middot; {{ scan_date }}</div>
 </div>
 </body>
 </html>"""

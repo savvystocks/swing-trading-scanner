@@ -197,7 +197,7 @@ def main():
     email_sent = False
     try:
         a_count = len(aa_results.get("A++", [])) + len(aa_results.get("A+", [])) + len(aa_results.get("A", []))
-        subject = f"Catalyst Scanner v4 — {a_count} A-grade picks — {suffix}"
+        subject = f"Micro/Small/Mid Setups — {a_count} A-grade — {suffix}"
         send_email(html_main, suffix, subject=subject)
         print("Unified email sent")
         email_sent = True

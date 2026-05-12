@@ -992,28 +992,40 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         aa_results, aa_rejections = assign_tiers(bracketed_filtered, regime_info=regime_info, verbose=verbose)
 
         aa_picks = pick_top_per_bracket(aa_results, per_bracket=2)
-        forensic_targets = []
-        for bracket in ("micro", "small", "mid"):
-            forensic_targets.extend(aa_picks.get(bracket, []))
 
-        if forensic_targets:
+        top_pick = None
+        for tier in ("A++", "A+", "A"):
+            tier_list = aa_results.get(tier) or []
+            if tier_list:
+                top_pick = tier_list[0]
+                break
+
+        if top_pick:
             if verbose:
-                est_cost = len(forensic_targets) * 1.5
-                print(f"  unified_forensic: 1 Sonnet+web call per A-grade pick ({len(forensic_targets)} picks, est ~${est_cost:.2f})")
+                print(f"  unified_forensic: 1 Sonnet+web call on TOP PICK ({top_pick['ticker']} — {top_pick.get('_aa_tier')}) ~$1.50")
             try:
-                apply_unified_forensic(forensic_targets, max_calls=6, verbose=verbose)
+                apply_unified_forensic([top_pick], max_calls=1, verbose=verbose)
             except Exception as e:
                 if verbose:
                     print(f"  unified_forensic failed (non-fatal): {type(e).__name__}: {e}")
-
             try:
-                apply_pre_mortem(forensic_targets, verbose=verbose)
+                apply_pre_mortem([top_pick], verbose=verbose)
             except Exception as e:
                 if verbose:
                     print(f"  pre_mortem failed: {type(e).__name__}: {e}")
         else:
             if verbose:
-                print(f"  unified_forensic: SKIPPED — 0 A-grade picks, no Sonnet+web spend")
+                print(f"  unified_forensic: SKIPPED — 0 A-grade picks, no Sonnet+web spend (£0)")
+
+        all_picks_flat = []
+        for bracket in ("micro", "small", "mid"):
+            all_picks_flat.extend(aa_picks.get(bracket, []))
+        for s in all_picks_flat:
+            if s.get("pre_mortem") is None:
+                try:
+                    apply_pre_mortem([s], verbose=False)
+                except Exception:
+                    pass
         if verbose:
             total = sum(len(v) for v in aa_picks.values())
             print(f"=== V4 OUTPUT: {total} A-grade picks (A++ {len(aa_results['A++'])}, A+ {len(aa_results['A+'])}, A {len(aa_results['A'])}) ===")

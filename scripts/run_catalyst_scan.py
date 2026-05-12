@@ -58,7 +58,7 @@ def main():
     email_sent = False
     try:
         a_count = len(aa_results.get("A++", [])) + len(aa_results.get("A+", [])) + len(aa_results.get("A", []))
-        send_email(html_main, scan["scan_date"], subject=f"Catalyst Scanner v4 — {a_count} A-grade picks — {scan['scan_date']}")
+        send_email(html_main, scan["scan_date"], subject=f"Micro/Small/Mid Setups — {a_count} A-grade — {scan['scan_date']}")
         print("Unified email sent")
         email_sent = True
     except Exception as e:

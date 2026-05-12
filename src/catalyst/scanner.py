@@ -51,7 +51,7 @@ from src.catalyst.aa_gates import assign_tiers, pick_top_per_bracket
 from src.catalyst.analog_statistician import apply_analog_validation
 from src.catalyst.counter_thesis import apply_counter_thesis
 from src.catalyst.pre_mortem import apply_pre_mortem
-from src.catalyst.unified_forensic import apply_unified_forensic
+from src.catalyst.unified_forensic import apply_unified_forensic, apply_haiku_synthesis
 from src.catalyst.sam_gov import fetch_recent_contract_awards, map_awardees_to_tickers
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
@@ -993,12 +993,13 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
         aa_picks = pick_top_per_bracket(aa_results, per_bracket=2)
 
-        top_pick = None
+        ranked_picks = []
         for tier in ("A++", "A+", "A"):
-            tier_list = aa_results.get(tier) or []
-            if tier_list:
-                top_pick = tier_list[0]
-                break
+            for s in aa_results.get(tier) or []:
+                ranked_picks.append(s)
+
+        top_pick = ranked_picks[0] if ranked_picks else None
+        haiku_targets = ranked_picks[1:4]
 
         if top_pick:
             if verbose:
@@ -1008,24 +1009,29 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             except Exception as e:
                 if verbose:
                     print(f"  unified_forensic failed (non-fatal): {type(e).__name__}: {e}")
-            try:
-                apply_pre_mortem([top_pick], verbose=verbose)
-            except Exception as e:
-                if verbose:
-                    print(f"  pre_mortem failed: {type(e).__name__}: {e}")
         else:
             if verbose:
                 print(f"  unified_forensic: SKIPPED — 0 A-grade picks, no Sonnet+web spend (£0)")
+
+        if haiku_targets:
+            if verbose:
+                est_cost = len(haiku_targets) * 0.05
+                tickers = [p.get("ticker") for p in haiku_targets]
+                print(f"  haiku_synthesis: {len(haiku_targets)} Haiku calls on next picks ({', '.join(tickers)}) ~${est_cost:.2f}")
+            try:
+                apply_haiku_synthesis(haiku_targets, max_calls=3, verbose=verbose)
+            except Exception as e:
+                if verbose:
+                    print(f"  haiku_synthesis failed (non-fatal): {type(e).__name__}: {e}")
 
         all_picks_flat = []
         for bracket in ("micro", "small", "mid"):
             all_picks_flat.extend(aa_picks.get(bracket, []))
         for s in all_picks_flat:
-            if s.get("pre_mortem") is None:
-                try:
-                    apply_pre_mortem([s], verbose=False)
-                except Exception:
-                    pass
+            try:
+                apply_pre_mortem([s], verbose=False)
+            except Exception:
+                pass
         if verbose:
             total = sum(len(v) for v in aa_picks.values())
             print(f"=== V4 OUTPUT: {total} A-grade picks (A++ {len(aa_results['A++'])}, A+ {len(aa_results['A+'])}, A {len(aa_results['A'])}) ===")

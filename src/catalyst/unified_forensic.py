@@ -12,6 +12,7 @@ except ImportError:
 
 FORENSIC_MODEL = os.environ.get("FORENSIC_MODEL", "claude-sonnet-4-6")
 FORENSIC_SLEEP = int(os.environ.get("FORENSIC_SLEEP", "65"))
+HAIKU_MODEL = os.environ.get("HAIKU_FORENSIC_MODEL", "claude-haiku-4-5")
 
 
 FORENSIC_SYSTEM = """You are a quantitative analyst producing the COMPLETE forensic report for a trade about to be executed. ONE call, COMPLETE output. The trader is sizing $400-2,000 in lottery options targeting 200-500% in 14-45 days.
@@ -193,6 +194,116 @@ def apply_unified_forensic(picks, max_calls=6, verbose=False):
             total_cost += result.get("_cost_usd", 0)
     if verbose:
         print(f"  unified_forensic: {enriched} picks researched, total cost ~${total_cost:.2f}")
+    return picks
+
+
+HAIKU_SYSTEM = """You are a quantitative analyst writing a SHORT forensic synthesis for a trade candidate. You don't have web search — synthesize from the data provided. The trader is sizing a lottery option targeting 200-500% in 14-45 days.
+
+Output STRICTLY this JSON (no preamble, no markdown):
+{
+  "verdict": "STRONG_BUY|BUY|HOLD|SKIP",
+  "confidence_pct": 0-100,
+  "bull_thesis": "2-3 sentences",
+  "bear_thesis": "2-3 sentences ruthless counter-case",
+  "what_kills_this_trade": "1 sentence — single most likely failure mode",
+  "warning_signs": ["sign 1", "sign 2"],
+  "synthesis_note": "100-150 word summary",
+  "red_flags_found": ["specific flag 1", "specific flag 2"]
+}
+
+Be ruthless on the bear case. No analog research (you don't have web access)."""
+
+
+def _build_haiku_prompt(candidate):
+    cats = candidate.get("catalysts") or []
+    cat_lines = [f"- [{c.get('tier','?')}] {c.get('label','')}: {c.get('details','')[:120]}" for c in cats[:5]]
+    sm = candidate.get("_smart_money_signals") or []
+    landmines = candidate.get("_landmine_flags") or []
+    landmine_lines = [f"- {f['severity']}: {f['label']}" for f in landmines]
+    iv_data = candidate.get("iv_percentile_analysis") or {}
+    options_check = candidate.get("options_check") or {}
+    peer = candidate.get("peer_benchmark") or {}
+    insider = candidate.get("insider_depth") or {}
+
+    return f"""Ticker: {candidate['ticker']} ({candidate.get('name','')})
+Bracket: {candidate.get('bracket','?')} (${(candidate.get('market_cap') or 0)/1e9:.2f}B)
+Sector: {candidate.get('sector','')} / Industry: {candidate.get('industry','')}
+Price: ${candidate.get('price', 0):.2f}
+Stacked categories: {candidate.get('_category_count', 0)}
+AA tier: {candidate.get('_aa_tier', 'unknown')}
+
+CATALYSTS:
+{chr(10).join(cat_lines) if cat_lines else '(none)'}
+
+SMART MONEY: {', '.join(sm) or 'none'}
+INSIDER: {insider.get('buyer_count', 0)} buyers, ${insider.get('total_value_usd', 0)/1000:.0f}k, CEO/CFO: {insider.get('ceo_or_cfo_bought', False)}
+
+OPTIONS: implied {options_check.get('implied_move_1d_pct', '?')}% · IV pctile {iv_data.get('iv_percentile', '?')} · regime {(iv_data.get('interpretation') or {}).get('regime', '?')}
+
+TECHNICAL: 5d {candidate.get('ret_5d', '?')}% · 30d {candidate.get('ret_30d', '?')}% · above50dMA {candidate.get('above_50dma', '?')} · above200dMA {candidate.get('above_200dma', '?')}
+
+PEER PERCENTILE: growth {peer.get('growth_percentile_avg', '?')} · quality {peer.get('quality_percentile_avg', '?')}
+
+LANDMINES:
+{chr(10).join(landmine_lines) if landmine_lines else '(none)'}
+
+Write the SHORT forensic synthesis. Bull + bear + what kills it. JSON only."""
+
+
+def synthesize_haiku(candidate, verbose=False):
+    if not ANTHROPIC_AVAILABLE or not os.environ.get("ANTHROPIC_API_KEY"):
+        return None
+    client = anthropic.Anthropic()
+    try:
+        response = client.messages.create(
+            model=HAIKU_MODEL,
+            max_tokens=1500,
+            system=HAIKU_SYSTEM,
+            messages=[{"role": "user", "content": _build_haiku_prompt(candidate)}],
+        )
+        text = "".join(b.text for b in response.content if b.type == "text").strip()
+        data = _extract_json(text)
+        if data:
+            data["_input_tokens"] = response.usage.input_tokens
+            data["_output_tokens"] = response.usage.output_tokens
+            data["_cost_usd"] = (response.usage.input_tokens * 1.0 + response.usage.output_tokens * 5.0) / 1_000_000
+            data["_model"] = "haiku"
+        return data
+    except Exception as e:
+        if verbose:
+            print(f"    haiku_synthesis failed for {candidate.get('ticker')}: {type(e).__name__}: {e}")
+        return None
+
+
+def apply_haiku_synthesis(picks, max_calls=3, verbose=False):
+    if not picks:
+        return picks
+    enriched = 0
+    total_cost = 0.0
+    for i, pick in enumerate(picks[:max_calls]):
+        ticker = pick.get("ticker")
+        if verbose:
+            print(f"    [haiku {i+1}/{min(max_calls, len(picks))}] {ticker}...")
+        result = synthesize_haiku(pick, verbose=verbose)
+        if result:
+            pick["haiku_synthesis"] = result
+            pick["deep_research"] = pick.get("deep_research") or {
+                "verdict": result.get("verdict", "HOLD"),
+                "confidence_pct": result.get("confidence_pct", 50),
+                "research_note": result.get("synthesis_note", ""),
+                "reason_to_buy": result.get("bull_thesis", ""),
+                "reason_to_avoid": result.get("bear_thesis", ""),
+            }
+            pick["counter_thesis"] = pick.get("counter_thesis") or {
+                "bear_thesis": result.get("bear_thesis", ""),
+                "what_kills_this_trade": result.get("what_kills_this_trade", ""),
+                "warning_signs_to_watch": result.get("warning_signs") or [],
+                "verdict_on_bull_thesis": "STRONG" if result.get("verdict") in ("STRONG_BUY", "BUY") else "WEAK",
+            }
+            enriched += 1
+            total_cost += result.get("_cost_usd", 0)
+    if verbose:
+        print(f"  haiku_synthesis: {enriched} picks synthesized, total cost ~${total_cost:.3f}")
     return picks
 
 

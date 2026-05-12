@@ -426,6 +426,51 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         s["eodhd_ticker"] = data.get("eodhd_ticker")
         s["news"] = None
         s["_enriched_data"] = data
+        s["_raw_fundamentals"] = data.get("fundamentals") or {}
+        s["above_50dma"] = None
+        s["above_200dma"] = data.get("above_200dma")
+        df = data.get("df")
+        try:
+            if df is not None and len(df) >= 5:
+                close = df["close"]
+                last = float(close.iloc[-1])
+                if len(close) >= 6:
+                    p5 = float(close.iloc[-6])
+                    if p5 > 0:
+                        s["ret_5d"] = round((last - p5) / p5 * 100, 2)
+                if len(close) >= 31:
+                    p30 = float(close.iloc[-31])
+                    if p30 > 0:
+                        s["ret_30d"] = round((last - p30) / p30 * 100, 2)
+                if len(close) >= 91:
+                    p90 = float(close.iloc[-91])
+                    if p90 > 0:
+                        s["ret_90d"] = round((last - p90) / p90 * 100, 2)
+                if len(close) >= 50:
+                    sma50 = float(close.iloc[-50:].mean())
+                    if sma50 > 0:
+                        s["pct_above_50dma"] = round((last - sma50) / sma50 * 100, 2)
+                        s["above_50dma"] = last > sma50
+                if len(close) >= 200:
+                    sma200 = float(close.iloc[-200:].mean())
+                    if sma200 > 0:
+                        s["pct_above_200dma"] = round((last - sma200) / sma200 * 100, 2)
+                if len(close) >= 252:
+                    low_52w = float(close.iloc[-252:].min())
+                    if low_52w > 0:
+                        s["pct_off_52w_low"] = round((last - low_52w) / low_52w * 100, 2)
+        except Exception:
+            pass
+        try:
+            fund = data.get("fundamentals") or {}
+            earnings = fund.get("Earnings") or {}
+            history = earnings.get("History") or {}
+            if isinstance(history, dict):
+                s["earnings_history"] = sorted(list(history.values()), key=lambda x: x.get("reportDate") or "", reverse=True)[:8]
+            elif isinstance(history, list):
+                s["earnings_history"] = history[:8]
+        except Exception:
+            pass
         catalysts_full = s["components"]["catalyst_quality"].get("catalysts_full") or []
         timing_pts = timing_bonus(catalysts_full, data.get("drift"))
         s["components"]["timing"] = timing_pts

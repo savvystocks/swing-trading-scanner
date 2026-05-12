@@ -50,6 +50,7 @@ from src.catalyst.news_tiering import enrich_news_quality
 from src.catalyst.aa_gates import assign_tiers, pick_top_per_bracket
 from src.catalyst.pre_mortem import apply_pre_mortem
 from src.catalyst.unified_forensic import apply_unified_forensic, apply_haiku_synthesis
+from src.catalyst.v4_paper_log import log_picks as log_v4_picks, measure_outcomes as measure_v4_outcomes, get_v4_stats
 from src.catalyst.sam_gov import fetch_recent_contract_awards, map_awardees_to_tickers
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
@@ -854,6 +855,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
     aa_picks = None
     aa_rejections = []
     regime_info = None
+    v4_stats = None
     try:
         if verbose:
             print(f"=== V4 ELITE PIPELINE: bracket routing → A-only gates ===")
@@ -945,6 +947,30 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 apply_pre_mortem([s], verbose=False)
             except Exception:
                 pass
+
+        try:
+            log_v4_picks(scan_date_str, ranked_picks, top_pick=top_pick, haiku_picks=haiku_targets, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  v4_paper_log log failed: {type(e).__name__}: {e}")
+
+        try:
+            measure_v4_outcomes(client, target_date=scan_date_str, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  v4_paper_log measure failed: {type(e).__name__}: {e}")
+
+        try:
+            v4_stats = get_v4_stats(days_back=30)
+            if verbose and v4_stats:
+                print(f"  v4 paper log (30d): {v4_stats.get('total_picks_measured', 0)} measured")
+                for rank, summary in (v4_stats.get('by_rank') or {}).items():
+                    if summary:
+                        print(f"    rank #{rank}: {summary['n']} picks, t1 win {summary['win_rate_t1_pct']}%, avg best {summary['avg_best_pct']}%")
+        except Exception as e:
+            v4_stats = None
+            if verbose:
+                print(f"  v4_paper_log get_stats failed: {type(e).__name__}: {e}")
         if verbose:
             total = sum(len(v) for v in aa_picks.values())
             print(f"=== V4 OUTPUT: {total} A-grade picks (A++ {len(aa_results['A++'])}, A+ {len(aa_results['A+'])}, A {len(aa_results['A'])}) ===")
@@ -978,6 +1004,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         "aa_picks": aa_picks,
         "aa_rejections": aa_rejections,
         "vol_regime_info": regime_info,
+        "v4_stats": v4_stats,
         "eodhd_calls": client.calls_made,
         "edgar_calls": edgar.calls_made,
         "llm_graded": len(llm_grades),

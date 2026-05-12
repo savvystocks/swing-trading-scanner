@@ -76,10 +76,22 @@ UNIFIED_EMAIL_TEMPLATE = """<!DOCTYPE html>
     </div>
   {% endif %}
 
-  {% if win_rate_stats %}
+  {% if v4_stats and v4_stats.total_picks_measured > 0 %}
+    {% set vs = v4_stats %}
+    <div class="strip winrate">
+      <strong>v4 paper log (last {{ vs.days_back }}d, {{ vs.total_picks_measured }} measured):</strong>
+      {% for rank in [1, 2, 3] %}
+        {% set s = vs.by_rank.get(rank) %}
+        {% if s %}
+          rank #{{ rank }} ({{ s.n }}): T1 <strong>{{ s.win_rate_t1_pct }}%</strong> &middot; T2 <strong>{{ s.win_rate_t2_pct }}%</strong> &middot; stop {{ s.stop_rate_pct }}% &middot; avg best <span class="badge-good">{{ "%+.1f"|format(s.avg_best_pct) }}%</span>{% if not loop.last %}<br>{% endif %}
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% elif win_rate_stats %}
     {% set ws = win_rate_stats %}
     <div class="strip winrate">
-      <strong>Last 30d:</strong> {{ ws.win_rate_pct }}% win &middot; {{ ws.n_wins }}W / {{ ws.n_losses }}L of {{ ws.n_trades }} &middot; avg {{ "%+.2f"|format(ws.avg_pnl_pct) }}% &middot; best <span class="badge-good">{{ "%+.1f"|format(ws.best_pct) }}%</span> &middot; worst <span class="badge-bad">{{ "%+.1f"|format(ws.worst_pct) }}%</span>
+      <strong>Legacy paper log (30d):</strong> {{ ws.win_rate_pct }}% win &middot; {{ ws.n_wins }}W / {{ ws.n_losses }}L of {{ ws.n_trades }} &middot; avg {{ "%+.2f"|format(ws.avg_pnl_pct) }}%
+      <br><em>v4 paper log will populate after first 30 days of new picks accumulate outcomes</em>
     </div>
   {% endif %}
 
@@ -334,6 +346,7 @@ def render_unified_email(scan, tier_results, picks_by_bracket, rejection_log, re
         macro=scan.get("macro"),
         portfolio_summary=portfolio_summary,
         win_rate_stats=win_rate_stats,
+        v4_stats=scan.get("v4_stats"),
         forward_calendar=scan.get("forward_calendar"),
         vol_regime=regime_info,
         execution_context=execution_ctx,

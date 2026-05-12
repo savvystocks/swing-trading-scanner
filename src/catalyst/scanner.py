@@ -51,6 +51,7 @@ from src.catalyst.aa_gates import assign_tiers, pick_top_per_bracket
 from src.catalyst.analog_statistician import apply_analog_validation
 from src.catalyst.counter_thesis import apply_counter_thesis
 from src.catalyst.pre_mortem import apply_pre_mortem
+from src.catalyst.unified_forensic import apply_unified_forensic
 from src.catalyst.sam_gov import fetch_recent_contract_awards, map_awardees_to_tickers
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
@@ -302,7 +303,7 @@ def enrich_ticker(client, ticker_short, signals, suffix_hint=None, fetch_news=Fa
 
 
 def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
-                       news_max_fetch=150, llm_max_grade=50, deep_research_max=5,
+                       news_max_fetch=150, llm_max_grade=50, deep_research_max=0,
                        insider_max_fetch=80, options_max_fetch=30, min_base_pts=2.0, verbose=True):
     client = EODHDClient()
     edgar = EDGARClient()
@@ -988,28 +989,31 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             if verbose:
                 print(f"  options_market_critic failed: {type(e).__name__}: {e}")
 
-        try:
-            apply_analog_validation(top_candidates_for_research, max_calls=10, verbose=verbose)
-        except Exception as e:
-            if verbose:
-                print(f"  analog_validation failed (non-fatal): {type(e).__name__}: {e}")
-
         aa_results, aa_rejections = assign_tiers(bracketed_filtered, regime_info=regime_info, verbose=verbose)
 
-        a_grade_top = aa_results["A++"] + aa_results["A+"] + aa_results["A"]
-        try:
-            apply_counter_thesis(a_grade_top, max_calls=6, verbose=verbose)
-        except Exception as e:
-            if verbose:
-                print(f"  counter_thesis failed: {type(e).__name__}: {e}")
-
-        try:
-            apply_pre_mortem(a_grade_top, verbose=verbose)
-        except Exception as e:
-            if verbose:
-                print(f"  pre_mortem failed: {type(e).__name__}: {e}")
-
         aa_picks = pick_top_per_bracket(aa_results, per_bracket=2)
+        forensic_targets = []
+        for bracket in ("micro", "small", "mid"):
+            forensic_targets.extend(aa_picks.get(bracket, []))
+
+        if forensic_targets:
+            if verbose:
+                est_cost = len(forensic_targets) * 1.5
+                print(f"  unified_forensic: 1 Sonnet+web call per A-grade pick ({len(forensic_targets)} picks, est ~${est_cost:.2f})")
+            try:
+                apply_unified_forensic(forensic_targets, max_calls=6, verbose=verbose)
+            except Exception as e:
+                if verbose:
+                    print(f"  unified_forensic failed (non-fatal): {type(e).__name__}: {e}")
+
+            try:
+                apply_pre_mortem(forensic_targets, verbose=verbose)
+            except Exception as e:
+                if verbose:
+                    print(f"  pre_mortem failed: {type(e).__name__}: {e}")
+        else:
+            if verbose:
+                print(f"  unified_forensic: SKIPPED — 0 A-grade picks, no Sonnet+web spend")
         if verbose:
             total = sum(len(v) for v in aa_picks.values())
             print(f"=== V4 OUTPUT: {total} A-grade picks (A++ {len(aa_results['A++'])}, A+ {len(aa_results['A+'])}, A {len(aa_results['A'])}) ===")

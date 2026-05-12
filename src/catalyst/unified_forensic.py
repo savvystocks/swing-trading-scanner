@@ -1,0 +1,217 @@
+import os
+import json
+import time
+
+
+try:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+
+
+FORENSIC_MODEL = os.environ.get("FORENSIC_MODEL", "claude-sonnet-4-6")
+FORENSIC_SLEEP = int(os.environ.get("FORENSIC_SLEEP", "65"))
+
+
+FORENSIC_SYSTEM = """You are a quantitative analyst producing the COMPLETE forensic report for a trade about to be executed. ONE call, COMPLETE output. The trader is sizing $400-2,000 in lottery options targeting 200-500% in 14-45 days.
+
+You will receive: ticker, fundamentals snapshot, catalyst stack, smart money signals, technical setup, options market data.
+
+Use web_search aggressively to:
+1. VERIFY the catalyst is real (primary source: company IR, SEC filing, news)
+2. Find 5-7 HISTORICAL ANALOGS from last 24 months — same sector, same mcap bracket, same catalyst type, same signal stack
+3. Compute statistics on analog outcomes (win rate, median move, drawdown)
+4. Identify the BEAR thesis — what kills this trade
+5. Read tone of recent earnings calls if available
+6. Cross-check options market positioning (call sweeps, skew, IV vs realized)
+
+Output STRICTLY this JSON (no preamble, no markdown):
+{
+  "verdict": "STRONG_BUY|BUY|HOLD|SKIP",
+  "confidence_pct": 0-100,
+  "catalyst_verified": true|false,
+  "catalyst_status": {
+    "status": "HAPPENED|SCHEDULED|RUMORED|EXPECTED",
+    "event_date": "YYYY-MM-DD or null",
+    "days_until": -2 or 7 or null,
+    "countdown_label": "in 3d AMC" or "happened yesterday",
+    "verified_via": "8-K / IR page / Reuters / etc."
+  },
+  "bull_thesis": "3 sentences with cited evidence",
+  "bear_thesis": "3 sentences ruthless counter-case",
+  "what_kills_this_trade": "single most likely failure mode",
+  "warning_signs": ["sign 1", "sign 2", "sign 3"],
+  "analogs": {
+    "n_found": 5,
+    "list": [
+      {"ticker": "ABCD", "date": "2025-08-15", "catalyst": "1-line", "next_day_pct": 14, "one_week_pct": 22, "note": "1-line"}
+    ],
+    "stats": {
+      "win_rate_next_day_pct": 67,
+      "median_next_day_pct": 12.5,
+      "p25_next_day_pct": 4,
+      "p75_next_day_pct": 22,
+      "worst_outcome_pct": -8
+    }
+  },
+  "expected_move": {
+    "if_positive_pct": 14,
+    "if_negative_pct": -8,
+    "expected_value_pct": 8
+  },
+  "options_market_read": {
+    "implied_move_pct": 12,
+    "analog_median_pct": 14,
+    "edge_label": "MARKET_UNDERPRICING|FAIRLY_PRICED|MARKET_OVERPRICING",
+    "iv_assessment": "COMPRESSED|FAIR|ELEVATED|PEAK",
+    "smart_money_positioning": "1 sentence on call/put flow"
+  },
+  "lottery_thesis": {
+    "best_strike_otm_pct": 5,
+    "best_dte_days": 21,
+    "expected_premium_target_move_pct": 12,
+    "thesis_paragraph": "Buy 21-DTE 5% OTM. Catalyst on DATE. Win prob X% based on Y analogs. Target +Z% premium ROI. Stop -50%. Risk: NEGATIVE_OUTCOME."
+  },
+  "pre_mortem_paragraph": "If this fails, the reason will be X. Specific warning signs to watch in first 48 hours.",
+  "research_note": "180-300 word synthesis with specific facts, analog reads, and verdict reasoning",
+  "red_flags_found": ["specific flag 1", "specific flag 2"]
+}
+
+Be ruthless on the bear case. Bull theses are easy. Bear theses save accounts. If you cannot find 5+ analogs, set verdict to HOLD or SKIP and explain why in research_note."""
+
+
+def _build_user_prompt(candidate):
+    cats = candidate.get("catalysts") or []
+    cat_lines = [f"- [{c.get('tier','?')}] {c.get('label','')}: {c.get('details','')[:120]}" for c in cats[:5]]
+    sm = candidate.get("_smart_money_signals") or []
+    landmines = candidate.get("_landmine_flags") or []
+    landmine_lines = [f"- {f['severity']}: {f['label']}" for f in landmines]
+    iv_data = candidate.get("iv_percentile_analysis") or {}
+    options_check = candidate.get("options_check") or {}
+    peer = candidate.get("peer_benchmark") or {}
+    insider = candidate.get("insider_depth") or {}
+
+    return f"""Ticker: {candidate['ticker']} ({candidate.get('name','')})
+Bracket: {candidate.get('bracket','?')} (${(candidate.get('market_cap') or 0)/1e9:.2f}B mcap)
+Sector: {candidate.get('sector','')} / Industry: {candidate.get('industry','')}
+Price: ${candidate.get('price', 0):.2f}
+Stacked categories: {candidate.get('_category_count', 0)} ({', '.join(candidate.get('_active_categories') or [])})
+Proposed AA tier: {candidate.get('_aa_tier', 'unknown')}
+
+CATALYSTS:
+{chr(10).join(cat_lines) if cat_lines else '(none)'}
+
+SMART MONEY: {', '.join(sm) or 'none detected'}
+INSIDER DEPTH: {insider.get('buyer_count', 0)} buyers, ${insider.get('total_value_usd', 0)/1000:.0f}k, CEO/CFO bought: {insider.get('ceo_or_cfo_bought', False)}
+
+OPTIONS MARKET:
+Implied 1d move: {options_check.get('implied_move_1d_pct', '?')}%
+IV percentile: {iv_data.get('iv_percentile', '?')}
+IV regime: {(iv_data.get('interpretation') or {}).get('regime', '?')}
+Realized vol 30d: {iv_data.get('realized_vol_30d', '?')}%
+
+TECHNICAL:
+Return 5d: {candidate.get('ret_5d', '?')}% / 30d: {candidate.get('ret_30d', '?')}% / 90d: {candidate.get('ret_90d', '?')}%
+Above 50dMA: {candidate.get('above_50dma', '?')} / Above 200dMA: {candidate.get('above_200dma', '?')}
+Distance above 50dMA: {candidate.get('pct_above_50dma', '?')}%
+
+PEER BENCHMARKS:
+Growth percentile: {peer.get('growth_percentile_avg', '?')} / Quality percentile: {peer.get('quality_percentile_avg', '?')}
+
+LANDMINES:
+{chr(10).join(landmine_lines) if landmine_lines else '(none detected)'}
+
+Produce the complete forensic report. Find 5-7 analogs via web_search. Verify catalyst from primary source. Write ruthless bear case. Output STRICT JSON only."""
+
+
+def research_unified(candidate, verbose=False):
+    if not ANTHROPIC_AVAILABLE or not os.environ.get("ANTHROPIC_API_KEY"):
+        return None
+    client = anthropic.Anthropic()
+    try:
+        response = client.messages.create(
+            model=FORENSIC_MODEL,
+            max_tokens=4000,
+            system=FORENSIC_SYSTEM,
+            messages=[{"role": "user", "content": _build_user_prompt(candidate)}],
+            tools=[{"type": "web_search_20250305", "name": "web_search"}],
+        )
+        text = "".join(b.text for b in response.content if b.type == "text").strip()
+        data = _extract_json(text)
+        if data:
+            data["_input_tokens"] = response.usage.input_tokens
+            data["_output_tokens"] = response.usage.output_tokens
+            data["_cost_usd"] = (response.usage.input_tokens * 3.0 + response.usage.output_tokens * 15.0) / 1_000_000
+        return data
+    except Exception as e:
+        if verbose:
+            print(f"    unified_forensic failed for {candidate.get('ticker')}: {type(e).__name__}: {e}")
+        return None
+
+
+def apply_unified_forensic(picks, max_calls=6, verbose=False):
+    if not picks:
+        return picks
+    enriched = 0
+    total_cost = 0.0
+    for i, pick in enumerate(picks[:max_calls]):
+        if i > 0 and FORENSIC_SLEEP > 0:
+            time.sleep(FORENSIC_SLEEP)
+        ticker = pick.get("ticker")
+        if verbose:
+            print(f"    [forensic {i+1}/{min(max_calls, len(picks))}] {ticker}...")
+        result = research_unified(pick, verbose=verbose)
+        if result:
+            pick["unified_forensic"] = result
+            pick["deep_research"] = {
+                "verdict": result.get("verdict", "HOLD"),
+                "confidence_pct": result.get("confidence_pct", 50),
+                "research_note": result.get("research_note", ""),
+                "reason_to_buy": result.get("bull_thesis", ""),
+                "reason_to_avoid": result.get("bear_thesis", ""),
+                "catalyst_status": result.get("catalyst_status") or {},
+                "expected_move": result.get("expected_move") or {},
+                "lottery_thesis": result.get("lottery_thesis") or {},
+            }
+            analogs_block = result.get("analogs") or {}
+            pick["analog_set"] = {
+                "analogs": analogs_block.get("list") or [],
+                "statistics": {
+                    "n_analogs": analogs_block.get("n_found", 0),
+                    **(analogs_block.get("stats") or {}),
+                },
+                "summary": "",
+            }
+            pick["counter_thesis"] = {
+                "bear_thesis": result.get("bear_thesis", ""),
+                "what_kills_this_trade": result.get("what_kills_this_trade", ""),
+                "warning_signs_to_watch": result.get("warning_signs") or [],
+                "verdict_on_bull_thesis": "STRONG" if result.get("verdict") in ("STRONG_BUY", "BUY") else "WEAK",
+            }
+            enriched += 1
+            total_cost += result.get("_cost_usd", 0)
+    if verbose:
+        print(f"  unified_forensic: {enriched} picks researched, total cost ~${total_cost:.2f}")
+    return picks
+
+
+def _extract_json(text):
+    if not text:
+        return None
+    text = text.strip()
+    if text.startswith("```"):
+        parts = text.split("```")
+        if len(parts) >= 2:
+            text = parts[1]
+            if text.startswith("json"):
+                text = text[4:]
+            text = text.strip()
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1:
+        return None
+    try:
+        return json.loads(text[start:end + 1])
+    except json.JSONDecodeError:
+        return None

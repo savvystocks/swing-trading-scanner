@@ -29,7 +29,8 @@ def count_active_categories(candidate):
     if (insider_depth.get("buyer_count") or 0) >= 3 or "insider_cluster" in smart_money:
         active.add("insider")
 
-    if "13f_accumulation" in smart_money:
+    pct_inst = candidate.get("pct_inst_held")
+    if "13f_accumulation" in smart_money or (pct_inst is not None and pct_inst >= 75):
         active.add("institutional")
 
     if "options_flow_bullish" in smart_money or options_flow.get("sentiment") == "BULLISH":

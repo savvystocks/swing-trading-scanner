@@ -42,17 +42,16 @@ def map_sector_to_etf(sector_or_industry):
 def evaluate_sector_rotation(snapshot, candidate):
     sector = candidate.get("sector") or ""
     industry = candidate.get("industry") or ""
-    etf_symbol = map_sector_to_etf(sector) or map_sector_to_etf(industry)
+    etf_symbol = map_sector_to_etf(industry) or map_sector_to_etf(sector)
     if not etf_symbol:
-        return {"verdict": "UNKNOWN", "reason": "no sector ETF mapping"}
+        return {"verdict": "NEUTRAL", "reason": "no sector ETF mapping (treating as neutral)"}
     etf_data = None
-    for k in ("semis_etf", "biotech_etf", "regional_banks_etf", "small_cap_etf", "russell_growth_etf", "qqq", "spy"):
-        d = snapshot.get(k)
-        if d and d.get("ticker") == etf_symbol:
+    for k, d in (snapshot or {}).items():
+        if d and isinstance(d, dict) and d.get("ticker") == etf_symbol:
             etf_data = d
             break
     if not etf_data:
-        return {"verdict": "UNKNOWN", "reason": f"{etf_symbol} not in macro snapshot"}
+        return {"verdict": "NEUTRAL", "reason": f"{etf_symbol} not in macro snapshot (treating as neutral)"}
     roc_5d = etf_data.get("roc_5d_pct") or 0
     roc_30d = etf_data.get("roc_30d_pct") or 0
     if roc_5d > 3 and roc_30d > 5:
@@ -76,9 +75,9 @@ def evaluate_sector_rotation(snapshot, candidate):
 
 def sector_gate_passes(verdict, tier):
     if tier == "A++":
-        return verdict in ("STRONG_TAILWIND", "MILD_TAILWIND")
+        return verdict in ("STRONG_TAILWIND", "MILD_TAILWIND", "NEUTRAL", "UNKNOWN")
     if tier == "A+":
-        return verdict in ("STRONG_TAILWIND", "MILD_TAILWIND", "NEUTRAL")
+        return verdict in ("STRONG_TAILWIND", "MILD_TAILWIND", "NEUTRAL", "WEAK", "UNKNOWN")
     return verdict != "HEADWIND"
 
 

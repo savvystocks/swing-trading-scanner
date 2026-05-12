@@ -25,9 +25,9 @@ UNIFIED_EMAIL_TEMPLATE = """<!DOCTYPE html>
   .card-head { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
   .ticker { font-weight:800; font-size:18px; color:#111; }
   .tier-badge { display:inline-block; padding:3px 10px; border-radius:4px; font-weight:800; font-size:12px; color:#fff; }
-  .tier-A\+\+ { background:#0d7b34; }
-  .tier-A\+ { background:#1a9850; }
-  .tier-A { background:#4a90e2; }
+  .tier-app { background:#0d7b34; }
+  .tier-ap { background:#1a9850; }
+  .tier-a { background:#4a90e2; }
   .bracket-badge { display:inline-block; padding:2px 8px; border-radius:3px; font-weight:700; font-size:10px; background:#384766; color:#fff; }
   .price-row { font-size:12px; color:#444; margin:6px 0; }
   .price-row strong { color:#0052cc; }
@@ -135,7 +135,8 @@ UNIFIED_EMAIL_TEMPLATE = """<!DOCTYPE html>
             <div class="card-head">
               <div>
                 <span class="ticker">{{ c.ticker }}</span>
-                <span class="tier-badge tier-{{ c._aa_tier|replace('+', '\\+') }}">{{ c._aa_tier }}</span>
+                {% set tier_css = 'tier-app' if c._aa_tier == 'A++' else 'tier-ap' if c._aa_tier == 'A+' else 'tier-a' %}
+                <span class="tier-badge {{ tier_css }}">{{ c._aa_tier }}</span>
                 <span class="bracket-badge">{{ bracket|upper }}</span>
                 {% if c._extension_check and c._extension_check.red_count == 0 and c._extension_check.yellow_count == 0 %}<span class="prime">PRIME ENTRY</span>{% endif %}
                 <span style="color:#666; font-size:11px;">{{ (c.name or '')[:36] }}</span>

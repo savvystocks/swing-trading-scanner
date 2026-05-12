@@ -3,9 +3,19 @@ from src.catalyst.analog_statistician import analog_passes_bracket_gate
 from src.catalyst.sector_rotation_gate import sector_gate_passes
 
 
-def evaluate_tier(candidate, bracket, regime_info=None):
-    proposed = "A"
+TIER_ORDER = {"REJECT": 0, "A": 1, "A+": 2, "A++": 3}
+TIER_ABOVE = {"A++": "A+", "A+": "A", "A": "REJECT"}
 
+
+def _min_tier(a, b):
+    return a if TIER_ORDER.get(a, 0) <= TIER_ORDER.get(b, 0) else b
+
+
+def _demote(tier):
+    return TIER_ABOVE.get(tier, "REJECT")
+
+
+def evaluate_tier(candidate, bracket, regime_info=None):
     cat_count = candidate.get("_category_count") or 0
     if cat_count >= 7:
         proposed = "A++"
@@ -14,53 +24,86 @@ def evaluate_tier(candidate, bracket, regime_info=None):
     elif cat_count >= 4:
         proposed = "A"
     else:
-        return {"tier": "REJECT", "reason": f"only {cat_count} stacked categories, need 4+"}
+        return {"tier": "REJECT", "reason": f"only {cat_count} stacked categories (need 4+ for A)"}
+
+    demotions = []
 
     ext_cap = candidate.get("_extension_tier_cap") or "A++"
-    tier_order = {"REJECT": 0, "A": 1, "A+": 2, "A++": 3}
-    if tier_order.get(ext_cap, 0) < tier_order.get(proposed, 0):
+    if ext_cap == "REJECT":
+        return {"tier": "REJECT", "reason": "extension filter REJECT (2+ red flags on returns/MA distance)"}
+    if TIER_ORDER.get(ext_cap, 3) < TIER_ORDER.get(proposed, 0):
+        demotions.append(f"extension cap → {ext_cap}")
         proposed = ext_cap
 
     if candidate.get("_landmine_red", 0) > 0:
-        return {"tier": "REJECT", "reason": f"{candidate['_landmine_red']} RED landmine flag(s)"}
+        flags = candidate.get("_landmine_flags") or []
+        red_labels = [f["label"] for f in flags if f["severity"] == "RED"][:2]
+        return {"tier": "REJECT", "reason": f"RED landmine: {'; '.join(red_labels)}"}
     if candidate.get("_landmine_yellow", 0) >= 2:
-        return {"tier": "REJECT", "reason": "2+ YELLOW landmine flags"}
+        flags = candidate.get("_landmine_flags") or []
+        yel_labels = [f["label"] for f in flags if f["severity"] == "YELLOW"][:2]
+        return {"tier": "REJECT", "reason": f"2+ YELLOW landmines: {'; '.join(yel_labels)}"}
 
     sm_signals = candidate.get("_smart_money_signals") or []
     if proposed == "A++" and len(sm_signals) < 2:
+        demotions.append("smart-money <2 → A+")
         proposed = "A+"
-    if proposed == "A+" and len(sm_signals) < 1:
-        proposed = "A"
-    if proposed == "A" and not sm_signals:
-        return {"tier": "REJECT", "reason": "no smart money signal — required for A grade"}
+    if proposed in ("A+", "A") and len(sm_signals) < 1:
+        return {"tier": "REJECT", "reason": "no smart money signal (insider/options-flow/13F/activist/index — required for A)"}
 
-    if not iv_passes_bracket_gate(candidate, bracket, proposed):
+    while proposed != "REJECT":
+        if iv_passes_bracket_gate(candidate, bracket, proposed):
+            break
+        prev = proposed
+        proposed = _demote(proposed)
+        if proposed != "REJECT":
+            demotions.append(f"IV too high for {prev} → demoted to {proposed}")
+    if proposed == "REJECT":
         ivp = (candidate.get("iv_percentile_analysis") or {}).get("iv_percentile")
-        return {"tier": "REJECT", "reason": f"IV percentile {ivp} too high for {bracket} {proposed}"}
+        return {"tier": "REJECT", "reason": f"IV percentile {ivp} too high for any tier in {bracket} bracket"}
 
-    if not analog_passes_bracket_gate(candidate, bracket, proposed):
+    while proposed != "REJECT":
+        if analog_passes_bracket_gate(candidate, bracket, proposed):
+            break
+        prev = proposed
+        proposed = _demote(proposed)
+        if proposed != "REJECT":
+            demotions.append(f"weak analogs for {prev} → demoted to {proposed}")
+    if proposed == "REJECT":
         aset = (candidate.get("analog_set") or {}).get("statistics") or {}
-        return {"tier": "REJECT", "reason": f"analog hit-rate {aset.get('win_rate_next_day_pct', '?')}% insufficient for {bracket} {proposed}"}
+        return {"tier": "REJECT", "reason": f"analog hit-rate {aset.get('win_rate_next_day_pct', 'n/a')}% insufficient for any tier"}
 
     sector_rot = candidate.get("_sector_rotation") or {}
-    if not sector_gate_passes(sector_rot.get("verdict"), proposed):
-        return {"tier": "REJECT", "reason": f"sector rotation {sector_rot.get('verdict')} not OK for {proposed}"}
+    while proposed != "REJECT":
+        if sector_gate_passes(sector_rot.get("verdict"), proposed):
+            break
+        prev = proposed
+        proposed = _demote(proposed)
+        if proposed != "REJECT":
+            demotions.append(f"sector {sector_rot.get('verdict')} → demoted from {prev} to {proposed}")
+    if proposed == "REJECT":
+        return {"tier": "REJECT", "reason": f"sector ETF in {sector_rot.get('verdict')} — headwind too strong for any tier"}
 
     if regime_info:
         from src.catalyst.vol_regime_tuner import cap_tier_by_regime
         capped = cap_tier_by_regime(proposed, regime_info)
-        if capped != proposed:
-            return {"tier": capped, "reason": f"vol regime capped from {proposed} to {capped} ({regime_info.get('regime')})"}
+        if TIER_ORDER.get(capped, 0) < TIER_ORDER.get(proposed, 0):
+            demotions.append(f"vol regime '{regime_info.get('regime')}' capped {proposed} → {capped}")
+            proposed = capped
 
     counter = candidate.get("counter_thesis") or {}
     if counter.get("verdict_on_bull_thesis") == "REJECTED":
-        return {"tier": "REJECT", "reason": "counter-thesis rejected bull case"}
+        return {"tier": "REJECT", "reason": f"counter-thesis: {counter.get('what_kills_this_trade', 'bear case strong')[:120]}"}
 
     composite = candidate.get("composite_quality") or {}
     if composite.get("composite_score", 50) < 30:
-        return {"tier": "REJECT", "reason": "composite quality score < 30 (Altman/Piotroski/Beneish flags)"}
+        flags = composite.get("flags") or []
+        return {"tier": "REJECT", "reason": f"quality red flag: {'; '.join(flags[:2])}"}
 
-    return {"tier": proposed, "reason": "passed all gates"}
+    reason_parts = [f"passed all gates as {proposed}"]
+    if demotions:
+        reason_parts.append("demotions: " + " · ".join(demotions))
+    return {"tier": proposed, "reason": "; ".join(reason_parts), "_demotions": demotions}
 
 
 def assign_tiers(candidates_by_bracket, regime_info=None, verbose=False):
@@ -74,11 +117,19 @@ def assign_tiers(candidates_by_bracket, regime_info=None, verbose=False):
             tier = verdict["tier"]
             s["_aa_tier"] = tier
             s["_aa_reason"] = verdict["reason"]
+            s["_aa_demotions"] = verdict.get("_demotions") or []
             if tier == "REJECT":
-                rejection_log.append({"ticker": s.get("ticker"), "bracket": bracket, "reason": verdict["reason"]})
+                rejection_log.append({
+                    "ticker": s.get("ticker"),
+                    "bracket": bracket,
+                    "reason": verdict["reason"],
+                    "stacked_score": s.get("_stacked_score") or s.get("score") or 0,
+                })
                 results["REJECT"].append(s)
             else:
                 results[tier].append(s)
+
+    rejection_log.sort(key=lambda r: r["stacked_score"], reverse=True)
 
     for tier_key in ("A++", "A+", "A"):
         results[tier_key].sort(key=lambda s: s.get("_stacked_score") or s.get("score") or 0, reverse=True)

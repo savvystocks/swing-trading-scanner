@@ -30,12 +30,19 @@ def has_activist_filing(candidate):
 
 def has_13f_accumulation(candidate):
     inst = candidate.get("institutional_ownership") or {}
-    delta_q = inst.get("delta_q_pct") or 0
-    try:
-        delta_q = float(delta_q)
-    except (TypeError, ValueError):
-        delta_q = 0
-    return delta_q >= 5
+    delta_q = inst.get("delta_q_pct")
+    if delta_q is not None:
+        try:
+            return float(delta_q) >= 5
+        except (TypeError, ValueError):
+            pass
+    pct_inst = candidate.get("pct_inst_held")
+    if pct_inst is not None:
+        try:
+            return float(pct_inst) >= 75
+        except (TypeError, ValueError):
+            pass
+    return False
 
 
 def has_index_inclusion(candidate):

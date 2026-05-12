@@ -6,8 +6,8 @@ import traceback
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.catalyst.scanner import run_catalyst_scan
-from src.catalyst.email_template import render_catalyst_email
-from src.catalyst.options_email import render_catalyst_options_email
+from src.catalyst.unified_email import render_unified_email
+from src.catalyst.execution_intel import execution_context as get_exec_ctx
 from src.email_report import send_email
 
 
@@ -34,43 +34,36 @@ def main():
         json.dump(scan, f, indent=2, default=str)
     print(f"Wrote {json_path}")
 
-    html_main = render_catalyst_email(scan)
+    aa_results = scan.get("aa_results") or {}
+    aa_picks = scan.get("aa_picks") or {"micro": [], "small": [], "mid": []}
+    aa_rejections = scan.get("aa_rejections") or []
+    regime_info = scan.get("vol_regime_info")
+    exec_ctx = get_exec_ctx()
+
     try:
-        html_options = render_catalyst_options_email(scan)
+        html_main = render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=regime_info, execution_ctx=exec_ctx)
     except Exception as e:
-        print(f"Options email render failed: {type(e).__name__}: {e}")
+        print(f"Unified email render failed: {type(e).__name__}: {e}")
         traceback.print_exc()
-        html_options = None
+        html_main = "<html><body><h1>Render failed</h1></body></html>"
 
     if os.environ.get("SKIP_EMAIL"):
         print("SKIP_EMAIL set -- not sending")
-        main_path = os.path.join(results_dir, f"catalyst_email_{scan['scan_date']}.html")
+        main_path = os.path.join(results_dir, f"catalyst_v4_elite_{scan['scan_date']}.html")
         with open(main_path, "w", encoding="utf-8") as f:
             f.write(html_main)
         print(f"Wrote {main_path}")
-        if html_options:
-            opts_path = os.path.join(results_dir, f"catalyst_options_email_{scan['scan_date']}.html")
-            with open(opts_path, "w", encoding="utf-8") as f:
-                f.write(html_options)
-            print(f"Wrote {opts_path}")
         return
 
     email_sent = False
     try:
-        send_email(html_main, scan["scan_date"], subject=f"Catalyst Watchlist {scan['scan_date']}")
-        print("Catalyst email sent")
+        a_count = len(aa_results.get("A++", [])) + len(aa_results.get("A+", [])) + len(aa_results.get("A", []))
+        send_email(html_main, scan["scan_date"], subject=f"Catalyst Scanner v4 — {a_count} A-grade picks — {scan['scan_date']}")
+        print("Unified email sent")
         email_sent = True
     except Exception as e:
-        print(f"Catalyst email send failed: {type(e).__name__}: {e}")
+        print(f"Unified email send failed: {type(e).__name__}: {e}")
         traceback.print_exc()
-
-    if html_options:
-        try:
-            send_email(html_options, scan["scan_date"], subject=f"Catalyst Options Plays {scan['scan_date']}")
-            print("Catalyst options email sent")
-        except Exception as e:
-            print(f"Catalyst options email send failed: {type(e).__name__}: {e}")
-            traceback.print_exc()
 
     try:
         from src.telegram import send_catalyst_alert

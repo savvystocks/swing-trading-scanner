@@ -7,9 +7,7 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.catalyst.email_template import render_catalyst_email
-from src.catalyst.options_email import render_catalyst_options_email
-from src.catalyst.factor_options_email import render_factor_options_email
+from src.catalyst.unified_email import render_unified_email
 from src.email_report import send_email
 from src.eodhd import EODHDClient
 from src.catalyst.edgar import EDGARClient, collect_material_signals, collect_form4_cluster
@@ -169,67 +167,43 @@ def main():
             print(f"Opening-action boost failed (non-fatal): {type(e).__name__}: {e}")
             traceback.print_exc()
 
-    print(f"Rendering catalyst email (live spot + options at send-time)...")
-    html_main = render_catalyst_email(scan)
+    print(f"Rendering UNIFIED v4 elite email (bracket-routed, A-only)...")
+
+    aa_results = scan.get("aa_results") or {}
+    aa_picks = scan.get("aa_picks") or {"micro": [], "small": [], "mid": []}
+    aa_rejections = scan.get("aa_rejections") or []
+    regime_info = scan.get("vol_regime_info")
+
+    from src.catalyst.execution_intel import execution_context as get_exec_ctx
+    exec_ctx = get_exec_ctx()
 
     try:
-        html_lottery = render_catalyst_options_email(scan)
+        html_main = render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=regime_info, execution_ctx=exec_ctx)
     except Exception as e:
-        print(f"Lottery email render failed: {type(e).__name__}: {e}")
+        print(f"Unified email render failed: {type(e).__name__}: {e}")
         traceback.print_exc()
-        html_lottery = None
-
-    try:
-        html_factors = render_factor_options_email(scan)
-    except Exception as e:
-        print(f"Factor options email render failed: {type(e).__name__}: {e}")
-        traceback.print_exc()
-        html_factors = None
+        sys.exit(1)
 
     suffix = scan.get("scan_date", datetime.utcnow().strftime("%Y-%m-%d"))
 
     if os.environ.get("SKIP_EMAIL"):
         print("SKIP_EMAIL set -- writing HTML, not sending")
-        main_path = os.path.join(RESULTS_DIR, f"catalyst_email_morning_{suffix}.html")
+        main_path = os.path.join(RESULTS_DIR, f"catalyst_v4_elite_{suffix}.html")
         with open(main_path, "w", encoding="utf-8") as f:
             f.write(html_main)
         print(f"Wrote {main_path}")
-        if html_lottery:
-            opts_path = os.path.join(RESULTS_DIR, f"catalyst_options_email_morning_{suffix}.html")
-            with open(opts_path, "w", encoding="utf-8") as f:
-                f.write(html_lottery)
-            print(f"Wrote {opts_path}")
-        if html_factors:
-            factor_path = os.path.join(RESULTS_DIR, f"factor_options_email_morning_{suffix}.html")
-            with open(factor_path, "w", encoding="utf-8") as f:
-                f.write(html_factors)
-            print(f"Wrote {factor_path}")
         return
 
     email_sent = False
     try:
-        send_email(html_main, suffix, subject=f"Catalyst Watchlist {suffix}")
-        print("Catalyst email sent")
+        a_count = len(aa_results.get("A++", [])) + len(aa_results.get("A+", [])) + len(aa_results.get("A", []))
+        subject = f"Catalyst Scanner v4 — {a_count} A-grade picks — {suffix}"
+        send_email(html_main, suffix, subject=subject)
+        print("Unified email sent")
         email_sent = True
     except Exception as e:
-        print(f"Catalyst email send failed: {type(e).__name__}: {e}")
+        print(f"Unified email send failed: {type(e).__name__}: {e}")
         traceback.print_exc()
-
-    if html_lottery:
-        try:
-            send_email(html_lottery, suffix, subject=f"Catalyst Lottery Options {suffix}")
-            print("Catalyst lottery options email sent")
-        except Exception as e:
-            print(f"Catalyst lottery options email send failed: {type(e).__name__}: {e}")
-            traceback.print_exc()
-
-    if html_factors:
-        try:
-            send_email(html_factors, suffix, subject=f"Top Factors Options {suffix}")
-            print("Top factors options email sent")
-        except Exception as e:
-            print(f"Top factors options email send failed: {type(e).__name__}: {e}")
-            traceback.print_exc()
 
     if not email_sent:
         sys.exit(1)

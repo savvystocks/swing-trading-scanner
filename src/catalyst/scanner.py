@@ -33,6 +33,24 @@ from src.catalyst.post_earnings_drift import detect_post_earnings_drift, apply_p
 from src.catalyst.analyst_changes import detect_analyst_changes, apply_analyst_scoring
 from src.catalyst.sympathy_detector import detect_sympathy_moves, apply_sympathy_scoring
 from src.catalyst.crypto_regime import fetch_crypto_regime, apply_crypto_regime_boost
+from src.catalyst.bracket_router import route_candidates
+from src.catalyst.landmine_filter import filter_landmines
+from src.catalyst.extension_filter import filter_extension
+from src.catalyst.smart_money_required import filter_smart_money_required
+from src.catalyst.stacking_engine import apply_stacking
+from src.catalyst.iv_percentile import apply_iv_percentile
+from src.catalyst.options_market_critic import apply_options_market_critic
+from src.catalyst.peer_benchmarker import apply_peer_benchmarking
+from src.catalyst.sector_rotation_gate import apply_sector_rotation_gate
+from src.catalyst.vol_regime_tuner import classify_vol_regime
+from src.catalyst.insider_seniority import enrich_insider_quality
+from src.catalyst.allocator_tier import enrich_allocator_tier
+from src.catalyst.composite_quality import enrich_composite_quality
+from src.catalyst.news_tiering import enrich_news_quality
+from src.catalyst.aa_gates import assign_tiers, pick_top_per_bracket
+from src.catalyst.analog_statistician import apply_analog_validation
+from src.catalyst.counter_thesis import apply_counter_thesis
+from src.catalyst.pre_mortem import apply_pre_mortem
 from src.catalyst.sam_gov import fetch_recent_contract_awards, map_awardees_to_tickers
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
@@ -873,6 +891,89 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         if verbose:
             print(f"  portfolio context failed: {type(e).__name__}: {e}")
 
+    aa_results = None
+    aa_picks = None
+    aa_rejections = []
+    regime_info = None
+    try:
+        if verbose:
+            print(f"=== V4 ELITE PIPELINE: bracket routing → A-only gates ===")
+        regime_info = classify_vol_regime(macro)
+        if verbose:
+            print(f"  vol regime: {regime_info.get('regime')} → tier cap {regime_info.get('tier_cap')} · pos × {regime_info.get('position_multiplier')}")
+
+        enrich_insider_quality(final_scored, verbose=verbose)
+        enrich_allocator_tier(final_scored, verbose=verbose)
+        enrich_composite_quality(final_scored, verbose=verbose)
+        enrich_news_quality(final_scored, verbose=verbose)
+        apply_peer_benchmarking(final_scored, verbose=verbose)
+        apply_sector_rotation_gate(final_scored, macro, verbose=verbose)
+        apply_stacking(final_scored, verbose=verbose)
+
+        bracketed = route_candidates(final_scored)
+        if verbose:
+            print(f"  bracket routing: micro={len(bracketed['micro'])} small={len(bracketed['small'])} mid={len(bracketed['mid'])} filtered={len(bracketed['filtered_out'])}")
+
+        bracketed_filtered = {}
+        for bracket in ("micro", "small", "mid"):
+            bucket = bracketed[bracket]
+            bucket, rejected_landmine = filter_landmines(bucket, verbose=verbose)
+            bucket, rejected_extension = filter_extension(bucket, verbose=verbose)
+            bucket, rejected_smart_money = filter_smart_money_required(bucket, bracket=bracket, verbose=verbose)
+            bracketed_filtered[bracket] = bucket
+
+        if verbose:
+            total_filtered = sum(len(v) for v in bracketed_filtered.values())
+            print(f"  pre-AA filtered total: {total_filtered}")
+
+        top_candidates_for_research = []
+        for bracket in ("micro", "small", "mid"):
+            bracketed_filtered[bracket].sort(key=lambda s: s.get("_stacked_score") or s.get("score") or 0, reverse=True)
+            top_candidates_for_research.extend(bracketed_filtered[bracket][:5])
+
+        try:
+            apply_iv_percentile(top_candidates_for_research, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  iv_percentile failed: {type(e).__name__}: {e}")
+
+        try:
+            apply_options_market_critic(top_candidates_for_research, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  options_market_critic failed: {type(e).__name__}: {e}")
+
+        try:
+            apply_analog_validation(top_candidates_for_research, max_calls=10, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  analog_validation failed (non-fatal): {type(e).__name__}: {e}")
+
+        aa_results, aa_rejections = assign_tiers(bracketed_filtered, regime_info=regime_info, verbose=verbose)
+
+        a_grade_top = aa_results["A++"] + aa_results["A+"] + aa_results["A"]
+        try:
+            apply_counter_thesis(a_grade_top, max_calls=6, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  counter_thesis failed: {type(e).__name__}: {e}")
+
+        try:
+            apply_pre_mortem(a_grade_top, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  pre_mortem failed: {type(e).__name__}: {e}")
+
+        aa_picks = pick_top_per_bracket(aa_results, per_bracket=2)
+        if verbose:
+            total = sum(len(v) for v in aa_picks.values())
+            print(f"=== V4 OUTPUT: {total} A-grade picks (A++ {len(aa_results['A++'])}, A+ {len(aa_results['A+'])}, A {len(aa_results['A'])}) ===")
+    except Exception as e:
+        if verbose:
+            import traceback
+            print(f"  V4 pipeline failed (non-fatal): {type(e).__name__}: {e}")
+            traceback.print_exc()
+
     return {
         "scan_date": scan_date_str,
         "macro": macro,
@@ -893,6 +994,10 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         "portfolio_summary": portfolio_summary,
         "yesterdays_followup": yesterdays_followup,
         "win_rate_stats": win_rate_stats,
+        "aa_results": aa_results,
+        "aa_picks": aa_picks,
+        "aa_rejections": aa_rejections,
+        "vol_regime_info": regime_info,
         "eodhd_calls": client.calls_made,
         "edgar_calls": edgar.calls_made,
         "llm_graded": len(llm_grades),

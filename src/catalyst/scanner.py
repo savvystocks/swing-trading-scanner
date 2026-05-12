@@ -48,8 +48,6 @@ from src.catalyst.allocator_tier import enrich_allocator_tier
 from src.catalyst.composite_quality import enrich_composite_quality
 from src.catalyst.news_tiering import enrich_news_quality
 from src.catalyst.aa_gates import assign_tiers, pick_top_per_bracket
-from src.catalyst.analog_statistician import apply_analog_validation
-from src.catalyst.counter_thesis import apply_counter_thesis
 from src.catalyst.pre_mortem import apply_pre_mortem
 from src.catalyst.unified_forensic import apply_unified_forensic, apply_haiku_synthesis
 from src.catalyst.sam_gov import fetch_recent_contract_awards, map_awardees_to_tickers
@@ -65,7 +63,6 @@ from src.catalyst.tracker import (
 from src.catalyst.risk_audit import audit_risks, detect_deal_closed
 from src.catalyst.insider_depth import analyze_insider
 from src.catalyst.options_check import implied_move, options_check_score
-from src.catalyst.deep_research import deep_research
 from src.catalyst.paper_trading import simulate_outcomes as simulate_paper, get_paper_stats
 
 
@@ -303,7 +300,7 @@ def enrich_ticker(client, ticker_short, signals, suffix_hint=None, fetch_news=Fa
 
 
 def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
-                       news_max_fetch=150, llm_max_grade=50, deep_research_max=0,
+                       news_max_fetch=150, llm_max_grade=50,
                        insider_max_fetch=80, options_max_fetch=30, min_base_pts=2.0, verbose=True):
     client = EODHDClient()
     edgar = EDGARClient()
@@ -726,90 +723,6 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         from collections import Counter
         buckets = Counter(s.get("bucket") for s in final_scored)
         print(f"  STRONG: {buckets.get('STRONG',0)}  WATCH: {buckets.get('WATCH',0)}  SPEC: {buckets.get('SPECULATIVE',0)}")
-
-    if deep_research_max > 0:
-        if verbose:
-            print(f"  running deep research (Sonnet + web search) — top {deep_research_max} bullish by score")
-        try:
-            def _is_priority(s):
-                if s.get("deal_closed"):
-                    return False
-                if s.get("pre_catalyst_high_conviction"):
-                    return True
-                tier = s.get("catalyst_tier")
-                if tier == "S":
-                    return True
-                if tier == "A":
-                    xconf = s.get("cross_confirmation") or {}
-                    if xconf.get("multiplier_label", "") in ("STRONG", "HIGH"):
-                        return True
-                return False
-
-            bullish_eligible = [s for s in final_scored
-                                if s.get("direction", "bull") == "bull"
-                                and not s.get("deal_closed")]
-            priority = [s for s in bullish_eligible if _is_priority(s)]
-            priority_sorted = sorted(priority, key=lambda x: x["score"], reverse=True)
-
-            top_for_deep = priority_sorted[:deep_research_max]
-            if len(top_for_deep) < deep_research_max:
-                priority_tickers = {s["ticker"] for s in top_for_deep}
-                fillers = [s for s in sorted(bullish_eligible, key=lambda x: x["score"], reverse=True)
-                           if s["ticker"] not in priority_tickers]
-                top_for_deep += fillers[:deep_research_max - len(top_for_deep)]
-
-            if verbose:
-                print(f"    {len(priority_sorted)} priority (Tier S/A+stacked/pre-cat), filled to {len(top_for_deep)} with top-by-score")
-            eligible_for_deep = top_for_deep
-            if top_for_deep:
-                deep_results = deep_research(top_for_deep, max_tickers=deep_research_max, verbose=verbose)
-            else:
-                deep_results = {}
-        except Exception as e:
-            if verbose:
-                print(f"  deep_research failed (non-fatal): {type(e).__name__}: {str(e)[:200]}")
-                print(f"  continuing without deep research outcome conviction adjustments")
-            deep_results = {}
-        positive_outcomes = {"BEAT", "BEAT_AND_RAISE", "APPROVAL", "DEAL_CLOSE", "DATA_HIT"}
-        negative_outcomes = {"MISS", "CRL", "DEAL_BREAK", "DATA_MISS"}
-        def _coerce_pct(v):
-            if v is None:
-                return 0
-            try:
-                return float(v)
-            except (TypeError, ValueError):
-                import re as _re
-                m = _re.search(r"-?\d+(?:\.\d+)?", str(v))
-                return float(m.group()) if m else 0
-        for s in final_scored:
-            if s["ticker"] in deep_results:
-                try:
-                    s["deep_research"] = deep_results[s["ticker"]]
-                    op = (deep_results[s["ticker"]].get("outcome_prediction") or {})
-                    outcome_prob = _coerce_pct(op.get("outcome_probability_pct"))
-                    expected_outcome = (op.get("expected_outcome") or "").upper()
-                    outcome_pts = 0
-                    if expected_outcome in positive_outcomes:
-                        if outcome_prob >= 70:
-                            outcome_pts = 15
-                        elif outcome_prob >= 55:
-                            outcome_pts = 8
-                        elif outcome_prob >= 40:
-                            outcome_pts = 2
-                    elif expected_outcome in negative_outcomes:
-                        if outcome_prob >= 50:
-                            outcome_pts = -25
-                        elif outcome_prob >= 35:
-                            outcome_pts = -10
-                    if outcome_pts != 0:
-                        s["components"]["outcome_conviction"] = {
-                            "points": outcome_pts,
-                            "label": f"{expected_outcome} ({outcome_prob}% prob)",
-                        }
-                        s["score"] = round(s["score"] + outcome_pts, 2)
-                except Exception as e:
-                    if verbose:
-                        print(f"  outcome_conviction adj failed for {s.get('ticker')}: {type(e).__name__}: {e}")
 
     scan_date_str = (target_date if isinstance(target_date, str) else (target_date or datetime.utcnow().date()).strftime("%Y-%m-%d"))
     snap_count, _ = snapshot_predictions(scan_date_str, final_scored)

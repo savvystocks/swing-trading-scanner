@@ -92,7 +92,7 @@ UNIFIED_EMAIL_TEMPLATE = """<!DOCTYPE html>
     </div>
     {% if fc.macro_trade_suggestions %}
       <div class="macro-play">
-        <strong style="color:#7f1d1d; text-transform:uppercase; font-size:11px;">Macro lottery plays this week</strong>
+        <strong style="color:#7f1d1d; text-transform:uppercase; font-size:11px;">Macro event plays this week</strong>
         {% for m in fc.macro_trade_suggestions[:2] %}
           <div style="margin-top:6px; padding:6px 10px; background:#fff; border-radius:4px; font-size:11px;">
             <strong>{{ m.event }}</strong> in <strong>{{ m.days_until }}d</strong> &middot; <strong>Play:</strong> {{ m.vehicles|join(' / ') }} {{ m.structure }} &middot; <strong>DTE:</strong> {{ m.dte_target }}

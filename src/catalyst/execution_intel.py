@@ -47,7 +47,7 @@ def day_of_week_advice():
         1: ("Tuesday", "best execution day historically"),
         2: ("Wednesday", "normal liquidity"),
         3: ("Thursday", "normal liquidity, watch for OpEx Friday positioning"),
-        4: ("Friday", "position-squaring, lower conviction — avoid new lottery entries"),
+        4: ("Friday", "position-squaring, lower conviction — avoid new aggressive entries"),
         5: ("Saturday", "market closed"),
         6: ("Sunday", "market closed"),
     }
@@ -76,7 +76,7 @@ def _build_guidance(time_window, dow_name):
     elif time_window["window"] == "afterhours":
         guidance.append("AVOID new entries — too illiquid")
     if dow_name == "Friday":
-        guidance.append("Friday: avoid new lottery, position-squaring distorts pricing")
+        guidance.append("Friday: avoid new aggressive entries, position-squaring distorts pricing")
     if dow_name == "Monday":
         guidance.append("Monday: weekend-news digestion creates entry opportunities AFTER first 30min")
     return guidance

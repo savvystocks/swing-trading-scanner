@@ -1,6 +1,22 @@
 from src.catalyst.iv_percentile import iv_passes_bracket_gate
-from src.catalyst.analog_statistician import analog_passes_bracket_gate
 from src.catalyst.sector_rotation_gate import sector_gate_passes
+
+
+def analog_passes_bracket_gate(candidate, bracket, tier):
+    aset = candidate.get("analog_set") or {}
+    stats = aset.get("statistics") or {}
+    n = stats.get("n_analogs") or 0
+    win_rate = stats.get("win_rate_next_day_pct") or 0
+    if tier == "A++":
+        thresholds = {"micro": {"min_n": 6, "min_win": 65}, "small": {"min_n": 7, "min_win": 60}, "mid": {"min_n": 7, "min_win": 55}}
+    elif tier == "A+":
+        thresholds = {"micro": {"min_n": 4, "min_win": 55}, "small": {"min_n": 5, "min_win": 50}, "mid": {"min_n": 5, "min_win": 45}}
+    else:
+        thresholds = {"micro": {"min_n": 3, "min_win": 45}, "small": {"min_n": 3, "min_win": 40}, "mid": {"min_n": 3, "min_win": 35}}
+    t = thresholds.get(bracket, {"min_n": 3, "min_win": 45})
+    if not aset:
+        return tier == "A"
+    return n >= t["min_n"] and win_rate >= t["min_win"]
 
 
 TIER_ORDER = {"REJECT": 0, "A": 1, "A+": 2, "A++": 3}

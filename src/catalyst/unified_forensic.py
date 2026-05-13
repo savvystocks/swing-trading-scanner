@@ -458,13 +458,40 @@ def _extract_json(text):
     if not text:
         return None
     text = text.strip()
-    if text.startswith("```"):
+    if "```" in text:
         parts = text.split("```")
-        if len(parts) >= 2:
-            text = parts[1]
-            if text.startswith("json"):
-                text = text[4:]
-            text = text.strip()
+        for block in reversed(parts):
+            b = block.strip()
+            if b.startswith("json"):
+                b = b[4:].strip()
+            if b.startswith("{") and b.endswith("}"):
+                try:
+                    return json.loads(b)
+                except json.JSONDecodeError:
+                    continue
+
+    candidates = []
+    depth = 0
+    start_idx = -1
+    for i, ch in enumerate(text):
+        if ch == "{":
+            if depth == 0:
+                start_idx = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and start_idx >= 0:
+                candidates.append((start_idx, i + 1))
+                start_idx = -1
+
+    for start, end in reversed(candidates):
+        try:
+            obj = json.loads(text[start:end])
+            if isinstance(obj, dict) and len(obj) >= 3:
+                return obj
+        except json.JSONDecodeError:
+            continue
+
     start = text.find("{")
     end = text.rfind("}")
     if start == -1 or end == -1:

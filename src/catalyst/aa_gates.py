@@ -4,6 +4,8 @@ from src.catalyst.sector_rotation_gate import sector_gate_passes
 
 def analog_passes_bracket_gate(candidate, bracket, tier):
     aset = candidate.get("analog_set") or {}
+    if not aset:
+        return True
     stats = aset.get("statistics") or {}
     n = stats.get("n_analogs") or 0
     win_rate = stats.get("win_rate_next_day_pct") or 0
@@ -14,8 +16,6 @@ def analog_passes_bracket_gate(candidate, bracket, tier):
     else:
         thresholds = {"micro": {"min_n": 3, "min_win": 45}, "small": {"min_n": 3, "min_win": 40}, "mid": {"min_n": 3, "min_win": 35}}
     t = thresholds.get(bracket, {"min_n": 3, "min_win": 45})
-    if not aset:
-        return tier == "A"
     return n >= t["min_n"] and win_rate >= t["min_win"]
 
 

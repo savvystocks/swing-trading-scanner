@@ -391,15 +391,24 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         "Technology": 3,
         "Healthcare": 2,
         "Industrials": 2,
-        "Financials": 2,
-        "Consumer": 2,
+        "Financials": 1,
+        "Consumer": 1,
         "Energy": 1,
         "Materials": 1,
         "Other": 1,
     }
 
+    TECH_BIAS_MULTIPLIER = 1.15
+
     buy_picks = [p for p in all_tier_picks if _is_buy_signal(p)]
-    buy_picks.sort(key=lambda p: -((p.get("unified_forensic") or {}).get("confidence_pct") or (p.get("haiku_synthesis") or {}).get("confidence_pct") or 50))
+
+    def _tech_biased_sort_key(p):
+        conf = (p.get("unified_forensic") or {}).get("confidence_pct") or (p.get("haiku_synthesis") or {}).get("confidence_pct") or 50
+        if _sector_bucket(p.get("sector")) == "Technology":
+            conf = conf * TECH_BIAS_MULTIPLIER
+        return -conf
+
+    buy_picks.sort(key=_tech_biased_sort_key)
 
     picked = []
     sector_counts = {}

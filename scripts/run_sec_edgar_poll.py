@@ -5,7 +5,7 @@ import glob
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.catalyst.sec_edgar_rss import poll_and_alert
+from src.catalyst.sec_edgar_rss import poll_and_alert, load_latest_scan_for_alerts
 from src.telegram import send_alert
 
 
@@ -48,15 +48,26 @@ def main():
     watchlist = build_watchlist()
     print(f"SEC EDGAR poll: watching {len(watchlist)} tickers")
 
+    latest_scan = load_latest_scan_for_alerts()
+    if latest_scan:
+        aa = latest_scan.get("aa_results") or {}
+        print(f"  loaded latest v4 scan: A++ {len(aa.get('A++', []))} · A+ {len(aa.get('A+', []))} · A {len(aa.get('A', []))}")
+    else:
+        print(f"  no v4 scan JSON found - alerts will use base priority only")
+
     def telegram_callback(msg):
         send_alert(msg)
+
+    min_pri = os.environ.get("EDGAR_MIN_PRIORITY", "MED").upper()
 
     new_filings, sent = poll_and_alert(
         watchlist_tickers=watchlist,
         telegram_callback=telegram_callback,
         verbose=True,
+        latest_scan=latest_scan,
+        min_priority=min_pri,
     )
-    print(f"Done: {len(new_filings)} new filings, {sent} alerts sent")
+    print(f"Done: {len(new_filings)} new filings, {sent} alerts sent (min priority: {min_pri})")
 
 
 if __name__ == "__main__":

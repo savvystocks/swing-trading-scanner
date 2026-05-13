@@ -107,20 +107,96 @@ def detect_new_filings(filings, seen_dict):
     return new
 
 
-def alert_message(filing):
+BULLISH_FORMS = {"8-K", "8-K/A", "13D", "13D/A", "13G", "4", "8-K12B"}
+BEARISH_FORMS = {"S-3", "424B5", "S-3/A"}
+
+
+def score_alert_priority(filing, latest_scan=None):
+    ticker = (filing.get("ticker") or "").upper()
+    form = filing.get("form_type", "")
+    if not ticker:
+        return ("SKIP", "no ticker parsed")
+
+    priority = "LOW"
+    reasons = []
+
+    if latest_scan and isinstance(latest_scan, dict):
+        aa = latest_scan.get("aa_results") or {}
+        for tier in ("A++", "A+"):
+            picks = aa.get(tier, [])
+            for p in picks:
+                if (p.get("ticker") or "").upper() == ticker:
+                    priority = "HIGH"
+                    reasons.append(f"in v4 scan as {tier}")
+                    break
+            if priority == "HIGH":
+                break
+        if priority != "HIGH":
+            a_picks = aa.get("A", [])
+            for p in a_picks:
+                if (p.get("ticker") or "").upper() == ticker:
+                    priority = "MED"
+                    reasons.append("in v4 scan as A")
+                    break
+
+    if form in BULLISH_FORMS:
+        if priority == "LOW":
+            priority = "MED"
+        reasons.append(f"bullish form ({form})")
+    elif form in BEARISH_FORMS:
+        if priority == "HIGH":
+            priority = "MED"
+        reasons.append(f"bearish-bias form ({form})")
+
+    return (priority, "; ".join(reasons))
+
+
+def alert_message(filing, latest_scan=None, priority=None, reason=None):
     form = filing["form_type"]
     label = ALERT_FORM_TYPES.get(form, form)
     ticker = filing.get("ticker") or "?"
     company = filing.get("company", "")[:60]
     link = filing.get("link", "")
-    return (
-        f"SEC ALERT: {ticker} ({company}) — {label} ({form})\n"
+
+    pri_label = ""
+    if priority == "HIGH":
+        pri_label = "[HIGH PRIORITY] "
+    elif priority == "MED":
+        pri_label = "[MED] "
+
+    tier_context = ""
+    if latest_scan and isinstance(latest_scan, dict):
+        aa = latest_scan.get("aa_results") or {}
+        for tier in ("A++", "A+", "A"):
+            for p in aa.get(tier, []):
+                if (p.get("ticker") or "").upper() == (ticker or "").upper():
+                    cats = p.get("catalysts") or []
+                    cat_keys = [c.get("key", "") for c in cats[:4] if isinstance(c, dict)]
+                    spot = p.get("live_spot") or p.get("price") or "?"
+                    sm = p.get("_smart_money_signals") or []
+                    tier_context = (
+                        f"\nV4 tier: {tier} · Score: {int(p.get('_stacked_score') or 0)} · "
+                        f"Cats: {p.get('_category_count', 0)} ({', '.join(cat_keys)}) · "
+                        f"Smart money: {len(sm)} signal(s)\n"
+                        f"Spot: ${spot}"
+                    )
+                    break
+            if tier_context:
+                break
+
+    base = (
+        f"{pri_label}SEC ALERT: {ticker} ({company}) -- {label} ({form})\n"
         f"Filed: {filing.get('filed_at', '')}\n"
         f"{link}"
     )
+    if tier_context:
+        base += tier_context
+    if reason:
+        base += f"\nReason: {reason}"
+    return base
 
 
-def poll_and_alert(watchlist_tickers, telegram_callback=None, verbose=False):
+def poll_and_alert(watchlist_tickers, telegram_callback=None, verbose=False, latest_scan=None, min_priority="MED"):
     seen = {}
     seen_set = _load_seen()
     seen.update({k: time.time() for k in seen_set})
@@ -131,17 +207,49 @@ def poll_and_alert(watchlist_tickers, telegram_callback=None, verbose=False):
     new_filings = detect_new_filings(relevant, seen)
     if verbose:
         print(f"  edgar_rss: {len(relevant)} on watchlist, {len(new_filings)} new")
+
+    priority_order = {"HIGH": 3, "MED": 2, "LOW": 1, "SKIP": 0}
+    min_pri_score = priority_order.get(min_priority, 2)
+
     sent = 0
+    skipped = 0
+    by_priority = {"HIGH": 0, "MED": 0, "LOW": 0, "SKIP": 0}
     for f in new_filings:
-        msg = alert_message(f)
+        pri, reason = score_alert_priority(f, latest_scan=latest_scan)
+        by_priority[pri] = by_priority.get(pri, 0) + 1
+        if priority_order.get(pri, 0) < min_pri_score:
+            skipped += 1
+            if verbose:
+                print(f"    [SKIP {pri}] {f.get('ticker')} {f.get('form_type')}")
+            continue
+        msg = alert_message(f, latest_scan=latest_scan, priority=pri, reason=reason)
         if telegram_callback:
             try:
                 telegram_callback(msg)
                 sent += 1
+                if verbose:
+                    print(f"    [SENT {pri}] {f.get('ticker')} {f.get('form_type')}")
             except Exception as e:
                 if verbose:
                     print(f"    telegram alert failed: {type(e).__name__}: {e}")
         elif verbose:
-            print(f"    [NEW] {msg[:120]}")
+            print(f"    [NEW {pri}] {msg[:120]}")
+    if verbose:
+        print(f"  edgar_rss: by priority: HIGH={by_priority['HIGH']} MED={by_priority['MED']} LOW={by_priority['LOW']} SKIP={by_priority['SKIP']}")
+        print(f"  edgar_rss: sent={sent}, skipped (below {min_priority})={skipped}")
     _save_seen(seen)
     return new_filings, sent
+
+
+def load_latest_scan_for_alerts():
+    import glob
+    results_dir = pathlib.Path(__file__).parent.parent.parent / "data" / "results"
+    pattern = str(results_dir / "catalyst_*.json")
+    files = sorted([f for f in glob.glob(pattern) if "_email" not in os.path.basename(f) and "_morning" not in os.path.basename(f)], reverse=True)
+    if not files:
+        return None
+    try:
+        with open(files[0]) as f:
+            return json.load(f)
+    except Exception:
+        return None

@@ -954,63 +954,86 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 return "Materials"
             return "Other"
 
-        top_sector = _sector_bucket_simple((top_pick or {}).get("sector"))
-        haiku_targets = []
-        seen_sectors = {top_sector}
+        top5_targets = []
+        seen_sectors = set()
         priority_order = ["Technology", "Industrials", "Financials", "Consumer", "Healthcare", "Energy", "Materials", "Other"]
         for sec_target in priority_order:
-            if sec_target in seen_sectors:
-                continue
-            for p in ranked_picks[1:]:
+            for p in ranked_picks:
+                if p in top5_targets:
+                    continue
                 if _sector_bucket_simple(p.get("sector")) == sec_target:
-                    haiku_targets.append(p)
+                    top5_targets.append(p)
                     seen_sectors.add(sec_target)
                     break
-            if len(haiku_targets) >= 3:
+            if len(top5_targets) >= 5:
                 break
-        if len(haiku_targets) < 3:
-            for p in ranked_picks[1:]:
-                if p in haiku_targets:
-                    continue
-                haiku_targets.append(p)
-                if len(haiku_targets) >= 3:
-                    break
-
-        if top_pick:
-            if verbose:
-                print(f"  unified_forensic: 1 Sonnet+web call on TOP PICK ({top_pick['ticker']} — {top_pick.get('_aa_tier')}) ~$1.50")
-            try:
-                apply_unified_forensic([top_pick], max_calls=1, verbose=verbose)
-            except Exception as e:
-                if verbose:
-                    print(f"  unified_forensic failed (non-fatal): {type(e).__name__}: {e}")
-        else:
-            if verbose:
-                print(f"  unified_forensic: SKIPPED — 0 A-grade picks, no Sonnet+web spend (£0)")
+        for p in ranked_picks:
+            if len(top5_targets) >= 5:
+                break
+            if p not in top5_targets:
+                top5_targets.append(p)
+        haiku_targets = top5_targets
 
         if haiku_targets:
             if verbose:
-                est_cost = len(haiku_targets) * 0.05
+                est_cost = len(haiku_targets) * 0.005
                 tickers = [p.get("ticker") for p in haiku_targets]
-                print(f"  haiku_synthesis: {len(haiku_targets)} Haiku calls on next picks ({', '.join(tickers)}) ~${est_cost:.2f}")
+                print(f"  haiku_synthesis: {len(haiku_targets)} Haiku bull calls (top 5, sector-diverse): {', '.join(tickers)} ~${est_cost:.3f}")
             try:
-                apply_haiku_synthesis(haiku_targets, max_calls=3, verbose=verbose)
+                apply_haiku_synthesis(haiku_targets, max_calls=5, verbose=verbose)
             except Exception as e:
                 if verbose:
                     print(f"  haiku_synthesis failed (non-fatal): {type(e).__name__}: {e}")
 
-        bear_targets = []
-        if top_pick:
-            bear_targets.append(top_pick)
-        bear_targets.extend(haiku_targets or [])
-        if bear_targets:
+        if haiku_targets:
             if verbose:
-                print(f"  bear_case_verification: 2nd-pass Haiku stress-test on {len(bear_targets)} picks ~${len(bear_targets)*0.005:.3f}")
+                print(f"  bear_case_verification: Haiku bear pass on {len(haiku_targets)} picks ~${len(haiku_targets)*0.005:.3f}")
             try:
-                apply_bear_case_verification(bear_targets, max_calls=4, verbose=verbose)
+                apply_bear_case_verification(haiku_targets, max_calls=5, verbose=verbose)
             except Exception as e:
                 if verbose:
                     print(f"  bear_case_verification failed (non-fatal): {type(e).__name__}: {e}")
+
+        rescue_targets = []
+        for p in haiku_targets:
+            haiku = p.get("haiku_synthesis") or {}
+            verdict = haiku.get("verdict")
+            bear = p.get("bear_verification") or {}
+            bear_conv = bear.get("bear_conviction_pct") or 0
+            is_trap = bear.get("is_this_trade_a_trap") or False
+            if verdict in ("HOLD", "SKIP") and not is_trap and bear_conv < 75:
+                rescue_targets.append(p)
+
+        if rescue_targets:
+            if verbose:
+                rescue_cost = len(rescue_targets) * 1.20
+                tickers = [p.get("ticker") for p in rescue_targets]
+                print(f"  sonnet_rescue: {len(rescue_targets)} Sonnet+web rescue checks on HOLD/SKIP picks ({', '.join(tickers)}) ~${rescue_cost:.2f}")
+            try:
+                apply_unified_forensic(rescue_targets, max_calls=min(len(rescue_targets), 4), verbose=verbose)
+                for p in rescue_targets:
+                    f = p.get("unified_forensic") or {}
+                    sonnet_verdict = f.get("verdict")
+                    sonnet_conf = f.get("confidence_pct") or 0
+                    if sonnet_verdict in ("BUY", "STRONG_BUY") and sonnet_conf >= 60:
+                        haiku = p.get("haiku_synthesis") or {}
+                        original_haiku = haiku.get("verdict")
+                        haiku["verdict_pre_sonnet_rescue"] = original_haiku
+                        haiku["verdict"] = sonnet_verdict
+                        haiku["rescue_reason"] = f"Sonnet+web rescue: {sonnet_verdict} {sonnet_conf}% (Haiku was {original_haiku})"
+                        if verbose:
+                            print(f"    RESCUE: {p.get('ticker')} {original_haiku} -> {sonnet_verdict} (Sonnet {sonnet_conf}%)")
+                    else:
+                        if verbose:
+                            print(f"    NO RESCUE: {p.get('ticker')} stays {p.get('haiku_synthesis',{}).get('verdict')} (Sonnet confirmed {sonnet_verdict}/{sonnet_conf}%)")
+            except Exception as e:
+                if verbose:
+                    print(f"  sonnet_rescue failed (non-fatal): {type(e).__name__}: {e}")
+        else:
+            if verbose:
+                print(f"  sonnet_rescue: SKIPPED - all top 5 picks already BUY-rated (no rescue needed, saved £4.80)")
+
+        top_pick = haiku_targets[0] if haiku_targets else (ranked_picks[0] if ranked_picks else None)
 
         try:
             measure_catalyst_performance(lookback_days=90, verbose=verbose)

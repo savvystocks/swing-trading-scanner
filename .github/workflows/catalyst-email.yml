@@ -28,35 +28,22 @@ jobs:
           python-version: "3.11"
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Run catalyst scan if today's JSON is missing
+      - name: Check today's scan JSON exists (no auto-rescan to preserve quota)
         env:
-          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          SAM_GOV_API_KEY: ${{ secrets.SAM_GOV_API_KEY }}
-          SKIP_EMAIL: "1"
-          ACCOUNT_SIZE_USD: ${{ secrets.ACCOUNT_SIZE_USD }}
-          POSITION_SIZE_PCT: ${{ secrets.POSITION_SIZE_PCT }}
-          STOP_LOSS_PCT: ${{ secrets.STOP_LOSS_PCT }}
-          MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
         run: |
           TODAY=$(date -u +%Y-%m-%d)
           if [ -f "data/results/catalyst_${TODAY}.json" ]; then
-            echo "Found data/results/catalyst_${TODAY}.json — skipping rescan"
+            echo "Found data/results/catalyst_${TODAY}.json — proceeding to email"
           else
-            echo "No catalyst_${TODAY}.json — running fresh scan"
-            python scripts/run_catalyst_scan.py
-          fi
-      - name: Run universe-wide factor screen if missing
-        if: always()
-        env:
-          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
-        run: |
-          TODAY=$(date -u +%Y-%m-%d)
-          if [ ! -f "data/results/factor_screen_${TODAY}.json" ]; then
-            echo "No factor_screen_${TODAY}.json — running fresh"
-            python scripts/run_factor_universe_scan.py || true
+            echo "::warning::No catalyst_${TODAY}.json — scan workflow must have failed. NOT auto-rescanning to preserve EODHD quota."
+            if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                -d "chat_id=${TELEGRAM_CHAT_ID}" \
+                -d "text=Catalyst-email skipped on ${TODAY} — scan JSON missing. Check catalyst-scan workflow logs for failure." || true
+            fi
+            exit 0
           fi
       - name: Render and send catalyst emails (live Alpaca chain at send-time)
         env:

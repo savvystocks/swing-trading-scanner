@@ -11,7 +11,7 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class EODHDClient:
-    def __init__(self, api_key=None, cache_hours=12):
+    def __init__(self, api_key=None, cache_hours=24):
         self.api_key = api_key or os.environ["EODHD_API_KEY"]
         self.cache_seconds = cache_hours * 3600
         self.session = requests.Session()

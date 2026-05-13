@@ -1,9 +1,9 @@
 Run the v3.1 swing trading research on the ticker(s) the user provided: $ARGUMENTS
 
-Execute this bash command for each ticker, loading the EODHD_API_KEY from the Windows user environment:
+Execute this bash command for each ticker. The `EODHD_API_KEY` env var must already be set in the Windows user environment (via `setx`) — never paste the literal token into this command or any committed file:
 
 ```
-cd "/c/Users/savva/OneDrive/Documents/Swing Trading" && export EODHD_API_KEY="69d8b4f4a14cc1.42263743" && python scripts/research.py <TICKER>
+cd "/c/Users/savva/OneDrive/Documents/Swing Trading" && python scripts/research.py <TICKER>
 ```
 
 Then walk the user through the result in plain English, matching the detailed explanation style from the ENVA breakdown. For every pillar and gate, tell them:

@@ -15,7 +15,7 @@ Runs every weekday at 14:09 UTC via GitHub Actions (email arrives ~15:30 BST). P
 - Main branch only, no PR flow, push direct to main
 
 ## Key files
-- `src/eodhd.py` — API client with 12h cache and retry
+- `src/eodhd.py` — API client with 24h cache and retry
 - `src/universe.py` — builds universe.json (rerun manually if needed, not in CI)
 - `src/indicators.py` — SMA/EMA/RSI/MACD/ATR/BB math in pure pandas
 - `src/pillars.py` — 7 pillars + 4 gates + helpers
@@ -29,13 +29,12 @@ Runs every weekday at 14:09 UTC via GitHub Actions (email arrives ~15:30 BST). P
 - `data/universe/universe.json` — committed, rebuilt only on manual universe.py run
 
 ## Secrets
-- EODHD_API_KEY: `69d8b4f4a14cc1.42263743` — All-in-One subscription, Savvas's personal account, £99.99/mo, monthly billing to his card. 100,000 API call/day quota, typical daily scan uses ~5,200. Key is also persisted as a Windows user env var (set via `setx`) and as a GitHub repo secret.
+- EODHD_API_KEY: stored ONLY as a Windows user env var (set via `setx`) and as a GitHub repo secret. NEVER write the literal token value into ANY committed file — EODHD's security scanner auto-revokes tokens it finds on GitHub. All-in-One subscription, Savvas's personal account, £99.99/mo, monthly billing to his card. 100,000 API call/MONTH quota (NOT per day — the credit pool resets at billing date, NOT at midnight UTC). Typical daily scan uses ~5,200 calls, so plan for ~6-7 scan-days of headroom per month. If you exhaust the quota mid-month, you'll get `402 Payment Required` on every endpoint (NOT 429 — EODHD uses 402 for quota top-up prompts). The fix is either a £5 top-up pack (100k extra credits) or wait for the next billing cycle. Account login: Google SSO via savvastgeorgiou@gmail.com.
 - GMAIL_USER: `savvastgeorgiou@gmail.com` — scan emails sent from and to this address.
 - GMAIL_APP_PASSWORD: stored only in GitHub repo secrets and Savvas's password manager. NEVER write the Gmail app password into this file or any committed file — it lives only in encrypted GitHub secrets.
-- Account login for EODHD: Google SSO via savvastgeorgiou@gmail.com.
 
 ## Cost model
-One ongoing cost: EODHD All-in-One £99.99/mo. Everything else (GitHub Actions, Gmail SMTP) is free. CI uses ~300 of 2000 free minutes per month. EODHD daily quota usage ~5,200 of 100,000 (5%).
+One ongoing cost: EODHD All-in-One £99.99/mo + occasional £5 top-up packs if quota runs short. Everything else (GitHub Actions, Gmail SMTP) is free. CI uses ~300 of 2000 free minutes per month. EODHD MONTHLY quota: ~5,200 calls per scan × ~22 trading days = ~115k/mo gross. We trim with 24h client cache + non-duplicated factor screen + no email-job rescan to stay under the 100k/mo limit. If burn rate creeps up, the catalyst-email workflow no longer auto-rescans on missing JSON — it just alerts and exits, preserving credits.
 
 ## Schedule
 Cron fires at 14:09 UTC Monday-Friday. Email arrives in Savvas's inbox around 15:30 BST (summer) / 14:30 GMT (winter). Data is yesterday's EOD bars — the time of day the cron fires is purely a delivery-time preference.
@@ -84,7 +83,7 @@ Savvas is not a coder. He gave me full coding control. He prefers plain text, cl
 
 ### Architecture decisions that paid off
 - Fast filter on Pillar 1 + Pillar 4 (OHLCV only) before hitting fundamentals endpoint cuts the full-score calls from 3089 to ~900. One fundamentals call per fast-filter survivor, not per universe ticker. Huge API savings.
-- 12-hour cache on the EODHD client means local dev reruns are free. CI workspace is ephemeral so cache doesn't help there, but also doesn't hurt.
+- 24-hour cache on the EODHD client means local dev reruns are free. CI workspace is ephemeral so cache doesn't help there, but also doesn't hurt.
 - Per-ticker try/except in scanner loop means one broken ticker can't crash the whole scan.
 - GitHub Actions cron + upload-artifact gives a free history of every scan without needing a database.
 - HTML email renders the full pillar+gate detail inline, no charts hosted anywhere, plain MIME attachment.

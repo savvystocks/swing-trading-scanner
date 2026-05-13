@@ -40,6 +40,9 @@ CATALYST_TIERS = {
     "earnings_spillover": {"tier": "B", "points": 3.0, "label": "Earnings spillover from cohort peer in <=3d", "direction": "bull", "event_timing": "pre_event"},
     "sympathy_continuation": {"tier": "B", "points": 3.0, "label": "Sympathy continuation from cohort peer move", "direction": "bull", "event_timing": "ongoing"},
     "insider_window": {"tier": "B", "points": 2.5, "label": "Insider buying in last 14d", "direction": "bull", "event_timing": "ongoing"},
+    "earnings_lead_up_10_15d": {"tier": "B", "points": 3.5, "label": "Earnings in 10-15d (sweet spot for pre-event run-up)", "direction": "bull", "event_timing": "pre_event"},
+    "earnings_imminent_5_9d": {"tier": "B", "points": 3.0, "label": "Earnings in 5-9d (IV expansion zone)", "direction": "bull", "event_timing": "pre_event"},
+    "earnings_peak_iv_3_4d": {"tier": "C", "points": 2.0, "label": "Earnings in 3-4d (peak IV, late entry)", "direction": "bull", "event_timing": "pre_event"},
     "buyback": {"tier": "C", "points": 1.5, "label": "Buyback program announced", "direction": "bull", "event_timing": "post_event"},
 
     "rebrand": {"tier": "D", "points": 1.0, "label": "Rebrand / name change", "direction": "bull", "event_timing": "post_event"},

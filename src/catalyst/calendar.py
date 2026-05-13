@@ -43,6 +43,34 @@ def upcoming_earnings(client, days_ahead=2, target_date=None):
     return out
 
 
+def earnings_lead_up_window(client, target_date=None, days_ahead=15):
+    today = datetime.utcnow().date()
+    if isinstance(target_date, str):
+        today = datetime.strptime(target_date, "%Y-%m-%d").date()
+    elif target_date:
+        today = target_date
+    out = {}
+    earnings = upcoming_earnings(client, days_ahead=days_ahead, target_date=today)
+    for e in earnings:
+        try:
+            rd = datetime.strptime(e["report_date"], "%Y-%m-%d").date()
+        except Exception:
+            continue
+        days_until = (rd - today).days
+        if days_until < 0 or days_until > days_ahead:
+            continue
+        ticker = e["ticker"]
+        short = ticker.split(".")[0]
+        out[short] = {
+            "ticker": ticker,
+            "report_date": e["report_date"],
+            "days_until": days_until,
+            "before_after_market": e.get("before_after_market"),
+            "estimate_eps": e.get("estimate_eps"),
+        }
+    return out
+
+
 def earnings_signals_for_tomorrow(client, target_date=None):
     today = datetime.utcnow().date()
     if isinstance(target_date, str):

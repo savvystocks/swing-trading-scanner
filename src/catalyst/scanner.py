@@ -16,7 +16,7 @@ from src.indicators import to_dataframe
 from src.catalyst.edgar import (
     EDGARClient, collect_material_signals, collect_13d_signals, collect_form4_cluster,
 )
-from src.catalyst.calendar import earnings_signals_for_tomorrow
+from src.catalyst.calendar import earnings_signals_for_tomorrow, earnings_lead_up_window
 from src.catalyst.cohorts import cohort_signals
 from src.catalyst.scoring import (
     score_ticker, max_possible_base, assign_buckets, CATALYST_TIERS, WEIGHT_CATALYST,
@@ -93,6 +93,10 @@ def gather_catalysts(client, edgar, target_date=None):
     earnings = earnings_signals_for_tomorrow(client, target_date=end_date)
     print(f"    {len(earnings)} earnings signals")
 
+    print(f"  pulling earnings lead-up window (1-15d ahead)...")
+    earnings_lead_up = earnings_lead_up_window(client, target_date=end_date, days_ahead=15)
+    print(f"    {len(earnings_lead_up)} tickers with earnings in next 15d")
+
     print(f"  pulling EDGAR 8-K / 6-K material filings (2 day window)...")
     material = collect_material_signals(edgar, days_back=2, end_date=end_date)
     print(f"    {len(material)} tickers with material filings")
@@ -120,6 +124,7 @@ def gather_catalysts(client, edgar, target_date=None):
 
     return {
         "earnings": earnings,
+        "earnings_lead_up": earnings_lead_up,
         "material": material,
         "activist": activist,
         "insider": insider,
@@ -879,7 +884,8 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         apply_sector_rotation_gate(final_scored, macro, verbose=verbose)
         try:
             from src.catalyst.catalyst_windows import apply_catalyst_windows
-            apply_catalyst_windows(final_scored, verbose=verbose)
+            earnings_lookup = catalysts.get("earnings_lead_up") or {}
+            apply_catalyst_windows(final_scored, verbose=verbose, earnings_lookup=earnings_lookup)
         except Exception as e:
             if verbose:
                 print(f"  catalyst_windows failed (non-fatal): {type(e).__name__}: {e}")

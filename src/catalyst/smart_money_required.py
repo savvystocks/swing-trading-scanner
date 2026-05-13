@@ -71,15 +71,25 @@ def passes_smart_money_filter(candidate, min_signals=1):
     return len(sigs) >= min_signals
 
 
-def filter_smart_money_required(candidates, bracket=None, verbose=False):
-    min_signals = 2 if bracket == "mid" else 1
-    passed = []
-    rejected = []
+def annotate_smart_money(candidates, verbose=False):
+    if not candidates:
+        return
+    n_with_signal = 0
+    n_two_plus = 0
     for s in candidates:
-        if passes_smart_money_filter(s, min_signals=min_signals):
-            passed.append(s)
-        else:
-            rejected.append(s)
+        sigs = smart_money_signals(s)
+        s["_smart_money_signals"] = sigs
+        if len(sigs) >= 1:
+            n_with_signal += 1
+        if len(sigs) >= 2:
+            n_two_plus += 1
     if verbose:
-        print(f"  smart-money required ({bracket}, min {min_signals}): {len(passed)} passed, {len(rejected)} rejected")
-    return passed, rejected
+        print(f"  smart-money annotated: {n_with_signal} have >=1 signal, {n_two_plus} have >=2 (used as scoring bonus, not gate)")
+
+
+def filter_smart_money_required(candidates, bracket=None, verbose=False):
+    annotate_smart_money(candidates, verbose=False)
+    if verbose:
+        n_signal = sum(1 for c in candidates if len(c.get("_smart_money_signals") or []) >= 1)
+        print(f"  smart-money (annotation only, no filter): {n_signal}/{len(candidates)} have >=1 signal")
+    return candidates, []

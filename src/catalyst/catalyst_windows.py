@@ -109,6 +109,45 @@ def detect_sympathy_continuation(candidate, all_candidates, gap_threshold_pct=10
     }
 
 
+def detect_earnings_lead_up(candidate, earnings_lookup):
+    if not earnings_lookup:
+        return None
+    ticker = candidate.get("ticker")
+    if not ticker:
+        return None
+    info = earnings_lookup.get(ticker)
+    if not info:
+        return None
+    days_until = info.get("days_until")
+    if days_until is None:
+        return None
+    if 10 <= days_until <= 15:
+        return {
+            "key": "earnings_lead_up_10_15d",
+            "tier": "B",
+            "label": f"earnings in {days_until}d (institutional positioning window)",
+            "report_date": info.get("report_date"),
+            "days_until": days_until,
+        }
+    if 5 <= days_until <= 9:
+        return {
+            "key": "earnings_imminent_5_9d",
+            "tier": "B",
+            "label": f"earnings in {days_until}d (IV expansion zone)",
+            "report_date": info.get("report_date"),
+            "days_until": days_until,
+        }
+    if 3 <= days_until <= 4:
+        return {
+            "key": "earnings_peak_iv_3_4d",
+            "tier": "C",
+            "label": f"earnings in {days_until}d (peak IV, late entry)",
+            "report_date": info.get("report_date"),
+            "days_until": days_until,
+        }
+    return None
+
+
 def detect_insider_window(candidate, days_back=14):
     ticker = candidate.get("ticker")
     if not ticker:
@@ -158,12 +197,15 @@ def detect_insider_window(candidate, days_back=14):
     }
 
 
-def apply_catalyst_windows(candidates, verbose=False):
+def apply_catalyst_windows(candidates, verbose=False, earnings_lookup=None):
     if not candidates:
         return
     added_spillover = 0
     added_sympathy = 0
     added_insider_window = 0
+    added_lead_up = 0
+    added_imminent = 0
+    added_peak_iv = 0
 
     for c in candidates:
         existing_cats = c.get("catalysts") or []
@@ -184,7 +226,18 @@ def apply_catalyst_windows(candidates, verbose=False):
             existing_cats.append(insider)
             added_insider_window += 1
 
+        if earnings_lookup:
+            lead_up = detect_earnings_lead_up(c, earnings_lookup)
+            if lead_up and lead_up["key"] not in existing_keys:
+                existing_cats.append(lead_up)
+                if lead_up["key"] == "earnings_lead_up_10_15d":
+                    added_lead_up += 1
+                elif lead_up["key"] == "earnings_imminent_5_9d":
+                    added_imminent += 1
+                else:
+                    added_peak_iv += 1
+
         c["catalysts"] = existing_cats
 
     if verbose:
-        print(f"  catalyst windows: +{added_spillover} earnings_spillover, +{added_sympathy} sympathy_continuation, +{added_insider_window} insider_window")
+        print(f"  catalyst windows: +{added_spillover} earnings_spillover, +{added_sympathy} sympathy_continuation, +{added_insider_window} insider_window, +{added_lead_up} earnings_lead_up_10_15d, +{added_imminent} earnings_imminent_5_9d, +{added_peak_iv} earnings_peak_iv_3_4d")

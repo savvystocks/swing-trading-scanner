@@ -481,15 +481,18 @@ def gate_7_earnings_blackout(fundamentals, ind=None):
     next_date = min(future_dates)
     days = (next_date - today).days
 
-    if days <= 10:
+    if days <= 2:
         return {
             "verdict": "FAIL",
             "next_earnings": next_date.strftime("%Y-%m-%d"),
             "days_until": days,
             "post_earnings": None,
+            "reason": f"earnings in {days}d — binary event imminent, do not enter new positions",
         }
 
     verdict = "PASS"
+    if 3 <= days <= 15:
+        verdict = "PASS_PRE_EARNINGS_WINDOW"
     if post and post.get("verdict") == "CATALYST":
         verdict = "PASS_BONUS"
     return {

@@ -994,46 +994,34 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 if verbose:
                     print(f"  bear_case_verification failed (non-fatal): {type(e).__name__}: {e}")
 
-        rescue_targets = []
+        buy_after_synthesis = []
         for p in haiku_targets:
             haiku = p.get("haiku_synthesis") or {}
             verdict = haiku.get("verdict")
             bear = p.get("bear_verification") or {}
-            bear_conv = bear.get("bear_conviction_pct") or 0
             is_trap = bear.get("is_this_trade_a_trap") or False
-            if verdict in ("HOLD", "SKIP") and not is_trap and bear_conv < 75:
-                rescue_targets.append(p)
+            if verdict in ("BUY", "STRONG_BUY") and not is_trap:
+                bull_conf = haiku.get("confidence_pct") or 0
+                bear_conv = bear.get("bear_conviction_pct") or 0
+                p["_net_edge"] = bull_conf - bear_conv
+                buy_after_synthesis.append(p)
 
-        if rescue_targets:
+        buy_after_synthesis.sort(key=lambda p: -(p.get("_net_edge") or 0))
+
+        top_pick = buy_after_synthesis[0] if buy_after_synthesis else None
+
+        if top_pick:
             if verbose:
-                rescue_cost = len(rescue_targets) * 1.20
-                tickers = [p.get("ticker") for p in rescue_targets]
-                print(f"  sonnet_rescue: {len(rescue_targets)} Sonnet+web rescue checks on HOLD/SKIP picks ({', '.join(tickers)}) ~${rescue_cost:.2f}")
+                net = top_pick.get("_net_edge")
+                print(f"  sonnet_deep_dive: 1 Sonnet+web call on email #1 ({top_pick['ticker']} net_edge={net}) ~$1.20")
             try:
-                apply_unified_forensic(rescue_targets, max_calls=min(len(rescue_targets), 4), verbose=verbose)
-                for p in rescue_targets:
-                    f = p.get("unified_forensic") or {}
-                    sonnet_verdict = f.get("verdict")
-                    sonnet_conf = f.get("confidence_pct") or 0
-                    if sonnet_verdict in ("BUY", "STRONG_BUY") and sonnet_conf >= 60:
-                        haiku = p.get("haiku_synthesis") or {}
-                        original_haiku = haiku.get("verdict")
-                        haiku["verdict_pre_sonnet_rescue"] = original_haiku
-                        haiku["verdict"] = sonnet_verdict
-                        haiku["rescue_reason"] = f"Sonnet+web rescue: {sonnet_verdict} {sonnet_conf}% (Haiku was {original_haiku})"
-                        if verbose:
-                            print(f"    RESCUE: {p.get('ticker')} {original_haiku} -> {sonnet_verdict} (Sonnet {sonnet_conf}%)")
-                    else:
-                        if verbose:
-                            print(f"    NO RESCUE: {p.get('ticker')} stays {p.get('haiku_synthesis',{}).get('verdict')} (Sonnet confirmed {sonnet_verdict}/{sonnet_conf}%)")
+                apply_unified_forensic([top_pick], max_calls=1, verbose=verbose)
             except Exception as e:
                 if verbose:
-                    print(f"  sonnet_rescue failed (non-fatal): {type(e).__name__}: {e}")
+                    print(f"  sonnet_deep_dive failed (non-fatal): {type(e).__name__}: {e}")
         else:
             if verbose:
-                print(f"  sonnet_rescue: SKIPPED - all top 5 picks already BUY-rated (no rescue needed, saved £4.80)")
-
-        top_pick = haiku_targets[0] if haiku_targets else (ranked_picks[0] if ranked_picks else None)
+                print(f"  sonnet_deep_dive: SKIPPED - no BUY-rated picks remain after Haiku bull+bear synthesis (saved $1.20)")
 
         try:
             measure_catalyst_performance(lookback_days=90, verbose=verbose)

@@ -91,9 +91,12 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     <table class="outcomes-table">
       <tr><th>Underlying move</th>{% for o in p.outcomes %}<th>+{{ o.underlying_pct }}%</th>{% endfor %}</tr>
       <tr><td>New spot</td>{% for o in p.outcomes %}<td>${{ o.new_spot }}</td>{% endfor %}</tr>
-      <tr><td>Option mid</td>{% for o in p.outcomes %}<td>${{ o.new_option }}</td>{% endfor %}</tr>
+      <tr><td>Option mid (IV-adj)</td>{% for o in p.outcomes %}<td>${{ o.new_option }}</td>{% endfor %}</tr>
       <tr><td>Return</td>{% for o in p.outcomes %}<td class="green">{{ o.return_pct|round(0)|int }}%</td>{% endfor %}</tr>
     </table>
+    {% if p.iv_crush_note %}
+    <div style="font-size:10px; color:#9ca3af; padding-left:38px; margin:2px 0 8px; font-style:italic;">{{ p.iv_crush_note }}</div>
+    {% endif %}
     {% endif %}
     <div class="pick-row"><span class="pick-row-label">Odds</span><span class="pick-row-odds">{{ p.odds_line }}</span></div>
     <div class="pick-row"><span class="pick-row-label">Bet</span><span class="pick-row-bet">{{ p.bet_line }}</span></div>
@@ -314,6 +317,32 @@ def _build_bet_line(pick):
     return " ".join(parts)
 
 
+def _detect_catalyst_flags(pick):
+    cats = pick.get("catalysts") or []
+    earnings_imminent_keys = {"earnings_imminent_5_9d", "earnings_peak_iv_3_4d", "earnings_amc_today", "earnings_bmo_tomorrow"}
+    earnings_lead_up_keys = {"earnings_lead_up_10_15d"}
+    general_catalyst_keys = {
+        "clinical_milestone", "fda_event", "merger", "definitive_agreement",
+        "ai_deal_announcement", "semis_capex_signal", "defense_contract_award",
+        "activist_stake", "13d", "13d_a", "strategic_partnership", "contract_win",
+        "post_earnings_beat", "bank_post_earnings_drift",
+    }
+    has_imminent = False
+    has_lead_up = False
+    has_general = False
+    for c in cats:
+        if not isinstance(c, dict):
+            continue
+        k = c.get("key", "")
+        if k in earnings_imminent_keys:
+            has_imminent = True
+        elif k in earnings_lead_up_keys:
+            has_lead_up = True
+        elif k in general_catalyst_keys:
+            has_general = True
+    return has_imminent, has_lead_up, has_general
+
+
 def _build_pick(pick, rank):
     tier = pick.get("_aa_tier", "A")
     price_raw = pick.get("live_spot") or pick.get("price")
@@ -322,9 +351,25 @@ def _build_pick(pick, rank):
     trade_line = _build_trade_line(pick)
     live_option = pick.get("_live_option")
     outcomes = []
+    iv_crush_note = None
     if live_option and price_raw:
         try:
-            outcomes = project_outcomes(live_option, float(price_raw))
+            has_imminent, has_lead_up, has_general = _detect_catalyst_flags(pick)
+            outcomes, crush_info = project_outcomes(
+                live_option,
+                float(price_raw),
+                has_earnings_imminent=has_imminent,
+                has_earnings_lead_up=has_lead_up,
+                has_general_catalyst=has_general,
+            )
+            iv_crush_note = crush_info.get("scenario_label")
+            iv_pts = crush_info.get("iv_change_pts")
+            iv_dollar = crush_info.get("iv_dollar_impact")
+            if iv_pts is not None and iv_pts < 0:
+                iv_crush_note = (
+                    f"IV crush built-in: {iv_pts:.0f} vol points · "
+                    f"~${iv_dollar:.2f}/contract drag · {iv_crush_note}"
+                )
         except Exception:
             outcomes = []
 
@@ -345,6 +390,7 @@ def _build_pick(pick, rank):
         "bet_line": _build_bet_line(pick),
         "outcomes": outcomes,
         "has_outcomes": bool(outcomes),
+        "iv_crush_note": iv_crush_note,
     }
 
 

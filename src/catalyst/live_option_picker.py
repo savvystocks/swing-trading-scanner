@@ -85,18 +85,47 @@ def find_best_call(symbol, spot, dte_min=25, dte_max=50):
     return rows[0]
 
 
-def project_outcomes(option, spot, scenarios=(5, 8, 12, 15, 20)):
+def _estimate_iv_crush_points(current_iv_pct, has_earnings_imminent, has_earnings_lead_up, has_general_catalyst):
+    if current_iv_pct is None or current_iv_pct <= 0:
+        return 0.0
+    if has_earnings_imminent:
+        crush = min(current_iv_pct * 0.45, 45.0)
+        return -crush
+    if has_earnings_lead_up:
+        crush = min(current_iv_pct * 0.15, 12.0)
+        return -crush
+    if has_general_catalyst:
+        crush = min(current_iv_pct * 0.08, 6.0)
+        return -crush
+    return -min(current_iv_pct * 0.03, 2.0)
+
+
+def project_outcomes(option, spot, scenarios=(5, 8, 12, 15, 20), has_earnings_imminent=False, has_earnings_lead_up=False, has_general_catalyst=False):
     mid = option["mid"]
     strike = option["strike"]
     delta = option["delta"]
     gamma = option.get("gamma", 0)
+    vega = option.get("vega", 0)
+    current_iv = option.get("iv_pct", 0) or 0
+
+    iv_change_pts = _estimate_iv_crush_points(
+        current_iv,
+        has_earnings_imminent,
+        has_earnings_lead_up,
+        has_general_catalyst,
+    )
+    iv_crush_pnl = vega * iv_change_pts
+
     out = []
     for pct in scenarios:
         new_spot = spot * (1 + pct / 100)
         underlying_move = new_spot - spot
-        new_option_value = mid + delta * underlying_move + 0.5 * gamma * (underlying_move ** 2)
+        delta_pnl = delta * underlying_move
+        gamma_pnl = 0.5 * gamma * (underlying_move ** 2)
+        new_option_value = mid + delta_pnl + gamma_pnl + iv_crush_pnl
         intrinsic = max(0, new_spot - strike)
-        new_option_value = max(new_option_value, intrinsic * 0.90)
+        new_option_value = max(new_option_value, intrinsic * 0.92)
+        new_option_value = max(0.01, new_option_value)
         return_pct = (new_option_value - mid) / mid * 100
         out.append({
             "underlying_pct": pct,
@@ -104,7 +133,16 @@ def project_outcomes(option, spot, scenarios=(5, 8, 12, 15, 20)):
             "new_option": round(new_option_value, 2),
             "return_pct": round(return_pct, 0),
         })
-    return out
+    return out, {
+        "iv_change_pts": round(iv_change_pts, 1),
+        "iv_dollar_impact": round(iv_crush_pnl, 2),
+        "scenario_label": (
+            "earnings IV crush priced in (~45% IV reduction)" if has_earnings_imminent
+            else "modest IV decay priced in (~15% reduction)" if has_earnings_lead_up
+            else "light IV softening priced in (~8% reduction)" if has_general_catalyst
+            else "minimal IV change (no event ahead)"
+        ),
+    }
 
 
 def build_trade_line(ticker, spot, option):

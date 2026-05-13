@@ -95,7 +95,9 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
   <h1>Micro · Small · Mid Setups</h1>
   <div class="header-meta">
-    {{ scan_day_label }} · {{ picks|length }} BUY-rated · {{ filtered_out_count }} filtered out (HOLD/SKIP)
+    {{ scan_day_label }} · {{ picks|length }} picks
+    {% if fallback_used_count %}({{ picks|length - fallback_used_count }} BUY + {{ fallback_used_count }} fallback HOLD/Weak){% else %}(all BUY-rated){% endif %}
+    · {{ filtered_out_count }} filtered out
     {% if regime_label %}· {{ regime_label }} regime{% endif %}
   </div>
   <div class="header-meta" style="margin-top:-18px; margin-bottom:24px; font-size:11px;">
@@ -644,19 +646,47 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
 
     TECH_BIAS_MULTIPLIER = 1.15
 
-    buy_picks = [p for p in all_tier_picks if _is_buy_signal(p)]
+    def _net_edge_of(p):
+        forensic = p.get("unified_forensic") or {}
+        haiku = p.get("haiku_synthesis") or {}
+        bear = p.get("bear_verification") or {}
+        bull = forensic.get("confidence_pct") or haiku.get("confidence_pct") or 0
+        bear_conv = bear.get("bear_conviction_pct") or 0
+        return bull - bear_conv
 
     def _tech_biased_sort_key(p):
-        conf = (p.get("unified_forensic") or {}).get("confidence_pct") or (p.get("haiku_synthesis") or {}).get("confidence_pct") or 50
+        edge = _net_edge_of(p) or 0
+        if not edge:
+            edge = (p.get("unified_forensic") or {}).get("confidence_pct") or (p.get("haiku_synthesis") or {}).get("confidence_pct") or 50
         if _sector_bucket(p.get("sector")) == "Technology":
-            conf = conf * TECH_BIAS_MULTIPLIER
-        return -conf
+            edge = edge * TECH_BIAS_MULTIPLIER
+        return -edge
 
+    buy_picks = [p for p in all_tier_picks if _is_buy_signal(p)]
     buy_picks.sort(key=_tech_biased_sort_key)
+
+    MIN_PICKS_TARGET = 3
+    fallback_picks = []
+    if len(buy_picks) < MIN_PICKS_TARGET:
+        already_included = set(id(p) for p in buy_picks)
+        candidates_with_llm = [
+            p for p in all_tier_picks
+            if id(p) not in already_included
+            and ((p.get("haiku_synthesis") or {}).get("verdict") or (p.get("unified_forensic") or {}).get("verdict"))
+        ]
+        candidates_with_llm.sort(key=_tech_biased_sort_key)
+        needed = MIN_PICKS_TARGET - len(buy_picks)
+        for p in candidates_with_llm[:needed * 2]:
+            bear = p.get("bear_verification") or {}
+            if bear.get("is_this_trade_a_trap"):
+                continue
+            fallback_picks.append(p)
+            if len(fallback_picks) >= needed:
+                break
 
     picked = []
     sector_counts = {}
-    for p in buy_picks:
+    for p in buy_picks + fallback_picks:
         bucket = _sector_bucket(p.get("sector"))
         cap = SECTOR_CAPS.get(bucket, 1)
         if sector_counts.get(bucket, 0) >= cap:
@@ -670,6 +700,7 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
     picks_out = [_build_pick(p, i + 1) for i, p in enumerate(top_picks)]
 
     filtered_out_count = len(all_tier_picks) - len(buy_picks)
+    fallback_used_count = len(fallback_picks)
 
     pre_earnings_lead_up = []
     pre_earnings_imminent = []
@@ -739,4 +770,5 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         pre_earnings_count=pre_earnings_count,
         skip_list=skip_list,
         filtered_out_count=filtered_out_count,
+        fallback_used_count=fallback_used_count,
     )

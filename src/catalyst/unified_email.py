@@ -1,6 +1,12 @@
 from datetime import datetime
 from jinja2 import Template
 
+try:
+    from src.catalyst.live_option_picker import find_best_call, project_outcomes, build_trade_line
+    LIVE_OPTIONS_AVAILABLE = True
+except ImportError:
+    LIVE_OPTIONS_AVAILABLE = False
+
 
 EMAIL_TEMPLATE = """<!DOCTYPE html>
 <html>
@@ -31,6 +37,15 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .pick-row-trade { color:#111; font-weight:600; }
   .pick-row-odds { color:#111; }
   .pick-row-bet { color:#374151; }
+  .outcomes-table { margin:8px 0 4px 38px; font-size:11px; border-collapse:collapse; }
+  .outcomes-table th { font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; padding:4px 10px 4px 0; text-align:left; }
+  .outcomes-table td { padding:3px 12px 3px 0; color:#1f2937; }
+  .outcomes-table td.green { color:#15803d; font-weight:700; }
+  .grade-pill { display:inline-block; padding:2px 7px; border-radius:3px; font-size:10px; font-weight:800; letter-spacing:0.4px; }
+  .grade-pill.highest { background:#065f46; color:#fff; }
+  .grade-pill.high { background:#15803d; color:#fff; }
+  .grade-pill.med { background:#ca8a04; color:#fff; }
+  .grade-pill.low { background:#9ca3af; color:#fff; }
   .table { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
   .table th { background:#f9fafb; padding:6px 10px; text-align:left; font-weight:700; color:#4b5563; font-size:11px; border-bottom:1px solid #e5e7eb; }
   .table td { padding:6px 10px; border-bottom:1px solid #f3f4f6; vertical-align:top; }
@@ -72,6 +87,14 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
     <div class="pick-row"><span class="pick-row-label">Trade</span><span class="pick-row-trade">{{ p.trade_line }}</span></div>
+    {% if p.has_outcomes %}
+    <table class="outcomes-table">
+      <tr><th>Underlying move</th>{% for o in p.outcomes %}<th>+{{ o.underlying_pct }}%</th>{% endfor %}</tr>
+      <tr><td>New spot</td>{% for o in p.outcomes %}<td>${{ o.new_spot }}</td>{% endfor %}</tr>
+      <tr><td>Option mid</td>{% for o in p.outcomes %}<td>${{ o.new_option }}</td>{% endfor %}</tr>
+      <tr><td>Return</td>{% for o in p.outcomes %}<td class="green">{{ o.return_pct|round(0)|int }}%</td>{% endfor %}</tr>
+    </table>
+    {% endif %}
     <div class="pick-row"><span class="pick-row-label">Odds</span><span class="pick-row-odds">{{ p.odds_line }}</span></div>
     <div class="pick-row"><span class="pick-row-label">Bet</span><span class="pick-row-bet">{{ p.bet_line }}</span></div>
   </div>
@@ -88,12 +111,14 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   <div class="subsection-label">10-15 days out — institutional positioning sweet spot</div>
   <div class="subsection-hint">Entry zone where IV is still cheap and the run-up typically starts. Hold until 1-3d before the print.</div>
   <table class="table">
-    <tr><th>Ticker</th><th>Spot</th><th>Earnings</th><th>Stacked Catalysts</th></tr>
+    <tr><th>Ticker</th><th>Spot</th><th>Earnings</th><th>Quality</th><th>Score</th><th>Stacked Catalysts</th></tr>
     {% for s in pre_earnings_lead_up %}
     <tr>
       <td class="tkr">{{ s.ticker }}</td>
       <td>${{ s.price_fmt }}</td>
       <td>{{ s.report_date }} ({{ s.days_until }}d)</td>
+      <td><span class="grade-pill {{ s.grade_class }}">{{ s.grade }}</span> {{ s.tier }}</td>
+      <td>{{ s.score }} · {{ s.cat_count }} cats</td>
       <td>{{ s.catalysts_joined }}</td>
     </tr>
     {% endfor %}
@@ -182,30 +207,26 @@ def _tier_class(tier):
 
 
 def _build_trade_line(pick):
-    trade = pick.get("trade_ticket") or {}
-    if trade and trade.get("option_action"):
-        action = trade.get("option_action", "BUY")
-        n = trade.get("option_contracts", 1)
-        exp = trade.get("option_expiry", "")
-        strike = trade.get("option_strike", "")
-        side = trade.get("option_side", "C")
-        mid = trade.get("option_mid_price")
-        target = trade.get("option_target")
-        stop = trade.get("option_stop")
-        line = f"{action} {n}x {pick.get('ticker')} {exp} ${strike}{side} @ ${mid}"
-        if target:
-            line += f" · target ${target}"
-        if stop:
-            line += f" · stop ${stop}"
-        return line
-
+    ticker = pick.get("ticker")
     price = pick.get("live_spot") or pick.get("price")
+    if price:
+        try:
+            price = float(price)
+        except (TypeError, ValueError):
+            price = None
+
+    if LIVE_OPTIONS_AVAILABLE and price and ticker:
+        try:
+            option = find_best_call(ticker, price)
+            if option:
+                line = build_trade_line(ticker, price, option)
+                pick["_live_option"] = option
+                return line
+        except Exception:
+            pass
+
     if not price:
-        return "Trade ticket unavailable"
-    try:
-        price = float(price)
-    except (TypeError, ValueError):
-        return "Trade ticket unavailable"
+        return "Trade ticket unavailable (no live spot, no option chain)"
 
     atr_pct = pick.get("atr_pct") or 3.5
     try:
@@ -215,12 +236,11 @@ def _build_trade_line(pick):
 
     target = price * 1.085
     stop = price * (1 - atr_pct / 100.0)
-    strike = round(price * 1.05 / 0.5) * 0.5
     return (
-        f"Buy {pick.get('ticker')} stock at ~${_fmt_price(price)} · "
+        f"Buy {ticker} stock at ~${_fmt_price(price)} · "
         f"target ${_fmt_price(target)} (+8.5%) · "
         f"stop ${_fmt_price(stop)} (-{atr_pct:.1f}%) · "
-        f"or call ~${_fmt_price(strike)} strike 30-45d expiry"
+        f"options chain too thin for clean contract"
     )
 
 
@@ -298,6 +318,16 @@ def _build_pick(pick, rank):
     tier = pick.get("_aa_tier", "A")
     price_raw = pick.get("live_spot") or pick.get("price")
     move_pct = pick.get("today_pct_change") or pick.get("intraday_pct_change")
+
+    trade_line = _build_trade_line(pick)
+    live_option = pick.get("_live_option")
+    outcomes = []
+    if live_option and price_raw:
+        try:
+            outcomes = project_outcomes(live_option, float(price_raw))
+        except Exception:
+            outcomes = []
+
     return {
         "rank": rank,
         "ticker": pick.get("ticker", "?"),
@@ -310,10 +340,26 @@ def _build_pick(pick, rank):
         "move_pct": move_pct,
         "move_pct_fmt": _fmt_pct(move_pct),
         "move_class": _move_class(move_pct),
-        "trade_line": _build_trade_line(pick),
+        "trade_line": trade_line,
         "odds_line": _build_odds_line(pick),
         "bet_line": _build_bet_line(pick),
+        "outcomes": outcomes,
+        "has_outcomes": bool(outcomes),
     }
+
+
+def _quality_grade(score, cat_count, tier):
+    if tier == "A++":
+        return ("S", "highest")
+    if tier == "A+" and score >= 250 and cat_count >= 4:
+        return ("HIGH", "high")
+    if score >= 200 and cat_count >= 3:
+        return ("HIGH", "high")
+    if score >= 100 and cat_count >= 3:
+        return ("MED", "med")
+    if cat_count >= 2:
+        return ("LOW", "low")
+    return ("?", "low")
 
 
 def _build_pre_earnings_row(pick):
@@ -335,12 +381,22 @@ def _build_pre_earnings_row(pick):
 
     days_until = (earn_cat or {}).get("days_until")
     report_date = (earn_cat or {}).get("report_date")
+    score = pick.get("_stacked_score") or pick.get("score") or 0
+    cat_count = pick.get("_category_count") or len(cats)
+    tier = pick.get("_aa_tier", "A")
+    grade, grade_class = _quality_grade(score, cat_count, tier)
+
     return {
         "ticker": pick.get("ticker", "?"),
         "price_fmt": _fmt_price(pick.get("live_spot") or pick.get("price")),
         "report_date": report_date or "?",
         "days_until": days_until if days_until is not None else 99,
         "catalysts_joined": " + ".join(visible_cats) if visible_cats else "?",
+        "tier": tier,
+        "score": int(score),
+        "cat_count": cat_count,
+        "grade": grade,
+        "grade_class": grade_class,
     }
 
 

@@ -56,6 +56,14 @@ class EODHDClient:
                 time.sleep(2 ** attempt)
 
     def ohlcv(self, ticker, from_date=None, to_date=None):
+        if ticker and ticker.endswith(".US"):
+            try:
+                from src.alpaca_ohlcv import get_daily_bars_eodhd_format
+                bars = get_daily_bars_eodhd_format(ticker[:-3], from_date=from_date, to_date=to_date)
+                if bars:
+                    return bars
+            except Exception:
+                pass
         params = {}
         if from_date:
             params["from"] = from_date

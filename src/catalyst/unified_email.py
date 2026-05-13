@@ -2,10 +2,13 @@ from datetime import datetime
 from jinja2 import Template
 
 try:
-    from src.catalyst.live_option_picker import find_best_call, project_outcomes, build_trade_line
+    from src.catalyst.live_option_picker import find_best_call, project_outcomes, build_trade_line, build_kelly_line
     LIVE_OPTIONS_AVAILABLE = True
 except ImportError:
     LIVE_OPTIONS_AVAILABLE = False
+
+import os
+ACCOUNT_SIZE_USD = float(os.environ.get("ACCOUNT_SIZE_USD", "5800"))
 
 
 EMAIL_TEMPLATE = """<!DOCTYPE html>
@@ -95,11 +98,17 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       <tr><td>Return</td>{% for o in p.outcomes %}<td class="green">{{ o.return_pct|round(0)|int }}%</td>{% endfor %}</tr>
     </table>
     {% if p.iv_crush_note %}
-    <div style="font-size:10px; color:#9ca3af; padding-left:38px; margin:2px 0 8px; font-style:italic;">{{ p.iv_crush_note }}</div>
+    <div style="font-size:10px; color:#9ca3af; padding-left:38px; margin:2px 0 4px; font-style:italic;">{{ p.iv_crush_note }}</div>
     {% endif %}
+    {% endif %}
+    {% if p.kelly_line %}
+    <div class="pick-row"><span class="pick-row-label">Size</span><span class="pick-row-trade">{{ p.kelly_line }}</span></div>
     {% endif %}
     <div class="pick-row"><span class="pick-row-label">Odds</span><span class="pick-row-odds">{{ p.odds_line }}</span></div>
     <div class="pick-row"><span class="pick-row-label">Bet</span><span class="pick-row-bet">{{ p.bet_line }}</span></div>
+    {% if p.bear_note %}
+    <div class="pick-row"><span class="pick-row-label">Bear</span><span style="color:#7f1d1d; font-size:12px;">{{ p.bear_note }}</span></div>
+    {% endif %}
   </div>
   {% endfor %}
   {% else %}
@@ -373,6 +382,34 @@ def _build_pick(pick, rank):
         except Exception:
             outcomes = []
 
+    kelly_line = None
+    if outcomes and live_option:
+        try:
+            forensic = pick.get("unified_forensic") or {}
+            haiku = pick.get("haiku_synthesis") or {}
+            win_prob = forensic.get("confidence_pct") or haiku.get("confidence_pct")
+            if win_prob:
+                kelly_line = build_kelly_line(
+                    win_prob_pct=float(win_prob),
+                    outcomes=outcomes,
+                    option_mid=live_option.get("mid"),
+                    account_size_usd=ACCOUNT_SIZE_USD,
+                )
+        except Exception:
+            kelly_line = None
+
+    bear_v = pick.get("bear_verification") or {}
+    bear_note = None
+    if bear_v:
+        bear_verdict = bear_v.get("bear_verdict")
+        bear_conv = bear_v.get("bear_conviction_pct", 0)
+        is_trap = bear_v.get("is_this_trade_a_trap")
+        killer = bear_v.get("killer_thesis", "")
+        if is_trap or (bear_conv and bear_conv >= 50):
+            bear_note = f"Bear case ({bear_verdict}, {bear_conv}% conviction): {killer[:200]}"
+        elif bear_conv:
+            bear_note = f"Bear case stress-tested: {bear_verdict} ({bear_conv}% conviction) - BULL THESIS HOLDS"
+
     return {
         "rank": rank,
         "ticker": pick.get("ticker", "?"),
@@ -391,6 +428,8 @@ def _build_pick(pick, rank):
         "outcomes": outcomes,
         "has_outcomes": bool(outcomes),
         "iv_crush_note": iv_crush_note,
+        "kelly_line": kelly_line,
+        "bear_note": bear_note,
     }
 
 

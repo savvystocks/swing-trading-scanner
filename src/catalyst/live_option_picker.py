@@ -157,6 +157,67 @@ def build_trade_line(ticker, spot, option):
     )
 
 
+def kelly_position_size(win_prob_pct, target_return_pct, max_loss_pct=80, account_size_usd=None, kelly_fraction=0.25, hard_cap_pct=15):
+    if win_prob_pct is None or win_prob_pct <= 0:
+        return None
+    p = win_prob_pct / 100.0
+    q = 1 - p
+    if target_return_pct <= 0 or max_loss_pct <= 0:
+        return None
+    b = target_return_pct / max_loss_pct
+    if b <= 0:
+        return None
+    full_kelly = (p * b - q) / b
+    if full_kelly <= 0:
+        return {
+            "full_kelly_pct": round(full_kelly * 100, 1),
+            "recommended_pct": 0,
+            "verdict": "EDGE NEGATIVE - DO NOT SIZE",
+            "dollar_size": 0,
+        }
+    recommended_pct = min(full_kelly * kelly_fraction * 100, hard_cap_pct)
+    dollar_size = None
+    if account_size_usd:
+        dollar_size = round(account_size_usd * recommended_pct / 100, 0)
+    return {
+        "full_kelly_pct": round(full_kelly * 100, 1),
+        "recommended_pct": round(recommended_pct, 1),
+        "kelly_fraction": kelly_fraction,
+        "hard_cap_pct": hard_cap_pct,
+        "verdict": "POSITIVE EDGE" if full_kelly > 0 else "NEGATIVE",
+        "dollar_size": dollar_size,
+    }
+
+
+def build_kelly_line(win_prob_pct, outcomes, option_mid, account_size_usd=None):
+    if not outcomes or not win_prob_pct:
+        return None
+    target_scenario = next((o for o in outcomes if o.get("underlying_pct") == 12), None) or outcomes[len(outcomes) // 2]
+    target_return = target_scenario.get("return_pct", 0)
+    if target_return <= 0:
+        return None
+    max_loss = 80
+    kelly = kelly_position_size(
+        win_prob_pct=win_prob_pct,
+        target_return_pct=target_return,
+        max_loss_pct=max_loss,
+        account_size_usd=account_size_usd,
+        kelly_fraction=0.25,
+        hard_cap_pct=15,
+    )
+    if not kelly:
+        return None
+    contracts = None
+    if account_size_usd and option_mid and kelly.get("dollar_size"):
+        contracts = max(1, int(kelly["dollar_size"] / (option_mid * 100)))
+    parts = []
+    parts.append(f"Kelly suggests {kelly['recommended_pct']}% of account")
+    if kelly.get("dollar_size") and contracts:
+        parts.append(f"~${int(kelly['dollar_size'])} = {contracts} contracts")
+    parts.append(f"(quarter-Kelly, capped {kelly['hard_cap_pct']}%)")
+    return " · ".join(parts)
+
+
 def build_outcome_table(option, spot):
     if not option:
         return []

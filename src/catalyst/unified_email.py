@@ -40,15 +40,41 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .pick-row-trade { color:#111; font-weight:600; }
   .pick-row-odds { color:#111; }
   .pick-row-bet { color:#374151; }
-  .outcomes-table { margin:8px 0 4px 38px; font-size:11px; border-collapse:collapse; }
-  .outcomes-table th { font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; padding:4px 10px 4px 0; text-align:left; }
-  .outcomes-table td { padding:3px 12px 3px 0; color:#1f2937; }
-  .outcomes-table td.green { color:#15803d; font-weight:700; }
+  .outcomes-cards { display:flex; gap:8px; margin:10px 0 4px 38px; flex-wrap:wrap; }
+  .outcome-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; padding:8px 12px; min-width:108px; flex:1; }
+  .outcome-card .move-label { font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; }
+  .outcome-card .new-spot { font-size:12px; color:#4b5563; margin:2px 0; }
+  .outcome-card .new-option { font-size:12px; color:#111; font-weight:600; margin:2px 0; }
+  .outcome-card .return-value { font-size:16px; font-weight:800; margin-top:4px; }
+  .outcome-card .return-value.win { color:#15803d; }
+  .outcome-card .return-value.lose { color:#b91c1c; }
+  .outcome-card .return-value.flat { color:#9ca3af; }
   .grade-pill { display:inline-block; padding:2px 7px; border-radius:3px; font-size:10px; font-weight:800; letter-spacing:0.4px; }
   .grade-pill.highest { background:#065f46; color:#fff; }
   .grade-pill.high { background:#15803d; color:#fff; }
   .grade-pill.med { background:#ca8a04; color:#fff; }
   .grade-pill.low { background:#9ca3af; color:#fff; }
+  .final-rating { margin:14px 0 0 38px; padding:12px 16px; border-radius:8px; border:2px solid; }
+  .final-rating.rating-strong { background:#ecfdf5; border-color:#065f46; }
+  .final-rating.rating-buy { background:#f0fdf4; border-color:#15803d; }
+  .final-rating.rating-weak { background:#fefce8; border-color:#a16207; }
+  .final-rating.rating-hold { background:#f9fafb; border-color:#6b7280; }
+  .final-rating.rating-skip { background:#fef2f2; border-color:#b91c1c; }
+  .final-rating.rating-neutral { background:#f9fafb; border-color:#9ca3af; }
+  .rating-headline { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
+  .rating-label { font-size:18px; font-weight:800; letter-spacing:-0.3px; }
+  .rating-strong .rating-label { color:#065f46; }
+  .rating-buy .rating-label { color:#15803d; }
+  .rating-weak .rating-label { color:#a16207; }
+  .rating-hold .rating-label { color:#6b7280; }
+  .rating-skip .rating-label { color:#b91c1c; }
+  .rating-neutral .rating-label { color:#9ca3af; }
+  .rating-stars { font-size:14px; font-weight:700; letter-spacing:2px; }
+  .rating-net { font-size:11px; color:#4b5563; font-weight:600; }
+  .rating-bull, .rating-bear { font-size:11px; padding:6px 10px; margin-top:6px; border-radius:4px; line-height:1.5; }
+  .rating-bull { background:#ecfdf5; color:#065f46; }
+  .rating-bear { background:#fef2f2; color:#7f1d1d; }
+  .rating-bull strong, .rating-bear strong { font-weight:800; }
   .table { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
   .table th { background:#f9fafb; padding:6px 10px; text-align:left; font-weight:700; color:#4b5563; font-size:11px; border-bottom:1px solid #e5e7eb; }
   .table td { padding:6px 10px; border-bottom:1px solid #f3f4f6; vertical-align:top; }
@@ -91,23 +117,45 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     </div>
     <div class="pick-row"><span class="pick-row-label">Trade</span><span class="pick-row-trade">{{ p.trade_line }}</span></div>
     {% if p.has_outcomes %}
-    <table class="outcomes-table">
-      <tr><th>Underlying move</th>{% for o in p.outcomes %}<th>+{{ o.underlying_pct }}%</th>{% endfor %}</tr>
-      <tr><td>New spot</td>{% for o in p.outcomes %}<td>${{ o.new_spot }}</td>{% endfor %}</tr>
-      <tr><td>Option mid (IV-adj)</td>{% for o in p.outcomes %}<td>${{ o.new_option }}</td>{% endfor %}</tr>
-      <tr><td>Return</td>{% for o in p.outcomes %}<td class="green">{{ o.return_pct|round(0)|int }}%</td>{% endfor %}</tr>
-    </table>
+    <div class="outcomes-cards">
+      {% for o in p.outcomes %}
+      <div class="outcome-card">
+        <div class="move-label">If stock +{{ o.underlying_pct }}%</div>
+        <div class="new-spot">Spot: ${{ o.new_spot }}</div>
+        <div class="new-option">Option: ${{ o.new_option }}</div>
+        <div class="return-value {% if o.return_pct >= 50 %}win{% elif o.return_pct < 0 %}lose{% else %}flat{% endif %}">{{ o.return_pct|round(0)|int }}%</div>
+      </div>
+      {% endfor %}
+    </div>
     {% if p.iv_crush_note %}
-    <div style="font-size:10px; color:#9ca3af; padding-left:38px; margin:2px 0 4px; font-style:italic;">{{ p.iv_crush_note }}</div>
+    <div style="font-size:10px; color:#9ca3af; padding-left:38px; margin:6px 0 4px; font-style:italic;">{{ p.iv_crush_note }}</div>
     {% endif %}
     {% endif %}
     {% if p.kelly_line %}
     <div class="pick-row"><span class="pick-row-label">Size</span><span class="pick-row-trade">{{ p.kelly_line }}</span></div>
     {% endif %}
+
+    {% if p.rating_summary and p.rating_summary.bull_conf %}
+    <div class="final-rating {{ p.rating_summary.rating_class }}">
+      <div class="rating-headline">
+        <span class="rating-label">{{ p.rating_summary.final_rating }}</span>
+        <span class="rating-stars">{{ p.rating_summary.star_display }}</span>
+        <span class="rating-net">
+          Bull {{ p.rating_summary.bull_conf }}%
+          {% if p.rating_summary.bear_conv %}vs Bear {{ p.rating_summary.bear_conv }}%{% endif %}
+          {% if p.rating_summary.net_edge is not none %} · net edge {{ p.rating_summary.net_edge|round(0)|int }}{% endif %}
+        </span>
+      </div>
+      {% if p.rating_summary.bull_thesis %}
+      <div class="rating-bull"><strong>Bull case:</strong> {{ p.rating_summary.bull_thesis }}</div>
+      {% endif %}
+      {% if p.rating_summary.killer_thesis %}
+      <div class="rating-bear"><strong>Bear killer{% if p.rating_summary.is_trap %} - TRAP FLAGGED{% endif %}:</strong> {{ p.rating_summary.killer_thesis }}</div>
+      {% endif %}
+    </div>
+    {% else %}
     <div class="pick-row"><span class="pick-row-label">Odds</span><span class="pick-row-odds">{{ p.odds_line }}</span></div>
     <div class="pick-row"><span class="pick-row-label">Bet</span><span class="pick-row-bet">{{ p.bet_line }}</span></div>
-    {% if p.bear_note %}
-    <div class="pick-row"><span class="pick-row-label">Bear</span><span style="color:#7f1d1d; font-size:12px;">{{ p.bear_note }}</span></div>
     {% endif %}
   </div>
   {% endfor %}
@@ -398,13 +446,67 @@ def _build_pick(pick, rank):
         except Exception:
             kelly_line = None
 
+    forensic = pick.get("unified_forensic") or {}
+    haiku = pick.get("haiku_synthesis") or {}
     bear_v = pick.get("bear_verification") or {}
+
+    bull_conf = forensic.get("confidence_pct") or haiku.get("confidence_pct") or 0
+    bull_verdict = forensic.get("verdict") or haiku.get("verdict") or "UNKNOWN"
+    bull_thesis = forensic.get("bull_thesis") or haiku.get("bull_thesis") or ""
+
+    bear_conv = bear_v.get("bear_conviction_pct") or 0
+    bear_verdict = bear_v.get("bear_verdict") or "NOT_TESTED"
+    killer = bear_v.get("killer_thesis") or ""
+    is_trap = bear_v.get("is_this_trade_a_trap") or False
+
+    net_edge = bull_conf - bear_conv if bull_conf else None
+    if is_trap:
+        final_rating = "SKIP - TRAP"
+        rating_class = "rating-skip"
+        stars = 1
+    elif net_edge is None:
+        final_rating = "NO LLM REVIEW"
+        rating_class = "rating-neutral"
+        stars = 2
+    elif net_edge >= 40:
+        final_rating = "STRONG BUY"
+        rating_class = "rating-strong"
+        stars = 5
+    elif net_edge >= 25:
+        final_rating = "BUY"
+        rating_class = "rating-buy"
+        stars = 4
+    elif net_edge >= 10:
+        final_rating = "WEAK BUY"
+        rating_class = "rating-weak"
+        stars = 3
+    elif net_edge >= -10:
+        final_rating = "HOLD"
+        rating_class = "rating-hold"
+        stars = 2
+    else:
+        final_rating = "SKIP"
+        rating_class = "rating-skip"
+        stars = 1
+
+    star_display = "*" * stars + "-" * (5 - stars)
+    rating_summary = {
+        "final_rating": final_rating,
+        "rating_class": rating_class,
+        "stars": stars,
+        "star_display": star_display,
+        "net_edge": net_edge,
+        "bull_conf": int(bull_conf) if bull_conf else None,
+        "bear_conv": int(bear_conv) if bear_conv else None,
+        "bull_verdict": bull_verdict,
+        "bear_verdict": bear_verdict,
+        "bull_thesis": bull_thesis[:400] if bull_thesis else "",
+        "killer_thesis": killer[:300] if killer else "",
+        "is_trap": is_trap,
+    }
+
     bear_note = None
     if bear_v:
-        bear_verdict = bear_v.get("bear_verdict")
-        bear_conv = bear_v.get("bear_conviction_pct", 0)
-        is_trap = bear_v.get("is_this_trade_a_trap")
-        killer = bear_v.get("killer_thesis", "")
         if is_trap or (bear_conv and bear_conv >= 50):
             bear_note = f"Bear case ({bear_verdict}, {bear_conv}% conviction): {killer[:200]}"
         elif bear_conv:
@@ -430,6 +532,7 @@ def _build_pick(pick, rank):
         "iv_crush_note": iv_crush_note,
         "kelly_line": kelly_line,
         "bear_note": bear_note,
+        "rating_summary": rating_summary,
     }
 
 

@@ -1,353 +1,425 @@
-UNIFIED_EMAIL_TEMPLATE = """<!DOCTYPE html>
+from datetime import datetime
+from jinja2 import Template
+
+
+EMAIL_TEMPLATE = """<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <style>
-  body { font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif; background:#f4f4f4; margin:0; padding:18px; color:#222; }
-  .wrap { max-width:980px; margin:0 auto; background:#fff; padding:24px 28px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-  h1 { font-size:22px; margin:0 0 4px; }
-  h2 { font-size:16px; margin:22px 0 10px; padding-bottom:6px; border-bottom:2px solid #eee; }
-  h3 { font-size:14px; margin:12px 0 8px; }
-  .meta { color:#666; font-size:12px; margin-bottom:14px; }
-  .strip { padding:8px 12px; margin-bottom:8px; border-radius:6px; font-size:11px; }
-  .strip strong { color:#222; }
-  .macro { background:#f0f9ff; border:1px solid #4a90e2; }
-  .portfolio { background:#fefce8; border:1px solid #eab308; }
-  .winrate { background:#f5f3ff; border:1px solid #8b5cf6; }
-  .forward { background:#ecfdf5; border:1px solid #10b981; }
-  .macro-play { background:#fef2f2; border:1px solid #c94545; padding:10px 12px; margin-bottom:14px; border-radius:6px; }
-  .empty { text-align:center; padding:36px; background:#fafafa; border-radius:8px; color:#666; }
-  .empty strong { color:#c94545; font-size:14px; display:block; margin-bottom:8px; }
-  .card { border:2px solid; border-radius:8px; padding:14px 16px; margin-bottom:12px; }
-  .card-app { border-color:#0d7b34; background:#f7fcf8; }
-  .card-ap { border-color:#1a9850; background:#f9fdfa; }
-  .card-a { border-color:#4a90e2; background:#f7fbff; }
-  .card-head { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
-  .ticker { font-weight:800; font-size:18px; color:#111; }
-  .tier-badge { display:inline-block; padding:3px 10px; border-radius:4px; font-weight:800; font-size:12px; color:#fff; }
-  .tier-app { background:#0d7b34; }
-  .tier-ap { background:#1a9850; }
-  .tier-a { background:#4a90e2; }
-  .bracket-badge { display:inline-block; padding:2px 8px; border-radius:3px; font-weight:700; font-size:10px; background:#384766; color:#fff; }
-  .price-row { font-size:12px; color:#444; margin:6px 0; }
-  .price-row strong { color:#0052cc; }
-  .prime { display:inline-block; padding:2px 8px; border-radius:3px; font-weight:700; font-size:10px; background:#0d7b34; color:#fff; box-shadow:0 0 6px rgba(13,123,52,0.4); }
-  .section { padding:8px 12px; margin:6px 0; border-radius:4px; }
-  .section-bull { background:#f0fdf4; border-left:3px solid #16a34a; }
-  .section-bear { background:#fef2f2; border-left:3px solid #c94545; }
-  .section-analog { background:#f5f3ff; border-left:3px solid #8b5cf6; }
-  .section-iv { background:#fefce8; border-left:3px solid #eab308; }
-  .section-trade { background:#eff6ff; border-left:3px solid #1d4ed8; }
-  .section-premortem { background:#fff7ed; border-left:3px solid #f97316; }
-  .analog-table { width:100%; font-size:11px; border-collapse:collapse; margin-top:4px; }
-  .analog-table th { background:#ede9fe; padding:3px 6px; text-align:left; }
-  .analog-table td { padding:3px 6px; border-bottom:1px solid #f0f0f0; }
-  .badge-good { background:#d1fae5; color:#065f46; padding:1px 6px; border-radius:3px; font-weight:700; font-size:10px; }
-  .badge-warn { background:#fef3c7; color:#854d0e; padding:1px 6px; border-radius:3px; font-weight:700; font-size:10px; }
-  .badge-bad { background:#fee2e2; color:#7f1d1d; padding:1px 6px; border-radius:3px; font-weight:700; font-size:10px; }
-  .skip-noise { background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; padding:10px 12px; margin-top:18px; font-size:11px; color:#555; }
-  .footer { margin-top:24px; padding-top:12px; border-top:1px solid #eee; font-size:10px; color:#999; text-align:center; }
+  body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; background:#f6f7f9; margin:0; padding:18px; color:#1a1a1a; }
+  .wrap { max-width:780px; margin:0 auto; background:#fff; padding:28px 32px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+  h1 { font-size:20px; margin:0 0 4px; font-weight:700; letter-spacing:-0.3px; }
+  .header-meta { color:#666; font-size:12px; margin-bottom:24px; }
+  .section-rule { border:0; height:1px; background:#e5e7eb; margin:28px 0 14px; }
+  .section-label { font-size:11px; font-weight:700; letter-spacing:1.2px; color:#6b7280; text-transform:uppercase; margin-bottom:14px; }
+  .pick { margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid #f1f3f5; }
+  .pick:last-child { border-bottom:0; }
+  .pick-header { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .pick-rank { font-size:13px; font-weight:700; color:#9ca3af; min-width:28px; }
+  .pick-ticker { font-size:18px; font-weight:800; color:#111; letter-spacing:-0.2px; }
+  .pick-tier { font-size:10px; font-weight:800; padding:2px 8px; border-radius:3px; letter-spacing:0.5px; }
+  .pick-tier.app { background:#065f46; color:#fff; }
+  .pick-tier.ap { background:#15803d; color:#fff; }
+  .pick-tier.a { background:#1d4ed8; color:#fff; }
+  .pick-name { font-size:13px; color:#4b5563; flex:1; min-width:200px; }
+  .pick-price { font-size:13px; font-weight:600; color:#111; }
+  .pick-move-up { color:#15803d; font-weight:700; }
+  .pick-move-down { color:#b91c1c; font-weight:700; }
+  .pick-row { font-size:13px; line-height:1.6; margin:5px 0; padding-left:38px; }
+  .pick-row-label { display:inline-block; min-width:62px; font-size:11px; font-weight:800; letter-spacing:0.6px; color:#6b7280; text-transform:uppercase; vertical-align:top; }
+  .pick-row-trade { color:#111; font-weight:600; }
+  .pick-row-odds { color:#111; }
+  .pick-row-bet { color:#374151; }
+  .table { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
+  .table th { background:#f9fafb; padding:6px 10px; text-align:left; font-weight:700; color:#4b5563; font-size:11px; border-bottom:1px solid #e5e7eb; }
+  .table td { padding:6px 10px; border-bottom:1px solid #f3f4f6; vertical-align:top; }
+  .table td.tkr { font-weight:700; color:#111; }
+  .subsection-label { font-size:12px; font-weight:700; color:#111; margin-bottom:4px; }
+  .subsection-hint { font-size:11px; color:#6b7280; margin-bottom:8px; }
+  .skip-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .skip-table td { padding:4px 8px; border-bottom:1px solid #f3f4f6; color:#4b5563; }
+  .skip-table td.tkr { font-weight:700; color:#374151; min-width:60px; }
+  .discipline { background:#f9fafb; padding:14px 18px; border-radius:6px; font-size:12px; line-height:1.7; color:#4b5563; }
+  .discipline strong { color:#111; }
+  .empty-state { text-align:center; padding:40px 20px; color:#6b7280; font-size:13px; }
+  .footer { margin-top:28px; padding-top:14px; border-top:1px solid #e5e7eb; font-size:10px; color:#9ca3af; text-align:center; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Micro &middot; Small &middot; Mid Cap Setups &mdash; {{ scan_date }}</h1>
-  <div class="meta">{{ total_picks }} A-grade picks across brackets (A++ {{ a_plus_plus_count }} &middot; A+ {{ a_plus_count }} &middot; A {{ a_count }}) &middot; {{ rejected_count }} rejected by gates &middot; universe {{ universe_size }}</div>
 
-  {% if macro %}
-    <div class="strip macro">
-      <strong>Macro regime:</strong>
-      <span class="tier-badge" style="background:{% if macro.regime == 'low_vol' %}#0d7b34{% elif macro.regime == 'normal' %}#4a90e2{% elif macro.regime == 'elevated' %}#e67e22{% else %}#c94545{% endif %};">{{ macro.regime|upper }}</span>
-      {% if macro.vix %}&middot; VIX <strong>{{ "%.1f"|format(macro.vix) }}</strong>{% endif %}
-      {% if vol_regime and vol_regime.tier_cap %}&middot; max tier this regime: <strong>{{ vol_regime.tier_cap }}</strong>{% endif %}
-      {% if vol_regime and vol_regime.position_multiplier != 1.0 %}&middot; position sizing × <strong>{{ vol_regime.position_multiplier }}</strong>{% endif %}
-      {% if macro.flags %}<br>{% for f in macro.flags[:3] %}{{ f }}{% if not loop.last %} &middot; {% endif %}{% endfor %}{% endif %}
-    </div>
-  {% endif %}
+  <h1>Micro · Small · Mid Setups</h1>
+  <div class="header-meta">
+    {{ scan_day_label }} · {{ a_pp_count }} A++ · {{ a_p_count }} A+ · {{ a_count }} A · {{ pre_earnings_count }} pre-earnings setups
+    {% if regime_label %}· {{ regime_label }} regime{% endif %}
+  </div>
 
-  {% if portfolio_summary %}
-    {% set ps = portfolio_summary %}
-    <div class="strip portfolio">
-      <strong>Portfolio:</strong>
-      <span class="tier-badge" style="background:{% if ps.n_free >= 2 %}#0d7b34{% elif ps.n_free == 1 %}#e67e22{% else %}#c94545{% endif %};">{{ ps.n_open }}/{{ ps.max_concurrent }}</span>
-      {% if ps.n_free > 0 %}{{ ps.n_free }} slot(s) free{% else %}FULL{% endif %}
-      {% if ps.tickers %}&middot; held: {{ ps.tickers|join(', ') }}{% endif %}
-      {% if ps.open_pnl_usd is defined %}&middot; MTM PnL <strong style="color:{% if ps.open_pnl_usd >= 0 %}#0d7b34{% else %}#c94545{% endif %};">${{ "%+.0f"|format(ps.open_pnl_usd) }}</strong>{% endif %}
-    </div>
-  {% endif %}
+  {% if picks %}
+  <hr class="section-rule">
+  <div class="section-label">The Picks</div>
 
-  {% if v4_stats and v4_stats.total_picks_measured > 0 %}
-    {% set vs = v4_stats %}
-    <div class="strip winrate">
-      <strong>v4 paper log (last {{ vs.days_back }}d, {{ vs.total_picks_measured }} measured):</strong>
-      {% for rank in [1, 2, 3] %}
-        {% set s = vs.by_rank.get(rank) %}
-        {% if s %}
-          rank #{{ rank }} ({{ s.n }}): T1 <strong>{{ s.win_rate_t1_pct }}%</strong> &middot; T2 <strong>{{ s.win_rate_t2_pct }}%</strong> &middot; stop {{ s.stop_rate_pct }}% &middot; avg best <span class="badge-good">{{ "%+.1f"|format(s.avg_best_pct) }}%</span>{% if not loop.last %}<br>{% endif %}
-        {% endif %}
-      {% endfor %}
+  {% for p in picks %}
+  <div class="pick">
+    <div class="pick-header">
+      <span class="pick-rank">#{{ loop.index }}</span>
+      <span class="pick-ticker">{{ p.ticker }}</span>
+      <span class="pick-tier {{ p.tier_class }}">{{ p.tier }}</span>
+      <span class="pick-name">{{ p.name }} · {{ p.sector }} {{ p.bracket }}</span>
+      <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
-  {% elif win_rate_stats %}
-    {% set ws = win_rate_stats %}
-    <div class="strip winrate">
-      <strong>Legacy paper log (30d):</strong> {{ ws.win_rate_pct }}% win &middot; {{ ws.n_wins }}W / {{ ws.n_losses }}L of {{ ws.n_trades }} &middot; avg {{ "%+.2f"|format(ws.avg_pnl_pct) }}%
-      <br><em>v4 paper log will populate after first 30 days of new picks accumulate outcomes</em>
-    </div>
-  {% endif %}
-
-  {% if forward_calendar %}
-    {% set fc = forward_calendar %}
-    {% set ec = fc.earnings or {} %}
-    <div class="strip forward">
-      <strong>This week:</strong> {{ ec.total_earnings or 0 }} earnings ({{ ec.on_watchlist_count or 0 }} watched)
-      {% if fc.macro_events %}&middot; {% for m in fc.macro_events %}{{ m.label }} ({{ m.days_until }}d){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
-    </div>
-    {% if fc.macro_trade_suggestions %}
-      <div class="macro-play">
-        <strong style="color:#7f1d1d; text-transform:uppercase; font-size:11px;">Macro event plays this week</strong>
-        {% for m in fc.macro_trade_suggestions[:2] %}
-          <div style="margin-top:6px; padding:6px 10px; background:#fff; border-radius:4px; font-size:11px;">
-            <strong>{{ m.event }}</strong> in <strong>{{ m.days_until }}d</strong> &middot; <strong>Play:</strong> {{ m.vehicles|join(' / ') }} {{ m.structure }} &middot; <strong>DTE:</strong> {{ m.dte_target }}
-            <div style="margin-top:2px; color:#555;">{{ m.specific_strikes }}</div>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endif %}
-
-  {% if execution_context %}
-    <div class="strip" style="background:#fff7ed; border:1px solid #f97316;">
-      <strong>Execution context:</strong>
-      {{ execution_context.day_of_week }} {{ execution_context.time_window.label }} &middot; expected slippage ~{{ execution_context.time_window.expected_slippage_pct }}%
-      {% if execution_context.guidance %}<br>{% for g in execution_context.guidance %}{{ g }}{% if not loop.last %} &middot; {% endif %}{% endfor %}{% endif %}
-    </div>
-  {% endif %}
-
-  {% if total_picks == 0 %}
-    <div class="empty">
-      <strong>NO QUALIFYING SETUPS TODAY</strong>
-      The discipline is in not trading B-grade. Most days the system will be quiet. Today none of the candidates passed all gates.
-      {% if rejection_summary %}
-        <div style="text-align:left; margin-top:20px; padding:14px 16px; background:#fff; border:1px solid #ddd; border-radius:6px; font-style:normal;">
-          <strong style="color:#222;">Closest 3 names + why they were rejected:</strong>
-          {% for r in rejection_summary[:3] %}
-            <div style="margin-top:8px;"><strong>{{ r.ticker }}</strong> ({{ r.bracket }}): {{ r.reason }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    </div>
+    <div class="pick-row"><span class="pick-row-label">Trade</span><span class="pick-row-trade">{{ p.trade_line }}</span></div>
+    <div class="pick-row"><span class="pick-row-label">Odds</span><span class="pick-row-odds">{{ p.odds_line }}</span></div>
+    <div class="pick-row"><span class="pick-row-label">Bet</span><span class="pick-row-bet">{{ p.bet_line }}</span></div>
+  </div>
+  {% endfor %}
   {% else %}
-    {% for bracket in ['micro', 'small', 'mid'] %}
-      {% set bracket_picks = picks_by_bracket.get(bracket) or [] %}
-      {% if bracket_picks %}
-        <h2>{{ bracket_label(bracket) }}</h2>
-        {% for c in bracket_picks %}
-          {% set tier_class = 'card-app' if c._aa_tier == 'A++' else 'card-ap' if c._aa_tier == 'A+' else 'card-a' %}
-          <div class="card {{ tier_class }}">
-            <div class="card-head">
-              <div>
-                <span class="ticker">{{ c.ticker }}</span>
-                {% set tier_css = 'tier-app' if c._aa_tier == 'A++' else 'tier-ap' if c._aa_tier == 'A+' else 'tier-a' %}
-                <span class="tier-badge {{ tier_css }}">{{ c._aa_tier }}</span>
-                <span class="bracket-badge">{{ bracket|upper }}</span>
-                {% if c._extension_check and c._extension_check.red_count == 0 and c._extension_check.yellow_count == 0 %}<span class="prime">PRIME ENTRY</span>{% endif %}
-                <span style="color:#666; font-size:11px;">{{ (c.name or '')[:36] }}</span>
-              </div>
-              <div style="text-align:right; font-size:11px; color:#444;">
-                Score {{ "%.0f"|format(c._stacked_score or c.score or 0) }} &middot; {{ c._category_count }} cats &middot; ${{ "%.1f"|format((c.market_cap or 0)/1e9) }}B
-              </div>
-            </div>
+  <div class="empty-state"><strong>No A-grade picks today.</strong><br>Scanner ran clean, gates produced nothing actionable. Sit out.</div>
+  {% endif %}
 
-            <div class="price-row">
-              <strong>${{ "%.2f"|format(c.price) if c.price else "n/a" }}</strong>
-              {% if c.live_spot %}&middot; LIVE ${{ "%.2f"|format(c.live_spot) }} ({{ "%+.2f"|format(c.live_change_pct or 0) }}%){% endif %}
-              {% if c.sector %}&middot; {{ c.sector }}{% endif %}
-              {% if c.short_pct_float %}&middot; SI {{ "%.0f"|format(c.short_pct_float) }}%{% endif %}
-              {% if c.iv_percentile_analysis %}&middot; IV percentile <strong>{{ c.iv_percentile_analysis.iv_percentile }}</strong> ({{ c.iv_percentile_analysis.interpretation.regime if c.iv_percentile_analysis.interpretation else '' }}){% endif %}
-            </div>
+  {% if pre_earnings_lead_up or pre_earnings_imminent %}
+  <hr class="section-rule">
+  <div class="section-label">Pre-Earnings Window · {{ pre_earnings_count }} setups for 20-50% in a week</div>
 
-            {% if c._smart_money_signals %}
-              <div style="font-size:11px; margin:4px 0;"><strong>Smart money:</strong> {% for s in c._smart_money_signals %}<span class="badge-good">{{ s|replace('_', ' ') }}</span> {% endfor %}</div>
-            {% endif %}
-
-            {% if c.catalysts %}
-              <div style="font-size:11px; margin:6px 0;">
-                <strong>Catalysts:</strong> {% for cat in c.catalysts[:3] %}<span style="display:inline-block; padding:1px 6px; margin:1px 2px 0 0; background:#dbeafe; border-radius:3px; font-size:10px;">[{{ cat.tier }}] {{ cat.label }}</span>{% endfor %}
-              </div>
-            {% endif %}
-
-            {% if c.deep_research and c.deep_research.research_note %}
-              <div class="section section-bull">
-                <strong>BULL:</strong> {{ c.deep_research.research_note[:400] }}
-              </div>
-            {% endif %}
-
-            {% if c.counter_thesis %}
-              <div class="section section-bear">
-                <strong>BEAR ({{ c.counter_thesis.bear_score or '?' }}/100):</strong> {{ c.counter_thesis.bear_thesis }}
-                {% if c.counter_thesis.what_kills_this_trade %}<br><em>Kill scenario:</em> {{ c.counter_thesis.what_kills_this_trade }}{% endif %}
-              </div>
-            {% endif %}
-
-            {% if c.analog_set and c.analog_set.statistics %}
-              {% set stats = c.analog_set.statistics %}
-              <div class="section section-analog">
-                <strong>ANALOGS ({{ stats.n_analogs }} found):</strong> win rate <strong>{{ stats.win_rate_next_day_pct }}%</strong> &middot; median next-day <strong>{{ stats.median_next_day_pct }}%</strong> &middot; worst <strong>{{ stats.worst_outcome_pct }}%</strong>
-                {% if c.analog_set.analogs %}
-                  <table class="analog-table">
-                    <thead><tr><th>Ticker</th><th>Date</th><th>Catalyst</th><th>Next-day</th><th>1-week</th></tr></thead>
-                    {% for a in c.analog_set.analogs[:5] %}
-                      <tr><td><strong>{{ a.ticker }}</strong></td><td>{{ a.date }}</td><td>{{ (a.catalyst or '')[:40] }}</td><td><span class="{% if a.next_day_pct >= 0 %}badge-good{% else %}badge-bad{% endif %}">{{ "%+.1f"|format(a.next_day_pct) }}%</span></td><td>{{ "%+.1f"|format(a.one_week_pct or 0) }}%</td></tr>
-                    {% endfor %}
-                  </table>
-                {% endif %}
-                {% if c.analog_set.summary %}<div style="margin-top:4px; font-style:italic;">{{ c.analog_set.summary }}</div>{% endif %}
-              </div>
-            {% endif %}
-
-            {% if c._options_market_read %}
-              {% set om = c._options_market_read %}
-              <div class="section section-iv">
-                <strong>OPTIONS MARKET:</strong>
-                {% if om.implied_move_pct %}implied {{ "%.1f"|format(om.implied_move_pct) }}%{% endif %}
-                {% if om.analog_median_move_pct %} vs analog {{ "%.1f"|format(om.analog_median_move_pct) }}%{% endif %}
-                {% if om.edge_label %}&middot; <span class="{% if om.edge_label == 'MARKET_UNDERPRICING' %}badge-good{% elif om.edge_label == 'MARKET_OVERPRICING' %}badge-bad{% else %}badge-warn{% endif %}">{{ om.edge_label|replace('_', ' ') }}</span>{% endif %}
-                {% if om.cp_signal %}<br>{{ om.cp_signal }}{% endif %}
-                {% if om.skew_signal %}<br>{{ om.skew_signal|replace('_', ' ') }}{% endif %}
-                {% if om.block_summary %}<br><strong>Block trades:</strong> {{ om.block_summary }}{% endif %}
-              </div>
-            {% endif %}
-
-            {% if c.trade_ticket %}
-              <div class="section section-trade">
-                <strong>TRADE TICKET:</strong>
-                {{ c.trade_ticket.contract_label }} &middot; <strong>{{ c.trade_ticket.position_size_usd }} ({{ c.trade_ticket.position_pct }}% of account)</strong>
-                <br>Stop -{{ c.trade_ticket.stop_pct }}% &middot; T1 +{{ c.trade_ticket.t1_pct }}% trim {{ c.trade_ticket.t1_trim_pct }}% &middot; T2 +{{ c.trade_ticket.t2_pct }}% trim {{ c.trade_ticket.t2_trim_pct }}% &middot; runner past +{{ c.trade_ticket.runner_pct }}%
-                <br><strong>EV:</strong> {{ "%+.1f"|format(c.trade_ticket.ev_pct) }}% per trade
-              </div>
-            {% endif %}
-
-            {% if c.pre_mortem %}
-              <div class="section section-premortem">
-                <strong>PRE-MORTEM:</strong> {{ c.pre_mortem.most_likely_failure }}
-                <br><strong>Warning signs:</strong> {{ c.pre_mortem.warning_signs[:2]|join(' &middot; ') }}
-              </div>
-            {% endif %}
-
-            {% if c.peer_benchmark %}
-              <div style="font-size:10px; color:#666; margin-top:6px;">
-                Peer rank ({{ c.peer_benchmark.peer_count }} peers): growth pctile <strong>{{ c.peer_benchmark.growth_percentile_avg }}</strong>, quality pctile <strong>{{ c.peer_benchmark.quality_percentile_avg }}</strong>
-              </div>
-            {% endif %}
-
-            {% if c._aa_reason %}
-              <div style="font-size:10px; color:#888; margin-top:4px; font-style:italic;">tier reasoning: {{ c._aa_reason }}</div>
-            {% endif %}
-          </div>
-        {% endfor %}
-      {% endif %}
+  {% if pre_earnings_lead_up %}
+  <div class="subsection-label">10-15 days out — institutional positioning sweet spot</div>
+  <div class="subsection-hint">Entry zone where IV is still cheap and the run-up typically starts. Hold until 1-3d before the print.</div>
+  <table class="table">
+    <tr><th>Ticker</th><th>Spot</th><th>Earnings</th><th>Stacked Catalysts</th></tr>
+    {% for s in pre_earnings_lead_up %}
+    <tr>
+      <td class="tkr">{{ s.ticker }}</td>
+      <td>${{ s.price_fmt }}</td>
+      <td>{{ s.report_date }} ({{ s.days_until }}d)</td>
+      <td>{{ s.catalysts_joined }}</td>
+    </tr>
     {% endfor %}
+  </table>
   {% endif %}
 
-  {% if rejection_summary %}
-    <div class="skip-noise">
-      <strong style="color:#222;">Skip the noise — 5 rejected names + why:</strong>
-      {% for r in rejection_summary[:5] %}
-        <div style="margin-top:5px;"><strong>{{ r.ticker }}</strong> ({{ r.bracket }}): {{ r.reason }}</div>
-      {% endfor %}
-    </div>
+  {% if pre_earnings_imminent %}
+  <div class="subsection-label" style="margin-top:18px;">5-9 days out — IV expansion zone</div>
+  <div class="subsection-hint">Late but still actionable. Premium higher, exit 1-2d before the print to avoid IV crush.</div>
+  <table class="table">
+    <tr><th>Ticker</th><th>Spot</th><th>Earnings</th><th>Stacked Catalysts</th></tr>
+    {% for s in pre_earnings_imminent %}
+    <tr>
+      <td class="tkr">{{ s.ticker }}</td>
+      <td>${{ s.price_fmt }}</td>
+      <td>{{ s.report_date }} ({{ s.days_until }}d)</td>
+      <td>{{ s.catalysts_joined }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
   {% endif %}
 
-  <div class="footer">micro/small/mid bracket scanner &middot; A-grade only &middot; live Alpaca chain &middot; Sonnet+web on top pick &middot; {{ scan_date }}</div>
+  {% if skip_list %}
+  <hr class="section-rule">
+  <div class="section-label">Skip List · Top {{ skip_list|length }} Rejected</div>
+  <table class="skip-table">
+    {% for s in skip_list %}
+    <tr><td class="tkr">{{ s.ticker }}</td><td>{{ s.reason }}</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+
+  <hr class="section-rule">
+  <div class="section-label">Discipline</div>
+  <div class="discipline">
+    Vol regime: <strong>{{ regime_label or 'NORMAL' }}</strong> · position size × {{ position_mult }}<br>
+    Win rate (30d): <strong>{{ win_rate_pct }}%</strong> on {{ win_rate_n }} paper trades<br>
+    Open positions: <strong>{{ open_slots }} of {{ max_slots }} slots</strong>
+  </div>
+
+  <div class="footer">v4 scanner · {{ scan_date }} · catalyst stack engine · auto-generated</div>
 </div>
 </body>
-</html>"""
+</html>
+"""
 
 
-def build_trade_ticket(candidate, regime_info=None):
-    bracket = candidate.get("bracket") or "small"
-    tier = candidate.get("_aa_tier") or "A"
-    sizing = {
-        ("micro", "A++"): (12, 50),
-        ("micro", "A+"): (6, 50),
-        ("micro", "A"): (4, 50),
-        ("small", "A++"): (22, 40),
-        ("small", "A+"): (12, 40),
-        ("small", "A"): (8, 40),
-        ("mid", "A++"): (30, 35),
-        ("mid", "A+"): (17, 35),
-        ("mid", "A"): (12, 35),
-    }
-    pos_pct, stop_pct = sizing.get((bracket, tier), (10, 40))
-    if regime_info and regime_info.get("position_multiplier"):
-        pos_pct = round(pos_pct * regime_info["position_multiplier"], 1)
-        stop_pct = round(stop_pct * regime_info.get("stop_multiplier", 1.0), 0)
-    analog = (candidate.get("analog_set") or {}).get("statistics") or {}
-    win_rate = analog.get("win_rate_next_day_pct") or 50
-    median_move = analog.get("median_next_day_pct") or 10
-    avg_win_pct = max(median_move * 8, 150)
-    ev = win_rate / 100 * avg_win_pct - (1 - win_rate / 100) * stop_pct
-    return {
-        "contract_label": "ATM-ish call (live chain at send-time)",
-        "position_pct": pos_pct,
-        "position_size_usd": "calculated at send",
-        "stop_pct": stop_pct,
-        "t1_pct": 50,
-        "t1_trim_pct": 25,
-        "t2_pct": 100,
-        "t2_trim_pct": 33,
-        "t3_pct": 200,
-        "t3_trim_pct": 50,
-        "runner_pct": 400,
-        "ev_pct": round(ev, 1),
-    }
-
-
-def render_unified_email(scan, tier_results, picks_by_bracket, rejection_log, regime_info=None, execution_ctx=None):
-    from jinja2 import Environment, BaseLoader
-    from src.catalyst.humanize import register_jinja_filters
-    from src.catalyst.bracket_router import bracket_label
-    env = Environment(loader=BaseLoader())
-    register_jinja_filters(env)
-    env.globals["bracket_label"] = bracket_label
-    tmpl = env.from_string(UNIFIED_EMAIL_TEMPLATE)
-
-    a_plus_plus = tier_results.get("A++", [])
-    a_plus = tier_results.get("A+", [])
-    a = tier_results.get("A", [])
-    total = sum(len(picks_by_bracket.get(b, [])) for b in ("micro", "small", "mid"))
-
-    for bracket in ("micro", "small", "mid"):
-        for c in picks_by_bracket.get(bracket, []):
-            if not c.get("trade_ticket"):
-                c["trade_ticket"] = build_trade_ticket(c, regime_info)
-
-    portfolio_summary = scan.get("portfolio_summary")
-    win_rate_stats = scan.get("win_rate_stats")
+def _move_class(pct):
+    if pct is None:
+        return ""
     try:
-        from src.catalyst.portfolio_context import get_position_summary, get_recent_paper_trade_stats
-        if not portfolio_summary:
-            portfolio_summary = get_position_summary()
-        if not win_rate_stats:
-            win_rate_stats = get_recent_paper_trade_stats(lookback_days=30)
-    except Exception:
-        pass
+        v = float(pct)
+    except (TypeError, ValueError):
+        return ""
+    if v > 0:
+        return "pick-move-up"
+    if v < 0:
+        return "pick-move-down"
+    return ""
 
-    return tmpl.render(
-        scan_date=scan.get("scan_date"),
-        universe_size=scan.get("candidates_total", 0),
-        total_picks=total,
-        a_plus_plus_count=len(a_plus_plus),
-        a_plus_count=len(a_plus),
-        a_count=len(a),
-        rejected_count=len(tier_results.get("REJECT", [])),
-        picks_by_bracket=picks_by_bracket,
-        rejection_summary=rejection_log,
-        macro=scan.get("macro"),
-        portfolio_summary=portfolio_summary,
-        win_rate_stats=win_rate_stats,
-        v4_stats=scan.get("v4_stats"),
-        forward_calendar=scan.get("forward_calendar"),
-        vol_regime=regime_info,
-        execution_context=execution_ctx,
+
+def _fmt_pct(pct):
+    if pct is None:
+        return ""
+    try:
+        return f"{float(pct):+.1f}%"
+    except (TypeError, ValueError):
+        return ""
+
+
+def _fmt_price(p):
+    if p is None:
+        return "?"
+    try:
+        v = float(p)
+    except (TypeError, ValueError):
+        return "?"
+    if v >= 100:
+        return f"{v:,.2f}"
+    return f"{v:.2f}"
+
+
+def _tier_class(tier):
+    return {"A++": "app", "A+": "ap", "A": "a"}.get(tier, "a")
+
+
+def _build_trade_line(pick):
+    trade = pick.get("trade_ticket") or {}
+    if trade and trade.get("option_action"):
+        action = trade.get("option_action", "BUY")
+        n = trade.get("option_contracts", 1)
+        exp = trade.get("option_expiry", "")
+        strike = trade.get("option_strike", "")
+        side = trade.get("option_side", "C")
+        mid = trade.get("option_mid_price")
+        target = trade.get("option_target")
+        stop = trade.get("option_stop")
+        line = f"{action} {n}x {pick.get('ticker')} {exp} ${strike}{side} @ ${mid}"
+        if target:
+            line += f" · target ${target}"
+        if stop:
+            line += f" · stop ${stop}"
+        return line
+
+    price = pick.get("live_spot") or pick.get("price")
+    if not price:
+        return "Trade ticket unavailable"
+    try:
+        price = float(price)
+    except (TypeError, ValueError):
+        return "Trade ticket unavailable"
+
+    atr_pct = pick.get("atr_pct") or 3.5
+    try:
+        atr_pct = float(atr_pct)
+    except (TypeError, ValueError):
+        atr_pct = 3.5
+
+    target = price * 1.085
+    stop = price * (1 - atr_pct / 100.0)
+    strike = round(price * 1.05 / 0.5) * 0.5
+    return (
+        f"Buy {pick.get('ticker')} stock at ~${_fmt_price(price)} · "
+        f"target ${_fmt_price(target)} (+8.5%) · "
+        f"stop ${_fmt_price(stop)} (-{atr_pct:.1f}%) · "
+        f"or call ~${_fmt_price(strike)} strike 30-45d expiry"
+    )
+
+
+def _build_odds_line(pick):
+    forensic = pick.get("unified_forensic") or {}
+    haiku = pick.get("haiku_synthesis") or {}
+    conf = forensic.get("confidence_pct") or haiku.get("confidence_pct")
+    verdict = forensic.get("verdict") or haiku.get("verdict")
+
+    if conf and verdict:
+        return f"{conf}% probability of profit · {verdict} (LLM forensic)"
+
+    score = pick.get("_stacked_score") or pick.get("score") or 0
+    try:
+        score = float(score)
+    except (TypeError, ValueError):
+        score = 0
+    if score >= 300:
+        prob = 70
+    elif score >= 200:
+        prob = 60
+    elif score >= 150:
+        prob = 55
+    elif score >= 100:
+        prob = 50
+    else:
+        prob = 45
+    return f"~{prob}% probability of profit · derived from stacked score {score:.0f} (no LLM forensic available)"
+
+
+def _build_bet_line(pick):
+    forensic = pick.get("unified_forensic") or {}
+    haiku = pick.get("haiku_synthesis") or {}
+    bull_case = (
+        forensic.get("bull_case")
+        or forensic.get("summary")
+        or haiku.get("bull_case")
+        or haiku.get("summary")
+    )
+    if bull_case:
+        return str(bull_case)[:500]
+
+    cats = pick.get("catalysts") or []
+    cat_labels = []
+    for c in cats[:3]:
+        if isinstance(c, dict):
+            label = c.get("label") or c.get("key", "")
+            cat_labels.append(label)
+    cat_text = " · ".join(cat_labels) if cat_labels else "no specific catalyst label"
+    active = pick.get("_active_categories") or []
+    cat_count = pick.get("_category_count") or len(cats)
+    score = pick.get("_stacked_score") or pick.get("score") or 0
+
+    pre_mortem = pick.get("pre_mortem") or {}
+    risk = pre_mortem.get("most_likely_failure")
+    if not risk:
+        warnings = pre_mortem.get("warning_signs")
+        if isinstance(warnings, list) and warnings:
+            risk = warnings[0]
+
+    parts = []
+    parts.append(f"Stacked {cat_count} dimensions ({', '.join(active[:5])}).")
+    parts.append(f"Drivers: {cat_text}.")
+    if risk:
+        risk_str = str(risk)[:120]
+        parts.append(f"Main risk: {risk_str}.")
+    return " ".join(parts)
+
+
+def _build_pick(pick, rank):
+    tier = pick.get("_aa_tier", "A")
+    price_raw = pick.get("live_spot") or pick.get("price")
+    move_pct = pick.get("today_pct_change") or pick.get("intraday_pct_change")
+    return {
+        "rank": rank,
+        "ticker": pick.get("ticker", "?"),
+        "name": (pick.get("name") or "")[:40],
+        "sector": (pick.get("sector") or "")[:18],
+        "bracket": pick.get("bracket", "?"),
+        "tier": tier,
+        "tier_class": _tier_class(tier),
+        "price_fmt": _fmt_price(price_raw),
+        "move_pct": move_pct,
+        "move_pct_fmt": _fmt_pct(move_pct),
+        "move_class": _move_class(move_pct),
+        "trade_line": _build_trade_line(pick),
+        "odds_line": _build_odds_line(pick),
+        "bet_line": _build_bet_line(pick),
+    }
+
+
+def _build_pre_earnings_row(pick):
+    cats = pick.get("catalysts") or []
+    visible_cats = []
+    earn_cat = None
+    for c in cats:
+        if not isinstance(c, dict):
+            continue
+        k = c.get("key", "")
+        if k in ("earnings_lead_up_10_15d", "earnings_imminent_5_9d", "earnings_peak_iv_3_4d"):
+            if earn_cat is None:
+                earn_cat = c
+            continue
+        if k:
+            visible_cats.append(k)
+        if len(visible_cats) >= 4:
+            break
+
+    days_until = (earn_cat or {}).get("days_until")
+    report_date = (earn_cat or {}).get("report_date")
+    return {
+        "ticker": pick.get("ticker", "?"),
+        "price_fmt": _fmt_price(pick.get("live_spot") or pick.get("price")),
+        "report_date": report_date or "?",
+        "days_until": days_until if days_until is not None else 99,
+        "catalysts_joined": " + ".join(visible_cats) if visible_cats else "?",
+    }
+
+
+def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=None, execution_ctx=None):
+    scan_date = scan.get("scan_date") or datetime.utcnow().date().isoformat()
+    try:
+        scan_day_label = datetime.strptime(scan_date, "%Y-%m-%d").strftime("%A %d %B %Y")
+    except Exception:
+        scan_day_label = scan_date
+
+    a_pp_count = len(aa_results.get("A++", []))
+    a_p_count = len(aa_results.get("A+", []))
+    a_count = len(aa_results.get("A", []))
+
+    all_tier_picks = []
+    for tier in ("A++", "A+", "A"):
+        all_tier_picks.extend(aa_results.get(tier, []))
+    all_tier_picks.sort(key=lambda p: (-({"A++": 3, "A+": 2, "A": 1}.get(p.get("_aa_tier"), 0)), -(p.get("_stacked_score") or p.get("score") or 0)))
+    top_picks = all_tier_picks[:4]
+    picks_out = [_build_pick(p, i + 1) for i, p in enumerate(top_picks)]
+
+    pre_earnings_lead_up = []
+    pre_earnings_imminent = []
+    seen_tickers = set()
+    for p in all_tier_picks:
+        t = p.get("ticker")
+        if t in seen_tickers:
+            continue
+        cats = p.get("catalysts") or []
+        for c in cats:
+            if not isinstance(c, dict):
+                continue
+            k = c.get("key", "")
+            if k == "earnings_lead_up_10_15d":
+                pre_earnings_lead_up.append(_build_pre_earnings_row(p))
+                seen_tickers.add(t)
+                break
+            if k in ("earnings_imminent_5_9d", "earnings_peak_iv_3_4d"):
+                pre_earnings_imminent.append(_build_pre_earnings_row(p))
+                seen_tickers.add(t)
+                break
+    pre_earnings_lead_up.sort(key=lambda r: r["days_until"])
+    pre_earnings_imminent.sort(key=lambda r: r["days_until"])
+    pre_earnings_count = len(pre_earnings_lead_up) + len(pre_earnings_imminent)
+
+    skip_list = []
+    for r in (aa_rejections or [])[:15]:
+        reason = r.get("reason", "")
+        lower = reason.lower()
+        if "extension" in lower:
+            short_reason = "extension RED — already chased"
+        elif "landmine" in lower:
+            short_reason = "landmine — " + reason.split(":")[-1].strip()[:60]
+        elif "sector" in lower:
+            short_reason = "sector headwind too strong"
+        elif "iv percentile" in lower:
+            short_reason = "IV too high — premium over-priced"
+        elif "stacked" in lower or "categories" in lower:
+            short_reason = reason[:80]
+        elif "smart money" in lower:
+            short_reason = "no smart-money signal"
+        else:
+            short_reason = reason[:80]
+        skip_list.append({"ticker": r.get("ticker", "?"), "reason": short_reason})
+
+    regime_label = (regime_info or {}).get("regime", "NORMAL")
+    position_mult = (regime_info or {}).get("position_multiplier", 1.0)
+    win_rate_stats = scan.get("win_rate_stats") or {}
+    portfolio = scan.get("portfolio_summary") or {}
+
+    template = Template(EMAIL_TEMPLATE)
+    return template.render(
+        scan_date=scan_date,
+        scan_day_label=scan_day_label,
+        a_pp_count=a_pp_count,
+        a_p_count=a_p_count,
+        a_count=a_count,
+        regime_label=regime_label,
+        position_mult=position_mult,
+        win_rate_pct=win_rate_stats.get("win_rate_pct", "n/a"),
+        win_rate_n=win_rate_stats.get("n", "?"),
+        open_slots=portfolio.get("n_open", "?"),
+        max_slots=portfolio.get("max_concurrent", "?"),
+        picks=picks_out,
+        pre_earnings_lead_up=pre_earnings_lead_up,
+        pre_earnings_imminent=pre_earnings_imminent,
+        pre_earnings_count=pre_earnings_count,
+        skip_list=skip_list,
     )

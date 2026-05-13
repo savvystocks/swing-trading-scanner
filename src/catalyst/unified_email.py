@@ -51,8 +51,11 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
   <h1>Micro · Small · Mid Setups</h1>
   <div class="header-meta">
-    {{ scan_day_label }} · {{ a_pp_count }} A++ · {{ a_p_count }} A+ · {{ a_count }} A · {{ pre_earnings_count }} pre-earnings setups
+    {{ scan_day_label }} · {{ picks|length }} BUY-rated · {{ filtered_out_count }} filtered out (HOLD/SKIP)
     {% if regime_label %}· {{ regime_label }} regime{% endif %}
+  </div>
+  <div class="header-meta" style="margin-top:-18px; margin-bottom:24px; font-size:11px;">
+    A++ {{ a_pp_count }} · A+ {{ a_p_count }} · A {{ a_count }} total tier output · {{ pre_earnings_count }} pre-earnings setups
   </div>
 
   {% if picks %}
@@ -74,7 +77,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   </div>
   {% endfor %}
   {% else %}
-  <div class="empty-state"><strong>No A-grade picks today.</strong><br>Scanner ran clean, gates produced nothing actionable. Sit out.</div>
+  <div class="empty-state"><strong>No BUY-rated picks today.</strong><br>{{ filtered_out_count }} candidate(s) graded HOLD or SKIP by the LLM forensic — nothing met the buy bar. Sit out.</div>
   {% endif %}
 
   {% if pre_earnings_lead_up or pre_earnings_imminent %}
@@ -352,8 +355,22 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
     for tier in ("A++", "A+", "A"):
         all_tier_picks.extend(aa_results.get(tier, []))
     all_tier_picks.sort(key=lambda p: (-({"A++": 3, "A+": 2, "A": 1}.get(p.get("_aa_tier"), 0)), -(p.get("_stacked_score") or p.get("score") or 0)))
-    top_picks = all_tier_picks[:4]
+
+    def _is_buy_signal(pick):
+        forensic = pick.get("unified_forensic") or {}
+        haiku = pick.get("haiku_synthesis") or {}
+        deep = pick.get("deep_research") or {}
+        verdict = forensic.get("verdict") or haiku.get("verdict") or deep.get("verdict")
+        if verdict is None:
+            return pick.get("_aa_tier") in ("A++", "A+")
+        return verdict in ("BUY", "STRONG_BUY")
+
+    buy_picks = [p for p in all_tier_picks if _is_buy_signal(p)]
+    buy_picks.sort(key=lambda p: -((p.get("unified_forensic") or {}).get("confidence_pct") or (p.get("haiku_synthesis") or {}).get("confidence_pct") or 50))
+    top_picks = buy_picks[:4]
     picks_out = [_build_pick(p, i + 1) for i, p in enumerate(top_picks)]
+
+    filtered_out_count = len(all_tier_picks) - len(buy_picks)
 
     pre_earnings_lead_up = []
     pre_earnings_imminent = []
@@ -422,4 +439,5 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         pre_earnings_imminent=pre_earnings_imminent,
         pre_earnings_count=pre_earnings_count,
         skip_list=skip_list,
+        filtered_out_count=filtered_out_count,
     )

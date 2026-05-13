@@ -128,6 +128,8 @@ Produce the complete forensic report. Find 5-7 analogs via web_search. Verify ca
 
 def research_unified(candidate, verbose=False):
     if not ANTHROPIC_AVAILABLE or not os.environ.get("ANTHROPIC_API_KEY"):
+        if verbose:
+            print(f"    forensic skip: anthropic missing or ANTHROPIC_API_KEY not set")
         return None
     client = anthropic.Anthropic()
     try:
@@ -140,14 +142,22 @@ def research_unified(candidate, verbose=False):
         )
         text = "".join(b.text for b in response.content if b.type == "text").strip()
         data = _extract_json(text)
-        if data:
-            data["_input_tokens"] = response.usage.input_tokens
-            data["_output_tokens"] = response.usage.output_tokens
-            data["_cost_usd"] = (response.usage.input_tokens * 3.0 + response.usage.output_tokens * 15.0) / 1_000_000
+        if not data:
+            if verbose:
+                print(f"    forensic for {candidate.get('ticker')}: JSON extraction failed from {len(text)} chars of text")
+                preview = text[:300].encode("ascii", "replace").decode("ascii")
+                print(f"      preview: {preview}")
+            return None
+        data["_input_tokens"] = response.usage.input_tokens
+        data["_output_tokens"] = response.usage.output_tokens
+        data["_cost_usd"] = (response.usage.input_tokens * 3.0 + response.usage.output_tokens * 15.0) / 1_000_000
+        if verbose:
+            print(f"    forensic OK {candidate.get('ticker')}: verdict={data.get('verdict')} conf={data.get('confidence_pct')}% cost=${data['_cost_usd']:.3f}")
         return data
     except Exception as e:
         if verbose:
-            print(f"    unified_forensic failed for {candidate.get('ticker')}: {type(e).__name__}: {e}")
+            err_msg = str(e).encode("ascii", "replace").decode("ascii")
+            print(f"    forensic FAILED for {candidate.get('ticker')}: {type(e).__name__}: {err_msg[:200]}")
         return None
 
 
@@ -268,10 +278,13 @@ def synthesize_haiku(candidate, verbose=False):
             data["_output_tokens"] = response.usage.output_tokens
             data["_cost_usd"] = (response.usage.input_tokens * 1.0 + response.usage.output_tokens * 5.0) / 1_000_000
             data["_model"] = "haiku"
+            if verbose:
+                print(f"    haiku OK {candidate.get('ticker')}: verdict={data.get('verdict')} conf={data.get('confidence_pct')}%")
         return data
     except Exception as e:
         if verbose:
-            print(f"    haiku_synthesis failed for {candidate.get('ticker')}: {type(e).__name__}: {e}")
+            err_msg = str(e).encode("ascii", "replace").decode("ascii")
+            print(f"    haiku FAILED for {candidate.get('ticker')}: {type(e).__name__}: {err_msg[:200]}")
         return None
 
 

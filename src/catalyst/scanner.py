@@ -869,6 +869,12 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         enrich_news_quality(final_scored, verbose=verbose)
         apply_peer_benchmarking(final_scored, verbose=verbose)
         apply_sector_rotation_gate(final_scored, macro, verbose=verbose)
+        try:
+            from src.catalyst.catalyst_windows import apply_catalyst_windows
+            apply_catalyst_windows(final_scored, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  catalyst_windows failed (non-fatal): {type(e).__name__}: {e}")
         apply_stacking(final_scored, verbose=verbose)
 
         bracketed = route_candidates(final_scored)

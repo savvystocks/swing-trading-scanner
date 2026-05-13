@@ -33,14 +33,33 @@ def _demote(tier):
 
 def evaluate_tier(candidate, bracket, regime_info=None):
     cat_count = candidate.get("_category_count") or 0
-    if cat_count >= 7:
-        proposed = "A++"
-    elif cat_count >= 5:
-        proposed = "A+"
-    elif cat_count >= 4:
-        proposed = "A"
+    if bracket == "micro":
+        if cat_count >= 5:
+            proposed = "A++"
+        elif cat_count >= 4:
+            proposed = "A+"
+        elif cat_count >= 3:
+            proposed = "A"
+        else:
+            return {"tier": "REJECT", "reason": f"only {cat_count} stacked categories (micro needs 3+ for A)"}
+    elif bracket == "small":
+        if cat_count >= 6:
+            proposed = "A++"
+        elif cat_count >= 4:
+            proposed = "A+"
+        elif cat_count >= 3:
+            proposed = "A"
+        else:
+            return {"tier": "REJECT", "reason": f"only {cat_count} stacked categories (small needs 3+ for A)"}
     else:
-        return {"tier": "REJECT", "reason": f"only {cat_count} stacked categories (need 4+ for A)"}
+        if cat_count >= 7:
+            proposed = "A++"
+        elif cat_count >= 5:
+            proposed = "A+"
+        elif cat_count >= 4:
+            proposed = "A"
+        else:
+            return {"tier": "REJECT", "reason": f"only {cat_count} stacked categories (mid needs 4+ for A)"}
 
     demotions = []
 
@@ -62,10 +81,11 @@ def evaluate_tier(candidate, bracket, regime_info=None):
 
     sm_signals = candidate.get("_smart_money_signals") or []
     if proposed == "A++" and len(sm_signals) < 2:
-        demotions.append("smart-money <2 → A+")
+        demotions.append(f"smart-money <2 (got {len(sm_signals)}) -> A+")
         proposed = "A+"
-    if proposed in ("A+", "A") and len(sm_signals) < 1:
-        return {"tier": "REJECT", "reason": "no smart money signal (insider/options-flow/13F/activist/index — required for A)"}
+    if proposed == "A+" and len(sm_signals) < 1:
+        demotions.append("no smart-money -> A")
+        proposed = "A"
 
     while proposed != "REJECT":
         if iv_passes_bracket_gate(candidate, bracket, proposed):

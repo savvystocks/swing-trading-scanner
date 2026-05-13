@@ -28,10 +28,18 @@ CATALYST_TIERS = {
 
     "insider_cluster": {"tier": "C", "points": 2.0, "label": "Form 4 insider buying cluster", "direction": "bull", "event_timing": "ongoing"},
     "cohort_high_momentum_runners": {"tier": "B", "points": 3.0, "label": "High-momentum mid-cap (space/quantum/nuclear/AI/robotics)", "direction": "bull", "event_timing": "ongoing"},
+    "cohort_recent_gappers_30d": {"tier": "B", "points": 3.0, "label": "Recent 30d gapper >=25% (in-motion name)", "direction": "bull", "event_timing": "ongoing"},
+    "cohort_ai_infra_pureplay": {"tier": "B", "points": 3.0, "label": "AI infrastructure pure-play (hyperscaler-tied)", "direction": "bull", "event_timing": "ongoing"},
+    "cohort_china_megacap_adrs": {"tier": "C", "points": 2.0, "label": "China mega-cap ADR (BABA/JD/PDD-style)", "direction": "bull", "event_timing": "ongoing"},
+    "cohort_uk_dual_listed_adrs": {"tier": "C", "points": 2.0, "label": "UK dual-listed ADR (LSE + NYSE)", "direction": "bull", "event_timing": "ongoing"},
+    "cohort_mega_cap_ai_tech": {"tier": "C", "points": 2.0, "label": "Mega-cap AI/tech (NVDA/AMD/QCOM/AMAT-style)", "direction": "bull", "event_timing": "ongoing"},
     "cohort_lazar_plays": {"tier": "C", "points": 2.0, "label": "Lazar Capital portfolio name", "direction": "bull", "event_timing": "ongoing"},
     "cohort_crypto_treasury": {"tier": "C", "points": 2.0, "label": "Crypto-treasury cohort", "direction": "bull", "event_timing": "ongoing"},
     "cohort_prediction_markets": {"tier": "C", "points": 2.0, "label": "Prediction market cohort", "direction": "bull", "event_timing": "ongoing"},
     "cohort_biotech_binary": {"tier": "C", "points": 2.0, "label": "Biotech binary catalyst cohort", "direction": "bull", "event_timing": "ongoing"},
+    "earnings_spillover": {"tier": "B", "points": 3.0, "label": "Earnings spillover from cohort peer in <=3d", "direction": "bull", "event_timing": "pre_event"},
+    "sympathy_continuation": {"tier": "B", "points": 3.0, "label": "Sympathy continuation from cohort peer move", "direction": "bull", "event_timing": "ongoing"},
+    "insider_window": {"tier": "B", "points": 2.5, "label": "Insider buying in last 14d", "direction": "bull", "event_timing": "ongoing"},
     "buyback": {"tier": "C", "points": 1.5, "label": "Buyback program announced", "direction": "bull", "event_timing": "post_event"},
 
     "rebrand": {"tier": "D", "points": 1.0, "label": "Rebrand / name change", "direction": "bull", "event_timing": "post_event"},

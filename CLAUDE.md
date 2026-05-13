@@ -2,6 +2,10 @@
 
 A daily automated scanner that screens S&P 500 + S&P 400 MidCap + Russell 2000 + FTSE 100 + FTSE 250 (3089 tickers) against Savvas's v3.1 quantitative swing trading system and emails the ranked results. Built April 2026.
 
+## Date discipline (CRITICAL — hard rule)
+
+Before ANY time-sensitive analysis — CPI/FOMC/jobs/earnings/options expiry/position management/"trim now or hold" decisions — confirm the current date and day-of-week EXPLICITLY by running `date` first. Never say "tomorrow" or "today" or "next week" without verifying against the system clock. The UserPromptSubmit hook in ~/.claude/settings.json injects the date into every message, but if for any reason that's missing or stale, run `date` manually before timing-related advice. Getting a date wrong on a trading recommendation costs real money (one error in this project cost ~$710 in unrealized gains on an ENS option trim).
+
 ## What it does
 Runs every weekday at 14:09 UTC via GitHub Actions (email arrives ~15:30 BST). Pulls data from EODHD, computes all 7 pillars + 4 gates per ticker, scores into tiers 0-5, sends an HTML Swing Scan email + a companion Priority Options Plays email to savvastgeorgiou@gmail.com. Uses caching locally but CI runs fresh every day. Typical run: ~21 minutes, ~5200 API calls, 300-350 actionable candidates on a normal market day.
 

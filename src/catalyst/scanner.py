@@ -1,7 +1,15 @@
 import os
+import sys
 import time
 import traceback
 from datetime import datetime, timedelta
+
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 from src.eodhd import EODHDClient
 from src.indicators import to_dataframe

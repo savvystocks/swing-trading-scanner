@@ -58,6 +58,7 @@ from src.catalyst.news_tiering import enrich_news_quality
 from src.catalyst.aa_gates import assign_tiers, pick_top_per_bracket
 from src.catalyst.pre_mortem import apply_pre_mortem
 from src.catalyst.unified_forensic import apply_unified_forensic, apply_haiku_synthesis, apply_bear_case_verification
+from src.catalyst.catalyst_performance import annotate_picks_with_performance, measure_catalyst_performance
 from src.catalyst.v4_paper_log import log_picks as log_v4_picks, measure_outcomes as measure_v4_outcomes, get_v4_stats
 from src.catalyst.sam_gov import fetch_recent_contract_awards, map_awardees_to_tickers
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
@@ -1010,6 +1011,13 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             except Exception as e:
                 if verbose:
                     print(f"  bear_case_verification failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            measure_catalyst_performance(lookback_days=90, verbose=verbose)
+            annotate_picks_with_performance(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  catalyst_performance failed (non-fatal): {type(e).__name__}: {e}")
 
         all_picks_flat = []
         for bracket in ("micro", "small", "mid"):

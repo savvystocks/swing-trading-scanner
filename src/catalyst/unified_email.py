@@ -369,9 +369,51 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
             return pick.get("_aa_tier") in ("A++", "A+")
         return verdict in ("BUY", "STRONG_BUY")
 
+    def _sector_bucket(sec):
+        s = (sec or "").lower()
+        if "tech" in s or "communication" in s or "information" in s:
+            return "Technology"
+        if "health" in s or "pharma" in s or "biotech" in s:
+            return "Healthcare"
+        if "industrial" in s or "aerospace" in s or "defense" in s:
+            return "Industrials"
+        if "financial" in s or "bank" in s or "insurance" in s:
+            return "Financials"
+        if "consumer" in s or "retail" in s or "restaurant" in s:
+            return "Consumer"
+        if "energy" in s or "oil" in s or "gas" in s:
+            return "Energy"
+        if "material" in s or "metal" in s or "mining" in s:
+            return "Materials"
+        return "Other"
+
+    SECTOR_CAPS = {
+        "Technology": 3,
+        "Healthcare": 2,
+        "Industrials": 2,
+        "Financials": 2,
+        "Consumer": 2,
+        "Energy": 1,
+        "Materials": 1,
+        "Other": 1,
+    }
+
     buy_picks = [p for p in all_tier_picks if _is_buy_signal(p)]
     buy_picks.sort(key=lambda p: -((p.get("unified_forensic") or {}).get("confidence_pct") or (p.get("haiku_synthesis") or {}).get("confidence_pct") or 50))
-    top_picks = buy_picks[:4]
+
+    picked = []
+    sector_counts = {}
+    for p in buy_picks:
+        bucket = _sector_bucket(p.get("sector"))
+        cap = SECTOR_CAPS.get(bucket, 1)
+        if sector_counts.get(bucket, 0) >= cap:
+            continue
+        picked.append(p)
+        sector_counts[bucket] = sector_counts.get(bucket, 0) + 1
+        if len(picked) >= 5:
+            break
+
+    top_picks = picked
     picks_out = [_build_pick(p, i + 1) for i, p in enumerate(top_picks)]
 
     filtered_out_count = len(all_tier_picks) - len(buy_picks)

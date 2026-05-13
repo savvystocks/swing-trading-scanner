@@ -934,7 +934,46 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 ranked_picks.append(s)
 
         top_pick = ranked_picks[0] if ranked_picks else None
-        haiku_targets = ranked_picks[1:4]
+
+        def _sector_bucket_simple(sec):
+            s = (sec or "").lower()
+            if "tech" in s or "communication" in s or "information" in s:
+                return "Technology"
+            if "health" in s or "pharma" in s or "biotech" in s:
+                return "Healthcare"
+            if "industrial" in s or "aerospace" in s or "defense" in s:
+                return "Industrials"
+            if "financial" in s or "bank" in s or "insurance" in s:
+                return "Financials"
+            if "consumer" in s or "retail" in s:
+                return "Consumer"
+            if "energy" in s or "oil" in s or "gas" in s:
+                return "Energy"
+            if "material" in s or "metal" in s or "mining" in s:
+                return "Materials"
+            return "Other"
+
+        top_sector = _sector_bucket_simple((top_pick or {}).get("sector"))
+        haiku_targets = []
+        seen_sectors = {top_sector}
+        priority_order = ["Technology", "Industrials", "Financials", "Consumer", "Healthcare", "Energy", "Materials", "Other"]
+        for sec_target in priority_order:
+            if sec_target in seen_sectors:
+                continue
+            for p in ranked_picks[1:]:
+                if _sector_bucket_simple(p.get("sector")) == sec_target:
+                    haiku_targets.append(p)
+                    seen_sectors.add(sec_target)
+                    break
+            if len(haiku_targets) >= 3:
+                break
+        if len(haiku_targets) < 3:
+            for p in ranked_picks[1:]:
+                if p in haiku_targets:
+                    continue
+                haiku_targets.append(p)
+                if len(haiku_targets) >= 3:
+                    break
 
         if top_pick:
             if verbose:

@@ -49,19 +49,13 @@ jobs:
           MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
           SAM_GOV_API_KEY: ${{ secrets.SAM_GOV_API_KEY }}
         run: python scripts/run_catalyst_scan.py
-      - name: Run universe-wide factor screen
-        if: always()
-        env:
-          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
-          CATALYST_DATE: ${{ inputs.target_date }}
-        run: python scripts/run_factor_universe_scan.py
       - name: Commit tracker data + scan JSON for email job
         if: always()
         run: |
           git config user.name "catalyst-tracker-bot"
           git config user.email "noreply@github.com"
           git add data/catalyst/predictions/ data/catalyst/history.json data/catalyst/paper_trades.json 2>/dev/null || true
-          git add -f data/results/catalyst_*.json data/results/factor_screen_*.json data/universe/factor_universe_mcap_cache.json 2>/dev/null || true
+          git add -f data/results/catalyst_*.json 2>/dev/null || true
           git diff --cached --quiet || git commit -m "tracker: update predictions, history, paper trades, scan JSON, factor screen [skip ci]"
           git push || true
       - name: Upload scan result

@@ -34,7 +34,21 @@ Runs every weekday at 14:09 UTC via GitHub Actions (email arrives ~15:30 BST). P
 - GMAIL_APP_PASSWORD: stored only in GitHub repo secrets and Savvas's password manager. NEVER write the Gmail app password into this file or any committed file — it lives only in encrypted GitHub secrets.
 
 ## Cost model
-One ongoing cost: EODHD All-in-One £99.99/mo + occasional £5 top-up packs if quota runs short. Everything else (GitHub Actions, Gmail SMTP) is free. CI uses ~300 of 2000 free minutes per month. EODHD MONTHLY quota: ~5,200 calls per scan × ~22 trading days = ~115k/mo gross. We trim with 24h client cache + non-duplicated factor screen + no email-job rescan to stay under the 100k/mo limit. If burn rate creeps up, the catalyst-email workflow no longer auto-rescans on missing JSON — it just alerts and exits, preserving credits.
+One ongoing cost: EODHD All-in-One £99.99/mo + occasional £5 top-up packs (= 100k extra credits) if quota runs short. Everything else (GitHub Actions, Gmail SMTP) is free. CI uses ~300 of 2000 free minutes per month.
+
+EODHD MONTHLY quota: 100,000 calls per billing cycle (NOT per day). Burn rate now per scan-day:
+- catalyst-scan: ~6,700 calls (3,089 fast-filter OHLCV + ~3,600 deep score + ~50 macro). Was ~9,800 before we removed the wasted factor-screen step
+- catalyst-email: 0 EODHD calls on success days (uses Alpaca for live chains). Only the email-time render touches EODHD if cache miss
+- 6,700 × 22 trading days = ~147k/mo gross. Still over 100k by ~47k
+
+Next-step optimisations if we keep blowing through:
+1. Move the fast-filter OHLCV from EODHD to Alpaca IEX feed (free, ~3,089 calls/day saved = ~68k/mo). Drops burn to ~80k/mo, fully under quota
+2. Drop FTSE 250 from universe (saves a few hundred OHLCV calls/day)
+3. Two-pass week: full scan Tue/Thu only, lightweight catalyst-only scan Mon/Wed/Fri
+
+For now the budget shortfall (~47k/mo) is covered by buying one £5 top-up pack per month. Cheaper than a plan upgrade until the Alpaca-OHLCV migration ships.
+
+If quota is exhausted mid-month, EODHD returns `402 Payment Required` on EVERY endpoint including free-tier OHLCV (NOT 429 — they reserve 429 for per-second rate limits). The fix is a top-up purchase OR waiting for the next billing cycle.
 
 ## Schedule
 Cron fires at 14:09 UTC Monday-Friday. Email arrives in Savvas's inbox around 15:30 BST (summer) / 14:30 GMT (winter). Data is yesterday's EOD bars — the time of day the cron fires is purely a delivery-time preference.

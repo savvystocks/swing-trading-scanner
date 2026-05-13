@@ -255,13 +255,17 @@ def _build_bet_line(pick):
     forensic = pick.get("unified_forensic") or {}
     haiku = pick.get("haiku_synthesis") or {}
     bull_case = (
-        forensic.get("bull_case")
-        or forensic.get("summary")
-        or haiku.get("bull_case")
-        or haiku.get("summary")
+        forensic.get("bull_thesis")
+        or forensic.get("research_note")
+        or haiku.get("bull_thesis")
+        or haiku.get("synthesis_note")
     )
     if bull_case:
-        return str(bull_case)[:500]
+        risk = forensic.get("what_kills_this_trade") or haiku.get("what_kills_this_trade")
+        out = str(bull_case)[:380]
+        if risk:
+            out += f" Risk: {str(risk)[:120]}."
+        return out
 
     cats = pick.get("catalysts") or []
     cat_labels = []

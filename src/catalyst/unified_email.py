@@ -8,7 +8,21 @@ except ImportError:
     LIVE_OPTIONS_AVAILABLE = False
 
 import os
-ACCOUNT_SIZE_USD = float(os.environ.get("ACCOUNT_SIZE_USD", "5800"))
+
+
+def _safe_float_env(key, default):
+    raw = os.environ.get(key, "")
+    if isinstance(raw, str):
+        raw = raw.strip()
+    if not raw:
+        return float(default)
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return float(default)
+
+
+ACCOUNT_SIZE_USD = _safe_float_env("ACCOUNT_SIZE_USD", 5800)
 
 
 EMAIL_TEMPLATE = """<!DOCTYPE html>

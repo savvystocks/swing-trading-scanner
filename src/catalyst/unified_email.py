@@ -22,7 +22,7 @@ def _safe_float_env(key, default):
         return float(default)
 
 
-ACCOUNT_SIZE_USD = _safe_float_env("ACCOUNT_SIZE_USD", 5800)
+ACCOUNT_SIZE_USD = _safe_float_env("ACCOUNT_SIZE_USD", 4300)
 
 
 EMAIL_TEMPLATE = """<!DOCTYPE html>

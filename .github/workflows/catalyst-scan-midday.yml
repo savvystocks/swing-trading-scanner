@@ -4,13 +4,15 @@ on:
   workflow_dispatch:
   repository_dispatch:
     types: [run-catalyst-scan-midday]
-  schedule:
-    - cron: "30 19 * * 1-5"
+  # Schedule disabled - 90% Actions quota burn forced this off.
+  # Re-enable after monthly quota reset (1st of month) or upgrade plan.
+  # schedule:
+  #   - cron: "30 19 * * 1-5"
 
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 25
     permissions:
       contents: write
     steps:

@@ -5,7 +5,8 @@ on:
   repository_dispatch:
     types: [run-exit-alerts]
   schedule:
-    - cron: "*/30 13-21 * * 1-5"
+    # Hourly during market hours (was every 30min - reduced for Actions quota)
+    - cron: "0 13-21 * * 1-5"
 
 permissions:
   contents: write

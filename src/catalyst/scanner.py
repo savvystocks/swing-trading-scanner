@@ -890,6 +890,12 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         except Exception as e:
             if verbose:
                 print(f"  catalyst_windows failed (non-fatal): {type(e).__name__}: {e}")
+        try:
+            from src.catalyst.sentiment_layer import apply_sentiment_buzz_catalyst
+            apply_sentiment_buzz_catalyst(final_scored, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  sentiment_buzz failed (non-fatal): {type(e).__name__}: {e}")
         apply_stacking(final_scored, verbose=verbose)
 
         bracketed = route_candidates(final_scored)

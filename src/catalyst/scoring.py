@@ -29,6 +29,7 @@ CATALYST_TIERS = {
     "insider_cluster": {"tier": "C", "points": 2.0, "label": "Form 4 insider buying cluster", "direction": "bull", "event_timing": "ongoing"},
     "cohort_high_momentum_runners": {"tier": "A", "points": 4.0, "label": "High-momentum mid-cap (space/quantum/nuclear/AI/robotics)", "direction": "bull", "event_timing": "ongoing"},
     "cohort_recent_gappers_30d": {"tier": "B", "points": 3.0, "label": "Recent 30d gapper >=25% (in-motion name)", "direction": "bull", "event_timing": "ongoing"},
+    "cohort_retail_buzz": {"tier": "C", "points": 2.0, "label": "Retail social buzz (Reddit + StockTwits trending)", "direction": "bull", "event_timing": "ongoing"},
     "cohort_ai_infra_pureplay": {"tier": "S", "points": 5.0, "label": "AI infrastructure pure-play (hyperscaler-tied) - TECH HIGHEST PRIORITY", "direction": "bull", "event_timing": "ongoing"},
     "cohort_china_megacap_adrs": {"tier": "C", "points": 2.0, "label": "China mega-cap ADR (BABA/JD/PDD-style)", "direction": "bull", "event_timing": "ongoing"},
     "cohort_uk_dual_listed_adrs": {"tier": "C", "points": 2.0, "label": "UK dual-listed ADR (LSE + NYSE)", "direction": "bull", "event_timing": "ongoing"},

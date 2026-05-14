@@ -484,26 +484,39 @@ def _build_pick(pick, rank):
         final_rating = "NO LLM REVIEW"
         rating_class = "rating-neutral"
         stars = 2
-    elif net_edge >= 40:
-        final_rating = "STRONG BUY"
-        rating_class = "rating-strong"
-        stars = 5
-    elif net_edge >= 25:
-        final_rating = "BUY"
-        rating_class = "rating-buy"
-        stars = 4
-    elif net_edge >= 10:
-        final_rating = "WEAK BUY"
-        rating_class = "rating-weak"
-        stars = 3
-    elif net_edge >= -10:
-        final_rating = "HOLD"
-        rating_class = "rating-hold"
-        stars = 2
-    else:
+    elif bull_verdict == "SKIP":
         final_rating = "SKIP"
         rating_class = "rating-skip"
         stars = 1
+    elif bull_verdict == "HOLD":
+        final_rating = "HOLD"
+        rating_class = "rating-hold"
+        stars = 2
+    elif bull_verdict in ("BUY", "STRONG_BUY"):
+        if net_edge >= 40:
+            final_rating = "STRONG BUY"
+            rating_class = "rating-strong"
+            stars = 5
+        elif net_edge >= 25:
+            final_rating = "BUY"
+            rating_class = "rating-buy"
+            stars = 4
+        elif net_edge >= 10:
+            final_rating = "WEAK BUY"
+            rating_class = "rating-weak"
+            stars = 3
+        elif net_edge >= -10:
+            final_rating = "HOLD"
+            rating_class = "rating-hold"
+            stars = 2
+        else:
+            final_rating = "SKIP"
+            rating_class = "rating-skip"
+            stars = 1
+    else:
+        final_rating = "NO LLM REVIEW"
+        rating_class = "rating-neutral"
+        stars = 2
 
     star_display = "*" * stars + "-" * (5 - stars)
     rating_summary = {

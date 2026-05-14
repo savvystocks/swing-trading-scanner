@@ -1,0 +1,39 @@
+name: exit-alerts
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [run-exit-alerts]
+  schedule:
+    - cron: "*/30 13-21 * * 1-5"
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Check open positions and fire Telegram on triggers
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/run_exit_alerts.py
+      - name: Commit seen-set + updated max prices
+        if: always()
+        run: |
+          git config user.name "exit-alerts-bot"
+          git config user.email "noreply@github.com"
+          git add data/paper_trades/exit_alerts_seen.json data/paper_trades/v4_picks.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "exit-alerts: update seen set + peak prices [skip ci]"
+          git push || true

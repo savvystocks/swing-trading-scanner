@@ -940,6 +940,63 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             for s in aa_results.get(tier) or []:
                 ranked_picks.append(s)
 
+        try:
+            from src.catalyst.calendar_signals import enrich_macro_with_calendar
+            macro = enrich_macro_with_calendar(macro or {})
+            if verbose:
+                cal_risks = (macro or {}).get("near_term_calendar_risks") or []
+                if cal_risks:
+                    print(f"  calendar signals: near-term risks = {cal_risks}")
+        except Exception as e:
+            if verbose:
+                print(f"  calendar_signals failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.correlation_regime import compute_correlation_regime
+            corr_info = compute_correlation_regime(client, lookback_days=30)
+            if corr_info and macro is not None:
+                macro["correlation_regime"] = corr_info
+                if verbose:
+                    print(f"  correlation_regime: {corr_info['regime']} avg={corr_info['avg_correlation']:.2f}")
+        except Exception as e:
+            if verbose:
+                print(f"  correlation_regime failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.earnings_quality import apply_earnings_quality
+            apply_earnings_quality(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  earnings_quality failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.news_sentiment import apply_news_sentiment
+            apply_news_sentiment(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  news_sentiment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.vol_microstructure import apply_vol_microstructure
+            apply_vol_microstructure(ranked_picks[:10], eodhd_client=client, verbose=verbose, max_picks=10)
+        except Exception as e:
+            if verbose:
+                print(f"  vol_microstructure failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.trade_survival_score import apply_survival_scores
+            apply_survival_scores(ranked_picks, macro=macro, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  trade_survival_score failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.multi_leg_suggester import apply_multi_leg_suggestions
+            apply_multi_leg_suggestions(ranked_picks, verbose=verbose, max_picks=5)
+        except Exception as e:
+            if verbose:
+                print(f"  multi_leg_suggester failed (non-fatal): {type(e).__name__}: {e}")
+
         top_pick = ranked_picks[0] if ranked_picks else None
 
         def _sector_bucket_simple(sec):

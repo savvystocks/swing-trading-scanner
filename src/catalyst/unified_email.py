@@ -68,6 +68,27 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   .grade-pill.high { background:#15803d; color:#fff; }
   .grade-pill.med { background:#ca8a04; color:#fff; }
   .grade-pill.low { background:#9ca3af; color:#fff; }
+  .survival-badge { display:inline-block; padding:3px 9px; border-radius:4px; font-size:11px; font-weight:800; letter-spacing:0.5px; margin-left:6px; }
+  .survival-badge.survival-go { background:#065f46; color:#fff; }
+  .survival-badge.survival-reduce { background:#a16207; color:#fff; }
+  .survival-badge.survival-avoid { background:#b91c1c; color:#fff; }
+  .survival-badge.survival-skip { background:#7f1d1d; color:#fff; }
+  .survival-detail { margin:8px 0 4px 38px; padding:10px 12px; background:#f9fafb; border-left:3px solid #d1d5db; border-radius:4px; font-size:11px; line-height:1.5; color:#4b5563; }
+  .survival-detail strong { color:#111; }
+  .survival-detail .kill-risk { color:#7f1d1d; font-weight:600; }
+  .vol-line { margin:4px 0 4px 38px; font-size:11px; color:#6b7280; font-style:italic; }
+  .skew-line { margin:4px 0 4px 38px; font-size:11px; color:#6b7280; }
+  .skew-bullish { color:#15803d; font-weight:600; }
+  .skew-bearish { color:#b91c1c; font-weight:600; }
+  .skew-neutral { color:#6b7280; }
+  .eq-pill { display:inline-block; padding:2px 7px; border-radius:3px; font-size:10px; font-weight:700; margin-left:6px; }
+  .eq-pill.HIGH { background:#15803d; color:#fff; }
+  .eq-pill.MED { background:#ca8a04; color:#fff; }
+  .eq-pill.LOW { background:#9ca3af; color:#fff; }
+  .eq-pill.RED_FLAG { background:#b91c1c; color:#fff; }
+  .multi-leg-box { margin:8px 0 4px 38px; padding:8px 10px; background:#f0f9ff; border-left:3px solid #2563eb; border-radius:4px; font-size:11px; line-height:1.5; }
+  .multi-leg-item { padding:3px 0; }
+  .multi-leg-item strong { color:#1d4ed8; }
   .final-rating { margin:14px 0 0 38px; padding:12px 16px; border-radius:8px; border:2px solid; }
   .final-rating.rating-strong { background:#ecfdf5; border-color:#065f46; }
   .final-rating.rating-buy { background:#f0fdf4; border-color:#15803d; }
@@ -149,6 +170,55 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     {% endif %}
     {% if p.kelly_line %}
     <div class="pick-row"><span class="pick-row-label">Size</span><span class="pick-row-trade">{{ p.kelly_line }}</span></div>
+    {% endif %}
+
+    {% if p.survival %}
+    <div class="pick-row">
+      <span class="pick-row-label">Survival</span>
+      <span>
+        <span class="survival-badge {{ p.survival.verdict_class }}">{{ p.survival.score }}/100 · {{ p.survival.verdict }}</span>
+        <span style="font-size:11px; color:#4b5563;">{{ p.survival.action }}</span>
+      </span>
+    </div>
+    {% if p.survival.kill_risks %}
+    <div class="survival-detail">
+      <strong>Top risks to this trade:</strong>
+      {% for kr in p.survival.kill_risks %}
+      <div class="kill-risk">- {{ kr }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {% if p.vol_micro %}
+    {% if p.vol_micro.riv_note %}
+    <div class="vol-line"><strong>Vol:</strong> {{ p.vol_micro.riv_note }}</div>
+    {% endif %}
+    {% if p.vol_micro.skew_note %}
+    <div class="skew-line"><strong>Skew:</strong> <span class="skew-{{ p.vol_micro.skew_bias }}">{{ p.vol_micro.skew_note }}</span></div>
+    {% endif %}
+    {% endif %}
+
+    {% if p.earnings_quality %}
+    <div class="pick-row">
+      <span class="pick-row-label">Quality</span>
+      <span>
+        <span class="eq-pill {{ p.earnings_quality.rating }}">{{ p.earnings_quality.rating }} {{ p.earnings_quality.score }}</span>
+        {% if p.earnings_quality.flags %}<span style="font-size:11px; color:#6b7280;">{{ p.earnings_quality.flags|join(' · ') }}</span>{% endif %}
+      </span>
+    </div>
+    {% endif %}
+
+    {% if p.multi_leg %}
+    <div class="multi-leg-box">
+      <strong style="color:#1d4ed8;">Structure suggestions:</strong>
+      {% for s in p.multi_leg %}
+      <div class="multi-leg-item">
+        <strong>{{ s.structure }}</strong> - {{ s.rationale }}
+        {% if s.details %}<br><span style="color:#4b5563;">{{ s.details }}</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
     {% endif %}
 
     {% if p.rating_summary and p.rating_summary.bull_conf %}
@@ -541,6 +611,13 @@ def _build_pick(pick, rank):
         elif bear_conv:
             bear_note = f"Bear case stress-tested: {bear_verdict} ({bear_conv}% conviction) - BULL THESIS HOLDS"
 
+    survival = pick.get("_survival_score") or {}
+    vol_micro = pick.get("_vol_microstructure") or {}
+    skew = vol_micro.get("skew") or {}
+    riv = vol_micro.get("realized_vs_implied") or {}
+    eq = pick.get("_earnings_quality") or {}
+    multi_leg = pick.get("_multi_leg_suggestions") or []
+
     return {
         "rank": rank,
         "ticker": pick.get("ticker", "?"),
@@ -562,6 +639,29 @@ def _build_pick(pick, rank):
         "kelly_line": kelly_line,
         "bear_note": bear_note,
         "rating_summary": rating_summary,
+        "survival": {
+            "score": survival.get("score"),
+            "verdict": survival.get("verdict"),
+            "verdict_class": survival.get("verdict_class"),
+            "action": survival.get("action"),
+            "size_mult": survival.get("size_multiplier"),
+            "kill_risks": survival.get("kill_risks") or [],
+        } if survival else None,
+        "vol_micro": {
+            "skew_bias": skew.get("skew_bias"),
+            "skew_note": skew.get("bias_note"),
+            "skew_pts": skew.get("put_call_skew_pts"),
+            "atm_iv": skew.get("atm_iv"),
+            "riv_verdict": riv.get("verdict"),
+            "riv_note": riv.get("note"),
+            "realized_vol": riv.get("realized_vol_pct"),
+        } if (skew or riv) else None,
+        "earnings_quality": {
+            "rating": eq.get("rating"),
+            "score": eq.get("earnings_quality_score"),
+            "flags": (eq.get("flags") or [])[:3],
+        } if eq else None,
+        "multi_leg": multi_leg[:3] if multi_leg else None,
     }
 
 

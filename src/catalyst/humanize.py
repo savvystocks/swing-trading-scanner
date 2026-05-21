@@ -30,51 +30,70 @@ CONVICTION_LABELS = {
 }
 
 CATALYST_KEY_LABELS = {
-    "earnings_bmo_tomorrow": "Earnings tomorrow morning",
-    "earnings_amc_today": "Earnings tonight after close",
-    "earnings_bmo_with_beat_streak": "Earnings + beat streak",
-    "fda_pdufa_tomorrow": "FDA decision tomorrow",
-    "fda_event": "FDA filing",
-    "fda_rejection": "FDA rejection",
-    "merger_cash_buyout": "Cash buyout offered",
+    "earnings_bmo_tomorrow": "Reports earnings tomorrow morning",
+    "earnings_amc_today": "Reports earnings tonight after close",
+    "earnings_bmo_with_beat_streak": "Earnings imminent + has beaten last 4 quarters",
+    "earnings_imminent_5_9d": "Earnings in 5-9 days (IV expansion zone)",
+    "earnings_lead_up_10_15d": "Earnings in 10-15 days (entry sweet spot)",
+    "earnings_peak_iv_3_4d": "Earnings in 3-4 days (peak option premium)",
+    "fda_pdufa_tomorrow": "FDA decision due tomorrow",
+    "fda_event": "FDA decision or filing scheduled",
+    "fda_rejection": "FDA rejection just announced",
+    "merger_cash_buyout": "Cash buyout offer on the table",
     "merger": "Merger filed",
-    "merger_terminated": "Merger killed",
-    "asset_sale": "Asset sale agreement",
-    "definitive_agreement": "Material agreement",
-    "clinical_milestone": "Clinical trial milestone",
-    "private_placement": "Private placement",
-    "covenant_relief": "Covenant relief / forbearance",
-    "strategic_partnership": "Strategic partnership",
-    "contract_win": "Contract win",
-    "major_contract_win": "Major contract win",
-    "activist_stake": "Activist takes stake",
-    "insider_cluster": "Insider buying cluster",
-    "buyback": "Buyback announced",
-    "rebrand": "Company rebrand",
-    "going_concern": "Going-concern flag",
-    "earnings_miss_with_guide_down": "Earnings miss + guidance cut",
-    "dilutive_offering": "Dilutive offering",
-    "reverse_stock_split": "Reverse stock split",
-    "lawsuit_material": "Material lawsuit",
-    "downgrade_cluster": "Multiple downgrades",
-    "auditor_change": "Auditor resigned",
-    "delisting_warning": "Delisting risk",
-    "restatement": "Financial restatement",
-    "executive_departure": "CEO/CFO leaving",
-    "insider_selling_cluster": "Heavy insider selling",
-    "capex_echo": "Hyperscaler capex echo",
-    "backlog_surge": "Order backlog surge",
-    "revision_spike": "EPS estimate raises",
-    "strategic_investment": "Strategic investment from hyperscaler",
-    "spinoff_catalyst": "Spinoff / separation",
-    "cohort_high_momentum_runners": "High-momentum mid-cap watchlist",
-    "cohort_lazar_plays": "Lazar Capital portfolio",
-    "cohort_crypto_treasury": "Crypto treasury name",
-    "cohort_prediction_markets": "Prediction market name",
-    "cohort_biotech_binary": "Biotech binary catalyst",
-    "cohort_ai_rebrand": "AI rebrand cohort",
-    "cohort_cannabis_basket": "Cannabis basket",
-    "cohort_small_cap_china_adr": "China small-cap ADR",
+    "merger_terminated": "Merger fell through",
+    "asset_sale": "Selling assets to unlock value",
+    "definitive_agreement": "Material agreement just signed",
+    "clinical_milestone": "Clinical trial data coming",
+    "private_placement": "Private placement deal",
+    "covenant_relief": "Negotiated debt covenant relief",
+    "strategic_partnership": "Strategic partnership announced",
+    "contract_win": "Won a new customer contract",
+    "major_contract_win": "Landed a major customer contract",
+    "activist_stake": "Activist investor took a stake",
+    "insider_cluster": "Multiple insiders buying in a cluster",
+    "buyback": "Share buyback authorised",
+    "rebrand": "Company rebrand / name change",
+    "going_concern": "Auditor going-concern warning",
+    "earnings_miss_with_guide_down": "Missed earnings + cut forward guidance",
+    "dilutive_offering": "Issuing more shares (dilution risk)",
+    "reverse_stock_split": "Reverse stock split (red flag)",
+    "lawsuit_material": "Material lawsuit filed",
+    "downgrade_cluster": "Multiple analysts downgrading",
+    "auditor_change": "Auditor just resigned",
+    "delisting_warning": "Stock at risk of delisting",
+    "restatement": "Restating prior financials",
+    "executive_departure": "CEO or CFO leaving",
+    "insider_selling_cluster": "Heavy insider selling cluster",
+    "capex_echo": "Hyperscaler announced spending plans (supplier benefits)",
+    "backlog_surge": "Record-breaking customer order backlog",
+    "revision_spike": "Wall Street raising EPS estimates",
+    "strategic_investment": "Hyperscaler made a strategic investment",
+    "spinoff_catalyst": "Spinning off a business unit",
+    "post_earnings_beat": "Beat earnings and stock holding gains",
+    "post_earnings_drift": "Post-earnings drift still active",
+    "bank_post_earnings_drift": "Bank post-earnings drift active",
+    "ai_deal_announcement": "AI deal or partnership announced",
+    "semis_capex_signal": "Semiconductor capex signal benefits this name",
+    "defense_contract_award": "Won a defense contract",
+    "13d": "Activist 13D filed",
+    "13d_a": "Activist amended 13D filed",
+    "ipo_lockup_expiry": "IPO lockup expiring (insider sell pressure)",
+    "secondary_offering": "Secondary share offering",
+    "guidance_raise": "Raised forward guidance",
+    "preliminary_results": "Pre-announced strong results",
+    "ratings_upgrade": "Credit rating upgrade",
+    "ratings_downgrade": "Credit rating downgrade",
+    "index_inclusion": "Being added to an index (forced buying)",
+    "index_exit": "Being removed from an index (forced selling)",
+    "cohort_high_momentum_runners": "On the high-momentum mid-cap watchlist",
+    "cohort_lazar_plays": "Held by Lazar Capital (smart-money cohort)",
+    "cohort_crypto_treasury": "Holds crypto on balance sheet",
+    "cohort_prediction_markets": "Prediction market play",
+    "cohort_biotech_binary": "Biotech with binary catalyst",
+    "cohort_ai_rebrand": "Recently rebranded around AI",
+    "cohort_cannabis_basket": "Cannabis sector cohort",
+    "cohort_small_cap_china_adr": "China small-cap ADR cohort",
 }
 
 STATUS_LABELS = {
@@ -122,7 +141,31 @@ def humanize_conviction(label):
 
 
 def humanize_catalyst_key(key):
-    return CATALYST_KEY_LABELS.get(key, key)
+    if not key:
+        return ""
+    if key in CATALYST_KEY_LABELS:
+        return CATALYST_KEY_LABELS[key]
+    fallback = key.replace("_", " ").strip()
+    return fallback[0].upper() + fallback[1:] if fallback else key
+
+
+def humanize_catalyst_list(catalysts, max_items=4):
+    if not catalysts:
+        return []
+    out = []
+    seen = set()
+    for c in catalysts:
+        if isinstance(c, dict):
+            key = c.get("key") or ""
+        else:
+            key = str(c)
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        out.append(humanize_catalyst_key(key))
+        if len(out) >= max_items:
+            break
+    return out
 
 
 def humanize_status(label):

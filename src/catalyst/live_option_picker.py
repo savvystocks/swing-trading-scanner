@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 logger = logging.getLogger(__name__)
 
 
-def find_best_call(symbol, spot, dte_min=25, dte_max=50):
+def find_best_call(symbol, spot, dte_min=20, dte_max=55):
     if not os.environ.get("ALPACA_API_KEY") or not os.environ.get("ALPACA_SECRET_KEY"):
         return None
     try:
@@ -25,8 +25,8 @@ def find_best_call(symbol, spot, dte_min=25, dte_max=50):
             underlying_symbol=symbol,
             expiration_date_gte=min_exp,
             expiration_date_lte=max_exp,
-            strike_price_gte=str(round(spot * 0.85, 2)),
-            strike_price_lte=str(round(spot * 1.35, 2)),
+            strike_price_gte=str(round(spot * 0.75, 2)),
+            strike_price_lte=str(round(spot * 1.50, 2)),
             type="call",
         )
         snaps = client.get_option_chain(req)
@@ -37,24 +37,20 @@ def find_best_call(symbol, spot, dte_min=25, dte_max=50):
     if not snaps:
         return None
 
-    rows = []
+    all_rows = []
     for sym, s in snaps.items():
         try:
             g = s.greeks
             q = s.latest_quote
-            if not g or not q or not g.delta:
+            if not g or not q or g.delta is None:
                 continue
             bid = float(q.bid_price) if q.bid_price else 0
             ask = float(q.ask_price) if q.ask_price else 0
             mid = (bid + ask) / 2 if bid > 0 and ask > 0 else 0
-            if mid <= 0.05:
+            if mid <= 0.02:
                 continue
             delta = abs(float(g.delta))
-            if delta < 0.18 or delta > 0.65:
-                continue
-            spread_pct = ((ask - bid) / mid * 100) if mid > 0 else 100
-            if spread_pct > 60:
-                continue
+            spread_pct = ((ask - bid) / mid * 100) if mid > 0 else 999
             m = re.match(r"([A-Z]+)(\d{6})([CP])(\d+)", sym if isinstance(sym, str) else str(sym))
             if not m:
                 continue
@@ -62,7 +58,7 @@ def find_best_call(symbol, spot, dte_min=25, dte_max=50):
             strike = int(m.group(4)) / 1000
             exp = f"20{exp_raw[:2]}-{exp_raw[2:4]}-{exp_raw[4:6]}"
             iv = getattr(s, "implied_volatility", None) or getattr(g, "implied_volatility", 0) or 0
-            rows.append({
+            all_rows.append({
                 "strike": strike,
                 "exp": exp,
                 "delta": round(delta, 3),
@@ -78,11 +74,30 @@ def find_best_call(symbol, spot, dte_min=25, dte_max=50):
         except Exception:
             continue
 
-    if not rows:
+    if not all_rows:
         return None
 
-    rows.sort(key=lambda r: abs(r["delta"] - 0.35))
-    return rows[0]
+    ideal = [r for r in all_rows if 0.25 <= r["delta"] <= 0.50 and r["spread_pct"] <= 30 and r["mid"] >= 0.10]
+    if ideal:
+        ideal.sort(key=lambda r: abs(r["delta"] - 0.35))
+        ideal[0]["_fit"] = "ideal"
+        return ideal[0]
+
+    relaxed = [r for r in all_rows if 0.18 <= r["delta"] <= 0.65 and r["spread_pct"] <= 60 and r["mid"] >= 0.05]
+    if relaxed:
+        relaxed.sort(key=lambda r: abs(r["delta"] - 0.35))
+        relaxed[0]["_fit"] = "acceptable"
+        return relaxed[0]
+
+    wider = [r for r in all_rows if 0.10 <= r["delta"] <= 0.80 and r["spread_pct"] <= 120]
+    if wider:
+        wider.sort(key=lambda r: (r["spread_pct"], abs(r["delta"] - 0.35)))
+        wider[0]["_fit"] = "best_available"
+        return wider[0]
+
+    all_rows.sort(key=lambda r: r["spread_pct"])
+    all_rows[0]["_fit"] = "wide_market"
+    return all_rows[0]
 
 
 def _estimate_iv_crush_points(current_iv_pct, has_earnings_imminent, has_earnings_lead_up, has_general_catalyst):
@@ -149,11 +164,25 @@ def build_trade_line(ticker, spot, option):
     if not option:
         return None
     pct_to_strike = ((option["strike"] - spot) / spot * 100)
+    cost_per_contract = option["mid"] * 100
+    fit = option.get("_fit", "ideal")
+    fit_note = ""
+    if fit == "acceptable":
+        fit_note = " (acceptable fit)"
+    elif fit == "best_available":
+        fit_note = " (best available - thinner chain)"
+    elif fit == "wide_market":
+        fit_note = " (wide market - check fill carefully)"
+    if pct_to_strike >= 0.5:
+        strike_phrase = f"strike sits {pct_to_strike:.1f}% above current price"
+    elif pct_to_strike <= -0.5:
+        strike_phrase = f"strike sits {abs(pct_to_strike):.1f}% below current price (already in-the-money)"
+    else:
+        strike_phrase = "strike right at current price (at-the-money)"
     return (
-        f"Buy {ticker} ${option['strike']:.0f}C exp {option['exp']} @ ${option['mid']:.2f} mid "
-        f"(bid ${option['bid']:.2f}/ask ${option['ask']:.2f}) "
-        f"· d {option['delta']:.2f} · IV {option['iv_pct']}% "
-        f"· strike {pct_to_strike:+.1f}% OTM"
+        f"Buy {ticker} ${option['strike']:.0f} call expiring {option['exp']} "
+        f"around ${option['mid']:.2f} per share (${cost_per_contract:.0f} per contract). "
+        f"{strike_phrase}.{fit_note}"
     )
 
 

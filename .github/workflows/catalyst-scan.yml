@@ -13,9 +13,9 @@ on:
         default: ""
   repository_dispatch:
     types: [run-catalyst-scan]
-  # External cron-job.org POSTs run-catalyst-scan at 14:00 UTC (30 min after
-  # US summer open) so scan picks up today's opening action via Alpaca live
-  # quotes baked into morning_refresh. GitHub schedule is fallback only.
+  # Single trigger via GitHub cron at 14:00 UTC weekdays. External cron-job.org
+  # was previously doing the same thing — double-firing was burning EODHD quota.
+  # If cron-job.org is still active in your account, DISABLE it.
   schedule:
     - cron: "0 14 * * 1-5"
 

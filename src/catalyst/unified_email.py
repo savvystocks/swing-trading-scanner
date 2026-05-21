@@ -7,6 +7,22 @@ try:
 except ImportError:
     LIVE_OPTIONS_AVAILABLE = False
 
+try:
+    from src.catalyst.humanize import humanize_catalyst_key, humanize_catalyst_list
+except ImportError:
+    def humanize_catalyst_key(k):
+        return (k or "").replace("_", " ").strip()
+    def humanize_catalyst_list(cats, max_items=4):
+        out = []
+        for c in (cats or [])[:max_items]:
+            if isinstance(c, dict):
+                k = c.get("key") or c.get("label") or ""
+            else:
+                k = str(c)
+            if k:
+                out.append(k.replace("_", " ").strip())
+        return out
+
 import os
 
 
@@ -31,85 +47,68 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <style>
   body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; background:#f6f7f9; margin:0; padding:18px; color:#1a1a1a; }
-  .wrap { max-width:780px; margin:0 auto; background:#fff; padding:28px 32px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-  h1 { font-size:20px; margin:0 0 4px; font-weight:700; letter-spacing:-0.3px; }
+  .wrap { max-width:820px; margin:0 auto; background:#fff; padding:28px 32px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+  h1 { font-size:22px; margin:0 0 4px; font-weight:700; letter-spacing:-0.3px; }
   .header-meta { color:#666; font-size:12px; margin-bottom:24px; }
   .section-rule { border:0; height:1px; background:#e5e7eb; margin:28px 0 14px; }
   .section-label { font-size:11px; font-weight:700; letter-spacing:1.2px; color:#6b7280; text-transform:uppercase; margin-bottom:14px; }
-  .pick { margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid #f1f3f5; }
-  .pick:last-child { border-bottom:0; }
-  .pick-header { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
-  .pick-rank { font-size:13px; font-weight:700; color:#9ca3af; min-width:28px; }
-  .pick-ticker { font-size:18px; font-weight:800; color:#111; letter-spacing:-0.2px; }
-  .pick-tier { font-size:10px; font-weight:800; padding:2px 8px; border-radius:3px; letter-spacing:0.5px; }
-  .pick-tier.app { background:#065f46; color:#fff; }
-  .pick-tier.ap { background:#15803d; color:#fff; }
-  .pick-tier.a { background:#1d4ed8; color:#fff; }
-  .pick-name { font-size:13px; color:#4b5563; flex:1; min-width:200px; }
-  .pick-price { font-size:13px; font-weight:600; color:#111; }
+
+  .pick { margin-bottom:30px; padding:18px 20px 20px; border:1px solid #e5e7eb; border-radius:10px; background:#fcfcfd; }
+  .pick-header { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .pick-rank { font-size:13px; font-weight:700; color:#9ca3af; }
+  .pick-ticker { font-size:22px; font-weight:800; color:#111; letter-spacing:-0.3px; }
+  .pick-name { font-size:12px; color:#4b5563; flex:1; min-width:160px; }
+  .pick-price { font-size:14px; font-weight:700; color:#111; }
   .pick-move-up { color:#15803d; font-weight:700; }
   .pick-move-down { color:#b91c1c; font-weight:700; }
-  .pick-row { font-size:13px; line-height:1.6; margin:5px 0; padding-left:38px; }
-  .pick-row-label { display:inline-block; min-width:62px; font-size:11px; font-weight:800; letter-spacing:0.6px; color:#6b7280; text-transform:uppercase; vertical-align:top; }
-  .pick-row-trade { color:#111; font-weight:600; }
-  .pick-row-odds { color:#111; }
-  .pick-row-bet { color:#374151; }
-  .outcomes-cards { display:flex; gap:8px; margin:10px 0 4px 38px; flex-wrap:wrap; }
-  .outcome-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; padding:8px 12px; min-width:108px; flex:1; }
-  .outcome-card .move-label { font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; }
-  .outcome-card .new-spot { font-size:12px; color:#4b5563; margin:2px 0; }
-  .outcome-card .new-option { font-size:12px; color:#111; font-weight:600; margin:2px 0; }
-  .outcome-card .return-value { font-size:16px; font-weight:800; margin-top:4px; }
-  .outcome-card .return-value.win { color:#15803d; }
-  .outcome-card .return-value.lose { color:#b91c1c; }
-  .outcome-card .return-value.flat { color:#9ca3af; }
+
+  .overall-score-box { display:flex; align-items:center; gap:14px; margin:8px 0 16px; padding:14px 18px; border-radius:10px; border:2px solid; }
+  .overall-score-box.overall-strong { background:#ecfdf5; border-color:#065f46; }
+  .overall-score-box.overall-good { background:#f0fdf4; border-color:#15803d; }
+  .overall-score-box.overall-borderline { background:#fefce8; border-color:#a16207; }
+  .overall-score-box.overall-watch { background:#f9fafb; border-color:#6b7280; }
+  .overall-score-box.overall-avoid { background:#fef2f2; border-color:#b91c1c; }
+  .score-circle { font-size:32px; font-weight:800; min-width:64px; text-align:center; }
+  .overall-strong .score-circle { color:#065f46; }
+  .overall-good .score-circle { color:#15803d; }
+  .overall-borderline .score-circle { color:#a16207; }
+  .overall-watch .score-circle { color:#6b7280; }
+  .overall-avoid .score-circle { color:#b91c1c; }
+  .score-info { flex:1; }
+  .score-verdict { font-size:16px; font-weight:800; margin-bottom:2px; }
+  .overall-strong .score-verdict { color:#065f46; }
+  .overall-good .score-verdict { color:#15803d; }
+  .overall-borderline .score-verdict { color:#a16207; }
+  .overall-watch .score-verdict { color:#6b7280; }
+  .overall-avoid .score-verdict { color:#b91c1c; }
+  .score-plain { font-size:12px; color:#374151; line-height:1.5; }
+
+  .key-numbers { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 14px; }
+  .key-num { flex:1; min-width:130px; padding:10px 12px; background:#fff; border:1px solid #e5e7eb; border-radius:8px; }
+  .key-num-label { font-size:10px; font-weight:700; color:#6b7280; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:3px; }
+  .key-num-value { font-size:18px; font-weight:800; color:#111; }
+  .key-num-value.win { color:#15803d; }
+  .key-num-value.lose { color:#b91c1c; }
+
+  .trade-block { margin:10px 0 12px; padding:14px 16px; background:#eff6ff; border-left:4px solid #2563eb; border-radius:6px; }
+  .trade-block-label { font-size:11px; font-weight:800; letter-spacing:0.8px; color:#1d4ed8; text-transform:uppercase; margin-bottom:4px; }
+  .trade-block-text { font-size:14px; font-weight:700; color:#111; line-height:1.5; }
+  .trade-block-detail { font-size:12px; color:#4b5563; margin-top:6px; line-height:1.5; }
+
+  .why-block, .risks-block, .catalysts-block { margin:10px 0; }
+  .why-block { padding:10px 14px; background:#ecfdf5; border-left:3px solid #15803d; border-radius:5px; font-size:13px; color:#065f46; line-height:1.55; }
+  .risks-block { padding:10px 14px; background:#fef2f2; border-left:3px solid #b91c1c; border-radius:5px; font-size:12px; color:#7f1d1d; line-height:1.55; }
+  .catalysts-block { padding:8px 14px; background:#f9fafb; border-left:3px solid #6b7280; border-radius:5px; font-size:13px; color:#374151; line-height:1.55; }
+  .catalysts-block strong, .why-block strong, .risks-block strong { font-weight:800; display:block; margin-bottom:4px; font-size:11px; letter-spacing:0.5px; text-transform:uppercase; }
+  .catalysts-list { list-style:none; padding-left:0; margin:0; }
+  .catalysts-list li { padding:2px 0; }
+
   .grade-pill { display:inline-block; padding:2px 7px; border-radius:3px; font-size:10px; font-weight:800; letter-spacing:0.4px; }
   .grade-pill.highest { background:#065f46; color:#fff; }
   .grade-pill.high { background:#15803d; color:#fff; }
   .grade-pill.med { background:#ca8a04; color:#fff; }
   .grade-pill.low { background:#9ca3af; color:#fff; }
-  .survival-badge { display:inline-block; padding:3px 9px; border-radius:4px; font-size:11px; font-weight:800; letter-spacing:0.5px; margin-left:6px; }
-  .survival-badge.survival-go { background:#065f46; color:#fff; }
-  .survival-badge.survival-reduce { background:#a16207; color:#fff; }
-  .survival-badge.survival-avoid { background:#b91c1c; color:#fff; }
-  .survival-badge.survival-skip { background:#7f1d1d; color:#fff; }
-  .survival-detail { margin:8px 0 4px 38px; padding:10px 12px; background:#f9fafb; border-left:3px solid #d1d5db; border-radius:4px; font-size:11px; line-height:1.5; color:#4b5563; }
-  .survival-detail strong { color:#111; }
-  .survival-detail .kill-risk { color:#7f1d1d; font-weight:600; }
-  .vol-line { margin:4px 0 4px 38px; font-size:11px; color:#6b7280; font-style:italic; }
-  .skew-line { margin:4px 0 4px 38px; font-size:11px; color:#6b7280; }
-  .skew-bullish { color:#15803d; font-weight:600; }
-  .skew-bearish { color:#b91c1c; font-weight:600; }
-  .skew-neutral { color:#6b7280; }
-  .eq-pill { display:inline-block; padding:2px 7px; border-radius:3px; font-size:10px; font-weight:700; margin-left:6px; }
-  .eq-pill.HIGH { background:#15803d; color:#fff; }
-  .eq-pill.MED { background:#ca8a04; color:#fff; }
-  .eq-pill.LOW { background:#9ca3af; color:#fff; }
-  .eq-pill.RED_FLAG { background:#b91c1c; color:#fff; }
-  .multi-leg-box { margin:8px 0 4px 38px; padding:8px 10px; background:#f0f9ff; border-left:3px solid #2563eb; border-radius:4px; font-size:11px; line-height:1.5; }
-  .multi-leg-item { padding:3px 0; }
-  .multi-leg-item strong { color:#1d4ed8; }
-  .final-rating { margin:14px 0 0 38px; padding:12px 16px; border-radius:8px; border:2px solid; }
-  .final-rating.rating-strong { background:#ecfdf5; border-color:#065f46; }
-  .final-rating.rating-buy { background:#f0fdf4; border-color:#15803d; }
-  .final-rating.rating-weak { background:#fefce8; border-color:#a16207; }
-  .final-rating.rating-hold { background:#f9fafb; border-color:#6b7280; }
-  .final-rating.rating-skip { background:#fef2f2; border-color:#b91c1c; }
-  .final-rating.rating-neutral { background:#f9fafb; border-color:#9ca3af; }
-  .rating-headline { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
-  .rating-label { font-size:18px; font-weight:800; letter-spacing:-0.3px; }
-  .rating-strong .rating-label { color:#065f46; }
-  .rating-buy .rating-label { color:#15803d; }
-  .rating-weak .rating-label { color:#a16207; }
-  .rating-hold .rating-label { color:#6b7280; }
-  .rating-skip .rating-label { color:#b91c1c; }
-  .rating-neutral .rating-label { color:#9ca3af; }
-  .rating-stars { font-size:14px; font-weight:700; letter-spacing:2px; }
-  .rating-net { font-size:11px; color:#4b5563; font-weight:600; }
-  .rating-bull, .rating-bear { font-size:11px; padding:6px 10px; margin-top:6px; border-radius:4px; line-height:1.5; }
-  .rating-bull { background:#ecfdf5; color:#065f46; }
-  .rating-bear { background:#fef2f2; color:#7f1d1d; }
-  .rating-bull strong, .rating-bear strong { font-weight:800; }
+
   .table { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
   .table th { background:#f9fafb; padding:6px 10px; text-align:left; font-weight:700; color:#4b5563; font-size:11px; border-bottom:1px solid #e5e7eb; }
   .table td { padding:6px 10px; border-bottom:1px solid #f3f4f6; vertical-align:top; }
@@ -128,15 +127,10 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 <body>
 <div class="wrap">
 
-  <h1>Micro · Small · Mid Setups</h1>
+  <h1>Today's Top Trades</h1>
   <div class="header-meta">
-    {{ scan_day_label }} · {{ picks|length }} picks
-    {% if fallback_used_count %}({{ picks|length - fallback_used_count }} BUY + {{ fallback_used_count }} fallback HOLD/Weak){% else %}(all BUY-rated){% endif %}
-    · {{ filtered_out_count }} filtered out
-    {% if regime_label %}· {{ regime_label }} regime{% endif %}
-  </div>
-  <div class="header-meta" style="margin-top:-18px; margin-bottom:24px; font-size:11px;">
-    A++ {{ a_pp_count }} · A+ {{ a_p_count }} · A {{ a_count }} total tier output · {{ pre_earnings_count }} pre-earnings setups
+    {{ scan_day_label }} · {{ picks|length }} picks selected from {{ filtered_out_count + picks|length }} candidates
+    {% if regime_label %}· Market mood: {{ regime_label }}{% endif %}
   </div>
 
   {% if picks %}
@@ -148,105 +142,75 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     <div class="pick-header">
       <span class="pick-rank">#{{ loop.index }}</span>
       <span class="pick-ticker">{{ p.ticker }}</span>
-      <span class="pick-tier {{ p.tier_class }}">{{ p.tier }}</span>
-      <span class="pick-name">{{ p.name }} · {{ p.sector }} {{ p.bracket }}</span>
+      <span class="pick-name">{{ p.name }}{% if p.sector %} · {{ p.sector }}{% endif %}</span>
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
-    <div class="pick-row"><span class="pick-row-label">Trade</span><span class="pick-row-trade">{{ p.trade_line }}</span></div>
-    {% if p.has_outcomes %}
-    <div class="outcomes-cards">
-      {% for o in p.outcomes %}
-      <div class="outcome-card">
-        <div class="move-label">If stock +{{ o.underlying_pct }}%</div>
-        <div class="new-spot">Spot: ${{ o.new_spot }}</div>
-        <div class="new-option">Option: ${{ o.new_option }}</div>
-        <div class="return-value {% if o.return_pct >= 50 %}win{% elif o.return_pct < 0 %}lose{% else %}flat{% endif %}">{{ o.return_pct|round(0)|int }}%</div>
+
+    <div class="overall-score-box {{ p.overall.verdict_class }}">
+      <div class="score-circle">{{ p.overall.score }}</div>
+      <div class="score-info">
+        <div class="score-verdict">{{ p.overall.verdict }}</div>
+        <div class="score-plain">{{ p.overall.plain_english }}</div>
       </div>
-      {% endfor %}
     </div>
-    {% if p.iv_crush_note %}
-    <div style="font-size:10px; color:#9ca3af; padding-left:38px; margin:6px 0 4px; font-style:italic;">{{ p.iv_crush_note }}</div>
-    {% endif %}
-    {% endif %}
-    {% if p.kelly_line %}
-    <div class="pick-row"><span class="pick-row-label">Size</span><span class="pick-row-trade">{{ p.kelly_line }}</span></div>
-    {% endif %}
 
-    {% if p.survival %}
-    <div class="pick-row">
-      <span class="pick-row-label">Survival</span>
-      <span>
-        <span class="survival-badge {{ p.survival.verdict_class }}">{{ p.survival.score }}/100 · {{ p.survival.verdict }}</span>
-        <span style="font-size:11px; color:#4b5563;">{{ p.survival.action }}</span>
-      </span>
-    </div>
-    {% if p.survival.kill_risks %}
-    <div class="survival-detail">
-      <strong>Top risks to this trade:</strong>
-      {% for kr in p.survival.kill_risks %}
-      <div class="kill-risk">- {{ kr }}</div>
-      {% endfor %}
-    </div>
-    {% endif %}
-    {% endif %}
-
-    {% if p.vol_micro %}
-    {% if p.vol_micro.riv_note %}
-    <div class="vol-line"><strong>Vol:</strong> {{ p.vol_micro.riv_note }}</div>
-    {% endif %}
-    {% if p.vol_micro.skew_note %}
-    <div class="skew-line"><strong>Skew:</strong> <span class="skew-{{ p.vol_micro.skew_bias }}">{{ p.vol_micro.skew_note }}</span></div>
-    {% endif %}
-    {% endif %}
-
-    {% if p.earnings_quality %}
-    <div class="pick-row">
-      <span class="pick-row-label">Quality</span>
-      <span>
-        <span class="eq-pill {{ p.earnings_quality.rating }}">{{ p.earnings_quality.rating }} {{ p.earnings_quality.score }}</span>
-        {% if p.earnings_quality.flags %}<span style="font-size:11px; color:#6b7280;">{{ p.earnings_quality.flags|join(' · ') }}</span>{% endif %}
-      </span>
-    </div>
-    {% endif %}
-
-    {% if p.multi_leg %}
-    <div class="multi-leg-box">
-      <strong style="color:#1d4ed8;">Structure suggestions:</strong>
-      {% for s in p.multi_leg %}
-      <div class="multi-leg-item">
-        <strong>{{ s.structure }}</strong> - {{ s.rationale }}
-        {% if s.details %}<br><span style="color:#4b5563;">{{ s.details }}</span>{% endif %}
+    <div class="key-numbers">
+      <div class="key-num">
+        <div class="key-num-label">Chance of profit</div>
+        <div class="key-num-value {% if p.overall.probability_of_profit_pct >= 55 %}win{% elif p.overall.probability_of_profit_pct < 40 %}lose{% endif %}">{{ p.overall.probability_of_profit_pct }}%</div>
       </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    {% if p.rating_summary and p.rating_summary.bull_conf %}
-    <div class="final-rating {{ p.rating_summary.rating_class }}">
-      <div class="rating-headline">
-        <span class="rating-label">{{ p.rating_summary.final_rating }}</span>
-        <span class="rating-stars">{{ p.rating_summary.star_display }}</span>
-        <span class="rating-net">
-          Bull {{ p.rating_summary.bull_conf }}%
-          {% if p.rating_summary.bear_conv %}vs Bear {{ p.rating_summary.bear_conv }}%{% endif %}
-          {% if p.rating_summary.net_edge is not none %} · net edge {{ p.rating_summary.net_edge|round(0)|int }}{% endif %}
-        </span>
+      <div class="key-num">
+        <div class="key-num-label">{{ p.target_label }}</div>
+        <div class="key-num-value {% if p.target_return_pct is not none and p.target_return_pct >= 30 %}win{% elif p.target_return_pct is not none and p.target_return_pct < 0 %}lose{% endif %}">{% if p.target_return_pct is none %}n/a{% elif p.target_return_pct > 0 %}+{{ p.target_return_pct }}%{% else %}{{ p.target_return_pct }}%{% endif %}</div>
       </div>
-      {% if p.rating_summary.bull_thesis %}
-      <div class="rating-bull"><strong>Bull case:</strong> {{ p.rating_summary.bull_thesis }}</div>
-      {% endif %}
-      {% if p.rating_summary.killer_thesis %}
-      <div class="rating-bear"><strong>Bear killer{% if p.rating_summary.is_trap %} - TRAP FLAGGED{% endif %}:</strong> {{ p.rating_summary.killer_thesis }}</div>
+      <div class="key-num">
+        <div class="key-num-label">Cost per contract</div>
+        <div class="key-num-value">{% if p.contract_cost %}${{ p.contract_cost }}{% else %}n/a{% endif %}</div>
+      </div>
+      <div class="key-num">
+        <div class="key-num-label">Size suggestion</div>
+        <div class="key-num-value">{% if p.size_contracts %}{{ p.size_contracts }} contract{% if p.size_contracts > 1 %}s{% endif %}{% else %}n/a{% endif %}</div>
+      </div>
+    </div>
+
+    <div class="trade-block">
+      <div class="trade-block-label">The trade</div>
+      <div class="trade-block-text">{{ p.trade_line }}</div>
+      {% if p.trade_detail %}
+      <div class="trade-block-detail">{{ p.trade_detail }}</div>
       {% endif %}
     </div>
-    {% else %}
-    <div class="pick-row"><span class="pick-row-label">Odds</span><span class="pick-row-odds">{{ p.odds_line }}</span></div>
-    <div class="pick-row"><span class="pick-row-label">Bet</span><span class="pick-row-bet">{{ p.bet_line }}</span></div>
+
+    {% if p.why %}
+    <div class="why-block">
+      <strong>Why this trade</strong>
+      {{ p.why }}
+    </div>
+    {% endif %}
+
+    {% if p.catalyst_lines %}
+    <div class="catalysts-block">
+      <strong>What's driving the move</strong>
+      <ul class="catalysts-list">
+        {% for cat in p.catalyst_lines %}
+        <li>· {{ cat }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if p.risks %}
+    <div class="risks-block">
+      <strong>What could go wrong</strong>
+      {% for r in p.risks %}
+      <div>· {{ r }}</div>
+      {% endfor %}
+    </div>
     {% endif %}
   </div>
   {% endfor %}
   {% else %}
-  <div class="empty-state"><strong>No BUY-rated picks today.</strong><br>{{ filtered_out_count }} candidate(s) graded HOLD or SKIP by the LLM forensic — nothing met the buy bar. Sit out.</div>
+  <div class="empty-state"><strong>No buy-rated picks today.</strong><br>{{ filtered_out_count }} candidates were graded HOLD or SKIP by the AI forensic - nothing cleared the bar. Sit out.</div>
   {% endif %}
 
   {% if pre_earnings_lead_up or pre_earnings_imminent %}
@@ -372,7 +336,7 @@ def _build_trade_line(pick):
             pass
 
     if not price:
-        return "Trade ticket unavailable (no live spot, no option chain)"
+        return "Trade ticket unavailable (no live price, no option chain)"
 
     atr_pct = pick.get("atr_pct") or 3.5
     try:
@@ -383,10 +347,10 @@ def _build_trade_line(pick):
     target = price * 1.085
     stop = price * (1 - atr_pct / 100.0)
     return (
-        f"Buy {ticker} stock at ~${_fmt_price(price)} · "
-        f"target ${_fmt_price(target)} (+8.5%) · "
-        f"stop ${_fmt_price(stop)} (-{atr_pct:.1f}%) · "
-        f"options chain too thin for clean contract"
+        f"Buy {ticker} stock at roughly ${_fmt_price(price)}, "
+        f"target ${_fmt_price(target)} (about +8.5%), "
+        f"stop ${_fmt_price(stop)} (about -{atr_pct:.1f}%). "
+        f"Option chain too thin for a clean contract."
     )
 
 
@@ -484,6 +448,62 @@ def _detect_catalyst_flags(pick):
         elif k in general_catalyst_keys:
             has_general = True
     return has_imminent, has_lead_up, has_general
+
+
+def _build_why_text(pick):
+    forensic = pick.get("unified_forensic") or {}
+    haiku = pick.get("haiku_synthesis") or {}
+    bull = forensic.get("bull_thesis") or haiku.get("bull_thesis") or forensic.get("research_note") or haiku.get("synthesis_note")
+    if bull:
+        return str(bull)[:380]
+    cats = pick.get("catalysts") or []
+    human = humanize_catalyst_list(cats, max_items=3)
+    if human:
+        return "Catalyst stack: " + " · ".join(human) + "."
+    return ""
+
+
+def _build_risks(pick):
+    out = []
+    bear_v = pick.get("bear_verification") or {}
+    killer = bear_v.get("killer_thesis")
+    is_trap = bear_v.get("is_this_trade_a_trap")
+    if killer:
+        if is_trap:
+            out.append("TRAP FLAGGED: " + str(killer)[:200])
+        else:
+            out.append("Bear case: " + str(killer)[:200])
+
+    survival = pick.get("_survival_score") or {}
+    for kr in (survival.get("kill_risks") or [])[:2]:
+        if ":" in kr:
+            cat, rest = kr.split(":", 1)
+            humanised = _humanize_kill_risk(cat.strip(), rest.strip())
+            out.append(humanised)
+        else:
+            out.append(kr)
+
+    if not out:
+        pre_mortem = pick.get("pre_mortem") or {}
+        risk = pre_mortem.get("most_likely_failure")
+        if risk:
+            out.append(str(risk)[:200])
+    return out[:3]
+
+
+def _humanize_kill_risk(category, note):
+    cat_map = {
+        "Calendar": "Macro calendar",
+        "Vol regime": "Market volatility",
+        "Sector": "Sector backdrop",
+        "Credit/rates": "Rates/credit backdrop",
+        "News": "News sentiment",
+        "Company": "Company-level risk",
+        "Exhaustion": "Already extended",
+        "Positioning": "Options positioning",
+    }
+    label = cat_map.get(category, category)
+    return f"{label}: {note}"
 
 
 def _build_pick(pick, rank):
@@ -611,18 +631,74 @@ def _build_pick(pick, rank):
         elif bear_conv:
             bear_note = f"Bear case stress-tested: {bear_verdict} ({bear_conv}% conviction) - BULL THESIS HOLDS"
 
-    survival = pick.get("_survival_score") or {}
-    vol_micro = pick.get("_vol_microstructure") or {}
-    skew = vol_micro.get("skew") or {}
-    riv = vol_micro.get("realized_vs_implied") or {}
-    eq = pick.get("_earnings_quality") or {}
-    multi_leg = pick.get("_multi_leg_suggestions") or []
+    overall = pick.get("_overall_score") or {}
+    if not overall:
+        try:
+            from src.catalyst.overall_score import compute_overall_score
+            overall = compute_overall_score(pick)
+        except Exception:
+            overall = {
+                "score": 50,
+                "verdict": "BORDERLINE",
+                "verdict_class": "overall-borderline",
+                "plain_english": "Score unavailable - mixed signals.",
+                "probability_of_profit_pct": 50,
+                "components": {},
+            }
+
+    target_return_pct = None
+    target_label = "If stock moves +8%"
+    contract_cost = None
+    size_contracts = None
+    trade_detail = None
+    if live_option:
+        contract_cost = int(round(live_option.get("mid", 0) * 100))
+        target_8 = None
+        for o in outcomes:
+            if o.get("underlying_pct") == 8:
+                target_8 = o
+                break
+        if target_8 is None and outcomes:
+            target_8 = outcomes[len(outcomes) // 2]
+            target_label = f"If stock moves +{target_8.get('underlying_pct', 8)}%"
+        if target_8:
+            target_return_pct = int(round(target_8.get("return_pct", 0)))
+        bits = []
+        if live_option.get("iv_pct") is not None:
+            bits.append(f"Option's implied volatility: {live_option['iv_pct']}%")
+        if iv_crush_note:
+            simple_iv = iv_crush_note.replace("IV crush built-in:", "Volatility drop priced in:")
+            simple_iv = simple_iv.replace("vol points", "vol pts")
+            bits.append(simple_iv)
+        trade_detail = " · ".join(bits) if bits else None
+
+    if kelly_line and live_option and live_option.get("mid"):
+        try:
+            import re as _re
+            m = _re.search(r"(\d+)\s+contracts?", kelly_line)
+            if m:
+                size_contracts = int(m.group(1))
+        except Exception:
+            size_contracts = None
+
+    if size_contracts is None and live_option and contract_cost:
+        survival = pick.get("_survival_score") or {}
+        size_mult = survival.get("size_multiplier", 1.0)
+        if overall.get("verdict") in ("AVOID", "WAIT FOR BETTER"):
+            size_contracts = 0
+        else:
+            base_dollars = ACCOUNT_SIZE_USD * 0.05 * (size_mult if size_mult else 1.0)
+            size_contracts = max(1, int(base_dollars / max(1, contract_cost)))
+
+    why = _build_why_text(pick)
+    catalyst_lines = humanize_catalyst_list(pick.get("catalysts") or [], max_items=4)
+    risks = _build_risks(pick)
 
     return {
         "rank": rank,
         "ticker": pick.get("ticker", "?"),
-        "name": (pick.get("name") or "")[:40],
-        "sector": (pick.get("sector") or "")[:18],
+        "name": (pick.get("name") or "")[:50],
+        "sector": (pick.get("sector") or "")[:24],
         "bracket": pick.get("bracket", "?"),
         "tier": tier,
         "tier_class": _tier_class(tier),
@@ -631,37 +707,21 @@ def _build_pick(pick, rank):
         "move_pct_fmt": _fmt_pct(move_pct),
         "move_class": _move_class(move_pct),
         "trade_line": trade_line,
-        "odds_line": _build_odds_line(pick),
-        "bet_line": _build_bet_line(pick),
+        "trade_detail": trade_detail,
         "outcomes": outcomes,
         "has_outcomes": bool(outcomes),
         "iv_crush_note": iv_crush_note,
         "kelly_line": kelly_line,
         "bear_note": bear_note,
         "rating_summary": rating_summary,
-        "survival": {
-            "score": survival.get("score"),
-            "verdict": survival.get("verdict"),
-            "verdict_class": survival.get("verdict_class"),
-            "action": survival.get("action"),
-            "size_mult": survival.get("size_multiplier"),
-            "kill_risks": survival.get("kill_risks") or [],
-        } if survival else None,
-        "vol_micro": {
-            "skew_bias": skew.get("skew_bias"),
-            "skew_note": skew.get("bias_note"),
-            "skew_pts": skew.get("put_call_skew_pts"),
-            "atm_iv": skew.get("atm_iv"),
-            "riv_verdict": riv.get("verdict"),
-            "riv_note": riv.get("note"),
-            "realized_vol": riv.get("realized_vol_pct"),
-        } if (skew or riv) else None,
-        "earnings_quality": {
-            "rating": eq.get("rating"),
-            "score": eq.get("earnings_quality_score"),
-            "flags": (eq.get("flags") or [])[:3],
-        } if eq else None,
-        "multi_leg": multi_leg[:3] if multi_leg else None,
+        "overall": overall,
+        "target_return_pct": target_return_pct,
+        "target_label": target_label,
+        "contract_cost": contract_cost,
+        "size_contracts": size_contracts,
+        "why": why,
+        "catalyst_lines": catalyst_lines,
+        "risks": risks,
     }
 
 
@@ -692,8 +752,8 @@ def _build_pre_earnings_row(pick):
                 earn_cat = c
             continue
         if k:
-            visible_cats.append(k)
-        if len(visible_cats) >= 4:
+            visible_cats.append(humanize_catalyst_key(k))
+        if len(visible_cats) >= 3:
             break
 
     days_until = (earn_cat or {}).get("days_until")
@@ -708,7 +768,7 @@ def _build_pre_earnings_row(pick):
         "price_fmt": _fmt_price(pick.get("live_spot") or pick.get("price")),
         "report_date": report_date or "?",
         "days_until": days_until if days_until is not None else 99,
-        "catalysts_joined": " + ".join(visible_cats) if visible_cats else "?",
+        "catalysts_joined": " · ".join(visible_cats) if visible_cats else "—",
         "tier": tier,
         "score": int(score),
         "cat_count": cat_count,

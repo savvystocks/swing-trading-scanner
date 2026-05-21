@@ -997,6 +997,25 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             if verbose:
                 print(f"  multi_leg_suggester failed (non-fatal): {type(e).__name__}: {e}")
 
+        try:
+            from src.catalyst.overall_score import apply_overall_scores
+            apply_overall_scores(ranked_picks, verbose=verbose, max_picks=25)
+        except Exception as e:
+            if verbose:
+                print(f"  overall_score failed (non-fatal): {type(e).__name__}: {e}")
+
+        def _provisional_score(p):
+            o = (p.get("_overall_score") or {}).get("score")
+            try:
+                return float(o) if o is not None else -1
+            except (TypeError, ValueError):
+                return -1
+
+        ranked_picks.sort(key=lambda p: -_provisional_score(p))
+        if verbose and ranked_picks:
+            top_ranks = [(p.get("ticker"), int(_provisional_score(p))) for p in ranked_picks[:5]]
+            print(f"  llm_target_selection: re-sorted by overall score, top 5 = {top_ranks}")
+
         top_pick = ranked_picks[0] if ranked_picks else None
 
         def _sector_bucket_simple(sec):
@@ -1017,33 +1036,25 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 return "Materials"
             return "Other"
 
-        top5_targets = []
-        seen_sectors = set()
-        priority_order = ["Technology", "Industrials", "Financials", "Consumer", "Healthcare", "Energy", "Materials", "Other"]
-        for sec_target in priority_order:
-            for p in ranked_picks:
-                if p in top5_targets:
-                    continue
-                if _sector_bucket_simple(p.get("sector")) == sec_target:
-                    top5_targets.append(p)
-                    seen_sectors.add(sec_target)
-                    break
-            if len(top5_targets) >= 5:
-                break
-        for p in ranked_picks:
-            if len(top5_targets) >= 5:
-                break
-            if p not in top5_targets:
-                top5_targets.append(p)
-        haiku_targets = top5_targets
+        LLM_OVERALL_THRESHOLD = 50
+        LLM_HARD_CAP = 30
+
+        def _overall_of(p):
+            v = (p.get("_overall_score") or {}).get("score")
+            try:
+                return float(v) if v is not None else -1
+            except (TypeError, ValueError):
+                return -1
+
+        haiku_targets = [p for p in ranked_picks if _overall_of(p) >= LLM_OVERALL_THRESHOLD][:LLM_HARD_CAP]
 
         if haiku_targets:
             if verbose:
                 est_cost = len(haiku_targets) * 0.005
                 tickers = [p.get("ticker") for p in haiku_targets]
-                print(f"  haiku_synthesis: {len(haiku_targets)} Haiku bull calls (top 5, sector-diverse): {', '.join(tickers)} ~${est_cost:.3f}")
+                print(f"  haiku_synthesis: {len(haiku_targets)} Haiku bull calls (all picks Overall >= {LLM_OVERALL_THRESHOLD}): {', '.join(tickers[:10])}{'...' if len(tickers) > 10 else ''} ~${est_cost:.3f}")
             try:
-                apply_haiku_synthesis(haiku_targets, max_calls=5, verbose=verbose)
+                apply_haiku_synthesis(haiku_targets, max_calls=len(haiku_targets), verbose=verbose)
             except Exception as e:
                 if verbose:
                     print(f"  haiku_synthesis failed (non-fatal): {type(e).__name__}: {e}")
@@ -1052,7 +1063,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             if verbose:
                 print(f"  bear_case_verification: Haiku bear pass on {len(haiku_targets)} picks ~${len(haiku_targets)*0.005:.3f}")
             try:
-                apply_bear_case_verification(haiku_targets, max_calls=5, verbose=verbose)
+                apply_bear_case_verification(haiku_targets, max_calls=len(haiku_targets), verbose=verbose)
             except Exception as e:
                 if verbose:
                     print(f"  bear_case_verification failed (non-fatal): {type(e).__name__}: {e}")
@@ -1085,6 +1096,17 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         else:
             if verbose:
                 print(f"  sonnet_deep_dive: SKIPPED - no BUY-rated picks remain after Haiku bull+bear synthesis (saved $1.20)")
+
+        try:
+            from src.catalyst.overall_score import apply_overall_scores as _apply_final_overall
+            _apply_final_overall(ranked_picks, verbose=verbose, max_picks=25)
+            ranked_picks.sort(key=lambda p: -_provisional_score(p))
+            if verbose and ranked_picks:
+                final_top = [(p.get("ticker"), int(_provisional_score(p))) for p in ranked_picks[:5]]
+                print(f"  overall_score (final, post-LLM): top 5 = {final_top}")
+        except Exception as e:
+            if verbose:
+                print(f"  overall_score final recompute failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
             measure_catalyst_performance(lookback_days=90, verbose=verbose)

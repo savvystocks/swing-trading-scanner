@@ -37,9 +37,36 @@ def main():
     results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "results")
     os.makedirs(results_dir, exist_ok=True)
     json_path = os.path.join(results_dir, f"catalyst_{scan['scan_date']}.json")
+
+    BLOAT_KEYS_PER_PICK = ("_raw_fundamentals", "earnings_history", "_pre_stack_score")
+    TOP_LEVEL_DUPLICATES = ("candidates", "all_scored")
+
+    def _strip_pick(p):
+        if not isinstance(p, dict):
+            return p
+        return {k: v for k, v in p.items() if k not in BLOAT_KEYS_PER_PICK}
+
+    slim_scan = {k: v for k, v in scan.items() if k not in TOP_LEVEL_DUPLICATES}
+    aa = slim_scan.get("aa_results") or {}
+    if isinstance(aa, dict):
+        slim_scan["aa_results"] = {
+            tier: [_strip_pick(p) for p in (aa.get(tier) or [])]
+            for tier in aa.keys()
+        }
+    aa_picks = slim_scan.get("aa_picks") or {}
+    if isinstance(aa_picks, dict):
+        slim_scan["aa_picks"] = {
+            bracket: [_strip_pick(p) for p in (aa_picks.get(bracket) or [])]
+            for bracket in aa_picks.keys()
+        }
+    pre_cat = slim_scan.get("pre_catalyst_watchlist") or []
+    if isinstance(pre_cat, list):
+        slim_scan["pre_catalyst_watchlist"] = [_strip_pick(p) for p in pre_cat]
+
     with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(scan, f, indent=2, default=str)
-    print(f"Wrote {json_path}")
+        json.dump(slim_scan, f, indent=2, default=str)
+    file_mb = os.path.getsize(json_path) / 1_000_000
+    print(f"Wrote {json_path} ({file_mb:.1f} MB)")
 
     aa_results = scan.get("aa_results") or {}
     aa_picks = scan.get("aa_picks") or {"micro": [], "small": [], "mid": []}

@@ -1,9 +1,9 @@
-name: premarket-alerts
+name: premarket-movers
 
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [run-premarket-alerts]
+    types: [run-premarket-movers]
   schedule:
     # 13:00 UTC = 14:00 BST = 9:00am ET = 30 min before US market open
     - cron: "0 13 * * 1-5"
@@ -29,4 +29,4 @@ jobs:
           ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python scripts/run_premarket_alerts.py
+        run: python scripts/run_premarket_movers.py

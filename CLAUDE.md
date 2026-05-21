@@ -38,8 +38,8 @@ Runs every weekday at 14:09 UTC via GitHub Actions (email arrives ~15:30 BST). P
 One ongoing cost: EODHD All-in-One £99.99/mo + occasional £5 top-up packs (= 100k extra credits) if quota runs short. Everything else (GitHub Actions, Gmail SMTP) is free. CI uses ~300 of 2000 free minutes per month.
 
 EODHD MONTHLY quota: 100,000 calls per billing cycle (NOT per day). Burn rate now per scan-day:
-- catalyst-scan: ~3,650 calls (fast-filter OHLCV via Alpaca for free, ~3,600 deep score on fundamentals/insider/news for fast-filter survivors + ~50 macro). Was ~9,800 before we removed the wasted factor-screen step + migrated OHLCV to Alpaca
-- catalyst-email: 0 EODHD calls on success days (uses Alpaca for live chains). Only the email-time render touches EODHD if cache miss
+- daily-scan: ~3,650 calls (fast-filter OHLCV via Alpaca for free, ~3,600 deep score on fundamentals/insider/news for fast-filter survivors + ~50 macro). Was ~9,800 before we removed the wasted factor-screen step + migrated OHLCV to Alpaca
+- daily-email: 0 EODHD calls on success days (uses Alpaca for live chains). Only the email-time render touches EODHD if cache miss
 - 3,650 × 22 trading days = ~80k/mo gross. Under the 100k quota with 20k headroom
 
 Future optimisations if burn creeps up:

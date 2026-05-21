@@ -1,4 +1,4 @@
-name: catalyst-scan
+name: daily-scan
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ on:
         required: false
         default: ""
   repository_dispatch:
-    types: [run-catalyst-scan]
+    types: [run-daily-scan]
   # Single trigger via GitHub cron at 14:00 UTC weekdays. External cron-job.org
   # was previously doing the same thing — double-firing was burning EODHD quota.
   # If cron-job.org is still active in your account, DISABLE it.
@@ -48,7 +48,7 @@ jobs:
           STOP_LOSS_PCT: ${{ secrets.STOP_LOSS_PCT }}
           MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
           SAM_GOV_API_KEY: ${{ secrets.SAM_GOV_API_KEY }}
-        run: python scripts/run_catalyst_scan.py
+        run: python scripts/run_daily_scan.py
       - name: Commit tracker data + scan JSON for email job
         if: always()
         run: |

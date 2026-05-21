@@ -1,9 +1,9 @@
-name: exit-alerts
+name: position-monitor
 
 on:
   workflow_dispatch:
   repository_dispatch:
-    types: [run-exit-alerts]
+    types: [run-position-monitor]
   schedule:
     # Hourly during market hours (was every 30min - reduced for Actions quota)
     - cron: "0 13-21 * * 1-5"
@@ -29,12 +29,12 @@ jobs:
           ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python scripts/run_exit_alerts.py
+        run: python scripts/run_position_monitor.py
       - name: Commit seen-set + updated max prices
         if: always()
         run: |
-          git config user.name "exit-alerts-bot"
+          git config user.name "position-monitor-bot"
           git config user.email "noreply@github.com"
           git add data/paper_trades/exit_alerts_seen.json data/paper_trades/v4_picks.json 2>/dev/null || true
-          git diff --cached --quiet || git commit -m "exit-alerts: update seen set + peak prices [skip ci]"
+          git diff --cached --quiet || git commit -m "position-monitor: update seen set + peak prices [skip ci]"
           git push || true

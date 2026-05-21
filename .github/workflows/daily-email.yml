@@ -1,4 +1,4 @@
-name: catalyst-email
+name: daily-email
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
         required: false
         default: ""
   repository_dispatch:
-    types: [run-catalyst-email]
+    types: [run-daily-email]
   schedule:
     # Email at 14:45 UTC = 15:45 BST = 75min after US summer open. Scan runs
     # at 14:00 UTC, finishes ~14:21, factor screen ~14:30. Email picks up
@@ -41,7 +41,7 @@ jobs:
             if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
               curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
                 -d "chat_id=${TELEGRAM_CHAT_ID}" \
-                -d "text=Catalyst-email skipped on ${TODAY} — scan JSON missing. Check catalyst-scan workflow logs for failure." || true
+                -d "text=Daily email skipped on ${TODAY} — scan JSON missing. Check daily-scan workflow logs for failure." || true
             fi
             exit 0
           fi
@@ -60,11 +60,11 @@ jobs:
           POSITION_SIZE_PCT: ${{ secrets.POSITION_SIZE_PCT }}
           STOP_LOSS_PCT: ${{ secrets.STOP_LOSS_PCT }}
           MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
-        run: python scripts/run_catalyst_email.py
+        run: python scripts/run_daily_email.py
       - name: Commit fresh scan + screen JSON
         if: always()
         run: |
-          git config user.name "catalyst-email-bot"
+          git config user.name "daily-email-bot"
           git config user.email "noreply@github.com"
           git add -f data/results/catalyst_*.json data/results/factor_screen_*.json data/catalyst/predictions/ data/catalyst/history.json data/catalyst/paper_trades.json data/universe/factor_universe_mcap_cache.json 2>/dev/null || true
           git diff --cached --quiet || git commit -m "email-bot: fresh scan + screen JSON [skip ci]"
@@ -73,5 +73,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: catalyst-emails
+          name: daily-emails
           path: data/results/catalyst_*email*.html

@@ -68,7 +68,7 @@ def kpi(label, value, value_class=""):
     )
 
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=30)
 def _load_scan_cached(date):
     scan = D.load_scan(date)
     if scan is None:
@@ -167,8 +167,6 @@ def render_pick_detail(pick):
 
 
 def page_picks():
-    st.subheader("Today's Picks")
-
     dates = D.list_scan_dates()
     date_choice = st.sidebar.selectbox(
         "Scan date",
@@ -179,6 +177,15 @@ def page_picks():
     if not scan:
         st.error("No scan loaded.")
         return
+
+    scan_date = scan.get("_scan_date_resolved") or scan.get("scan_date") or "?"
+    from datetime import datetime
+    try:
+        nice = datetime.strptime(scan_date, "%Y-%m-%d").strftime("%A %d %B %Y")
+    except Exception:
+        nice = scan_date
+    st.subheader(f"Picks for {nice}")
+    st.caption(f"Same tickers as the email sent on {scan_date}. If your inbox has a newer date, click 🔄 Refresh from GitHub in the sidebar.")
 
     picks = D.all_picks(scan, sort_by="overall")
 
@@ -442,8 +449,44 @@ def page_ask():
                 st.markdown(answer)
 
 
+def _pull_latest_from_github():
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["git", "pull", "--rebase", "--autostash"],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            cwd=os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")),
+        )
+        if result.returncode == 0:
+            if "Already up to date" in result.stdout:
+                return True, "Already on the latest scan"
+            return True, f"Pulled new scan from GitHub"
+        return False, f"git pull failed: {result.stderr[:120]}"
+    except subprocess.TimeoutExpired:
+        return False, "git pull timed out"
+    except Exception as e:
+        return False, f"git pull error: {e}"
+
+
 def main():
     st.sidebar.title("Swing Trading")
+
+    latest_date = D.latest_scan_date() or "(no scan)"
+    st.sidebar.markdown(f"**Latest scan:** {latest_date}")
+
+    if st.sidebar.button("🔄 Refresh from GitHub", use_container_width=True):
+        with st.spinner("Pulling latest scan from GitHub..."):
+            ok, msg = _pull_latest_from_github()
+        if ok:
+            st.cache_data.clear()
+            st.sidebar.success(msg)
+            st.rerun()
+        else:
+            st.sidebar.error(msg)
+
+    st.sidebar.markdown("---")
     page = st.sidebar.radio("Section", ["Picks", "Positions", "Macro", "Stats", "History", "Ask"], index=0)
     if page == "Picks":
         page_picks()

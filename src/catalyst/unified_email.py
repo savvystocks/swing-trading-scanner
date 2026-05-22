@@ -850,7 +850,7 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
     buy_picks = [p for p in all_tier_picks if _is_buy_signal(p) and not is_speculative_only(p)]
     buy_picks.sort(key=_overall_sort_key)
 
-    MIN_PICKS_TARGET = 3
+    MIN_PICKS_TARGET = 10
     fallback_picks = []
     if len(buy_picks) < MIN_PICKS_TARGET:
         already_included = set(id(p) for p in buy_picks)
@@ -874,12 +874,12 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
     sector_counts = {}
     for p in buy_picks + fallback_picks:
         bucket = _sector_bucket(p.get("sector"))
-        cap = SECTOR_CAPS.get(bucket, 1)
+        cap = SECTOR_CAPS.get(bucket, 1) * 2
         if sector_counts.get(bucket, 0) >= cap:
             continue
         picked.append(p)
         sector_counts[bucket] = sector_counts.get(bucket, 0) + 1
-        if len(picked) >= 5:
+        if len(picked) >= 12:
             break
 
     top_picks = picked

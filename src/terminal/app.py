@@ -76,6 +76,31 @@ def _load_scan_cached(date):
     return scan
 
 
+def _fetch_live_premarket(ticker):
+    if not os.environ.get("ALPACA_API_KEY") or not os.environ.get("ALPACA_SECRET_KEY"):
+        return None
+    try:
+        from alpaca.data.historical.stock import StockHistoricalDataClient
+        from alpaca.data.requests import StockLatestQuoteRequest
+        c = StockHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+        q = c.get_stock_latest_quote(StockLatestQuoteRequest(symbol_or_symbols=[ticker]))
+        info = q.get(ticker)
+        if not info:
+            return None
+        bid = float(info.bid_price) if info.bid_price else 0
+        ask = float(info.ask_price) if info.ask_price else 0
+        mid = (bid + ask) / 2 if (bid > 0 and ask > 0) else (bid or ask)
+        return {
+            "bid": bid,
+            "ask": ask,
+            "mid": mid,
+            "spread_pct": ((ask - bid) / mid * 100) if mid else 0,
+            "timestamp": info.timestamp.isoformat() if info.timestamp else "",
+        }
+    except Exception:
+        return None
+
+
 def render_pick_detail(pick):
     d = F.pick_full_detail(pick)
     overall = d.get("overall") or {}
@@ -87,6 +112,8 @@ def render_pick_detail(pick):
     riv = (vol.get("realized_vs_implied") or {})
     sk = (vol.get("skew") or {})
     multi = d.get("multi_leg") or []
+    stage2 = pick.get("_stage2_zone") or {}
+    fresh = pick.get("_fresh_context") or {}
 
     cls = _verdict_class(overall.get("verdict", "WATCH"))
     st.markdown(
@@ -95,6 +122,28 @@ def render_pick_detail(pick):
         f'<span style="font-weight:500">{overall.get("plain_english", "")}</span></div>',
         unsafe_allow_html=True,
     )
+
+    live = _fetch_live_premarket(d.get("ticker", ""))
+    if live:
+        scan_price = d.get("price") or 0
+        try:
+            scan_price = float(scan_price)
+        except (TypeError, ValueError):
+            scan_price = 0
+        if scan_price > 0 and live.get("mid"):
+            change_pct = (live["mid"] - scan_price) / scan_price * 100
+            spread_warn = " · ⚠️ wide spread (illiquid)" if live.get("spread_pct", 0) > 8 else ""
+            color = "green" if change_pct >= 0 else "red"
+            st.markdown(
+                f"**LIVE pre-market / latest quote:** bid ${live['bid']:.2f} / ask ${live['ask']:.2f} · mid ${live['mid']:.2f}"
+                f" · <span style='color:{color};font-weight:700'>{change_pct:+.2f}%</span> vs scan close ${scan_price:.2f}"
+                f"{spread_warn}",
+                unsafe_allow_html=True,
+            )
+            if change_pct < -3:
+                st.error(f"⚠️ Down {change_pct:+.1f}% pre-market — this pick has moved against the thesis since the scan ran. Consider whether the catalyst is now sell-the-news or whether a competitor announcement has changed the picture.")
+            elif change_pct > 3:
+                st.info(f"📈 Up {change_pct:+.1f}% pre-market — catalyst already partially priced. Adjust entry expectations.")
 
     c1, c2, c3, c4, c5 = st.columns(5)
     with c1:
@@ -163,7 +212,38 @@ def render_pick_detail(pick):
     if multi:
         st.markdown("**Structure suggestions**")
         for s in multi:
+            details = s.get("details", "")
             st.write(f"- **{s.get('structure', '—')}** — {s.get('rationale', '—')}")
+            if details:
+                st.caption(details)
+
+    if stage2:
+        zone = stage2.get("zone", "?")
+        zone_color = {"PRIME_ENTRY": "🟢", "EARLY_CONTINUATION": "🟢", "CONTINUATION": "🟡", "EXTENDED": "🟠", "CLIMAX": "🔴", "NOT_IN_STAGE2": "⚫"}.get(zone, "⚪")
+        st.markdown(f"**Stage 2 entry zone:** {zone_color} {zone}")
+        st.caption(stage2.get("note", ""))
+
+    fc_alpaca = fresh.get("alpaca_news_7d") or []
+    fc_eodhd = fresh.get("eodhd_news") or []
+    fc_edgar = fresh.get("edgar_filings") or []
+    if fc_alpaca or fc_eodhd or fc_edgar:
+        st.markdown("---")
+        st.markdown("**📰 Fresh context (live data pulled at scan time):**")
+        if fc_alpaca:
+            with st.expander(f"News (Alpaca, last 7 days, {len(fc_alpaca)} items)", expanded=True):
+                for n in fc_alpaca[:10]:
+                    ts = (n.get("published") or "")[:10]
+                    st.markdown(f"**[{ts}]** {n.get('headline', '')}")
+                    if n.get("summary"):
+                        st.caption(n["summary"])
+        if fc_eodhd:
+            with st.expander(f"Additional news (EODHD, {len(fc_eodhd)} items)", expanded=False):
+                for n in fc_eodhd[:10]:
+                    st.markdown(f"- {n.get('headline', '')}")
+        if fc_edgar:
+            with st.expander(f"Recent SEC filings ({len(fc_edgar)} items)", expanded=False):
+                for f in fc_edgar:
+                    st.markdown(f"- **{f.get('filed', '')}** {f.get('form_type', '')}: {f.get('match', '')}")
 
 
 def page_picks():

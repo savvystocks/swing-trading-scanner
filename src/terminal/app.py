@@ -115,65 +115,85 @@ def render_pick_detail(pick):
     stage2 = pick.get("_stage2_zone") or {}
     fresh = pick.get("_fresh_context") or {}
 
-    cls = _verdict_class(overall.get("verdict", "WATCH"))
+    live = _fetch_live_premarket(d.get("ticker", ""))
+    live_change_pct = None
+    if live and d.get("price"):
+        try:
+            scan_price = float(d.get("price"))
+            if scan_price > 0 and live.get("mid"):
+                live_change_pct = (live["mid"] - scan_price) / scan_price * 100
+        except (TypeError, ValueError):
+            pass
+
+    try:
+        from src.catalyst.action_signal import compute_action
+        action = compute_action(pick, live_change_pct=live_change_pct)
+    except Exception:
+        action = {"action": "WATCH", "badge": "🟡 WATCH", "why": "Action signal unavailable"}
+
+    action_color = {
+        "TAKE": "#065f46",
+        "WATCH": "#a16207",
+        "SKIP": "#475569",
+        "AVOID": "#b91c1c",
+    }.get(action["action"], "#6b7280")
+    action_bg = {
+        "TAKE": "#ecfdf5",
+        "WATCH": "#fefce8",
+        "SKIP": "#f9fafb",
+        "AVOID": "#fef2f2",
+    }.get(action["action"], "#f9fafb")
     st.markdown(
-        f'<div class="{cls}"><span style="font-size:28px">{overall.get("score", "—")}</span> &nbsp; '
-        f'{overall.get("verdict", "—")} &nbsp;·&nbsp; '
-        f'<span style="font-weight:500">{overall.get("plain_english", "")}</span></div>',
+        f'<div style="background:{action_bg};border-left:6px solid {action_color};padding:18px 22px;border-radius:8px;margin:10px 0">'
+        f'<div style="font-size:28px;font-weight:800;color:{action_color}">{action["badge"]}</div>'
+        f'<div style="font-size:14px;color:#374151;margin-top:6px">{action["why"]}</div>'
+        f'</div>',
         unsafe_allow_html=True,
     )
-
-    live = _fetch_live_premarket(d.get("ticker", ""))
-    if live:
-        scan_price = d.get("price") or 0
+    if live and d.get("price"):
         try:
-            scan_price = float(scan_price)
+            scan_price = float(d.get("price"))
         except (TypeError, ValueError):
             scan_price = 0
         if scan_price > 0 and live.get("mid"):
             change_pct = (live["mid"] - scan_price) / scan_price * 100
-            spread_warn = " · ⚠️ wide spread (illiquid)" if live.get("spread_pct", 0) > 8 else ""
-            color = "green" if change_pct >= 0 else "red"
+            color = "#16a34a" if change_pct >= 0 else "#dc2626"
             st.markdown(
-                f"**LIVE pre-market / latest quote:** bid ${live['bid']:.2f} / ask ${live['ask']:.2f} · mid ${live['mid']:.2f}"
-                f" · <span style='color:{color};font-weight:700'>{change_pct:+.2f}%</span> vs scan close ${scan_price:.2f}"
-                f"{spread_warn}",
+                f"**{d['ticker']}** · {d.get('name','—')} · ${scan_price:.2f} close → "
+                f"<span style='color:{color};font-weight:700'>{change_pct:+.2f}%</span> live "
+                f"(${live['mid']:.2f}, bid {live['bid']:.2f}/ask {live['ask']:.2f})",
                 unsafe_allow_html=True,
             )
-            if change_pct < -3:
-                st.error(f"⚠️ Down {change_pct:+.1f}% pre-market — this pick has moved against the thesis since the scan ran. Consider whether the catalyst is now sell-the-news or whether a competitor announcement has changed the picture.")
-            elif change_pct > 3:
-                st.info(f"📈 Up {change_pct:+.1f}% pre-market — catalyst already partially priced. Adjust entry expectations.")
 
-    c1, c2, c3, c4, c5 = st.columns(5)
-    with c1:
-        kpi("Chance of profit", f"{overall.get('probability_of_profit_pct', '—')}%")
-    with c2:
-        kpi("Survival score", f"{surv.get('score', '—')}/100")
-    with c3:
-        kpi("Earnings quality", eq.get("rating", "—"))
-    with c4:
-        kpi("Catalyst stack", f"{d.get('cat_count', '—')} cats")
-    with c5:
-        kpi("Tier", d.get("tier", "—"))
+    if d.get("catalysts_human"):
+        st.markdown(
+            "**Driving this:** " + " · ".join(d["catalysts_human"][:3]),
+        )
 
-    st.markdown("---")
-    info1, info2 = st.columns([3, 2])
-    with info1:
-        st.markdown(f"**{d['ticker']}** · {d.get('name','—')} · {d.get('sector','—')} · {d.get('bracket','—')}")
-        price = d.get("price")
+    if forensic.get("bull"):
+        st.markdown(f"**Bull thesis:** {forensic['bull'][:280]}")
+
+    if bear.get("killer") and (bear.get("is_trap") or (bear.get("conviction") or 0) >= 50):
+        trap_str = " ⚠️ TRAP" if bear.get("is_trap") else ""
+        st.markdown(f"**Bear risk{trap_str}:** {bear['killer'][:240]}")
+
+    with st.expander("📊 Full numbers (Overall, Survival, Quality, Tier, components)", expanded=False):
+        c1, c2, c3, c4, c5 = st.columns(5)
+        with c1:
+            kpi("Chance of profit", f"{overall.get('probability_of_profit_pct', '—')}%")
+        with c2:
+            kpi("Survival score", f"{surv.get('score', '—')}/100")
+        with c3:
+            kpi("Earnings quality", eq.get("rating", "—"))
+        with c4:
+            kpi("Catalyst stack", f"{d.get('cat_count', '—')} cats")
+        with c5:
+            kpi("Tier", d.get("tier", "—"))
         st.markdown(
-            f"Price **${price}** &nbsp;·&nbsp; "
-            f"5d {F.fmt_pct(d.get('ret_5d'))} &nbsp;·&nbsp; "
-            f"30d {F.fmt_pct(d.get('ret_30d'))} &nbsp;·&nbsp; "
-            f"90d {F.fmt_pct(d.get('ret_90d'))}"
+            f"5d {F.fmt_pct(d.get('ret_5d'))} · 30d {F.fmt_pct(d.get('ret_30d'))} · 90d {F.fmt_pct(d.get('ret_90d'))} · "
+            f"Stacked score {d.get('stacked_score','—')} · LLM {forensic.get('verdict','—')} {forensic.get('confidence','—')}% · "
+            f"IV pctile {d.get('iv_percentile','—')}"
         )
-        st.markdown(
-            f"Stacked score **{d.get('stacked_score','—')}** · "
-            f"LLM verdict **{forensic.get('verdict','—')}** ({forensic.get('confidence','—')}% conf) · "
-            f"IV pctile **{d.get('iv_percentile','—')}**"
-        )
-    with info2:
         components = overall.get("components") or {}
         if components:
             comp_df = pd.DataFrame([
@@ -182,68 +202,48 @@ def render_pick_detail(pick):
             ])
             st.dataframe(comp_df, hide_index=True, use_container_width=True, height=240)
 
-    if d.get("catalysts_human"):
-        st.markdown('<div class="catalyst-box"><strong>What\'s driving the move:</strong><br>' +
-                    "<br>".join(f"· {c}" for c in d["catalysts_human"]) + "</div>", unsafe_allow_html=True)
-
-    if forensic.get("bull"):
-        st.markdown(f'<div class="bull-box"><strong>Bull case:</strong><br>{forensic["bull"]}</div>',
-                    unsafe_allow_html=True)
-    if bear.get("killer"):
-        trap_note = " — TRAP FLAGGED" if bear.get("is_trap") else ""
-        st.markdown(
-            f'<div class="bear-box"><strong>Bear case ({bear.get("conviction", "—")}% conviction){trap_note}:</strong>'
-            f'<br>{bear["killer"]}</div>',
-            unsafe_allow_html=True,
-        )
-
+    risks_to_show = []
     if surv.get("kill_risks"):
-        st.markdown("**Top survival risks**")
-        for kr in surv["kill_risks"]:
-            st.markdown(f"- {kr}")
+        risks_to_show.extend(surv["kill_risks"][:3])
+    if risks_to_show:
+        with st.expander(f"⚠️ Survival risks ({len(risks_to_show)})", expanded=False):
+            for kr in risks_to_show:
+                st.markdown(f"- {kr}")
 
-    if riv.get("note") or sk.get("bias_note"):
-        st.markdown("**Vol / Skew**")
-        if riv.get("note"):
-            st.write(f"Vol: {riv['note']}")
-        if sk.get("bias_note"):
-            st.write(f"Skew: {sk['bias_note']}")
+    if riv.get("note") or sk.get("bias_note") or stage2:
+        with st.expander("📈 Setup details (vol, skew, Stage 2 zone)", expanded=False):
+            if stage2:
+                zone = stage2.get("zone", "?")
+                zone_color = {"PRIME_ENTRY": "🟢", "EARLY_CONTINUATION": "🟢", "CONTINUATION": "🟡", "EXTENDED": "🟠", "CLIMAX": "🔴", "NOT_IN_STAGE2": "⚫"}.get(zone, "⚪")
+                st.markdown(f"**Stage 2 zone:** {zone_color} {zone} — {stage2.get('note', '')}")
+            if riv.get("note"):
+                st.write(f"**Vol:** {riv['note']}")
+            if sk.get("bias_note"):
+                st.write(f"**Skew:** {sk['bias_note']}")
 
     if multi:
-        st.markdown("**Structure suggestions**")
-        for s in multi:
-            details = s.get("details", "")
-            st.write(f"- **{s.get('structure', '—')}** — {s.get('rationale', '—')}")
-            if details:
-                st.caption(details)
-
-    if stage2:
-        zone = stage2.get("zone", "?")
-        zone_color = {"PRIME_ENTRY": "🟢", "EARLY_CONTINUATION": "🟢", "CONTINUATION": "🟡", "EXTENDED": "🟠", "CLIMAX": "🔴", "NOT_IN_STAGE2": "⚫"}.get(zone, "⚪")
-        st.markdown(f"**Stage 2 entry zone:** {zone_color} {zone}")
-        st.caption(stage2.get("note", ""))
+        with st.expander(f"💡 Structure ideas ({len(multi)})", expanded=False):
+            for s in multi:
+                details = s.get("details", "")
+                st.markdown(f"**{s.get('structure', '—')}** — {s.get('rationale', '—')}")
+                if details:
+                    st.caption(details)
 
     fc_alpaca = fresh.get("alpaca_news_7d") or []
     fc_eodhd = fresh.get("eodhd_news") or []
     fc_edgar = fresh.get("edgar_filings") or []
-    if fc_alpaca or fc_eodhd or fc_edgar:
-        st.markdown("---")
-        st.markdown("**📰 Fresh context (live data pulled at scan time):**")
-        if fc_alpaca:
-            with st.expander(f"News (Alpaca, last 7 days, {len(fc_alpaca)} items)", expanded=True):
-                for n in fc_alpaca[:10]:
-                    ts = (n.get("published") or "")[:10]
-                    st.markdown(f"**[{ts}]** {n.get('headline', '')}")
-                    if n.get("summary"):
-                        st.caption(n["summary"])
-        if fc_eodhd:
-            with st.expander(f"Additional news (EODHD, {len(fc_eodhd)} items)", expanded=False):
-                for n in fc_eodhd[:10]:
-                    st.markdown(f"- {n.get('headline', '')}")
-        if fc_edgar:
-            with st.expander(f"Recent SEC filings ({len(fc_edgar)} items)", expanded=False):
-                for f in fc_edgar:
-                    st.markdown(f"- **{f.get('filed', '')}** {f.get('form_type', '')}: {f.get('match', '')}")
+    total_news = len(fc_alpaca) + len(fc_eodhd) + len(fc_edgar)
+    if total_news:
+        with st.expander(f"📰 Fresh news & filings ({total_news} items the LLM saw)", expanded=False):
+            for n in fc_alpaca[:6]:
+                ts = (n.get("published") or "")[:10]
+                st.markdown(f"**[{ts}]** {n.get('headline', '')}")
+                if n.get("summary"):
+                    st.caption(n["summary"][:160])
+            for n in fc_eodhd[:4]:
+                st.markdown(f"- {n.get('headline', '')}")
+            for f in fc_edgar:
+                st.markdown(f"- **{f.get('filed', '')}** {f.get('form_type', '')}: {f.get('match', '')}")
 
 
 def page_picks():
@@ -346,12 +346,19 @@ def page_picks():
     else:
         st.caption(f"Showing {len(filtered)} of {len(picks)} picks (view: {view_mode}){spec_note}")
 
+    try:
+        from src.catalyst.action_signal import compute_action
+    except ImportError:
+        compute_action = None
+
     rows = []
     for i, p in enumerate(filtered, 1):
         row = F.pick_summary_row(p)
+        action = compute_action(p) if compute_action else {"badge": "—"}
         rows.append({
             "#": i,
             "Ticker": row["ticker"],
+            "Action": action.get("badge", "—"),
             "Overall": row["overall_score"],
             "Verdict": row["overall_verdict"],
             "PoP %": row["probability"],

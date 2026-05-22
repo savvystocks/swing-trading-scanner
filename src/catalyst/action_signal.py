@@ -40,10 +40,15 @@ def compute_action(pick, live_change_pct=None):
         return _wrap("WATCH", "extended", "Already extended above 50dMA — wait for pullback to 50dMA before entry.")
 
     if not stage2_tradeable and stage2_zone == "NOT_IN_STAGE2":
-        return _wrap("AVOID", "no_trend", "Below 50dMA or 200dMA — not in confirmed uptrend.")
+        if live_change_pct is not None and live_change_pct >= 5:
+            return _wrap("WATCH", "gap_up_from_below_ma", f"Was below 50/200dMA at scan close, but live gap +{live_change_pct:.1f}% likely cleared the MA. Confirm trend before chasing.")
+        return _wrap("AVOID", "no_trend", "Below 50dMA or 200dMA at scan close - not in confirmed uptrend.")
 
     if live_change_pct is not None and live_change_pct <= -3:
-        return _wrap("WATCH", "premarket_down", f"Down {live_change_pct:+.1f}% in pre-market — thesis has moved against you since scan ran. Wait for stabilisation.")
+        return _wrap("WATCH", "premarket_down", f"Down {live_change_pct:+.1f}% in pre-market - thesis has moved against you since scan ran. Wait for stabilisation.")
+
+    if live_change_pct is not None and live_change_pct >= 7:
+        return _wrap("WATCH", "gap_up_chase", f"Gapped up {live_change_pct:+.1f}% live - catalyst already played out, chasing the move is high-risk. Wait for pullback.")
 
     if llm_verdict in ("STRONG_BUY",) and overall >= 65 and not is_trap:
         return _wrap("TAKE", "strong_buy", f"LLM strong BUY at {llm_conf}% + Overall {overall:.0f} + bear cleared. High-confidence setup.")

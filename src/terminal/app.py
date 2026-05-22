@@ -157,12 +157,12 @@ def render_pick_detail(pick):
             scan_price = 0
         if scan_price > 0 and live.get("mid"):
             change_pct = (live["mid"] - scan_price) / scan_price * 100
-            color = "#16a34a" if change_pct >= 0 else "#dc2626"
+            color_tag = "green" if change_pct >= 0 else "red"
+            sign = "+" if change_pct >= 0 else ""
             st.markdown(
                 f"**{d['ticker']}** · {d.get('name','—')} · ${scan_price:.2f} close → "
-                f"<span style='color:{color};font-weight:700'>{change_pct:+.2f}%</span> live "
-                f"(${live['mid']:.2f}, bid {live['bid']:.2f}/ask {live['ask']:.2f})",
-                unsafe_allow_html=True,
+                f":{color_tag}[**{sign}{change_pct:.2f}%**] live "
+                f"(${live['mid']:.2f}, bid ${live['bid']:.2f}/ask ${live['ask']:.2f})"
             )
 
     if d.get("catalysts_human"):
@@ -350,6 +350,13 @@ def page_picks():
         from src.catalyst.action_signal import compute_action
     except ImportError:
         compute_action = None
+
+    if compute_action:
+        action_priority = {"TAKE": 0, "WATCH": 1, "SKIP": 2, "AVOID": 3}
+        filtered.sort(key=lambda p: (
+            action_priority.get((p.get("_action_signal") or compute_action(p)).get("action"), 9),
+            -((p.get("_overall_score") or {}).get("score") or 0),
+        ))
 
     rows = []
     for i, p in enumerate(filtered, 1):

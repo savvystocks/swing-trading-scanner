@@ -841,7 +841,13 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
     def _overall_sort_key(p):
         return -_overall_score_of(p)
 
-    buy_picks = [p for p in all_tier_picks if _is_buy_signal(p)]
+    try:
+        from src.catalyst.catalyst_quality import is_speculative_only
+    except ImportError:
+        def is_speculative_only(p):
+            return False
+
+    buy_picks = [p for p in all_tier_picks if _is_buy_signal(p) and not is_speculative_only(p)]
     buy_picks.sort(key=_overall_sort_key)
 
     MIN_PICKS_TARGET = 3
@@ -850,7 +856,9 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         already_included = set(id(p) for p in buy_picks)
         candidates_with_overall = [
             p for p in all_tier_picks
-            if id(p) not in already_included and _overall_score_of(p) >= 50
+            if id(p) not in already_included
+            and _overall_score_of(p) >= 50
+            and not is_speculative_only(p)
         ]
         candidates_with_overall.sort(key=_overall_sort_key)
         needed = MIN_PICKS_TARGET - len(buy_picks)

@@ -211,8 +211,19 @@ def page_picks():
     min_surv = st.sidebar.slider("Minimum survival score", 0, 100, 0, step=5)
     cat_text = st.sidebar.text_input("Catalyst contains", value="")
 
+    try:
+        from src.catalyst.catalyst_quality import is_speculative_only
+    except ImportError:
+        def is_speculative_only(p):
+            return False
+
     filtered = []
+    speculative_dropped = 0
     for p in picks:
+        if is_speculative_only(p):
+            speculative_dropped += 1
+            continue
+
         overall = (p.get("_overall_score") or {}) or {}
         score = overall.get("score", 0) or 0
         pop = overall.get("probability_of_profit_pct", 0) or 0
@@ -240,14 +251,15 @@ def page_picks():
                 continue
         filtered.append(p)
 
+    spec_note = f" · {speculative_dropped} speculative picks (FDA/clinical/M&A) removed" if speculative_dropped else ""
     if view_mode == "🎯 Tradeable only" and not filtered:
         st.warning(
             f"No tradeable picks today. {len(picks)} candidates met the Tier A bar but none cleared "
-            f"Overall ≥ 65 + PoP ≥ 65% + bear-test. Switch to '👀 Watch + Tradeable' to see borderline ones, "
-            f"or '📋 Show all' to see the full Tier A list."
+            f"Overall ≥ 65 + PoP ≥ 65% + bear-test.{spec_note} "
+            f"Switch to '👀 Watch + Tradeable' to see borderline ones, or '📋 Show all' to see the full evidence-based list."
         )
     else:
-        st.caption(f"Showing {len(filtered)} of {len(picks)} picks (view: {view_mode})")
+        st.caption(f"Showing {len(filtered)} of {len(picks)} picks (view: {view_mode}){spec_note}")
 
     rows = []
     for i, p in enumerate(filtered, 1):

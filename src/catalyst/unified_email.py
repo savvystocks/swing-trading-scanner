@@ -831,39 +831,30 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         "Other": 1,
     }
 
-    TECH_BIAS_MULTIPLIER = 1.15
+    def _overall_score_of(p):
+        v = (p.get("_overall_score") or {}).get("score")
+        try:
+            return float(v) if v is not None else -1
+        except (TypeError, ValueError):
+            return -1
 
-    def _net_edge_of(p):
-        forensic = p.get("unified_forensic") or {}
-        haiku = p.get("haiku_synthesis") or {}
-        bear = p.get("bear_verification") or {}
-        bull = forensic.get("confidence_pct") or haiku.get("confidence_pct") or 0
-        bear_conv = bear.get("bear_conviction_pct") or 0
-        return bull - bear_conv
-
-    def _tech_biased_sort_key(p):
-        edge = _net_edge_of(p) or 0
-        if not edge:
-            edge = (p.get("unified_forensic") or {}).get("confidence_pct") or (p.get("haiku_synthesis") or {}).get("confidence_pct") or 50
-        if _sector_bucket(p.get("sector")) == "Technology":
-            edge = edge * TECH_BIAS_MULTIPLIER
-        return -edge
+    def _overall_sort_key(p):
+        return -_overall_score_of(p)
 
     buy_picks = [p for p in all_tier_picks if _is_buy_signal(p)]
-    buy_picks.sort(key=_tech_biased_sort_key)
+    buy_picks.sort(key=_overall_sort_key)
 
     MIN_PICKS_TARGET = 3
     fallback_picks = []
     if len(buy_picks) < MIN_PICKS_TARGET:
         already_included = set(id(p) for p in buy_picks)
-        candidates_with_llm = [
+        candidates_with_overall = [
             p for p in all_tier_picks
-            if id(p) not in already_included
-            and ((p.get("haiku_synthesis") or {}).get("verdict") or (p.get("unified_forensic") or {}).get("verdict"))
+            if id(p) not in already_included and _overall_score_of(p) >= 50
         ]
-        candidates_with_llm.sort(key=_tech_biased_sort_key)
+        candidates_with_overall.sort(key=_overall_sort_key)
         needed = MIN_PICKS_TARGET - len(buy_picks)
-        for p in candidates_with_llm[:needed * 2]:
+        for p in candidates_with_overall[:needed * 2]:
             bear = p.get("bear_verification") or {}
             if bear.get("is_this_trade_a_trap"):
                 continue

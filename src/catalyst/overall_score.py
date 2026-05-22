@@ -31,10 +31,14 @@ def _llm_edge_component(pick):
     if not verdict:
         return 50.0
 
-    if verdict in ("STRONG_BUY", "BUY"):
-        bull_signal = conf
+    if verdict in ("STRONG_BUY",):
+        bull_signal = 50 + (conf * 0.5)
+    elif verdict in ("BUY",):
+        bull_signal = 50 + (conf * 0.4)
     elif verdict in ("SKIP", "STRONG_SELL", "SELL"):
-        bull_signal = 100 - conf
+        bull_signal = 50 - (conf * 0.5)
+    elif verdict in ("HOLD", "WATCH"):
+        bull_signal = 50
     else:
         bull_signal = 50
 

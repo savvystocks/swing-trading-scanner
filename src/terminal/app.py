@@ -269,12 +269,13 @@ def page_picks():
 
     view_mode = st.radio(
         "View",
-        ["🎯 Tradeable only", "👀 Watch + Tradeable", "📋 Show all"],
+        ["🟢 TAKE only", "🟢🟡 TAKE + WATCH", "📋 Show all"],
         horizontal=True,
         index=0,
         help=(
-            "Tradeable = Overall ≥ 65 AND Chance of profit ≥ 65% AND not trap-flagged. "
-            "Watch = Overall ≥ 55. Show all = every Tier A pick regardless of LLM verdict."
+            "TAKE = LLM confirmed BUY + Overall 65+ + bear cleared + not extended. "
+            "WATCH = borderline edge or extended uptrend - wait for cleaner entry. "
+            "Show all = every pick including SKIP / AVOID for full context."
         ),
     )
 
@@ -293,9 +294,12 @@ def page_picks():
 
     try:
         from src.catalyst.catalyst_quality import is_speculative_only
+        from src.catalyst.action_signal import compute_action
     except ImportError:
         def is_speculative_only(p):
             return False
+        def compute_action(p):
+            return {"action": "WATCH", "badge": "—"}
 
     filtered = []
     speculative_dropped = 0
@@ -306,20 +310,16 @@ def page_picks():
 
         overall = (p.get("_overall_score") or {}) or {}
         score = overall.get("score", 0) or 0
-        pop = overall.get("probability_of_profit_pct", 0) or 0
-        bear = p.get("bear_verification") or {}
-        is_trap = bool(bear.get("is_this_trade_a_trap"))
 
-        stage2 = p.get("_stage2_zone") or {}
-        stage2_tradeable = stage2.get("tradeable", True) if stage2 else True
+        action = compute_action(p)
+        action_label = action.get("action", "WATCH")
+        p["_action_signal"] = action
 
-        if view_mode == "🎯 Tradeable only":
-            if score < 65 or pop < 65 or is_trap:
+        if view_mode == "🟢 TAKE only":
+            if action_label != "TAKE":
                 continue
-            if not stage2_tradeable:
-                continue
-        elif view_mode == "👀 Watch + Tradeable":
-            if score < 55 or is_trap:
+        elif view_mode == "🟢🟡 TAKE + WATCH":
+            if action_label not in ("TAKE", "WATCH"):
                 continue
 
         if p.get("_aa_tier") not in tier_filter:
@@ -337,11 +337,11 @@ def page_picks():
         filtered.append(p)
 
     spec_note = f" · {speculative_dropped} speculative picks (FDA/clinical/M&A) removed" if speculative_dropped else ""
-    if view_mode == "🎯 Tradeable only" and not filtered:
+    if view_mode == "🟢 TAKE only" and not filtered:
         st.warning(
-            f"No tradeable picks today. {len(picks)} candidates met the Tier A bar but none cleared "
-            f"Overall ≥ 65 + PoP ≥ 65% + bear-test.{spec_note} "
-            f"Switch to '👀 Watch + Tradeable' to see borderline ones, or '📋 Show all' to see the full evidence-based list."
+            f"No TAKE picks today. {len(picks)} candidates passed the Tier A bar but none cleared "
+            f"the full action-signal test (LLM-confirmed BUY + Overall 65+ + bear NEUTRAL + not extended).{spec_note} "
+            f"Switch to '🟢🟡 TAKE + WATCH' to see borderline names or '📋 Show all' for the full list."
         )
     else:
         st.caption(f"Showing {len(filtered)} of {len(picks)} picks (view: {view_mode}){spec_note}")

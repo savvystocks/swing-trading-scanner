@@ -101,6 +101,34 @@ def _fetch_live_premarket(ticker):
         return None
 
 
+@st.cache_data(ttl=60)
+def _fetch_live_quotes_batch(tickers_tuple):
+    if not os.environ.get("ALPACA_API_KEY") or not os.environ.get("ALPACA_SECRET_KEY"):
+        return {}
+    if not tickers_tuple:
+        return {}
+    try:
+        from alpaca.data.historical.stock import StockHistoricalDataClient
+        from alpaca.data.requests import StockLatestQuoteRequest
+        c = StockHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+        us_tickers = [t for t in tickers_tuple if t and "." not in t]
+        if not us_tickers:
+            return {}
+        q = c.get_stock_latest_quote(StockLatestQuoteRequest(symbol_or_symbols=us_tickers))
+        out = {}
+        for t, info in q.items():
+            try:
+                bid = float(info.bid_price) if info.bid_price else 0
+                ask = float(info.ask_price) if info.ask_price else 0
+                mid = (bid + ask) / 2 if (bid > 0 and ask > 0) else (bid or ask)
+                out[t] = {"bid": bid, "ask": ask, "mid": mid}
+            except Exception:
+                continue
+        return out
+    except Exception:
+        return {}
+
+
 def render_pick_detail(pick):
     d = F.pick_full_detail(pick)
     overall = d.get("overall") or {}
@@ -164,6 +192,48 @@ def render_pick_detail(pick):
                 f":{color_tag}[**{sign}{change_pct:.2f}%**] live "
                 f"(${live['mid']:.2f}, bid ${live['bid']:.2f}/ask ${live['ask']:.2f})"
             )
+
+    live_option = pick.get("_live_option") or {}
+    if live_option and action.get("action") in ("TAKE", "WATCH"):
+        strike = live_option.get("strike", "?")
+        exp = live_option.get("exp", "?")
+        mid = live_option.get("mid", 0)
+        bid = live_option.get("bid", 0)
+        ask = live_option.get("ask", 0)
+        delta = live_option.get("delta", 0)
+        iv = live_option.get("iv_pct", 0)
+        cost = mid * 100 if mid else 0
+        overall_obj_inner = pick.get("_overall_score") or {}
+        pop_val = overall_obj_inner.get("probability_of_profit_pct", "—")
+
+        outcome_8 = None
+        outcomes_list = []
+        try:
+            from src.catalyst.live_option_picker import project_outcomes
+            live_spot_for_calc = live.get("mid") if (live and live.get("mid")) else float(d.get("price") or 0)
+            if live_spot_for_calc:
+                outcomes_list, _ = project_outcomes(live_option, live_spot_for_calc)
+                outcome_8 = next((o for o in outcomes_list if o.get("underlying_pct") == 8), None)
+        except Exception:
+            pass
+
+        st.markdown(
+            f'<div style="background:#0c1e3a;border-left:6px solid #2563eb;padding:18px 22px;border-radius:8px;margin:10px 0">'
+            f'<div style="font-size:12px;font-weight:700;color:#93c5fd;letter-spacing:0.8px">📝 RECOMMENDED OPTION CONTRACT</div>'
+            f'<div style="font-size:20px;font-weight:800;color:#e8eef5;margin-top:6px">'
+            f'Buy {d["ticker"]} ${strike:.0f} call expiring {exp} at ${mid:.2f} per share'
+            f'</div>'
+            f'<div style="font-size:14px;color:#cbd5e1;margin-top:8px">'
+            f'<b>${cost:.0f}</b> per contract &nbsp;·&nbsp; '
+            f'<b>Chance of profit: {pop_val}%</b> &nbsp;·&nbsp; '
+            f'If stock +8% → option <b style="color:#22c55e">{("+%.0f" % outcome_8["return_pct"]) if outcome_8 else "?"}%</b>'
+            f'</div>'
+            f'<div style="font-size:12px;color:#94a3b8;margin-top:6px">'
+            f'Bid ${bid:.2f} / Ask ${ask:.2f} &nbsp;·&nbsp; Delta {delta} &nbsp;·&nbsp; IV {iv}%'
+            f'</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
     if d.get("catalysts_human"):
         st.markdown(
@@ -298,8 +368,21 @@ def page_picks():
     except ImportError:
         def is_speculative_only(p):
             return False
-        def compute_action(p):
+        def compute_action(p, live_change_pct=None):
             return {"action": "WATCH", "badge": "—"}
+
+    top_for_live = [p["ticker"] for p in picks[:25] if p.get("ticker")]
+    live_quotes = _fetch_live_quotes_batch(tuple(top_for_live))
+    for p in picks:
+        q = live_quotes.get(p.get("ticker"))
+        if q and q.get("mid"):
+            try:
+                scan_close = float(p.get("price") or 0)
+                if scan_close > 0:
+                    p["_live_mid"] = q["mid"]
+                    p["_live_change_pct"] = (q["mid"] - scan_close) / scan_close * 100
+            except (TypeError, ValueError):
+                pass
 
     filtered = []
     speculative_dropped = 0
@@ -311,7 +394,7 @@ def page_picks():
         overall = (p.get("_overall_score") or {}) or {}
         score = overall.get("score", 0) or 0
 
-        action = compute_action(p)
+        action = compute_action(p, live_change_pct=p.get("_live_change_pct"))
         action_label = action.get("action", "WATCH")
         p["_action_signal"] = action
 
@@ -361,11 +444,15 @@ def page_picks():
     rows = []
     for i, p in enumerate(filtered, 1):
         row = F.pick_summary_row(p)
-        action = compute_action(p) if compute_action else {"badge": "—"}
+        action = p.get("_action_signal") or (compute_action(p, live_change_pct=p.get("_live_change_pct")) if compute_action else {"badge": "—"})
+        live_mid = p.get("_live_mid")
+        live_pct = p.get("_live_change_pct")
         rows.append({
             "#": i,
             "Ticker": row["ticker"],
             "Action": action.get("badge", "—"),
+            "Live $": round(live_mid, 2) if live_mid else None,
+            "Live %": round(live_pct, 1) if live_pct is not None else None,
             "Overall": row["overall_score"],
             "Verdict": row["overall_verdict"],
             "PoP %": row["probability"],
@@ -393,7 +480,9 @@ def page_picks():
         column_config={
             "Overall": st.column_config.ProgressColumn("Overall", min_value=0, max_value=100, format="%d"),
             "PoP %": st.column_config.NumberColumn("PoP %", format="%d%%"),
-            "Price": st.column_config.NumberColumn("Price", format="$%.2f"),
+            "Price": st.column_config.NumberColumn("Close $", format="$%.2f", help="Yesterday's close (scan price)"),
+            "Live $": st.column_config.NumberColumn("Live $", format="$%.2f", help="Latest Alpaca quote, refreshes every 60s"),
+            "Live %": st.column_config.NumberColumn("Live %", format="%+.1f%%", help="% move from scan close to live"),
         },
     )
 

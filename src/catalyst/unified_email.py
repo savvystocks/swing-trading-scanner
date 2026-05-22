@@ -847,7 +847,18 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         def is_speculative_only(p):
             return False
 
-    buy_picks = [p for p in all_tier_picks if _is_buy_signal(p) and not is_speculative_only(p)]
+    try:
+        from src.catalyst.action_signal import compute_action
+    except ImportError:
+        compute_action = None
+
+    def _is_take_or_watch(pick):
+        if compute_action is None:
+            return _is_buy_signal(pick)
+        action = pick.get("_action_signal") or compute_action(pick)
+        return action.get("action") in ("TAKE", "WATCH")
+
+    buy_picks = [p for p in all_tier_picks if _is_take_or_watch(p) and not is_speculative_only(p)]
     buy_picks.sort(key=_overall_sort_key)
 
     MIN_PICKS_TARGET = 10

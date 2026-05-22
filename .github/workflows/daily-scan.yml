@@ -13,11 +13,13 @@ on:
         default: ""
   repository_dispatch:
     types: [run-daily-scan]
-  # Single trigger via GitHub cron at 14:00 UTC weekdays. External cron-job.org
-  # was previously doing the same thing — double-firing was burning EODHD quota.
-  # If cron-job.org is still active in your account, DISABLE it.
+  # Target: 30 min after US market open every weekday.
+  # US market opens 14:30 BST (Mar-Nov, BST/EDT both in summer) -> scan 15:00 BST = 14:00 UTC.
+  # US market opens 14:30 GMT (Nov-Mar, GMT/EST both in winter) -> scan 15:00 GMT = 15:00 UTC.
+  # Two crons keep us on schedule across DST changes without manual flips.
   schedule:
-    - cron: "0 14 * * 1-5"
+    - cron: "0 14 * 3-10 1-5"
+    - cron: "0 15 * 1-2,11-12 1-5"
 
 jobs:
   scan:

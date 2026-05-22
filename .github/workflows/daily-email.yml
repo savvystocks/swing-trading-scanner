@@ -10,10 +10,11 @@ on:
   repository_dispatch:
     types: [run-daily-email]
   schedule:
-    # Email at 14:45 UTC = 15:45 BST = 75min after US summer open. Scan runs
-    # at 14:00 UTC, finishes ~14:21, factor screen ~14:30. Email picks up
-    # fresh JSON + applies opening-action gap boost via Alpaca live quotes.
-    - cron: "45 14 * * 1-5"
+    # Email lands 75 min after US market open = 45 min after the scan finishes.
+    # Summer (BST/EDT, Mar-Nov): 15:45 BST = 14:45 UTC.
+    # Winter (GMT/EST, Nov-Mar): 15:45 GMT = 15:45 UTC.
+    - cron: "45 14 * 3-10 1-5"
+    - cron: "45 15 * 1-2,11-12 1-5"
 
 jobs:
   email:

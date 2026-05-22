@@ -187,6 +187,17 @@ def page_picks():
     st.subheader(f"Picks for {nice}")
     st.caption(f"Same tickers as the email sent on {scan_date}. If your inbox has a newer date, click 🔄 Refresh from GitHub in the sidebar.")
 
+    view_mode = st.radio(
+        "View",
+        ["🎯 Tradeable only", "👀 Watch + Tradeable", "📋 Show all"],
+        horizontal=True,
+        index=0,
+        help=(
+            "Tradeable = Overall ≥ 65 AND Chance of profit ≥ 65% AND not trap-flagged. "
+            "Watch = Overall ≥ 55. Show all = every Tier A pick regardless of LLM verdict."
+        ),
+    )
+
     picks = D.all_picks(scan, sort_by="overall")
 
     sort_choice = st.sidebar.radio("Sort by", ["overall", "tier", "stacked"], index=0)
@@ -202,11 +213,24 @@ def page_picks():
 
     filtered = []
     for p in picks:
+        overall = (p.get("_overall_score") or {}) or {}
+        score = overall.get("score", 0) or 0
+        pop = overall.get("probability_of_profit_pct", 0) or 0
+        bear = p.get("bear_verification") or {}
+        is_trap = bool(bear.get("is_this_trade_a_trap"))
+
+        if view_mode == "🎯 Tradeable only":
+            if score < 65 or pop < 65 or is_trap:
+                continue
+        elif view_mode == "👀 Watch + Tradeable":
+            if score < 55 or is_trap:
+                continue
+
         if p.get("_aa_tier") not in tier_filter:
             continue
         if (p.get("sector") or "Other") not in sector_filter:
             continue
-        if (p.get("_overall_score") or {}).get("score", 0) < min_score:
+        if score < min_score:
             continue
         if (p.get("_survival_score") or {}).get("score", 0) < min_surv:
             continue
@@ -216,7 +240,14 @@ def page_picks():
                 continue
         filtered.append(p)
 
-    st.caption(f"Showing {len(filtered)} of {len(picks)} picks from {scan.get('_scan_date_resolved')}")
+    if view_mode == "🎯 Tradeable only" and not filtered:
+        st.warning(
+            f"No tradeable picks today. {len(picks)} candidates met the Tier A bar but none cleared "
+            f"Overall ≥ 65 + PoP ≥ 65% + bear-test. Switch to '👀 Watch + Tradeable' to see borderline ones, "
+            f"or '📋 Show all' to see the full Tier A list."
+        )
+    else:
+        st.caption(f"Showing {len(filtered)} of {len(picks)} picks (view: {view_mode})")
 
     rows = []
     for i, p in enumerate(filtered, 1):

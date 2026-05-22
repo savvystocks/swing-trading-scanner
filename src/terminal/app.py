@@ -230,8 +230,13 @@ def page_picks():
         bear = p.get("bear_verification") or {}
         is_trap = bool(bear.get("is_this_trade_a_trap"))
 
+        stage2 = p.get("_stage2_zone") or {}
+        stage2_tradeable = stage2.get("tradeable", True) if stage2 else True
+
         if view_mode == "🎯 Tradeable only":
             if score < 65 or pop < 65 or is_trap:
+                continue
+            if not stage2_tradeable:
                 continue
         elif view_mode == "👀 Watch + Tradeable":
             if score < 55 or is_trap:

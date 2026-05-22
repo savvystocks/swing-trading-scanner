@@ -269,6 +269,15 @@ def _build_bear_prompt(candidate, bull_data=None):
     if bull_data:
         bull_summary = f"\n\nBULL THESIS (your job: tear this apart):\n{bull_data.get('bull_thesis') or bull_data.get('research_note', '')[:600]}"
 
+    fresh_block = ""
+    fresh = candidate.get("_fresh_context") or {}
+    if fresh:
+        try:
+            from src.catalyst.fresh_context import format_for_prompt
+            fresh_block = "\n\n" + format_for_prompt(fresh)
+        except Exception:
+            fresh_block = ""
+
     return f"""Ticker: {candidate['ticker']} ({candidate.get('name','')})
 Bracket: {candidate.get('bracket','?')} (${(candidate.get('market_cap') or 0)/1e9:.2f}B)
 Sector: {candidate.get('sector','')}
@@ -288,9 +297,9 @@ Return 5d: {candidate.get('ret_5d', '?')}% / 30d: {candidate.get('ret_30d', '?')
 Above 50dMA: {candidate.get('above_50dma', '?')} / Above 200dMA: {candidate.get('above_200dma', '?')}
 
 LANDMINES:
-{chr(10).join(landmine_lines) if landmine_lines else '(none detected)'}{bull_summary}
+{chr(10).join(landmine_lines) if landmine_lines else '(none detected)'}{bull_summary}{fresh_block}
 
-Write the BEAR case. Find the failure mode. Is this trade a trap? JSON only."""
+Write the bear case grounded in the actual data above (including FRESH CONTEXT if present). If no specific failure mode is visible, the honest answer is NEUTRAL or BULL_THESIS_HOLDS — do not manufacture risks. JSON only."""
 
 
 def verify_with_bear_case(candidate, verbose=False):
@@ -373,6 +382,15 @@ def _build_haiku_prompt(candidate):
     peer = candidate.get("peer_benchmark") or {}
     insider = candidate.get("insider_depth") or {}
 
+    fresh_block = ""
+    fresh = candidate.get("_fresh_context") or {}
+    if fresh:
+        try:
+            from src.catalyst.fresh_context import format_for_prompt
+            fresh_block = "\n\n" + format_for_prompt(fresh)
+        except Exception:
+            fresh_block = ""
+
     return f"""Ticker: {candidate['ticker']} ({candidate.get('name','')})
 Bracket: {candidate.get('bracket','?')} (${(candidate.get('market_cap') or 0)/1e9:.2f}B)
 Sector: {candidate.get('sector','')} / Industry: {candidate.get('industry','')}
@@ -393,9 +411,9 @@ TECHNICAL: 5d {candidate.get('ret_5d', '?')}% · 30d {candidate.get('ret_30d', '
 PEER PERCENTILE: growth {peer.get('growth_percentile_avg', '?')} · quality {peer.get('quality_percentile_avg', '?')}
 
 LANDMINES:
-{chr(10).join(landmine_lines) if landmine_lines else '(none)'}
+{chr(10).join(landmine_lines) if landmine_lines else '(none)'}{fresh_block}
 
-Write the SHORT forensic synthesis. Bull + bear + what kills it. JSON only."""
+Write the SHORT forensic synthesis. Use the FRESH CONTEXT to validate or challenge the catalyst thesis with current information. Bull + bear + what kills it. JSON only."""
 
 
 def synthesize_haiku(candidate, verbose=False):

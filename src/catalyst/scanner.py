@@ -1019,6 +1019,48 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  openinsider failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.options_flow_diy import apply_options_flow_diy
+            apply_options_flow_diy(ranked_picks, max_picks=15, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  options_flow_diy failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.analyst_rating_news import apply_analyst_rating_news
+            apply_analyst_rating_news(ranked_picks, max_picks=15, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  analyst_rating_news failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.earnings_whisper import apply_earnings_whisper
+            apply_earnings_whisper(ranked_picks, max_picks=15, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  earnings_whisper failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.congressional_trades import apply_congressional_trades
+            apply_congressional_trades(ranked_picks, max_picks=15, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  congressional_trades failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.wsb_mentions import apply_wsb_mentions
+            apply_wsb_mentions(ranked_picks, max_picks=10, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  wsb_mentions failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.google_trends_buzz import apply_google_trends
+            apply_google_trends(ranked_picks, max_picks=10, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  google_trends failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.overall_score import apply_overall_scores
             apply_overall_scores(ranked_picks, verbose=verbose, max_picks=25)
         except Exception as e:

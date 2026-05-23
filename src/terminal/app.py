@@ -236,15 +236,63 @@ def render_pick_detail(pick):
         )
 
     oi = pick.get("_openinsider") or {}
+    flow = pick.get("_options_flow_diy") or {}
+    analyst = pick.get("_analyst_rating_changes") or {}
+    whisper = pick.get("_earnings_whisper") or {}
+    congress = pick.get("_congressional_trades") or {}
+    wsb = pick.get("_wsb_mentions") or {}
+    trends = pick.get("_google_trends") or {}
+
+    smart_signals = []
     if oi and oi.get("buyers_count"):
-        ceo_cfo = " 👔 CEO/CFO buying" if oi.get("ceo_or_cfo_bought") else ""
+        ceo_cfo = " 👔 CEO/CFO" if oi.get("ceo_or_cfo_bought") else ""
         recency = oi.get("recency_days")
-        rec_note = f" · last buy {recency}d ago" if recency is not None else ""
-        st.markdown(
-            f"**💰 Insider cluster (OpenInsider):** "
-            f"**{oi['buyers_count']} buyers** spent **${oi['total_value_usd']:,}** in last 14d"
-            f"{ceo_cfo}{rec_note}"
+        rec = f" · {recency}d ago" if recency is not None else ""
+        smart_signals.append(
+            f"**💰 Insider cluster:** {oi['buyers_count']} buyers spent ${oi['total_value_usd']:,}{ceo_cfo}{rec}"
         )
+    if flow and flow.get("verdict") in ("STRONG_FLOW", "MODERATE_FLOW"):
+        sig_str = " · ".join(flow.get("signals", [])[:2])
+        smart_signals.append(f"**📊 Options flow ({flow['verdict']}):** {sig_str}")
+    if analyst and analyst.get("verdict") in ("UPGRADE_CLUSTER", "BULLISH_LEAN"):
+        smart_signals.append(
+            f"**📈 Analyst lean:** {analyst['upgrades_count']} upgrade signals in recent news"
+            + (f" ({analyst['upgrade_examples'][0][:80]}...)" if analyst.get("upgrade_examples") else "")
+        )
+    if analyst and analyst.get("verdict") in ("DOWNGRADE_CLUSTER", "BEARISH_LEAN"):
+        smart_signals.append(
+            f"**📉 Analyst lean BEARISH:** {analyst['downgrades_count']} downgrade signals in recent news"
+        )
+    if whisper and whisper.get("verdict") == "WHISPER_ABOVE_CONSENSUS":
+        smart_signals.append(
+            f"**🤫 Whisper EPS ${whisper.get('whisper_eps')} vs consensus ${whisper.get('consensus_eps')}** "
+            f"(+{whisper.get('delta_pct')}%) — street expects beat"
+        )
+    if whisper and whisper.get("verdict") == "WHISPER_BELOW_CONSENSUS":
+        smart_signals.append(
+            f"**🤫 Whisper EPS below consensus by {whisper.get('delta_pct')}%** — street expects miss"
+        )
+    if congress and congress.get("purchases_60d", 0) > 0:
+        smart_signals.append(
+            f"**🏛️ Congress activity:** {congress['purchases_60d']} purchases in last 60d "
+            f"by {congress.get('unique_members', 0)} member(s)"
+        )
+    if wsb and wsb.get("verdict") in ("HEAVY_BUZZ", "ELEVATED_BUZZ"):
+        smart_signals.append(
+            f"**🚀 WSB buzz {wsb['verdict']}:** {wsb['mentions_7d']} mentions in last 7d "
+            f"({wsb.get('spike_ratio')}x baseline)"
+        )
+    if trends and trends.get("verdict") in ("TRENDING_UP", "ELEVATED"):
+        smart_signals.append(
+            f"**🔥 Google Trends {trends['verdict']}:** retail search volume {trends.get('spike_ratio')}x baseline"
+        )
+
+    if smart_signals:
+        st.markdown("---")
+        st.markdown("**🎯 Smart Money & Buzz Layer**")
+        for s in smart_signals:
+            st.markdown(s)
+        st.markdown("---")
 
     if d.get("catalysts_human"):
         st.markdown(

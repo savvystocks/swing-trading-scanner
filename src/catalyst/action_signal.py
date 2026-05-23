@@ -50,11 +50,23 @@ def compute_action(pick, live_change_pct=None):
     if live_change_pct is not None and live_change_pct >= 7:
         return _wrap("WATCH", "gap_up_chase", f"Gapped up {live_change_pct:+.1f}% live - catalyst already played out, chasing the move is high-risk. Wait for pullback.")
 
+    oi = pick.get("_openinsider") or {}
+    insider_value = oi.get("total_value_usd", 0) or 0
+    insider_count = oi.get("buyers_count", 0) or 0
+    ceo_cfo = bool(oi.get("ceo_or_cfo_bought"))
+    insider_recency = oi.get("recency_days")
+    has_strong_insider = (insider_count >= 3 and insider_value >= 200_000) or (ceo_cfo and insider_value >= 100_000)
+
     if llm_verdict in ("STRONG_BUY",) and overall >= 65 and not is_trap:
         return _wrap("TAKE", "strong_buy", f"LLM strong BUY at {llm_conf}% + Overall {overall:.0f} + bear cleared. High-confidence setup.")
 
     if llm_verdict == "BUY" and llm_conf >= 55 and overall >= 65 and bear_conv < 60:
         return _wrap("TAKE", "buy_confirmed", f"LLM BUY at {llm_conf}% + Overall {overall:.0f} + bear NEUTRAL. Clear edge.")
+
+    if has_strong_insider and overall >= 60 and not is_trap:
+        ceo_note = " (CEO/CFO buying)" if ceo_cfo else ""
+        rec_note = f" {insider_recency}d ago" if insider_recency is not None else ""
+        return _wrap("TAKE", "insider_cluster", f"Strong insider cluster: {insider_count} buyers, ${insider_value/1000:.0f}k total{ceo_note}{rec_note} + Overall {overall:.0f}. Smart money confirming.")
 
     if llm_verdict == "BUY" and overall >= 60:
         return _wrap("WATCH", "weak_buy", f"LLM weakly bullish ({llm_conf}% BUY) — wait for confirming volume or news.")

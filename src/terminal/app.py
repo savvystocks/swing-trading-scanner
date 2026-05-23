@@ -235,6 +235,17 @@ def render_pick_detail(pick):
             unsafe_allow_html=True,
         )
 
+    oi = pick.get("_openinsider") or {}
+    if oi and oi.get("buyers_count"):
+        ceo_cfo = " 👔 CEO/CFO buying" if oi.get("ceo_or_cfo_bought") else ""
+        recency = oi.get("recency_days")
+        rec_note = f" · last buy {recency}d ago" if recency is not None else ""
+        st.markdown(
+            f"**💰 Insider cluster (OpenInsider):** "
+            f"**{oi['buyers_count']} buyers** spent **${oi['total_value_usd']:,}** in last 14d"
+            f"{ceo_cfo}{rec_note}"
+        )
+
     if d.get("catalysts_human"):
         st.markdown(
             "**Driving this:** " + " · ".join(d["catalysts_human"][:3]),

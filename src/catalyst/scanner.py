@@ -1012,6 +1012,13 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  fresh_context failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.openinsider_scraper import apply_openinsider_signals
+            apply_openinsider_signals(ranked_picks, days_back=14, min_buyers=2, min_value_usd=50_000, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  openinsider failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.overall_score import apply_overall_scores
             apply_overall_scores(ranked_picks, verbose=verbose, max_picks=25)
         except Exception as e:

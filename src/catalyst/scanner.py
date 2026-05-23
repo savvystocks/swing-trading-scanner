@@ -1040,13 +1040,6 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  earnings_whisper failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
-            from src.catalyst.congressional_trades import apply_congressional_trades
-            apply_congressional_trades(ranked_picks, max_picks=15, verbose=verbose)
-        except Exception as e:
-            if verbose:
-                print(f"  congressional_trades failed (non-fatal): {type(e).__name__}: {e}")
-
-        try:
             from src.catalyst.wsb_mentions import apply_wsb_mentions
             apply_wsb_mentions(ranked_picks, max_picks=10, verbose=verbose)
         except Exception as e:

@@ -272,11 +272,6 @@ def render_pick_detail(pick):
         smart_signals.append(
             f"**🤫 Whisper EPS below consensus by {whisper.get('delta_pct')}%** — street expects miss"
         )
-    if congress and congress.get("purchases_60d", 0) > 0:
-        smart_signals.append(
-            f"**🏛️ Congress activity:** {congress['purchases_60d']} purchases in last 60d "
-            f"by {congress.get('unique_members', 0)} member(s)"
-        )
     if wsb and wsb.get("verdict") in ("HEAVY_BUZZ", "ELEVATED_BUZZ"):
         smart_signals.append(
             f"**🚀 WSB buzz {wsb['verdict']}:** {wsb['mentions_7d']} mentions in last 7d "

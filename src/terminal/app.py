@@ -282,6 +282,51 @@ def render_pick_detail(pick):
             f"**🔥 Google Trends {trends['verdict']}:** retail search volume {trends.get('spike_ratio')}x baseline"
         )
 
+    pead = pick.get("_pead") or {}
+    if pead.get("verdict") == "PEAD_ELIGIBLE":
+        smart_signals.append(
+            f"**💎 PEAD setup ({pead.get('strength')}):** beat by {pead.get('beat_pct')}% "
+            f"{pead.get('days_since_earnings')}d ago, "
+            f"{pead.get('drift_window_remaining_days')}d drift window left"
+        )
+
+    buyback = pick.get("_edgar_buyback") or {}
+    if buyback.get("verdict") == "BUYBACK_ANNOUNCED":
+        smart_signals.append(
+            f"**💵 Buyback announced** ({buyback.get('filed_date')}) — mechanical buying pressure for weeks"
+        )
+
+    guidance_raise = pick.get("_edgar_guidance_raise") or {}
+    if guidance_raise.get("verdict") == "GUIDANCE_RAISED":
+        smart_signals.append(
+            f"**📊 Guidance raised** ({guidance_raise.get('filed_date')}) — pre-confirmed positive surprise"
+        )
+
+    si = pick.get("_streetinsider") or {}
+    si_lines = []
+    if si.get("upgrade"):
+        si_lines.append(f"upgrade ({si['upgrade'][:80]})")
+    if si.get("buyback"):
+        si_lines.append(f"buyback ({si['buyback'][:80]})")
+    if si.get("guidance_change"):
+        si_lines.append(f"guidance ({si['guidance_change'][:80]})")
+    if si.get("downgrade"):
+        si_lines.append(f"⚠️ downgrade ({si['downgrade'][:80]})")
+    if si_lines:
+        smart_signals.append(f"**📰 StreetInsider:** " + " · ".join(si_lines))
+
+    ww = pick.get("_whalewisdom_13f") or {}
+    if ww.get("verdict") in ("FUND_ACCUMULATION", "MILD_ACCUMULATION"):
+        smart_signals.append(
+            f"**🏦 13F: {ww['verdict']}** — {ww.get('new_positions', '?')} new fund positions, "
+            f"{ww.get('closed_positions', '?')} closed last quarter"
+        )
+    if ww.get("verdict") == "FUND_DISTRIBUTION":
+        smart_signals.append(
+            f"**⚠️ 13F: FUND DISTRIBUTION** — funds dropping {ww.get('closed_positions', '?')} positions, "
+            f"only {ww.get('new_positions', '?')} new last quarter"
+        )
+
     if smart_signals:
         st.markdown("---")
         st.markdown("**🎯 Smart Money & Buzz Layer**")

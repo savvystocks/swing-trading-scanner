@@ -80,6 +80,30 @@ def compute_action(pick, live_change_pct=None):
     if whisper.get("verdict") == "WHISPER_ABOVE_CONSENSUS" and whisper.get("delta_pct", 0) >= 7 and overall >= 60 and not is_trap:
         return _wrap("TAKE", "whisper_beat", f"Street whisper EPS ${whisper.get('whisper_eps')} vs consensus ${whisper.get('consensus_eps')} (+{whisper.get('delta_pct')}%). Beat expected, run-up likely.")
 
+    pead = pick.get("_pead") or {}
+    if pead.get("verdict") == "PEAD_ELIGIBLE" and pead.get("strength") == "STRONG_BEAT_HOLDING" and overall >= 55 and not is_trap:
+        return _wrap("TAKE", "pead_strong", f"PEAD setup: beat by {pead.get('beat_pct')}% {pead.get('days_since_earnings')}d ago, price held. {pead.get('drift_window_remaining_days')}d drift window left. Strongest documented retail edge.")
+    if pead.get("verdict") == "PEAD_ELIGIBLE" and pead.get("strength") == "GOOD_BEAT_HOLDING" and overall >= 60 and not is_trap:
+        return _wrap("TAKE", "pead_good", f"PEAD setup: beat by {pead.get('beat_pct')}% {pead.get('days_since_earnings')}d ago, price held. Post-earnings drift in progress.")
+
+    buyback = pick.get("_edgar_buyback") or {}
+    if buyback.get("verdict") == "BUYBACK_ANNOUNCED" and overall >= 55 and not is_trap:
+        return _wrap("TAKE", "buyback", f"Buyback authorization filed {buyback.get('filed_date')} - mechanical buying pressure for weeks. Overall {overall:.0f}.")
+
+    guidance = pick.get("_edgar_guidance_raise") or {}
+    if guidance.get("verdict") == "GUIDANCE_RAISED" and overall >= 55 and not is_trap:
+        return _wrap("TAKE", "guidance_raise", f"Guidance raised in 8-K filed {guidance.get('filed_date')} - pre-confirmed positive surprise. Overall {overall:.0f}.")
+
+    si = pick.get("_streetinsider") or {}
+    if si.get("guidance_change") and overall >= 55 and not is_trap:
+        return _wrap("TAKE", "si_guidance", f"StreetInsider flagged guidance change: {si['guidance_change'][:100]}")
+    if si.get("buyback") and overall >= 55 and not is_trap:
+        return _wrap("TAKE", "si_buyback", f"StreetInsider buyback alert: {si['buyback'][:100]}")
+
+    ww = pick.get("_whalewisdom_13f") or {}
+    if ww.get("verdict") == "FUND_ACCUMULATION" and overall >= 60 and not is_trap:
+        return _wrap("TAKE", "fund_accumulation", f"13F: {ww.get('new_positions')} new fund positions last quarter. Smart money accumulating.")
+
     trends = pick.get("_google_trends") or {}
     if trends.get("verdict") == "FADING" and overall < 70:
         return _wrap("SKIP", "trends_fading", f"Google Trends FADING ({trends.get('spike_ratio')}x baseline) - retail interest collapsing. No catalyst momentum.")

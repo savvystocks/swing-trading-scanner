@@ -1054,6 +1054,34 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  google_trends failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.pead_scanner import apply_pead_scanner
+            apply_pead_scanner(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  pead_scanner failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.edgar_keyword_scanner import apply_edgar_keyword_scanner
+            apply_edgar_keyword_scanner(ranked_picks, max_picks=25, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  edgar_keyword_scanner failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.streetinsider_scraper import apply_streetinsider
+            apply_streetinsider(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  streetinsider failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.whalewisdom_13f import apply_whalewisdom
+            apply_whalewisdom(ranked_picks, max_picks=15, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  whalewisdom_13f failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.candidate_aggregator import discover_external_candidates, find_missed_high_quality_candidates
             external_candidates = discover_external_candidates(existing_picks=ranked_picks, verbose=verbose)
             missed = find_missed_high_quality_candidates(aa_results, external_candidates)

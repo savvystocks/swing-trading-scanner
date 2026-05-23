@@ -68,6 +68,22 @@ def compute_action(pick, live_change_pct=None):
         rec_note = f" {insider_recency}d ago" if insider_recency is not None else ""
         return _wrap("TAKE", "insider_cluster", f"Strong insider cluster: {insider_count} buyers, ${insider_value/1000:.0f}k total{ceo_note}{rec_note} + Overall {overall:.0f}. Smart money confirming.")
 
+    flow = pick.get("_options_flow_diy") or {}
+    if flow.get("verdict") == "STRONG_FLOW" and overall >= 60 and not is_trap and stage2_tradeable:
+        return _wrap("TAKE", "options_flow_confirm", f"Strong options flow (vol/OI {flow.get('vol_oi_ratio', 0):.1f}x, concentrated buying) + Overall {overall:.0f}. Smart money pre-positioning.")
+
+    analyst = pick.get("_analyst_rating_changes") or {}
+    if analyst.get("verdict") == "UPGRADE_CLUSTER" and overall >= 60 and not is_trap and stage2_tradeable:
+        return _wrap("TAKE", "analyst_cluster", f"Analyst upgrade cluster ({analyst.get('upgrades_count')} upgrades in recent news) + Overall {overall:.0f}. Wall Street piling in.")
+
+    whisper = pick.get("_earnings_whisper") or {}
+    if whisper.get("verdict") == "WHISPER_ABOVE_CONSENSUS" and whisper.get("delta_pct", 0) >= 7 and overall >= 60 and not is_trap:
+        return _wrap("TAKE", "whisper_beat", f"Street whisper EPS ${whisper.get('whisper_eps')} vs consensus ${whisper.get('consensus_eps')} (+{whisper.get('delta_pct')}%). Beat expected, run-up likely.")
+
+    trends = pick.get("_google_trends") or {}
+    if trends.get("verdict") == "FADING" and overall < 70:
+        return _wrap("SKIP", "trends_fading", f"Google Trends FADING ({trends.get('spike_ratio')}x baseline) - retail interest collapsing. No catalyst momentum.")
+
     if llm_verdict == "BUY" and overall >= 60:
         return _wrap("WATCH", "weak_buy", f"LLM weakly bullish ({llm_conf}% BUY) — wait for confirming volume or news.")
 

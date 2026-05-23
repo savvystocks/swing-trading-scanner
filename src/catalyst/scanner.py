@@ -1054,6 +1054,33 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  google_trends failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.candidate_aggregator import discover_external_candidates, find_missed_high_quality_candidates
+            external_candidates = discover_external_candidates(existing_picks=ranked_picks, verbose=verbose)
+            missed = find_missed_high_quality_candidates(aa_results, external_candidates)
+            if missed:
+                if verbose:
+                    print(f"  candidate_aggregator: {len(missed)} HIGH-QUALITY tickers our scan MISSED (from external signals):")
+                    for m in missed[:10]:
+                        sources_str = " + ".join(m["sources"])
+                        print(f"    {m['ticker']:7} composite={m['composite_score']:3} via {sources_str}")
+            if external_candidates and aa_results is not None:
+                if "EXTERNAL_DISCOVERY" not in aa_results:
+                    aa_results["EXTERNAL_DISCOVERY"] = []
+                for m in missed[:15]:
+                    candidate_pick = {
+                        "ticker": m["ticker"],
+                        "_aa_tier": "EXT",
+                        "_discovered_from": m["sources"],
+                        "_discovery_reasons": m["reasons"],
+                        "_discovery_composite_score": m["composite_score"],
+                        "catalysts": [{"key": f"external_{s}", "label": r} for s, r in zip(m["sources"], m["reasons"])],
+                    }
+                    aa_results["EXTERNAL_DISCOVERY"].append(candidate_pick)
+        except Exception as e:
+            if verbose:
+                print(f"  candidate_aggregator failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.overall_score import apply_overall_scores
             apply_overall_scores(ranked_picks, verbose=verbose, max_picks=25)
         except Exception as e:

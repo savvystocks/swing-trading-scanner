@@ -1006,7 +1006,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
         try:
             from src.catalyst.fresh_context import apply_fresh_context
-            apply_fresh_context(ranked_picks, max_picks=10, verbose=verbose)
+            apply_fresh_context(ranked_picks, max_picks=30, verbose=verbose)
         except Exception as e:
             if verbose:
                 print(f"  fresh_context failed (non-fatal): {type(e).__name__}: {e}")
@@ -1020,21 +1020,21 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
         try:
             from src.catalyst.options_flow_diy import apply_options_flow_diy
-            apply_options_flow_diy(ranked_picks, max_picks=15, verbose=verbose)
+            apply_options_flow_diy(ranked_picks, max_picks=50, verbose=verbose)
         except Exception as e:
             if verbose:
                 print(f"  options_flow_diy failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
             from src.catalyst.analyst_rating_news import apply_analyst_rating_news
-            apply_analyst_rating_news(ranked_picks, max_picks=15, verbose=verbose)
+            apply_analyst_rating_news(ranked_picks, max_picks=50, verbose=verbose)
         except Exception as e:
             if verbose:
                 print(f"  analyst_rating_news failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
             from src.catalyst.earnings_whisper import apply_earnings_whisper
-            apply_earnings_whisper(ranked_picks, max_picks=15, verbose=verbose)
+            apply_earnings_whisper(ranked_picks, max_picks=50, verbose=verbose)
         except Exception as e:
             if verbose:
                 print(f"  earnings_whisper failed (non-fatal): {type(e).__name__}: {e}")
@@ -1076,7 +1076,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
         try:
             from src.catalyst.whalewisdom_13f import apply_whalewisdom
-            apply_whalewisdom(ranked_picks, max_picks=15, verbose=verbose)
+            apply_whalewisdom(ranked_picks, max_picks=50, verbose=verbose)
         except Exception as e:
             if verbose:
                 print(f"  whalewisdom_13f failed (non-fatal): {type(e).__name__}: {e}")
@@ -1110,12 +1110,25 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
         try:
             from src.catalyst.overall_score import apply_overall_scores
-            apply_overall_scores(ranked_picks, verbose=verbose, max_picks=25)
+            apply_overall_scores(ranked_picks, verbose=verbose, max_picks=50)
         except Exception as e:
             if verbose:
                 print(f"  overall_score failed (non-fatal): {type(e).__name__}: {e}")
 
+        try:
+            from src.catalyst.conviction_score import apply_conviction_scores
+            apply_conviction_scores(ranked_picks, verbose=verbose, max_picks=60)
+        except Exception as e:
+            if verbose:
+                print(f"  conviction_score failed (non-fatal): {type(e).__name__}: {e}")
+
         def _provisional_score(p):
+            c = (p.get("_conviction") or {}).get("score")
+            if c is not None:
+                try:
+                    return float(c)
+                except (TypeError, ValueError):
+                    pass
             o = (p.get("_overall_score") or {}).get("score")
             try:
                 return float(o) if o is not None else -1
@@ -1125,7 +1138,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         ranked_picks.sort(key=lambda p: -_provisional_score(p))
         if verbose and ranked_picks:
             top_ranks = [(p.get("ticker"), int(_provisional_score(p))) for p in ranked_picks[:5]]
-            print(f"  llm_target_selection: re-sorted by overall score, top 5 = {top_ranks}")
+            print(f"  llm_target_selection: re-sorted by CONVICTION score, top 5 = {top_ranks}")
 
         top_pick = ranked_picks[0] if ranked_picks else None
 
@@ -1147,23 +1160,29 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 return "Materials"
             return "Other"
 
-        LLM_OVERALL_THRESHOLD = 50
+        LLM_CONVICTION_THRESHOLD = 50
         LLM_HARD_CAP = 30
 
         def _overall_of(p):
+            c = (p.get("_conviction") or {}).get("score")
+            if c is not None:
+                try:
+                    return float(c)
+                except (TypeError, ValueError):
+                    pass
             v = (p.get("_overall_score") or {}).get("score")
             try:
                 return float(v) if v is not None else -1
             except (TypeError, ValueError):
                 return -1
 
-        haiku_targets = [p for p in ranked_picks if _overall_of(p) >= LLM_OVERALL_THRESHOLD][:LLM_HARD_CAP]
+        haiku_targets = [p for p in ranked_picks if _overall_of(p) >= LLM_CONVICTION_THRESHOLD][:LLM_HARD_CAP]
 
         if haiku_targets:
             if verbose:
                 est_cost = len(haiku_targets) * 0.005
                 tickers = [p.get("ticker") for p in haiku_targets]
-                print(f"  haiku_synthesis: {len(haiku_targets)} Haiku bull calls (all picks Overall >= {LLM_OVERALL_THRESHOLD}): {', '.join(tickers[:10])}{'...' if len(tickers) > 10 else ''} ~${est_cost:.3f}")
+                print(f"  haiku_synthesis: {len(haiku_targets)} Haiku bull calls (all picks Conviction >= {LLM_CONVICTION_THRESHOLD}): {', '.join(tickers[:10])}{'...' if len(tickers) > 10 else ''} ~${est_cost:.3f}")
             try:
                 apply_haiku_synthesis(haiku_targets, max_calls=len(haiku_targets), verbose=verbose)
             except Exception as e:
@@ -1210,14 +1229,21 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
 
         try:
             from src.catalyst.overall_score import apply_overall_scores as _apply_final_overall
-            _apply_final_overall(ranked_picks, verbose=verbose, max_picks=25)
-            ranked_picks.sort(key=lambda p: -_provisional_score(p))
-            if verbose and ranked_picks:
-                final_top = [(p.get("ticker"), int(_provisional_score(p))) for p in ranked_picks[:5]]
-                print(f"  overall_score (final, post-LLM): top 5 = {final_top}")
+            _apply_final_overall(ranked_picks, verbose=verbose, max_picks=50)
         except Exception as e:
             if verbose:
                 print(f"  overall_score final recompute failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.conviction_score import apply_conviction_scores as _apply_final_conviction
+            _apply_final_conviction(ranked_picks, verbose=verbose, max_picks=60)
+            ranked_picks.sort(key=lambda p: -_provisional_score(p))
+            if verbose and ranked_picks:
+                final_top = [(p.get("ticker"), int(_provisional_score(p))) for p in ranked_picks[:5]]
+                print(f"  conviction_score (FINAL post-LLM): top 5 = {final_top}")
+        except Exception as e:
+            if verbose:
+                print(f"  conviction_score final recompute failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
             measure_catalyst_performance(lookback_days=90, verbose=verbose)

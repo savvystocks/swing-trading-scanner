@@ -7,6 +7,10 @@ quote (if available) into ONE recommendation with a single-sentence why.
 
 
 def compute_action(pick, live_change_pct=None):
+    conviction_obj = pick.get("_conviction") or {}
+    conviction = conviction_obj.get("score")
+    conviction_tier = conviction_obj.get("tier")
+
     overall_obj = pick.get("_overall_score") or {}
     overall = overall_obj.get("score") or 0
     pop = overall_obj.get("probability_of_profit_pct") or 0
@@ -49,6 +53,23 @@ def compute_action(pick, live_change_pct=None):
 
     if live_change_pct is not None and live_change_pct >= 7:
         return _wrap("WATCH", "gap_up_chase", f"Gapped up {live_change_pct:+.1f}% live - catalyst already played out, chasing the move is high-risk. Wait for pullback.")
+
+    if conviction is not None:
+        top_components = []
+        comps = conviction_obj.get("components") or {}
+        for k in ("insider", "pead", "buyback_guidance", "options_flow", "analyst", "whisper"):
+            if comps.get(k, 50) >= 75:
+                top_components.append(k.replace("_", "/").upper())
+        signal_str = (", ".join(top_components[:3]) + " + " if top_components else "") + f"LLM {llm_verdict or 'n/a'}"
+        if conviction >= 80:
+            return _wrap("TAKE", "conviction_high", f"Conviction {conviction:.0f}/100 (TAKE_HIGH). Strong cross-signal alignment: {signal_str}.")
+        if conviction >= 70:
+            return _wrap("TAKE", "conviction_take", f"Conviction {conviction:.0f}/100. Solid setup: {signal_str}.")
+        if conviction >= 60:
+            return _wrap("WATCH", "conviction_watch", f"Conviction {conviction:.0f}/100. Borderline - {signal_str}.")
+        if conviction >= 45:
+            return _wrap("SKIP", "conviction_skip", f"Conviction {conviction:.0f}/100. Weak signal stack.")
+        return _wrap("AVOID", "conviction_avoid", f"Conviction {conviction:.0f}/100. No edge.")
 
     oi = pick.get("_openinsider") or {}
     insider_value = oi.get("total_value_usd", 0) or 0

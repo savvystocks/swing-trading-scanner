@@ -1116,6 +1116,33 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  overall_score failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.macro_regime_detector import detect_macro_regime
+            macro_regime = detect_macro_regime()
+            if macro is None:
+                macro = {}
+            macro["macro_regime"] = macro_regime
+            if verbose and macro_regime:
+                print(f"  macro_regime: {macro_regime['regime']} ({macro_regime['score']}/100) - {macro_regime['label']}")
+                for n in macro_regime.get('notes', [])[:5]:
+                    print(f"    - {n}")
+        except Exception as e:
+            macro_regime = None
+            if verbose:
+                print(f"  macro_regime failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.macro_put_candidates import generate_macro_puts
+            macro_puts = generate_macro_puts(macro_regime, verbose=verbose)
+            if macro_puts:
+                ranked_picks.extend(macro_puts)
+                if "MACRO_PUT" not in aa_results:
+                    aa_results["MACRO_PUT"] = []
+                aa_results["MACRO_PUT"].extend(macro_puts)
+        except Exception as e:
+            if verbose:
+                print(f"  macro_put_candidates failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.bearish_signals import apply_bearish_signals
             apply_bearish_signals(ranked_picks, verbose=verbose)
         except Exception as e:

@@ -463,6 +463,22 @@ def page_picks():
     st.subheader(f"Picks for {nice}")
     st.caption(f"Same tickers as the email sent on {scan_date}. If your inbox has a newer date, click 🔄 Refresh from GitHub in the sidebar.")
 
+    macro = scan.get("macro") or {}
+    regime = macro.get("macro_regime") or {}
+    if regime.get("score") is not None:
+        score = regime.get("score", 0)
+        bg_color = "#fef2f2" if score >= 55 else "#fefce8" if score >= 35 else "#ecfdf5"
+        border = "#b91c1c" if score >= 55 else "#a16207" if score >= 35 else "#15803d"
+        notes_html = ""
+        if regime.get("notes"):
+            notes_html = "<ul style='margin:6px 0 0 18px; padding:0; font-size:12px;'>" + "".join(f"<li>{n}</li>" for n in regime["notes"][:4]) + "</ul>"
+        st.markdown(
+            f'<div style="background:{bg_color};border-left:4px solid {border};padding:10px 14px;border-radius:6px;margin:8px 0">'
+            f'<div style="font-weight:700">Macro regime: {regime.get("label", "")} ({score}/100)</div>'
+            f'{notes_html}</div>',
+            unsafe_allow_html=True,
+        )
+
     view_mode = st.radio(
         "View",
         ["🟢 TAKE only", "🟢🟡 TAKE + WATCH", "📋 Show all"],

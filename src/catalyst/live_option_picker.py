@@ -16,6 +16,14 @@ def find_best_call(symbol, spot, dte_min=20, dte_max=55):
         return None
 
     client = OptionHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+
+    try:
+        full_check = client.get_option_chain(OptionChainRequest(underlying_symbol=symbol))
+        if not full_check:
+            return {"_no_options_listed": True, "_reason": f"{symbol} has zero options listed on OPRA - trade shares directly."}
+    except Exception:
+        pass
+
     today = datetime.now()
     min_exp = (today + timedelta(days=dte_min)).strftime("%Y-%m-%d")
     max_exp = (today + timedelta(days=dte_max)).strftime("%Y-%m-%d")
@@ -35,7 +43,18 @@ def find_best_call(symbol, spot, dte_min=20, dte_max=55):
         return None
 
     if not snaps:
-        return None
+        try:
+            wider_req = OptionChainRequest(
+                underlying_symbol=symbol,
+                expiration_date_gte=(today + timedelta(days=5)).strftime("%Y-%m-%d"),
+                expiration_date_lte=(today + timedelta(days=180)).strftime("%Y-%m-%d"),
+                type="call",
+            )
+            snaps = client.get_option_chain(wider_req)
+        except Exception:
+            return None
+        if not snaps:
+            return {"_no_options_listed": False, "_reason": f"{symbol} has options listed but none within DTE 5-180. Trade shares."}
 
     all_rows = []
     for sym, s in snaps.items():
@@ -95,8 +114,11 @@ def find_best_call(symbol, spot, dte_min=20, dte_max=55):
         wider[0]["_fit"] = "best_available"
         return wider[0]
 
-    all_rows.sort(key=lambda r: r["spread_pct"])
-    all_rows[0]["_fit"] = "wide_market"
+    all_rows.sort(key=lambda r: (
+        abs(r["delta"] - 0.35) if r["delta"] else 99,
+        r["spread_pct"],
+    ))
+    all_rows[0]["_fit"] = "ultra_thin"
     return all_rows[0]
 
 
@@ -163,6 +185,11 @@ def project_outcomes(option, spot, scenarios=(5, 8, 12, 15, 20), has_earnings_im
 def build_trade_line(ticker, spot, option):
     if not option:
         return None
+    if option.get("_no_options_listed"):
+        return f"⚠️ {option.get('_reason', f'{ticker} has no options listed')} — buy the SHARES directly at ~${spot:.2f}."
+    if "strike" not in option:
+        reason = option.get("_reason", f"No tradeable options for {ticker}")
+        return f"⚠️ {reason} — trade SHARES at ~${spot:.2f}."
     pct_to_strike = ((option["strike"] - spot) / spot * 100)
     cost_per_contract = option["mid"] * 100
     fit = option.get("_fit", "ideal")
@@ -173,6 +200,8 @@ def build_trade_line(ticker, spot, option):
         fit_note = " (best available - thinner chain)"
     elif fit == "wide_market":
         fit_note = " (wide market - check fill carefully)"
+    elif fit == "ultra_thin":
+        fit_note = " (ultra-thin chain - use limit order, expect slippage)"
     if pct_to_strike >= 0.5:
         strike_phrase = f"strike sits {pct_to_strike:.1f}% above current price"
     elif pct_to_strike <= -0.5:

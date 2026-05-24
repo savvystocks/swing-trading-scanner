@@ -146,11 +146,24 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
 
-    <div class="overall-score-box {{ p.overall.verdict_class }}">
-      <div class="score-circle">{{ p.overall.score }}</div>
+    <div class="overall-score-box {{ p.conviction.verdict_class }}">
+      <div class="score-circle">{{ p.conviction.score }}</div>
       <div class="score-info">
-        <div class="score-verdict">{{ p.overall.verdict }}</div>
-        <div class="score-plain">{{ p.overall.plain_english }}</div>
+        <div class="score-verdict">{{ p.conviction.verdict }}</div>
+        <div class="score-plain">{{ p.conviction.plain_english }}</div>
+        {% if p.conviction.strong_signals %}
+        <div style="margin-top:6px; font-size:11px; color:#15803d; font-weight:600;">
+          💪 Strong signals: {{ p.conviction.strong_signals|join(' · ') }}
+        </div>
+        {% endif %}
+        {% if p.conviction.weak_signals %}
+        <div style="margin-top:3px; font-size:11px; color:#b91c1c;">
+          ⚠️ Weak: {{ p.conviction.weak_signals|join(' · ') }}
+        </div>
+        {% endif %}
+        <div style="margin-top:4px; font-size:10px; color:#6b7280;">
+          Overall {{ p.overall.score }}/100 · {{ p.overall.verdict }} ({{ p.overall.probability_of_profit_pct }}% PoP)
+        </div>
       </div>
     </div>
 
@@ -646,6 +659,52 @@ def _build_pick(pick, rank):
                 "components": {},
             }
 
+    conv_raw = pick.get("_conviction") or {}
+    if not conv_raw:
+        try:
+            from src.catalyst.conviction_score import compute_conviction_score
+            conv_raw = compute_conviction_score(pick)
+        except Exception:
+            conv_raw = {"score": overall.get("score", 50), "tier": "WATCH", "components": {}, "weights": {}}
+
+    c_score = conv_raw.get("score", 50)
+    c_tier = conv_raw.get("tier", "WATCH")
+    if c_score >= 80:
+        c_verdict, c_class, c_plain = "TAKE HIGH-CONVICTION", "overall-strong", "Strong cross-signal alignment. Multiple independent signals confirming."
+    elif c_score >= 70:
+        c_verdict, c_class, c_plain = "TAKE", "overall-good", "Solid setup. Worth a normal-sized position."
+    elif c_score >= 60:
+        c_verdict, c_class, c_plain = "WATCH", "overall-borderline", "Borderline edge. Wait for confirmation or size down."
+    elif c_score >= 45:
+        c_verdict, c_class, c_plain = "SKIP", "overall-watch", "Weak signal stack. Not actionable."
+    else:
+        c_verdict, c_class, c_plain = "AVOID", "overall-avoid", "No edge or active red flags."
+
+    comps = conv_raw.get("components") or {}
+    component_labels = {
+        "llm_and_overall": "LLM/Overall",
+        "insider": "Insider cluster",
+        "pead": "PEAD beat",
+        "buyback_guidance": "Buyback/Guidance",
+        "options_flow": "Options flow",
+        "stage2": "Stage 2 entry",
+        "analyst": "Analyst upgrades",
+        "whisper": "Whisper EPS",
+        "whalewisdom": "13F accumulation",
+        "trends": "Retail buzz",
+    }
+    strong_signals = [component_labels.get(k, k) for k, v in comps.items() if v >= 75]
+    weak_signals = [component_labels.get(k, k) for k, v in comps.items() if v <= 25]
+
+    conviction = {
+        "score": c_score,
+        "verdict": c_verdict,
+        "verdict_class": c_class,
+        "plain_english": c_plain,
+        "strong_signals": strong_signals[:4],
+        "weak_signals": weak_signals[:3],
+    }
+
     target_return_pct = None
     target_label = "If stock moves +8%"
     contract_cost = None
@@ -715,6 +774,7 @@ def _build_pick(pick, rank):
         "bear_note": bear_note,
         "rating_summary": rating_summary,
         "overall": overall,
+        "conviction": conviction,
         "target_return_pct": target_return_pct,
         "target_label": target_label,
         "contract_cost": contract_cost,

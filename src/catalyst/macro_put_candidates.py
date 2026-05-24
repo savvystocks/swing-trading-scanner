@@ -24,10 +24,15 @@ MACRO_PUT_UNIVERSE = {
         "trigger_score": 55,
         "rationale": "Tech/growth hedge - higher beta than SPY on selloffs",
     },
+    "SMH": {
+        "name": "Semiconductors (AI infrastructure)",
+        "trigger_score": 55,
+        "rationale": "Most-extended AI capex names (NVDA, AVGO, AMD). Long-duration + AI-bubble exposure - hit first in rate-shock OR bubble-pop scenarios.",
+    },
     "IWM": {
         "name": "Russell 2000",
         "trigger_score": 50,
-        "rationale": "Small-cap puts amplify on risk-off (3x SPY beta typical)",
+        "rationale": "Small-cap puts amplify on risk-off (3x SPY beta typical, more debt sensitivity)",
     },
     "XLF": {
         "name": "Financials sector",
@@ -36,17 +41,34 @@ MACRO_PUT_UNIVERSE = {
         "trigger_component": "xlf_vs_spy_30d",
         "trigger_value": -3,
     },
+    "KRE": {
+        "name": "Regional Banks (SVB-style risk)",
+        "trigger_score": 55,
+        "rationale": "Regional banks more fragile than XLF: commercial real estate exposure, deposit flight risk, SVB-style asset/liability duration mismatch. Twice the volatility of XLF on credit fears.",
+        "trigger_component": "xlf_vs_spy_30d",
+        "trigger_value": -2,
+    },
+    "ARKK": {
+        "name": "Innovation / profitless tech (ARK)",
+        "trigger_score": 60,
+        "rationale": "Most-loved unprofitable growth names. Lose 25-40% in rate-shock or valuation-reset scenarios. Highest beta to risk-off of any listed ETF.",
+    },
+    "XLRE": {
+        "name": "REITs (rate-sensitive)",
+        "trigger_score": 55,
+        "rationale": "Direct duration exposure + refinancing risk. Crushed when 10Y yields rip past 4.8%. Cap-rate compression hits NAV.",
+    },
     "HYG": {
         "name": "High Yield Bonds",
         "trigger_score": 60,
-        "rationale": "Credit hedge - widens before equity selloffs",
+        "rationale": "Credit hedge - high-yield spreads blow out before equity selloffs",
         "trigger_component": "hyg_vs_lqd_20d",
         "trigger_value": -2,
     },
     "XLY": {
         "name": "Consumer Discretionary",
         "trigger_score": 60,
-        "rationale": "Cyclical hedge - first to decline in slowdown",
+        "rationale": "Cyclical hedge - autos/big-ticket purchases hit first in slowdown",
     },
 }
 

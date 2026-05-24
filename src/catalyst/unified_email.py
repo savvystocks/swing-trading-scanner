@@ -832,6 +832,12 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
     }
 
     def _overall_score_of(p):
+        c = (p.get("_conviction") or {}).get("score")
+        if c is not None:
+            try:
+                return float(c)
+            except (TypeError, ValueError):
+                pass
         v = (p.get("_overall_score") or {}).get("score")
         try:
             return float(v) if v is not None else -1

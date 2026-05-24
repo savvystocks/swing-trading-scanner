@@ -90,12 +90,21 @@ def all_picks(scan, sort_by="overall"):
         except (TypeError, ValueError):
             return 0
 
+    def _conviction(p):
+        v = (p.get("_conviction") or {}).get("score")
+        try:
+            return float(v) if v is not None else -1
+        except (TypeError, ValueError):
+            return -1
+
     if sort_by == "tier":
-        out.sort(key=lambda p: (-tier_rank.get(p.get("_aa_tier"), 0), -_overall(p), -_stacked(p)))
+        out.sort(key=lambda p: (-tier_rank.get(p.get("_aa_tier"), 0), -_conviction(p), -_overall(p), -_stacked(p)))
     elif sort_by == "stacked":
-        out.sort(key=lambda p: (-_stacked(p), -_overall(p)))
+        out.sort(key=lambda p: (-_stacked(p), -_conviction(p), -_overall(p)))
+    elif sort_by == "overall":
+        out.sort(key=lambda p: (-_overall(p), -_conviction(p), -tier_rank.get(p.get("_aa_tier"), 0), -_stacked(p)))
     else:
-        out.sort(key=lambda p: (-_overall(p), -tier_rank.get(p.get("_aa_tier"), 0), -_stacked(p)))
+        out.sort(key=lambda p: (-_conviction(p), -_overall(p), -tier_rank.get(p.get("_aa_tier"), 0), -_stacked(p)))
     return out
 
 

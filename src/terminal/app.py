@@ -346,6 +346,33 @@ def render_pick_detail(pick):
         trap_str = " ⚠️ TRAP" if bear.get("is_trap") else ""
         st.markdown(f"**Bear risk{trap_str}:** {bear['killer'][:240]}")
 
+    conv = pick.get("_conviction") or {}
+    if conv.get("score") is not None:
+        comps = conv.get("components") or {}
+        weights = conv.get("weights") or {}
+        strong = [k for k, v in comps.items() if v >= 75]
+        weak = [k for k, v in comps.items() if v <= 30]
+        st.markdown(f"**🎯 Conviction Score: {conv.get('score')}/100 ({conv.get('tier')})**")
+        if strong:
+            st.markdown(f"Strong signals: " + " · ".join(k.replace("_", " ").title() for k in strong[:5]))
+        if weak:
+            st.markdown(f"Weak signals: " + " · ".join(k.replace("_", " ").title() for k in weak[:3]))
+        with st.expander("🧮 Conviction component breakdown", expanded=False):
+            comp_rows = []
+            for k in ("llm_and_overall", "insider", "pead", "buyback_guidance", "options_flow", "stage2", "analyst", "whisper", "whalewisdom", "trends"):
+                v = comps.get(k, 50)
+                w = int(weights.get(k, 0) * 100)
+                comp_rows.append({
+                    "Signal": k.replace("_", " ").title(),
+                    "Score": v,
+                    "Weight": f"{w}%",
+                    "Contribution": round(v * weights.get(k, 0), 1),
+                })
+            st.dataframe(pd.DataFrame(comp_rows), hide_index=True, use_container_width=True, height=380,
+                         column_config={
+                             "Score": st.column_config.ProgressColumn("Score", min_value=0, max_value=100, format="%d"),
+                         })
+
     with st.expander("📊 Full numbers (Overall, Survival, Quality, Tier, components)", expanded=False):
         c1, c2, c3, c4, c5 = st.columns(5)
         with c1:
@@ -448,11 +475,13 @@ def page_picks():
         ),
     )
 
-    picks = D.all_picks(scan, sort_by="overall")
+    picks = D.all_picks(scan, sort_by="conviction")
 
-    sort_choice = st.sidebar.radio("Sort by", ["overall", "tier", "stacked"], index=0)
-    if sort_choice != "overall":
+    sort_choice = st.sidebar.radio("Sort by", ["conviction", "overall", "tier", "stacked"], index=0)
+    if sort_choice != "conviction":
         picks = D.all_picks(scan, sort_by=sort_choice)
+
+    mobile_mode = st.sidebar.checkbox("📱 Mobile view (compact)", value=False, help="Hide secondary columns for smaller screens")
 
     tier_filter = st.sidebar.multiselect("Tier", ["A++", "A+", "A"], default=["A++", "A+", "A"])
     sectors = sorted({(p.get("sector") or "Other") for p in picks})
@@ -546,19 +575,19 @@ def page_picks():
         action = p.get("_action_signal") or (compute_action(p, live_change_pct=p.get("_live_change_pct")) if compute_action else {"badge": "—"})
         live_mid = p.get("_live_mid")
         live_pct = p.get("_live_change_pct")
+        conv_obj = p.get("_conviction") or {}
         rows.append({
             "#": i,
             "Ticker": row["ticker"],
             "Action": action.get("badge", "—"),
-            "Live $": round(live_mid, 2) if live_mid else None,
+            "Conviction": conv_obj.get("score"),
             "Live %": round(live_pct, 1) if live_pct is not None else None,
             "Overall": row["overall_score"],
-            "Verdict": row["overall_verdict"],
             "PoP %": row["probability"],
             "Tier": row["tier"],
-            "Survival": row["survival_score"],
             "LLM": row["llm_conf"],
             "Cats": row["cat_count"],
+            "Live $": round(live_mid, 2) if live_mid else None,
             "Price": row["price"],
             "Sector": row["sector"],
             "Name": row["name"],
@@ -569,15 +598,19 @@ def page_picks():
         return
 
     df = pd.DataFrame(rows)
+    if mobile_mode:
+        mobile_cols = ["#", "Ticker", "Action", "Conviction", "Live %"]
+        df = df[mobile_cols]
     selection = st.dataframe(
         df,
         hide_index=True,
         use_container_width=True,
-        height=460,
+        height=460 if not mobile_mode else 600,
         on_select="rerun",
         selection_mode="single-row",
         column_config={
-            "Overall": st.column_config.ProgressColumn("Overall", min_value=0, max_value=100, format="%d"),
+            "Conviction": st.column_config.ProgressColumn("Conviction", min_value=0, max_value=100, format="%d", help="Composite of all 11 signals - primary ranking metric. >=70 = TAKE-grade."),
+            "Overall": st.column_config.ProgressColumn("Overall", min_value=0, max_value=100, format="%d", help="LLM-aware score (subset of Conviction)"),
             "PoP %": st.column_config.NumberColumn("PoP %", format="%d%%"),
             "Price": st.column_config.NumberColumn("Close $", format="$%.2f", help="Yesterday's close (scan price)"),
             "Live $": st.column_config.NumberColumn("Live $", format="$%.2f", help="Latest Alpaca quote, refreshes every 60s"),

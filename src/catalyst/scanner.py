@@ -1116,11 +1116,32 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  overall_score failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.bearish_signals import apply_bearish_signals
+            apply_bearish_signals(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  bearish_signals failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.conviction_score import apply_conviction_scores
             apply_conviction_scores(ranked_picks, verbose=verbose, max_picks=60)
         except Exception as e:
             if verbose:
                 print(f"  conviction_score failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.bear_conviction_score import apply_bear_conviction
+            apply_bear_conviction(ranked_picks, verbose=verbose, max_picks=60)
+        except Exception as e:
+            if verbose:
+                print(f"  bear_conviction failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.direction_picker import apply_directions
+            apply_directions(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  direction_picker failed (non-fatal): {type(e).__name__}: {e}")
 
         def _provisional_score(p):
             c = (p.get("_conviction") or {}).get("score")
@@ -1237,13 +1258,25 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         try:
             from src.catalyst.conviction_score import apply_conviction_scores as _apply_final_conviction
             _apply_final_conviction(ranked_picks, verbose=verbose, max_picks=60)
-            ranked_picks.sort(key=lambda p: -_provisional_score(p))
+            from src.catalyst.bear_conviction_score import apply_bear_conviction as _apply_final_bear
+            _apply_final_bear(ranked_picks, verbose=verbose, max_picks=60)
+            from src.catalyst.direction_picker import apply_directions as _apply_final_dirs
+            _apply_final_dirs(ranked_picks, verbose=verbose)
+
+            def _winning_score(p):
+                d = p.get("_direction") or {}
+                return d.get("winning_score") or 0
+
+            ranked_picks.sort(key=lambda p: -_winning_score(p))
             if verbose and ranked_picks:
-                final_top = [(p.get("ticker"), int(_provisional_score(p))) for p in ranked_picks[:5]]
-                print(f"  conviction_score (FINAL post-LLM): top 5 = {final_top}")
+                final_top = []
+                for p in ranked_picks[:5]:
+                    d = p.get("_direction") or {}
+                    final_top.append((p.get("ticker"), d.get("side"), int(_winning_score(p))))
+                print(f"  FINAL ranking (call/put unified): top 5 = {final_top}")
         except Exception as e:
             if verbose:
-                print(f"  conviction_score final recompute failed (non-fatal): {type(e).__name__}: {e}")
+                print(f"  final scoring failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
             measure_catalyst_performance(lookback_days=90, verbose=verbose)

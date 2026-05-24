@@ -7,6 +7,30 @@ quote (if available) into ONE recommendation with a single-sentence why.
 
 
 def compute_action(pick, live_change_pct=None):
+    direction = pick.get("_direction") or {}
+    if direction.get("side") == "PUT" and direction.get("put_score", 0) >= 60:
+        bear_conv = pick.get("_bear_conviction") or {}
+        bs = pick.get("_bearish_signals") or {}
+        strong_bearish = []
+        if bs.get("going_concern"):
+            strong_bearish.append("GOING CONCERN")
+        if bs.get("dilution"):
+            strong_bearish.append("DILUTION RISK")
+        if bs.get("stage4", {}).get("zone") in ("STAGE_4_DECLINE", "BREAKDOWN_FRESH"):
+            strong_bearish.append(bs["stage4"]["zone"])
+        if bs.get("downgrade_cluster"):
+            strong_bearish.append("DOWNGRADE CLUSTER")
+        if bs.get("earnings_miss"):
+            strong_bearish.append("EARNINGS MISS DRIFT")
+        bear_signal_str = ", ".join(strong_bearish[:3]) or "multi-signal bear setup"
+        score = direction["put_score"]
+        if score >= 80:
+            return _wrap("TAKE", "put_high", f"📉 PUT: Bear conviction {score:.0f}/100. {bear_signal_str}.")
+        if score >= 70:
+            return _wrap("TAKE", "put_take", f"📉 PUT: Bear conviction {score:.0f}/100. {bear_signal_str}.")
+        if score >= 60:
+            return _wrap("WATCH", "put_watch", f"📉 PUT: Bear conviction {score:.0f}/100 (borderline). {bear_signal_str}.")
+
     conviction_obj = pick.get("_conviction") or {}
     conviction = conviction_obj.get("score")
     conviction_tier = conviction_obj.get("tier")

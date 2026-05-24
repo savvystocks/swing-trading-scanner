@@ -2,7 +2,7 @@ from datetime import datetime
 from jinja2 import Template
 
 try:
-    from src.catalyst.live_option_picker import find_best_call, project_outcomes, build_trade_line, build_kelly_line
+    from src.catalyst.live_option_picker import find_best_call, find_best_put, project_outcomes, build_trade_line, build_kelly_line
     LIVE_OPTIONS_AVAILABLE = True
 except ImportError:
     LIVE_OPTIONS_AVAILABLE = False
@@ -338,9 +338,15 @@ def _build_trade_line(pick):
         except (TypeError, ValueError):
             price = None
 
+    direction = pick.get("_direction") or {}
+    side = direction.get("side", "CALL")
+
     if LIVE_OPTIONS_AVAILABLE and price and ticker:
         try:
-            option = find_best_call(ticker, price)
+            if side == "PUT":
+                option = find_best_put(ticker, price)
+            else:
+                option = find_best_call(ticker, price)
             if option:
                 line = build_trade_line(ticker, price, option)
                 pick["_live_option"] = option

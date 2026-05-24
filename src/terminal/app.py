@@ -576,11 +576,13 @@ def page_picks():
         live_mid = p.get("_live_mid")
         live_pct = p.get("_live_change_pct")
         conv_obj = p.get("_conviction") or {}
+        direction_obj = p.get("_direction") or {}
         rows.append({
             "#": i,
             "Ticker": row["ticker"],
+            "Side": direction_obj.get("label", "📈 CALL"),
             "Action": action.get("badge", "—"),
-            "Conviction": conv_obj.get("score"),
+            "Conviction": max(direction_obj.get("call_score") or 0, direction_obj.get("put_score") or 0) if direction_obj else conv_obj.get("score"),
             "Live %": round(live_pct, 1) if live_pct is not None else None,
             "Overall": row["overall_score"],
             "PoP %": row["probability"],

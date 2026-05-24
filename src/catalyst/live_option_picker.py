@@ -137,7 +137,127 @@ def _estimate_iv_crush_points(current_iv_pct, has_earnings_imminent, has_earning
     return -min(current_iv_pct * 0.03, 2.0)
 
 
-def project_outcomes(option, spot, scenarios=(5, 8, 12, 15, 20), has_earnings_imminent=False, has_earnings_lead_up=False, has_general_catalyst=False):
+def find_best_put(symbol, spot, dte_min=20, dte_max=55):
+    """Mirror of find_best_call for puts. Same 4-tier fallback logic."""
+    if not os.environ.get("ALPACA_API_KEY") or not os.environ.get("ALPACA_SECRET_KEY"):
+        return None
+    try:
+        from alpaca.data.historical.option import OptionHistoricalDataClient
+        from alpaca.data.requests import OptionChainRequest
+    except ImportError:
+        return None
+
+    client = OptionHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+
+    try:
+        full_check = client.get_option_chain(OptionChainRequest(underlying_symbol=symbol))
+        if not full_check:
+            return {"_no_options_listed": True, "_reason": f"{symbol} has zero options listed on OPRA - short shares directly if possible."}
+    except Exception:
+        pass
+
+    today = datetime.now()
+    min_exp = (today + timedelta(days=dte_min)).strftime("%Y-%m-%d")
+    max_exp = (today + timedelta(days=dte_max)).strftime("%Y-%m-%d")
+
+    try:
+        req = OptionChainRequest(
+            underlying_symbol=symbol,
+            expiration_date_gte=min_exp,
+            expiration_date_lte=max_exp,
+            strike_price_gte=str(round(spot * 0.65, 2)),
+            strike_price_lte=str(round(spot * 1.20, 2)),
+            type="put",
+        )
+        snaps = client.get_option_chain(req)
+    except Exception as e:
+        logger.warning(f"Alpaca put chain {symbol}: {e}")
+        return None
+
+    if not snaps:
+        try:
+            wider_req = OptionChainRequest(
+                underlying_symbol=symbol,
+                expiration_date_gte=(today + timedelta(days=5)).strftime("%Y-%m-%d"),
+                expiration_date_lte=(today + timedelta(days=180)).strftime("%Y-%m-%d"),
+                type="put",
+            )
+            snaps = client.get_option_chain(wider_req)
+        except Exception:
+            return None
+        if not snaps:
+            return {"_no_options_listed": False, "_reason": f"{symbol} has options listed but no puts within DTE 5-180."}
+
+    all_rows = []
+    for sym, s in snaps.items():
+        try:
+            g = s.greeks
+            q = s.latest_quote
+            if not g or not q or g.delta is None:
+                continue
+            bid = float(q.bid_price) if q.bid_price else 0
+            ask = float(q.ask_price) if q.ask_price else 0
+            mid = (bid + ask) / 2 if bid > 0 and ask > 0 else 0
+            if mid <= 0.02:
+                continue
+            delta = abs(float(g.delta))
+            spread_pct = ((ask - bid) / mid * 100) if mid > 0 else 999
+            m = re.match(r"([A-Z]+)(\d{6})([CP])(\d+)", sym if isinstance(sym, str) else str(sym))
+            if not m:
+                continue
+            exp_raw = m.group(2)
+            strike = int(m.group(4)) / 1000
+            exp = f"20{exp_raw[:2]}-{exp_raw[2:4]}-{exp_raw[4:6]}"
+            iv = getattr(s, "implied_volatility", None) or getattr(g, "implied_volatility", 0) or 0
+            all_rows.append({
+                "strike": strike,
+                "exp": exp,
+                "delta": round(delta, 3),
+                "iv_pct": round(float(iv) * 100, 1) if iv else None,
+                "mid": round(mid, 2),
+                "bid": round(bid, 2),
+                "ask": round(ask, 2),
+                "spread_pct": round(spread_pct, 1),
+                "gamma": round(abs(float(g.gamma)), 4) if g.gamma else 0,
+                "theta": round(float(g.theta), 4) if g.theta else 0,
+                "vega": round(float(g.vega), 4) if g.vega else 0,
+                "right": "put",
+            })
+        except Exception:
+            continue
+
+    if not all_rows:
+        return None
+
+    ideal = [r for r in all_rows if 0.25 <= r["delta"] <= 0.50 and r["spread_pct"] <= 30 and r["mid"] >= 0.10]
+    if ideal:
+        ideal.sort(key=lambda r: abs(r["delta"] - 0.35))
+        ideal[0]["_fit"] = "ideal"
+        return ideal[0]
+
+    relaxed = [r for r in all_rows if 0.18 <= r["delta"] <= 0.65 and r["spread_pct"] <= 60 and r["mid"] >= 0.05]
+    if relaxed:
+        relaxed.sort(key=lambda r: abs(r["delta"] - 0.35))
+        relaxed[0]["_fit"] = "acceptable"
+        return relaxed[0]
+
+    wider = [r for r in all_rows if 0.10 <= r["delta"] <= 0.80 and r["spread_pct"] <= 120]
+    if wider:
+        wider.sort(key=lambda r: (r["spread_pct"], abs(r["delta"] - 0.35)))
+        wider[0]["_fit"] = "best_available"
+        return wider[0]
+
+    all_rows.sort(key=lambda r: (abs(r["delta"] - 0.35) if r["delta"] else 99, r["spread_pct"]))
+    all_rows[0]["_fit"] = "ultra_thin"
+    return all_rows[0]
+
+
+def project_outcomes(option, spot, scenarios=(5, 8, 12, 15, 20), has_earnings_imminent=False, has_earnings_lead_up=False, has_general_catalyst=False, side=None):
+    if side is None:
+        side = option.get("right", "call").lower()
+    is_put = side == "put"
+    if is_put:
+        scenarios = tuple(-abs(s) for s in scenarios)
     mid = option["mid"]
     strike = option["strike"]
     delta = option["delta"]
@@ -157,10 +277,14 @@ def project_outcomes(option, spot, scenarios=(5, 8, 12, 15, 20), has_earnings_im
     for pct in scenarios:
         new_spot = spot * (1 + pct / 100)
         underlying_move = new_spot - spot
-        delta_pnl = delta * underlying_move
+        delta_signed = -delta if is_put else delta
+        delta_pnl = delta_signed * underlying_move
         gamma_pnl = 0.5 * gamma * (underlying_move ** 2)
         new_option_value = mid + delta_pnl + gamma_pnl + iv_crush_pnl
-        intrinsic = max(0, new_spot - strike)
+        if is_put:
+            intrinsic = max(0, strike - new_spot)
+        else:
+            intrinsic = max(0, new_spot - strike)
         new_option_value = max(new_option_value, intrinsic * 0.92)
         new_option_value = max(0.01, new_option_value)
         return_pct = (new_option_value - mid) / mid * 100
@@ -208,8 +332,10 @@ def build_trade_line(ticker, spot, option):
         strike_phrase = f"strike sits {abs(pct_to_strike):.1f}% below current price (already in-the-money)"
     else:
         strike_phrase = "strike right at current price (at-the-money)"
+    side = option.get("right", "call").upper()
+    side_label = "PUT" if side == "PUT" else "call"
     return (
-        f"Buy {ticker} ${option['strike']:.0f} call expiring {option['exp']} "
+        f"Buy {ticker} ${option['strike']:.0f} {side_label} expiring {option['exp']} "
         f"around ${option['mid']:.2f} per share (${cost_per_contract:.0f} per contract). "
         f"{strike_phrase}.{fit_note}"
     )

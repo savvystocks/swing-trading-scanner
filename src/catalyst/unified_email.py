@@ -149,6 +149,14 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   {% endfor %}
   {% endif %}
 
+  {% if sit_out_today %}
+  <hr class="section-rule">
+  <div style="padding:24px 20px; background:#f9fafb; border:2px solid #6b7280; border-radius:10px; text-align:center; margin:18px 0;">
+    <div style="font-size:18px; font-weight:800; color:#374151; margin-bottom:8px;">Sit out today</div>
+    <div style="font-size:13px; color:#6b7280; line-height:1.5;">No setup clears the TAKE-grade bar. The system would rather show you nothing than push borderline picks. Cash is a position. Come back tomorrow.</div>
+  </div>
+  {% endif %}
+
   {% if picks %}
   <hr class="section-rule">
   <div class="section-label">The Picks</div>
@@ -298,7 +306,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   <div class="section-label">Discipline</div>
   <div class="discipline">
     Vol regime: <strong>{{ regime_label or 'NORMAL' }}</strong> · position size × {{ position_mult }}<br>
-    Win rate (30d): <strong>{{ win_rate_pct }}%</strong> on {{ win_rate_n }} paper trades<br>
+    Win rate (30d): <strong>{{ win_rate_display }}</strong><br>
     Open positions: <strong>{{ open_slots }} of {{ max_slots }} slots</strong>
   </div>
 
@@ -1052,52 +1060,33 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
     except ImportError:
         compute_action = None
 
-    def _is_take_or_watch(pick):
+    def _is_take_only(pick):
         if compute_action is None:
             return _is_buy_signal(pick)
         action = pick.get("_action_signal") or compute_action(pick)
-        return action.get("action") in ("TAKE", "WATCH")
+        return action.get("action") == "TAKE"
 
-    buy_picks = [p for p in all_tier_picks if _is_take_or_watch(p) and not is_speculative_only(p)]
+    buy_picks = [p for p in all_tier_picks if _is_take_only(p) and not is_speculative_only(p)]
     buy_picks.sort(key=_overall_sort_key)
-
-    MIN_PICKS_TARGET = 10
-    fallback_picks = []
-    if len(buy_picks) < MIN_PICKS_TARGET:
-        already_included = set(id(p) for p in buy_picks)
-        candidates_with_overall = [
-            p for p in all_tier_picks
-            if id(p) not in already_included
-            and _overall_score_of(p) >= 50
-            and not is_speculative_only(p)
-        ]
-        candidates_with_overall.sort(key=_overall_sort_key)
-        needed = MIN_PICKS_TARGET - len(buy_picks)
-        for p in candidates_with_overall[:needed * 2]:
-            bear = p.get("bear_verification") or {}
-            if bear.get("is_this_trade_a_trap"):
-                continue
-            fallback_picks.append(p)
-            if len(fallback_picks) >= needed:
-                break
 
     picked = []
     sector_counts = {}
-    for p in buy_picks + fallback_picks:
+    for p in buy_picks:
         bucket = _sector_bucket(p.get("sector"))
         cap = SECTOR_CAPS.get(bucket, 1) * 2
         if sector_counts.get(bucket, 0) >= cap:
             continue
         picked.append(p)
         sector_counts[bucket] = sector_counts.get(bucket, 0) + 1
-        if len(picked) >= 12:
+        if len(picked) >= 5:
             break
 
     top_picks = picked
     picks_out = [_build_pick(p, i + 1) for i, p in enumerate(top_picks)]
 
     filtered_out_count = len(all_tier_picks) - len(buy_picks)
-    fallback_used_count = len(fallback_picks)
+    fallback_used_count = 0
+    sit_out_today = len(top_picks) == 0
 
     pre_earnings_lead_up = []
     pre_earnings_imminent = []
@@ -1148,6 +1137,13 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
     win_rate_stats = scan.get("win_rate_stats") or {}
     portfolio = scan.get("portfolio_summary") or {}
 
+    wr_pct = win_rate_stats.get("win_rate_pct")
+    wr_n = win_rate_stats.get("n")
+    if wr_pct is None or wr_n in (None, "?"):
+        win_rate_display = "no data yet"
+    else:
+        win_rate_display = f"{wr_pct}% on {wr_n} paper trades"
+
     template = Template(EMAIL_TEMPLATE)
     return template.render(
         scan_date=scan_date,
@@ -1157,11 +1153,11 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         a_count=a_count,
         regime_label=regime_label,
         position_mult=position_mult,
-        win_rate_pct=win_rate_stats.get("win_rate_pct", "n/a"),
-        win_rate_n=win_rate_stats.get("n", "?"),
-        open_slots=portfolio.get("n_open", "?"),
-        max_slots=portfolio.get("max_concurrent", "?"),
+        win_rate_display=win_rate_display,
+        open_slots=portfolio.get("n_open") if portfolio.get("n_open") is not None else 0,
+        max_slots=portfolio.get("max_concurrent") if portfolio.get("max_concurrent") is not None else 2,
         picks=picks_out,
+        sit_out_today=sit_out_today,
         pre_earnings_lead_up=pre_earnings_lead_up,
         pre_earnings_imminent=pre_earnings_imminent,
         pre_earnings_count=pre_earnings_count,

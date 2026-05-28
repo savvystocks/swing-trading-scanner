@@ -29,7 +29,7 @@ def compute_action(pick, live_change_pct=None):
         if score >= 70:
             return _wrap("TAKE", "put_take", f"📉 PUT: Bear conviction {score:.0f}/100. {bear_signal_str}.")
         if score >= 60:
-            return _wrap("WATCH", "put_watch", f"📉 PUT: Bear conviction {score:.0f}/100 (borderline). {bear_signal_str}.")
+            return _wrap("SKIP", "put_watch", f"📉 PUT: Bear conviction {score:.0f}/100 (borderline). {bear_signal_str}.")
 
     conviction_obj = pick.get("_conviction") or {}
     conviction = conviction_obj.get("score")
@@ -65,18 +65,18 @@ def compute_action(pick, live_change_pct=None):
         return _wrap("AVOID", "climax", "Already parabolic +25%+ above 50dMA — distribution risk, mean reversion likely.")
 
     if stage2_zone == "EXTENDED":
-        return _wrap("WATCH", "extended", "Already extended above 50dMA — wait for pullback to 50dMA before entry.")
+        return _wrap("SKIP", "extended", "Already extended above 50dMA — wait for pullback to 50dMA before entry.")
 
     if not stage2_tradeable and stage2_zone == "NOT_IN_STAGE2":
         if live_change_pct is not None and live_change_pct >= 5:
-            return _wrap("WATCH", "gap_up_from_below_ma", f"Was below 50/200dMA at scan close, but live gap +{live_change_pct:.1f}% likely cleared the MA. Confirm trend before chasing.")
+            return _wrap("SKIP", "gap_up_from_below_ma", f"Was below 50/200dMA at scan close, but live gap +{live_change_pct:.1f}% likely cleared the MA. Confirm trend before chasing.")
         return _wrap("AVOID", "no_trend", "Below 50dMA or 200dMA at scan close - not in confirmed uptrend.")
 
     if live_change_pct is not None and live_change_pct <= -3:
-        return _wrap("WATCH", "premarket_down", f"Down {live_change_pct:+.1f}% in pre-market - thesis has moved against you since scan ran. Wait for stabilisation.")
+        return _wrap("SKIP", "premarket_down", f"Down {live_change_pct:+.1f}% in pre-market - thesis has moved against you since scan ran. Wait for stabilisation.")
 
     if live_change_pct is not None and live_change_pct >= 7:
-        return _wrap("WATCH", "gap_up_chase", f"Gapped up {live_change_pct:+.1f}% live - catalyst already played out, chasing the move is high-risk. Wait for pullback.")
+        return _wrap("SKIP", "gap_up_chase", f"Gapped up {live_change_pct:+.1f}% live - catalyst already played out, chasing the move is high-risk. Wait for pullback.")
 
     if conviction is not None:
         top_components = []
@@ -90,7 +90,7 @@ def compute_action(pick, live_change_pct=None):
         if conviction >= 70:
             return _wrap("TAKE", "conviction_take", f"Conviction {conviction:.0f}/100. Solid setup: {signal_str}.")
         if conviction >= 60:
-            return _wrap("WATCH", "conviction_watch", f"Conviction {conviction:.0f}/100. Borderline - {signal_str}.")
+            return _wrap("SKIP", "conviction_watch", f"Conviction {conviction:.0f}/100. Borderline - {signal_str}.")
         if conviction >= 45:
             return _wrap("SKIP", "conviction_skip", f"Conviction {conviction:.0f}/100. Weak signal stack.")
         return _wrap("AVOID", "conviction_avoid", f"Conviction {conviction:.0f}/100. No edge.")
@@ -154,19 +154,19 @@ def compute_action(pick, live_change_pct=None):
         return _wrap("SKIP", "trends_fading", f"Google Trends FADING ({trends.get('spike_ratio')}x baseline) - retail interest collapsing. No catalyst momentum.")
 
     if llm_verdict == "BUY" and overall >= 60:
-        return _wrap("WATCH", "weak_buy", f"LLM weakly bullish ({llm_conf}% BUY) — wait for confirming volume or news.")
+        return _wrap("SKIP", "weak_buy", f"LLM weakly bullish ({llm_conf}% BUY) — wait for confirming volume or news.")
 
     if llm_verdict in ("SKIP", "STRONG_SELL") and llm_conf >= 60:
         return _wrap("SKIP", "llm_skip_strong", f"LLM {llm_verdict} at {llm_conf}% — multiple bear factors. Don't trade.")
 
     if llm_verdict in ("SKIP", "STRONG_SELL") and llm_conf < 40 and overall >= 65 and pop >= 60:
-        return _wrap("WATCH", "soft_skip_good_data", f"LLM weakly bearish ({llm_conf}% SKIP) but other signals strong (Overall {overall:.0f}, PoP {pop:.0f}%). Borderline.")
+        return _wrap("SKIP", "soft_skip_good_data", f"LLM weakly bearish ({llm_conf}% SKIP) but other signals strong (Overall {overall:.0f}, PoP {pop:.0f}%). Borderline.")
 
     if overall >= 70 and pop >= 65:
         return _wrap("TAKE", "data_strong", f"Strong evidence stack (Overall {overall:.0f}, PoP {pop:.0f}%) even with cautious LLM.")
 
     if overall >= 60 and pop >= 55:
-        return _wrap("WATCH", "borderline", f"Borderline (Overall {overall:.0f}, PoP {pop:.0f}%) — not a clear edge.")
+        return _wrap("SKIP", "borderline", f"Borderline (Overall {overall:.0f}, PoP {pop:.0f}%) — not a clear edge.")
 
     return _wrap("SKIP", "weak", f"Weak across the board (Overall {overall:.0f}, PoP {pop:.0f}%).")
 

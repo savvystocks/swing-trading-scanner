@@ -60,6 +60,8 @@ from src.catalyst.pre_mortem import apply_pre_mortem
 from src.catalyst.unified_forensic import apply_unified_forensic, apply_haiku_synthesis, apply_bear_case_verification
 from src.catalyst.catalyst_performance import annotate_picks_with_performance, measure_catalyst_performance
 from src.catalyst.v4_paper_log import log_picks as log_v4_picks, measure_outcomes as measure_v4_outcomes, get_v4_stats
+from src.catalyst.conviction_journal import log_picks_from_scan as log_conviction_picks, mark_forward_returns as mark_conviction_forward, get_journal_stats as get_conviction_stats
+from src.catalyst.conviction_drift import check_drift as check_conviction_drift
 from src.catalyst.sam_gov import fetch_recent_contract_awards, map_awardees_to_tickers
 from src.catalyst.drift import compute_drift, drift_score, timing_bonus
 from src.catalyst.historical import historical_earnings_reaction, historical_score
@@ -1094,6 +1096,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             if external_candidates and aa_results is not None:
                 if "EXTERNAL_DISCOVERY" not in aa_results:
                     aa_results["EXTERNAL_DISCOVERY"] = []
+                stub_externals = []
                 for m in missed[:15]:
                     candidate_pick = {
                         "ticker": m["ticker"],
@@ -1104,6 +1107,21 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                         "catalysts": [{"key": f"external_{s}", "label": r} for s, r in zip(m["sources"], m["reasons"])],
                     }
                     aa_results["EXTERNAL_DISCOVERY"].append(candidate_pick)
+                    stub_externals.append(candidate_pick)
+
+                try:
+                    from src.catalyst.external_enrichment import enrich_externals
+                    promoted = enrich_externals(stub_externals, client, max_enrich=5, run_haiku=True, verbose=verbose)
+                    if promoted:
+                        existing_tickers = {p.get("ticker") for p in ranked_picks if p.get("ticker")}
+                        for p in promoted:
+                            if p.get("ticker") and p["ticker"] not in existing_tickers:
+                                ranked_picks.append(p)
+                        if verbose:
+                            print(f"  external_enrichment: {len(promoted)} externals merged into ranked_picks")
+                except Exception as e:
+                    if verbose:
+                        print(f"  external_enrichment failed (non-fatal): {type(e).__name__}: {e}")
         except Exception as e:
             if verbose:
                 print(f"  candidate_aggregator failed (non-fatal): {type(e).__name__}: {e}")
@@ -1148,6 +1166,13 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         except Exception as e:
             if verbose:
                 print(f"  bearish_signals failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.signal_dedup import apply_signal_dedup
+            apply_signal_dedup(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  signal_dedup failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
             from src.catalyst.conviction_score import apply_conviction_scores
@@ -1283,6 +1308,13 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  overall_score final recompute failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.signal_dedup import apply_signal_dedup as _apply_final_dedup
+            _apply_final_dedup(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  signal_dedup final recompute failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.conviction_score import apply_conviction_scores as _apply_final_conviction
             _apply_final_conviction(ranked_picks, verbose=verbose, max_picks=60)
             from src.catalyst.bear_conviction_score import apply_bear_conviction as _apply_final_bear
@@ -1353,11 +1385,56 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             print(f"  V4 pipeline failed (non-fatal): {type(e).__name__}: {e}")
             traceback.print_exc()
 
+    conviction_drift_alerts = []
+    conviction_journal_stats = None
+    try:
+        try:
+            from src.catalyst.conviction_trend import apply_trends
+            _trend_scan = {"scan_date": scan_date_str, "aa_results": aa_results}
+            apply_trends(_trend_scan, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  conviction_trend failed (non-fatal): {type(e).__name__}: {e}")
+
+        _scan_for_journal = {
+            "scan_date": scan_date_str,
+            "macro": macro,
+            "aa_results": aa_results,
+        }
+        log_conviction_picks(_scan_for_journal, verbose=verbose)
+        try:
+            mark_conviction_forward(client, target_date=scan_date_str, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  conviction_journal mark_forward failed: {type(e).__name__}: {e}")
+        try:
+            conviction_drift_alerts = check_conviction_drift(_scan_for_journal, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  conviction_drift check failed: {type(e).__name__}: {e}")
+        try:
+            conviction_journal_stats = get_conviction_stats(days_back=60)
+            if verbose and conviction_journal_stats:
+                by_side = conviction_journal_stats.get("by_side") or {}
+                cs = by_side.get("CALL") or {}
+                ps = by_side.get("PUT") or {}
+                print(f"  conviction_journal stats (60d): {conviction_journal_stats.get('total_measured', 0)} measured  CALL n={cs.get('n', 0)} win={cs.get('win_rate_pct', 0)}%  PUT n={ps.get('n', 0)} win={ps.get('win_rate_pct', 0)}%")
+        except Exception as e:
+            if verbose:
+                print(f"  conviction_journal stats failed: {type(e).__name__}: {e}")
+    except Exception as e:
+        if verbose:
+            import traceback
+            print(f"  conviction_journal pipeline failed (non-fatal): {type(e).__name__}: {e}")
+            traceback.print_exc()
+
     return {
         "scan_date": scan_date_str,
         "macro": macro,
         "tracker_stats": tracker_stats,
         "paper_stats": paper_stats,
+        "conviction_drift_alerts": conviction_drift_alerts,
+        "conviction_journal_stats": conviction_journal_stats,
         "candidates_total": len(per_ticker),
         "enriched_total": len(enriched),
         "scored_total": len(final_scored),

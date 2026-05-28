@@ -164,16 +164,22 @@ def research_unified(candidate, verbose=False):
 def apply_unified_forensic(picks, max_calls=6, verbose=False):
     if not picks:
         return picks
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    workers = int(os.environ.get("FORENSIC_WORKERS", "3"))
+    targets = picks[:max_calls]
     enriched = 0
     total_cost = 0.0
-    for i, pick in enumerate(picks[:max_calls]):
-        if i > 0 and FORENSIC_SLEEP > 0:
-            time.sleep(FORENSIC_SLEEP)
-        ticker = pick.get("ticker")
-        if verbose:
-            print(f"    [forensic {i+1}/{min(max_calls, len(picks))}] {ticker}...")
-        result = research_unified(pick, verbose=verbose)
-        if result:
+
+    def _one(pick):
+        result = research_unified(pick, verbose=False)
+        return pick, result
+
+    with ThreadPoolExecutor(max_workers=min(workers, len(targets) or 1)) as executor:
+        futures = [executor.submit(_one, p) for p in targets]
+        for fut in as_completed(futures):
+            pick, result = fut.result()
+            if not result:
+                continue
             pick["unified_forensic"] = result
             pick["deep_research"] = {
                 "verdict": result.get("verdict", "HOLD"),
@@ -202,8 +208,10 @@ def apply_unified_forensic(picks, max_calls=6, verbose=False):
             }
             enriched += 1
             total_cost += result.get("_cost_usd", 0)
+            if verbose:
+                print(f"    [forensic] {pick.get('ticker')} -> {result.get('verdict')}")
     if verbose:
-        print(f"  unified_forensic: {enriched} picks researched, total cost ~${total_cost:.2f}")
+        print(f"  unified_forensic: {enriched} picks researched in parallel, total cost ~${total_cost:.2f}")
     return picks
 
 
@@ -224,36 +232,73 @@ Output STRICTLY this JSON (no preamble, no markdown):
 Be ruthless on the bear case. No analog research (you don't have web access)."""
 
 
-BEAR_CASE_SYSTEM = """You are a balanced risk analyst stress-testing a swing trade thesis. Your job is honest assessment, not adversarial roleplay. Most setups are NEITHER traps NOR perfect — they're in between, and your verdict should reflect that distribution.
+BEAR_CASE_SYSTEM = """You are a risk auditor verifying a bull thesis. You are NOT a contrarian — you are a calibrated second opinion. Most swing-trade setups in this scanner are mid-quality opportunities: not perfect, not traps. Your output distribution matters as much as any single verdict.
 
-Look at the data and identify ONLY specific, evidence-based bear risks. Do not invent generic risks ("options can lose money", "stocks can go down"). If the data does not show a concrete failure mode, say so.
+==== HARD CALIBRATION RULE ====
+You will be measured against this target across 100 verdicts:
+  TRAP: 8-12%        (only when smoking-gun evidence is in the data)
+  BEAR_RISK: 25-35%  (real concerns but thesis may still pay)
+  NEUTRAL: 35-45%    (mixed picture, no decisive signal either way)
+  BULL_THESIS_HOLDS: 15-25% (clean setup, no specific bear evidence)
 
-Specific failure modes you may flag (must be visible in the data):
-- Run-up exhaustion: stock already +25%+ in 30d before the catalyst → sell-the-news risk
-- Crowded positioning: very high IV (>80 percentile) + high short interest → squeeze cuts both ways
-- Insider selling cluster contradicting the bull thesis
-- Going concern language, recent dilution (shelf S-3, ATM offering), or covenant violation
-- Sector strong headwind (verdict STRONG_HEADWIND in sector data)
-- Earnings miss with guide-down in recent history
-- Bear catalyst keys present (downgrade_cluster, executive_departure, restatement, auditor_change)
-- Extension: >20% above 50dMA (statistically mean-reverts on 2-4 week swings)
-- Liquidity: dollar volume <$2M (slippage risk on size)
+If your last 5 outputs have been TRAP/TRAP/TRAP/BEAR_RISK/TRAP, the 6th must NOT be TRAP unless the evidence is overwhelming. Self-check before responding.
 
-A trade is a TRAP only when you can name a SPECIFIC failure mode visible in the data that the bull case ignores. Generic "this could fail" is NOT a trap — it's market reality. Set is_this_trade_a_trap=true only when there's an IDENTIFIABLE smoking gun.
+==== HOW TO DECIDE THE VERDICT ====
+
+TRAP requires AT LEAST ONE of (cite the exact data point in trap_reasoning):
+  • Insider SELLING cluster in last 90d (>=3 sellers, no offsetting buyers)
+  • Going-concern language or recent dilution (S-3, ATM, convertible) confirmed in catalysts
+  • Bear catalyst key present: downgrade_cluster, executive_departure, restatement, auditor_change, fraud_allegation, missed_guidance_severe
+  • Extension RED + run-up >40% in 30d (data: ret_30d and landmines)
+  • Sector verdict STRONG_HEADWIND in landmines
+
+BEAR_RISK is the right call when:
+  • Extension YELLOW (>20% above 50dMA) without a fresh hard catalyst
+  • IV percentile >80 (premium-priced) without exceptional thesis strength
+  • Mixed signals: bull catalyst exists but contradicted by 1-2 yellow flags
+  • Liquidity concerns ($1-2M daily volume)
+
+NEUTRAL is correct when:
+  • Data is mixed or thin (e.g. micro-cap with only 1-2 catalysts and no insider/options signal)
+  • Catalyst tier is C or below
+  • No specific failure mode AND no exceptional strength visible
+  • You genuinely cannot form a strong directional bear view
+
+BULL_THESIS_HOLDS is correct when ALL of these are true:
+  • No bear catalysts in the data
+  • Insider buying present OR zero insider selling
+  • Extension is GREEN or mild yellow
+  • Sector verdict is TAILWIND or NEUTRAL
+  • Multiple A/B-tier catalysts stack
+
+==== NEVER MARK TRAP FOR THESE GENERIC REASONS ====
+- "Options can lose value" / "theta decay" — applies to every option trade
+- "Small-cap volatility" — applies to every micro-cap
+- "Earnings risk" without a specific blackout window
+- "Market could correct" — applies to every long
+- "Speculative biotech" — generic, not data-cited
+- "Could fail" without a named mechanism
+
+If your trap_reasoning fits a template you could apply to any random ticker, the answer is NOT trap.
+
+==== bear_conviction_pct CALIBRATION ====
+Tie this to your verdict — they must be consistent:
+  TRAP:              75-95
+  BEAR_RISK:         50-70
+  NEUTRAL:           30-50
+  BULL_THESIS_HOLDS: 10-30
 
 Output STRICTLY this JSON (no preamble, no markdown):
 {
   "bear_verdict": "TRAP|BEAR_RISK|NEUTRAL|BULL_THESIS_HOLDS",
   "bear_conviction_pct": 0-100,
   "killer_thesis": "single sentence: the most likely reason this fails, OR 'no specific bear case found' if NEUTRAL/BULL_THESIS_HOLDS",
-  "specific_failure_modes": ["mode 1 with data citation", "mode 2 with data citation"],
+  "specific_failure_modes": ["mode 1 with data citation (e.g. 'CEO sold $2.4M on 14-May per insider depth')", "mode 2 with data citation"],
   "what_to_watch_to_invalidate": "what would change the verdict",
   "expected_loss_pct_if_wrong": -30 to -90,
   "is_this_trade_a_trap": true|false,
-  "trap_reasoning": "1-2 sentences citing the specific data point that triggers trap=true, empty otherwise"
-}
-
-Calibration target across 100 picks: ~10% TRAP, ~30% BEAR_RISK, ~40% NEUTRAL, ~20% BULL_THESIS_HOLDS. If you're labeling everything TRAP or everything NEUTRAL, you're being lazy. Distribution matters."""
+  "trap_reasoning": "1-2 sentences citing the specific data point that triggers trap=true, empty otherwise. MUST quote a number from the data (insider count, ret_30d %, IV percentile, sector verdict, catalyst key)."
+}"""
 
 
 def _build_bear_prompt(candidate, bull_data=None):
@@ -338,31 +383,72 @@ def apply_bear_case_verification(picks, max_calls=4, verbose=False):
     flipped = 0
     confirmed = 0
     total_cost = 0.0
-    for i, pick in enumerate(picks[:max_calls]):
+
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    workers = int(os.environ.get("BEAR_CASE_WORKERS", "4"))
+    targets = []
+    for pick in picks[:max_calls]:
         bull = pick.get("unified_forensic") or pick.get("haiku_synthesis") or {}
         if not bull:
             continue
-        bull_verdict = bull.get("verdict")
-        if bull_verdict not in ("BUY", "STRONG_BUY"):
+        if bull.get("verdict") not in ("BUY", "STRONG_BUY"):
             continue
-        bear = verify_with_bear_case(pick, verbose=verbose)
+        targets.append(pick)
+
+    if not targets:
+        return picks
+
+    bear_results = {}
+    with ThreadPoolExecutor(max_workers=min(workers, len(targets))) as executor:
+        futures = {executor.submit(verify_with_bear_case, p, False): p for p in targets}
+        for fut in as_completed(futures):
+            pick = futures[fut]
+            try:
+                bear = fut.result()
+            except Exception:
+                bear = None
+            if bear:
+                bear_results[id(pick)] = bear
+
+    for pick in targets:
+        bull = pick.get("unified_forensic") or pick.get("haiku_synthesis") or {}
+        bear = bear_results.get(id(pick))
         if not bear:
             continue
         pick["bear_verification"] = bear
         bear_conv = bear.get("bear_conviction_pct", 0) or 0
         is_trap = bear.get("is_this_trade_a_trap", False)
-        if bear_conv >= 65 or is_trap:
+        bear_verdict = bear.get("bear_verdict", "NEUTRAL")
+        failure_modes = bear.get("specific_failure_modes") or []
+        trap_reasoning = (bear.get("trap_reasoning") or "").strip()
+        cited_data = any(
+            any(tok in (m or "").lower() for tok in ("ret_", "iv ", "iv:", "iv_percentile", "insider", "catalyst", "sector verdict", "atm", "shelf", "downgrade", "guide-down", "miss", "$"))
+            for m in failure_modes
+        )
+        has_evidence = bool(failure_modes) and cited_data
+        if is_trap and not (trap_reasoning and cited_data):
+            is_trap = False
+            bear["is_this_trade_a_trap"] = False
+            bear["_trap_demoted_reason"] = "trap_reasoning lacked data citation"
+
+        should_downgrade = False
+        if bear_verdict == "TRAP" and is_trap and has_evidence:
+            should_downgrade = True
+        elif bear_verdict == "BEAR_RISK" and bear_conv >= 75 and has_evidence:
+            should_downgrade = True
+
+        if should_downgrade:
             original_verdict = bull.get("verdict")
-            adjusted = "HOLD" if bear_conv < 80 else "SKIP"
+            adjusted = "HOLD" if bear_conv < 85 else "SKIP"
             bull["verdict_pre_bear_check"] = original_verdict
             bull["verdict"] = adjusted
-            bull["verdict_adjustment_reason"] = f"bear-case conviction {bear_conv}% (trap={is_trap}) overrides bull verdict"
+            bull["verdict_adjustment_reason"] = f"bear verdict {bear_verdict} ({bear_conv}%, trap={is_trap}) with cited evidence overrides bull verdict"
             deep = pick.get("deep_research") or {}
             if deep:
                 deep["verdict"] = adjusted
             flipped += 1
             if verbose:
-                print(f"    {pick.get('ticker')}: {original_verdict} -> {adjusted} (bear conviction {bear_conv}%)")
+                print(f"    {pick.get('ticker')}: {original_verdict} -> {adjusted} ({bear_verdict} {bear_conv}%, modes={len(failure_modes)})")
         else:
             confirmed += 1
         total_cost += bear.get("_cost_usd", 0)
@@ -447,14 +533,23 @@ def synthesize_haiku(candidate, verbose=False):
 def apply_haiku_synthesis(picks, max_calls=3, verbose=False):
     if not picks:
         return picks
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    workers = int(os.environ.get("HAIKU_SYNTHESIS_WORKERS", "4"))
+    targets = picks[:max_calls]
     enriched = 0
     total_cost = 0.0
-    for i, pick in enumerate(picks[:max_calls]):
+
+    def _one(pick):
         ticker = pick.get("ticker")
-        if verbose:
-            print(f"    [haiku {i+1}/{min(max_calls, len(picks))}] {ticker}...")
-        result = synthesize_haiku(pick, verbose=verbose)
-        if result:
+        result = synthesize_haiku(pick, verbose=False)
+        return pick, ticker, result
+
+    with ThreadPoolExecutor(max_workers=min(workers, len(targets) or 1)) as executor:
+        futures = [executor.submit(_one, p) for p in targets]
+        for fut in as_completed(futures):
+            pick, ticker, result = fut.result()
+            if not result:
+                continue
             pick["haiku_synthesis"] = result
             pick["deep_research"] = pick.get("deep_research") or {
                 "verdict": result.get("verdict", "HOLD"),
@@ -471,8 +566,10 @@ def apply_haiku_synthesis(picks, max_calls=3, verbose=False):
             }
             enriched += 1
             total_cost += result.get("_cost_usd", 0)
+            if verbose:
+                print(f"    [haiku] {ticker} -> {result.get('verdict')} ({result.get('confidence_pct')}%)")
     if verbose:
-        print(f"  haiku_synthesis: {enriched} picks synthesized, total cost ~${total_cost:.3f}")
+        print(f"  haiku_synthesis: {enriched} picks synthesized in parallel, total cost ~${total_cost:.3f}")
     return picks
 
 

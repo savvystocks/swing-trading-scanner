@@ -133,6 +133,22 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     {% if regime_label %}· Market mood: {{ regime_label }}{% endif %}
   </div>
 
+  {% if drift_alerts %}
+  <hr class="section-rule">
+  <div class="section-label" style="color:#b91c1c;">EXIT WARNINGS · Open positions losing conviction</div>
+  {% for a in drift_alerts %}
+  <div style="padding:12px 16px; margin:8px 0; background:{{ '#fef2f2' if a.severity == 'HIGH' else '#fefce8' }}; border-left:4px solid {{ '#b91c1c' if a.severity == 'HIGH' else '#a16207' }}; border-radius:6px;">
+    <div style="font-weight:800; color:{{ '#b91c1c' if a.severity == 'HIGH' else '#a16207' }}; font-size:14px;">
+      [{{ a.severity }}] {{ a.ticker }} — {{ a.alert_type|replace('_', ' ') }}
+    </div>
+    <div style="font-size:13px; color:#374151; margin-top:6px; line-height:1.5;">{{ a.message }}</div>
+    <div style="font-size:11px; color:#6b7280; margin-top:6px;">
+      Opened {{ a.entry_scan_date }} as {{ a.entry_side }}{% if a.entry_price and a.current_price %} · Price ${{ '%.2f'|format(a.entry_price) }} → ${{ '%.2f'|format(a.current_price) }}{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
   {% if picks %}
   <hr class="section-rule">
   <div class="section-label">The Picks</div>
@@ -143,6 +159,8 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       <span class="pick-rank">#{{ loop.index }}</span>
       <span class="pick-ticker">{{ p.ticker }}</span>
       <span class="pick-name">{{ p.name }}{% if p.sector %} · {{ p.sector }}{% endif %}</span>
+      {% if p.confidence_label %}<span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:800; background:{{ p.confidence_color }}; color:#fff; letter-spacing:0.4px;" title="{{ p.confidence_detail }}">{{ p.confidence_label }}</span>{% endif %}
+      {% if p.trend_badge %}<span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:800; background:#fff; border:1px solid {{ p.trend_badge.color }}; color:{{ p.trend_badge.color }}; letter-spacing:0.3px;" title="{{ p.trend_badge.tooltip }}">{{ p.trend_badge.arrow }}</span>{% endif %}
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
 
@@ -182,7 +200,8 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       </div>
       <div class="key-num">
         <div class="key-num-label">Size suggestion</div>
-        <div class="key-num-value">{% if p.size_contracts %}{{ p.size_contracts }} contract{% if p.size_contracts > 1 %}s{% endif %}{% else %}n/a{% endif %}</div>
+        <div class="key-num-value">{% if p.size_contracts %}{{ p.size_contracts }} contract{% if p.size_contracts > 1 %}s{% endif %}{% elif p.size_contracts == 0 %}PASS{% else %}n/a{% endif %}</div>
+        {% if p.size_rationale %}<div style="font-size:10px; color:#6b7280; margin-top:3px; line-height:1.3;">{{ p.size_rationale }}</div>{% endif %}
       </div>
     </div>
 
@@ -525,10 +544,82 @@ def _humanize_kill_risk(category, note):
     return f"{label}: {note}"
 
 
+def _signal_agreement(pick):
+    """Confidence badge: how many independent signals agree on the direction?"""
+    direction = pick.get("_direction") or {}
+    side = direction.get("side") or "CALL"
+    conv = (pick.get("_conviction") or {}).get("components") or {}
+    agreeing = 0
+    if side == "CALL":
+        if (conv.get("insider") or 50) >= 60:
+            agreeing += 1
+        if (conv.get("pead") or 50) >= 60:
+            agreeing += 1
+        if (conv.get("buyback_guidance") or 50) >= 60:
+            agreeing += 1
+        if (conv.get("stage2") or 50) >= 60:
+            agreeing += 1
+        if (conv.get("analyst") or 50) >= 65:
+            agreeing += 1
+        if (conv.get("options_flow") or 50) >= 60:
+            agreeing += 1
+        if (conv.get("whisper") or 50) >= 60:
+            agreeing += 1
+        if (conv.get("whalewisdom") or 50) >= 60:
+            agreeing += 1
+        haiku = pick.get("haiku_synthesis") or {}
+        if haiku.get("verdict") in ("STRONG_BUY", "BUY"):
+            agreeing += 1
+    else:
+        bsig = pick.get("_bearish_signals") or {}
+        if bsig.get("stage_4_zone"):
+            agreeing += 1
+        if bsig.get("insider_selling_cluster"):
+            agreeing += 1
+        if bsig.get("dilution"):
+            agreeing += 1
+        if bsig.get("going_concern"):
+            agreeing += 1
+        if bsig.get("earnings_miss_drift"):
+            agreeing += 1
+        if bsig.get("downgrade_cluster"):
+            agreeing += 1
+        macro = pick.get("_macro_put")
+        if macro:
+            agreeing += 2
+    if agreeing >= 5:
+        return ("HIGH", "#15803d", f"{agreeing} signals agree")
+    if agreeing >= 3:
+        return ("MED", "#a16207", f"{agreeing} signals agree")
+    if agreeing >= 1:
+        return ("LOW", "#6b7280", f"{agreeing} signal{'s' if agreeing != 1 else ''} agree")
+    return ("THIN", "#b91c1c", "0 confirming signals - score driven by 1 component")
+
+
+def _trend_arrow(pick):
+    trend = pick.get("_conviction_trend") or {}
+    label = trend.get("label")
+    if not label or label == "FLAT":
+        return None
+    delta = trend.get("delta")
+    if label == "NEW":
+        return {"arrow": "NEW", "color": "#0ea5e9", "tooltip": "First appearance"}
+    if label == "FLIP":
+        prior_side = trend.get("prior_side") or ""
+        return {"arrow": "FLIP", "color": "#b91c1c", "tooltip": f"Side flipped from {prior_side}"}
+    if label == "UP":
+        return {"arrow": f"+{abs(delta):.0f}", "color": "#15803d", "tooltip": f"Conviction up {abs(delta):.0f} pts vs prior"}
+    if label == "DOWN":
+        return {"arrow": f"-{abs(delta):.0f}", "color": "#b91c1c", "tooltip": f"Conviction down {abs(delta):.0f} pts vs prior"}
+    return None
+
+
 def _build_pick(pick, rank):
     tier = pick.get("_aa_tier", "A")
     price_raw = pick.get("live_spot") or pick.get("price")
     move_pct = pick.get("today_pct_change") or pick.get("intraday_pct_change")
+    confidence_label, confidence_color, confidence_detail = _signal_agreement(pick)
+    trend_badge = _trend_arrow(pick)
 
     trade_line = _build_trade_line(pick)
     live_option = pick.get("_live_option")
@@ -746,14 +837,44 @@ def _build_pick(pick, rank):
         except Exception:
             size_contracts = None
 
+    size_rationale = None
     if size_contracts is None and live_option and contract_cost:
         survival = pick.get("_survival_score") or {}
         size_mult = survival.get("size_multiplier", 1.0)
         if overall.get("verdict") in ("AVOID", "WAIT FOR BETTER"):
             size_contracts = 0
+            size_rationale = "verdict avoid - skip"
         else:
-            base_dollars = ACCOUNT_SIZE_USD * 0.05 * (size_mult if size_mult else 1.0)
-            size_contracts = max(1, int(base_dollars / max(1, contract_cost)))
+            conv_score = (conviction or {}).get("score") if isinstance(conviction, dict) else None
+            if conv_score is None:
+                conv_score = overall.get("score") or 0
+            try:
+                conv_score = float(conv_score)
+            except (TypeError, ValueError):
+                conv_score = 0
+            if conv_score >= 80:
+                pct_account = 0.025
+                tier_label = "high conviction (80+)"
+            elif conv_score >= 70:
+                pct_account = 0.015
+                tier_label = "take grade (70-79)"
+            elif conv_score >= 60:
+                pct_account = 0.008
+                tier_label = "watch grade (60-69)"
+            elif conv_score >= 55:
+                pct_account = 0.005
+                tier_label = "weak watch (55-59)"
+            else:
+                pct_account = 0.0
+                tier_label = "below watch threshold"
+            base_dollars = ACCOUNT_SIZE_USD * pct_account * (size_mult if size_mult else 1.0)
+            if base_dollars < contract_cost * 0.6:
+                size_contracts = 0
+                size_rationale = f"pass - {tier_label} sizing ${base_dollars:.0f} below 60% of one contract (${contract_cost})"
+            else:
+                size_contracts = max(1, int(round(base_dollars / max(1, contract_cost))))
+                actual_pct = (size_contracts * contract_cost) / ACCOUNT_SIZE_USD * 100
+                size_rationale = f"{tier_label}: {pct_account*100:.1f}% target -> {size_contracts}x @ ${contract_cost} = ${size_contracts * contract_cost} ({actual_pct:.1f}% of ${int(ACCOUNT_SIZE_USD)})"
 
     why = _build_why_text(pick)
     catalyst_lines = humanize_catalyst_list(pick.get("catalysts") or [], max_items=4)
@@ -785,6 +906,11 @@ def _build_pick(pick, rank):
         "target_label": target_label,
         "contract_cost": contract_cost,
         "size_contracts": size_contracts,
+        "size_rationale": size_rationale,
+        "confidence_label": confidence_label,
+        "confidence_color": confidence_color,
+        "confidence_detail": confidence_detail,
+        "trend_badge": trend_badge,
         "why": why,
         "catalyst_lines": catalyst_lines,
         "risks": risks,
@@ -843,8 +969,10 @@ def _build_pre_earnings_row(pick):
     }
 
 
-def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=None, execution_ctx=None):
+def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=None, execution_ctx=None, drift_alerts=None):
     scan_date = scan.get("scan_date") or datetime.utcnow().date().isoformat()
+    if drift_alerts is None:
+        drift_alerts = scan.get("conviction_drift_alerts") or []
     try:
         scan_day_label = datetime.strptime(scan_date, "%Y-%m-%d").strftime("%A %d %B %Y")
     except Exception:
@@ -1040,4 +1168,5 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         skip_list=skip_list,
         filtered_out_count=filtered_out_count,
         fallback_used_count=fallback_used_count,
+        drift_alerts=drift_alerts,
     )

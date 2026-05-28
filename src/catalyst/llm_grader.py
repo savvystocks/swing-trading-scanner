@@ -124,9 +124,11 @@ def grade_candidates(candidates, max_grade=50, verbose=True):
     total_cached = 0
     errors = 0
 
-    for i, c in enumerate(sorted_candidates):
-        if verbose and i > 0 and i % 10 == 0:
-            print(f"  [LLM {i}/{len(sorted_candidates)}] cached_tokens={total_cached} errors={errors}")
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    max_workers = int(os.environ.get("LLM_GRADER_WORKERS", "8"))
+
+    def _grade_safely(c):
         try:
             grade = grade_one(
                 client,
@@ -137,16 +139,29 @@ def grade_candidates(candidates, max_grade=50, verbose=True):
                 catalysts=c.get("catalysts") or [],
                 news_headlines=(c.get("news") or {}).get("headlines") or [],
             )
-            results[c["ticker"]] = grade
+            return c["ticker"], grade, None
+        except Exception as e:
+            return c.get("ticker"), None, e
+
+    completed = 0
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_grade_safely, c): c for c in sorted_candidates}
+        for fut in as_completed(futures):
+            ticker, grade, err = fut.result()
+            completed += 1
+            if err:
+                errors += 1
+                if verbose and errors < 3:
+                    print(f"  llm grade failed for {ticker}: {type(err).__name__}: {err}")
+                continue
+            results[ticker] = grade
             total_in += grade.get("input_tokens", 0)
             total_out += grade.get("output_tokens", 0)
             total_cached += grade.get("cache_read", 0)
             if grade.get("error"):
                 errors += 1
-        except Exception as e:
-            errors += 1
-            if verbose and errors < 3:
-                print(f"  llm grade failed for {c.get('ticker')}: {type(e).__name__}: {e}")
+            if verbose and completed > 0 and completed % 10 == 0:
+                print(f"  [LLM {completed}/{len(sorted_candidates)}] cached_tokens={total_cached} errors={errors}")
 
     if verbose:
         cost_in = (total_in - total_cached) * 1.0 / 1_000_000

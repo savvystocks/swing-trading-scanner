@@ -1428,6 +1428,14 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             print(f"  conviction_journal pipeline failed (non-fatal): {type(e).__name__}: {e}")
             traceback.print_exc()
 
+    guardrail_state = None
+    try:
+        from src.catalyst.guardrails import evaluate as evaluate_guardrails
+        guardrail_state = evaluate_guardrails(verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  guardrails evaluate failed (non-fatal): {type(e).__name__}: {e}")
+
     return {
         "scan_date": scan_date_str,
         "macro": macro,
@@ -1435,6 +1443,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         "paper_stats": paper_stats,
         "conviction_drift_alerts": conviction_drift_alerts,
         "conviction_journal_stats": conviction_journal_stats,
+        "guardrail_state": guardrail_state,
         "candidates_total": len(per_ticker),
         "enriched_total": len(enriched),
         "scored_total": len(final_scored),

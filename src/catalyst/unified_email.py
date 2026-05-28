@@ -129,9 +129,30 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
 
   <h1>Today's Top Trades</h1>
   <div class="header-meta">
-    {{ scan_day_label }} · {{ picks|length }} picks selected from {{ filtered_out_count + picks|length }} candidates
-    {% if regime_label %}· Market mood: {{ regime_label }}{% endif %}
+    {{ scan_day_label }} · {{ picks|length }} pick{% if picks|length != 1 %}s{% endif %} surfaced
   </div>
+
+  <div style="background:#1a1a1a; color:#fff; padding:12px 16px; border-radius:8px; margin:14px 0; font-size:12px; line-height:1.7;">
+    <div style="display:flex; flex-wrap:wrap; gap:14px;">
+      <span><strong style="color:{% if at_glance.regime == 'STRONG_BULL' %}#86efac{% elif at_glance.regime == 'BULL' %}#a7f3d0{% elif at_glance.regime == 'MIXED' %}#fde68a{% elif at_glance.regime == 'BEAR' %}#fca5a5{% elif at_glance.regime == 'STRONG_BEAR' %}#ef4444{% else %}#d1d5db{% endif %};">{{ at_glance.regime }}</strong> regime</span>
+      <span>VIX <strong>{{ at_glance.vix }}</strong></span>
+      <span>FOMC in <strong>{{ at_glance.fomc_days }}d</strong></span>
+      <span>CPI in <strong>{{ at_glance.cpi_days }}d</strong></span>
+      <span>Account <strong>£{{ at_glance.account_gbp }}</strong>{% if at_glance.drawdown_pct > 0 %} ({{ at_glance.drawdown_pct }}% off peak){% endif %}</span>
+      <span>Open <strong>{{ at_glance.open_positions }}/{{ at_glance.max_positions }}</strong></span>
+      <span>Pace to £20k: <strong style="color:{% if at_glance.on_pace %}#86efac{% else %}#fca5a5{% endif %};">{% if at_glance.on_pace %}ON TRACK{% else %}BEHIND{% endif %}</strong> ({{ at_glance.weeks_left }}w left, need {{ at_glance.required_weekly }}%/wk)</span>
+    </div>
+  </div>
+
+  {% if review_mode %}
+  <div style="padding:16px 18px; margin:14px 0; background:#fef2f2; border:2px solid #b91c1c; border-radius:8px;">
+    <div style="font-weight:800; color:#b91c1c; font-size:15px; margin-bottom:6px;">REVIEW MODE - circuit breaker triggered</div>
+    {% for t in review_triggers %}
+    <div style="font-size:12px; color:#7f1d1d; line-height:1.5; margin-bottom:3px;">- {{ t.message }}</div>
+    {% endfor %}
+    <div style="font-size:11px; color:#7f1d1d; margin-top:8px; font-style:italic;">Picks below are still shown but require a manual thesis review before you enter. Do not auto-trade.</div>
+  </div>
+  {% endif %}
 
   {% if drift_alerts %}
   <hr class="section-rule">
@@ -167,90 +188,49 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       <span class="pick-rank">#{{ loop.index }}</span>
       <span class="pick-ticker">{{ p.ticker }}</span>
       <span class="pick-name">{{ p.name }}{% if p.sector %} · {{ p.sector }}{% endif %}</span>
-      {% if p.confidence_label %}<span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:800; background:{{ p.confidence_color }}; color:#fff; letter-spacing:0.4px;" title="{{ p.confidence_detail }}">{{ p.confidence_label }}</span>{% endif %}
-      {% if p.trend_badge %}<span style="display:inline-block; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:800; background:#fff; border:1px solid {{ p.trend_badge.color }}; color:{{ p.trend_badge.color }}; letter-spacing:0.3px;" title="{{ p.trend_badge.tooltip }}">{{ p.trend_badge.arrow }}</span>{% endif %}
+      <span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:#065f46; color:#fff;">TAKE {{ p.conviction.score }}</span>
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
 
-    <div class="overall-score-box {{ p.conviction.verdict_class }}">
-      <div class="score-circle">{{ p.conviction.score }}</div>
-      <div class="score-info">
-        <div class="score-verdict">{{ p.conviction.verdict }}</div>
-        <div class="score-plain">{{ p.conviction.plain_english }}</div>
-        {% if p.conviction.strong_signals %}
-        <div style="margin-top:6px; font-size:11px; color:#15803d; font-weight:600;">
-          💪 Strong signals: {{ p.conviction.strong_signals|join(' · ') }}
-        </div>
-        {% endif %}
-        {% if p.conviction.weak_signals %}
-        <div style="margin-top:3px; font-size:11px; color:#b91c1c;">
-          ⚠️ Weak: {{ p.conviction.weak_signals|join(' · ') }}
-        </div>
-        {% endif %}
-        <div style="margin-top:4px; font-size:10px; color:#6b7280;">
-          Overall {{ p.overall.score }}/100 · {{ p.overall.verdict }} ({{ p.overall.probability_of_profit_pct }}% PoP)
-        </div>
-      </div>
-    </div>
-
-    <div class="key-numbers">
-      <div class="key-num">
-        <div class="key-num-label">Chance of profit</div>
-        <div class="key-num-value {% if p.overall.probability_of_profit_pct >= 55 %}win{% elif p.overall.probability_of_profit_pct < 40 %}lose{% endif %}">{{ p.overall.probability_of_profit_pct }}%</div>
-      </div>
-      <div class="key-num">
-        <div class="key-num-label">{{ p.target_label }}</div>
-        <div class="key-num-value {% if p.target_return_pct is not none and p.target_return_pct >= 30 %}win{% elif p.target_return_pct is not none and p.target_return_pct < 0 %}lose{% endif %}">{% if p.target_return_pct is none %}n/a{% elif p.target_return_pct > 0 %}+{{ p.target_return_pct }}%{% else %}{{ p.target_return_pct }}%{% endif %}</div>
-      </div>
-      <div class="key-num">
-        <div class="key-num-label">Cost per contract</div>
-        <div class="key-num-value">{% if p.contract_cost %}${{ p.contract_cost }}{% else %}n/a{% endif %}</div>
-      </div>
-      <div class="key-num">
-        <div class="key-num-label">Size suggestion</div>
-        <div class="key-num-value">{% if p.size_contracts %}{{ p.size_contracts }} contract{% if p.size_contracts > 1 %}s{% endif %}{% elif p.size_contracts == 0 %}PASS{% else %}n/a{% endif %}</div>
-        {% if p.size_rationale %}<div style="font-size:10px; color:#6b7280; margin-top:3px; line-height:1.3;">{{ p.size_rationale }}</div>{% endif %}
-      </div>
-    </div>
-
-    <div class="trade-block">
-      <div class="trade-block-label">The trade</div>
-      <div class="trade-block-text">{{ p.trade_line }}</div>
-      {% if p.trade_detail %}
-      <div class="trade-block-detail">{{ p.trade_detail }}</div>
-      {% endif %}
-    </div>
-
-    {% if p.why %}
-    <div class="why-block">
-      <strong>Why this trade</strong>
-      {{ p.why }}
+    {% if p.thesis_plain %}
+    <div style="padding:12px 14px; background:#f9fafb; border-left:3px solid #374151; border-radius:5px; margin:10px 0; font-size:13px; color:#1f2937; line-height:1.55;">
+      <strong style="display:block; margin-bottom:4px; color:#374151; font-size:11px; letter-spacing:0.8px;">WHY THIS MATTERS</strong>
+      {{ p.thesis_plain }}
     </div>
     {% endif %}
 
-    {% if p.catalyst_lines %}
-    <div class="catalysts-block">
-      <strong>What's driving the move</strong>
-      <ul class="catalysts-list">
-        {% for cat in p.catalyst_lines %}
-        <li>· {{ cat }}</li>
-        {% endfor %}
-      </ul>
+    {% if p.robinhood_order %}
+    <div style="margin:14px 0; padding:16px 18px; background:#0f172a; color:#fff; border-radius:8px;">
+      <div style="font-size:11px; font-weight:800; color:#86efac; letter-spacing:1.2px; margin-bottom:8px;">ROBINHOOD ORDER</div>
+      <div style="font-size:15px; font-weight:700; line-height:1.5; font-family:Menlo, Consolas, monospace;">
+        Buy {{ p.robinhood_order.contracts }}x &nbsp;{{ p.ticker }}&nbsp; {{ p.robinhood_order.expiry_label }}&nbsp; <strong>${{ p.robinhood_order.strike }} {{ p.robinhood_order.right }}</strong>
+      </div>
+      <div style="font-size:13px; line-height:1.7; margin-top:8px; font-family:Menlo, Consolas, monospace;">
+        Limit price: <strong>${{ p.robinhood_order.limit_price }}</strong> (mid)<br>
+        Total cost: <strong>£{{ p.robinhood_order.total_cost_gbp }}</strong> ({{ p.robinhood_order.account_pct }}% of account)<br>
+        Stop if option drops below: <strong>${{ p.robinhood_order.stop_price }}</strong> (~{{ p.robinhood_order.stop_loss_pct }}% loss)<br>
+        Exit target: <strong>${{ p.robinhood_order.target_price }}</strong> (~+{{ p.robinhood_order.target_gain_pct }}%) or {{ p.robinhood_order.exit_by_date }}
+      </div>
+    </div>
+    {% elif p.size_rationale %}
+    <div style="padding:10px 14px; background:#fef2f2; border-left:3px solid #b91c1c; border-radius:5px; margin:10px 0; font-size:12px; color:#7f1d1d;">
+      <strong>No order shown:</strong> {{ p.size_rationale }}
     </div>
     {% endif %}
 
-    {% if p.risks %}
-    <div class="risks-block">
-      <strong>What could go wrong</strong>
-      {% for r in p.risks %}
-      <div>· {{ r }}</div>
-      {% endfor %}
+    {% if p.confirming %}
+    <div style="padding:10px 14px; background:#ecfdf5; border-left:3px solid #15803d; border-radius:5px; margin:10px 0; font-size:12px; color:#065f46; line-height:1.55;">
+      <strong>Confirming signals:</strong> {{ p.confirming }}
+    </div>
+    {% endif %}
+
+    {% if p.what_kills %}
+    <div style="padding:10px 14px; background:#fef2f2; border-left:3px solid #b91c1c; border-radius:5px; margin:10px 0; font-size:12px; color:#7f1d1d; line-height:1.55;">
+      <strong>What kills this trade:</strong> {{ p.what_kills }}
     </div>
     {% endif %}
   </div>
   {% endfor %}
-  {% else %}
-  <div class="empty-state"><strong>No buy-rated picks today.</strong><br>{{ filtered_out_count }} candidates were graded HOLD or SKIP by the AI forensic - nothing cleared the bar. Sit out.</div>
   {% endif %}
 
   {% if pre_earnings_lead_up or pre_earnings_imminent %}
@@ -622,12 +602,123 @@ def _trend_arrow(pick):
     return None
 
 
-def _build_pick(pick, rank):
+def _humanize_signal(key):
+    return {
+        "insider": "Insider buying cluster",
+        "pead": "Post-earnings drift setup",
+        "stage2": "Stage 2 uptrend confirmed",
+        "buyback_guidance": "Buyback / guidance raise",
+        "options_flow": "Options flow positive",
+        "analyst": "Analyst upgrades",
+        "whisper": "Earnings whisper bullish",
+        "trends": "Search interest rising",
+        "whalewisdom": "Institutional accumulation",
+        "llm_and_overall": "LLM bull thesis",
+    }.get(key, key.replace("_", " ").title())
+
+
+def _build_thesis_plain(pick):
+    """One-sentence plain-English why-this-trade. Synthesises from haiku + catalyst."""
+    haiku = pick.get("haiku_synthesis") or {}
+    bull = (haiku.get("bull_thesis") or "").strip()
+    if bull:
+        return bull
+    cats = pick.get("catalysts") or []
+    if cats:
+        labels = [c.get("label", "") for c in cats[:2] if isinstance(c, dict) and c.get("label")]
+        if labels:
+            return f"Setup driven by {' and '.join(labels)}."
+    return "Setup met multiple TAKE-grade conviction signals."
+
+
+def _build_confirming_signals(pick):
+    conv = (pick.get("_conviction") or {}).get("components") or {}
+    strong = []
+    for k in ("insider", "pead", "stage2", "buyback_guidance", "llm_and_overall"):
+        if (conv.get(k) or 0) >= 70:
+            strong.append(_humanize_signal(k))
+    return " · ".join(strong[:4]) if strong else None
+
+
+def _build_what_kills(pick):
+    haiku = pick.get("haiku_synthesis") or {}
+    kt = haiku.get("what_kills_this_trade")
+    if kt:
+        return kt
+    bear = pick.get("bear_verification") or {}
+    killer = bear.get("killer_thesis")
+    if killer and killer.strip().lower() != "no specific bear case found":
+        return killer
+    return None
+
+
+def _build_robinhood_order(pick, guardrail_state):
+    """Build the exact Robinhood-typeable order from live_option + guardrails."""
+    live_option = pick.get("_live_option")
+    if not live_option or not guardrail_state:
+        return None, "no live options chain attached - manual entry needed"
+
+    try:
+        from src.catalyst.guardrails import position_size_for_pick
+        mid = float(live_option.get("mid") or 0)
+        contracts, total_gbp, fail = position_size_for_pick(guardrail_state, mid)
+        if fail:
+            return None, fail
+
+        config = guardrail_state["config"]
+        account_gbp = guardrail_state["current_account_gbp"]
+        account_pct = round((total_gbp / account_gbp) * 100, 1) if account_gbp > 0 else 0
+
+        strike = float(live_option.get("strike") or 0)
+        expiry = live_option.get("expiration") or ""
+        right = (live_option.get("right") or "call").lower()
+        right_display = "CALL" if right == "call" else "PUT"
+
+        try:
+            exp_dt = datetime.strptime(expiry, "%Y-%m-%d")
+            expiry_label = exp_dt.strftime("%b %d").upper()
+        except Exception:
+            expiry_label = expiry
+
+        stop_pct = 40
+        stop_price = round(mid * (1 - stop_pct / 100), 2)
+        target_pct = 80
+        target_price = round(mid * (1 + target_pct / 100), 2)
+
+        try:
+            exp_dt = datetime.strptime(expiry, "%Y-%m-%d").date()
+            exit_by = (exp_dt.replace(day=max(1, exp_dt.day - 3))).strftime("%b %d")
+        except Exception:
+            exit_by = "3 days before expiry"
+
+        return {
+            "contracts": contracts,
+            "strike": f"{strike:.2f}".rstrip("0").rstrip(".") if strike < 1000 else f"{strike:.0f}",
+            "expiry_label": expiry_label,
+            "right": right_display,
+            "limit_price": f"{mid:.2f}",
+            "total_cost_gbp": int(round(total_gbp)),
+            "account_pct": account_pct,
+            "stop_price": f"{stop_price:.2f}",
+            "stop_loss_pct": stop_pct,
+            "target_price": f"{target_price:.2f}",
+            "target_gain_pct": target_pct,
+            "exit_by_date": exit_by,
+        }, None
+    except Exception as e:
+        return None, f"order build failed: {type(e).__name__}: {e}"
+
+
+def _build_pick(pick, rank, guardrail_state=None):
     tier = pick.get("_aa_tier", "A")
     price_raw = pick.get("live_spot") or pick.get("price")
     move_pct = pick.get("today_pct_change") or pick.get("intraday_pct_change")
     confidence_label, confidence_color, confidence_detail = _signal_agreement(pick)
     trend_badge = _trend_arrow(pick)
+    thesis_plain = _build_thesis_plain(pick)
+    confirming = _build_confirming_signals(pick)
+    what_kills = _build_what_kills(pick)
+    robinhood_order, ro_fail_reason = _build_robinhood_order(pick, guardrail_state)
 
     trade_line = _build_trade_line(pick)
     live_option = pick.get("_live_option")
@@ -914,7 +1005,7 @@ def _build_pick(pick, rank):
         "target_label": target_label,
         "contract_cost": contract_cost,
         "size_contracts": size_contracts,
-        "size_rationale": size_rationale,
+        "size_rationale": size_rationale or ro_fail_reason,
         "confidence_label": confidence_label,
         "confidence_color": confidence_color,
         "confidence_detail": confidence_detail,
@@ -922,6 +1013,10 @@ def _build_pick(pick, rank):
         "why": why,
         "catalyst_lines": catalyst_lines,
         "risks": risks,
+        "thesis_plain": thesis_plain,
+        "confirming": confirming,
+        "what_kills": what_kills,
+        "robinhood_order": robinhood_order,
     }
 
 
@@ -977,10 +1072,18 @@ def _build_pre_earnings_row(pick):
     }
 
 
-def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=None, execution_ctx=None, drift_alerts=None):
+def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=None, execution_ctx=None, drift_alerts=None, guardrail_state=None):
     scan_date = scan.get("scan_date") or datetime.utcnow().date().isoformat()
     if drift_alerts is None:
         drift_alerts = scan.get("conviction_drift_alerts") or []
+    if guardrail_state is None:
+        guardrail_state = scan.get("guardrail_state")
+    if guardrail_state is None:
+        try:
+            from src.catalyst.guardrails import evaluate as evaluate_guardrails
+            guardrail_state = evaluate_guardrails(verbose=False)
+        except Exception:
+            guardrail_state = None
     try:
         scan_day_label = datetime.strptime(scan_date, "%Y-%m-%d").strftime("%A %d %B %Y")
     except Exception:
@@ -1082,7 +1185,7 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
             break
 
     top_picks = picked
-    picks_out = [_build_pick(p, i + 1) for i, p in enumerate(top_picks)]
+    picks_out = [_build_pick(p, i + 1, guardrail_state=guardrail_state) for i, p in enumerate(top_picks)]
 
     filtered_out_count = len(all_tier_picks) - len(buy_picks)
     fallback_used_count = 0
@@ -1144,6 +1247,37 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
     else:
         win_rate_display = f"{wr_pct}% on {wr_n} paper trades"
 
+    macro_block = (scan.get("macro") or {})
+    macro_regime_block = macro_block.get("macro_regime") or {}
+    macro_regime_label = macro_regime_block.get("regime") or regime_label
+    vix_val = (macro_block.get("vix") or macro_regime_block.get("components", {}).get("vix")) if macro_block else None
+    try:
+        vix_display = f"{float(vix_val):.1f}" if vix_val is not None else "n/a"
+    except Exception:
+        vix_display = "n/a"
+
+    cal = macro_block.get("calendar") or {}
+    fomc_days = cal.get("days_to_fomc") if cal else None
+    cpi_days = cal.get("days_to_cpi") if cal else None
+
+    gs = guardrail_state or {}
+    pace = gs.get("pace") or {}
+    at_glance = {
+        "regime": macro_regime_label,
+        "vix": vix_display,
+        "fomc_days": fomc_days if fomc_days is not None else "?",
+        "cpi_days": cpi_days if cpi_days is not None else "?",
+        "account_gbp": int(round(gs.get("current_account_gbp", 4000))),
+        "drawdown_pct": gs.get("drawdown_pct", 0),
+        "open_positions": gs.get("open_positions", 0),
+        "max_positions": gs.get("max_positions", 2),
+        "on_pace": pace.get("on_pace", True),
+        "weeks_left": pace.get("weeks_left", "?"),
+        "required_weekly": pace.get("required_weekly_growth_pct", "?"),
+    }
+    review_mode = gs.get("mode") == "REVIEW_MODE"
+    review_triggers = [t for t in (gs.get("triggers") or []) if t.get("severity") == "HIGH"]
+
     template = Template(EMAIL_TEMPLATE)
     return template.render(
         scan_date=scan_date,
@@ -1154,8 +1288,8 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         regime_label=regime_label,
         position_mult=position_mult,
         win_rate_display=win_rate_display,
-        open_slots=portfolio.get("n_open") if portfolio.get("n_open") is not None else 0,
-        max_slots=portfolio.get("max_concurrent") if portfolio.get("max_concurrent") is not None else 2,
+        open_slots=at_glance["open_positions"],
+        max_slots=at_glance["max_positions"],
         picks=picks_out,
         sit_out_today=sit_out_today,
         pre_earnings_lead_up=pre_earnings_lead_up,
@@ -1165,4 +1299,7 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         filtered_out_count=filtered_out_count,
         fallback_used_count=fallback_used_count,
         drift_alerts=drift_alerts,
+        at_glance=at_glance,
+        review_mode=review_mode,
+        review_triggers=review_triggers,
     )

@@ -46,10 +46,18 @@ jobs:
           CATALYST_LLM_MAX: ${{ inputs.llm_max }}
           SKIP_EMAIL: ${{ github.event_name == 'schedule' && '1' || '' }}
           ACCOUNT_SIZE_USD: ${{ secrets.ACCOUNT_SIZE_USD }}
-          POSITION_SIZE_PCT: ${{ secrets.POSITION_SIZE_PCT }}
+          POSITION_SIZE_PCT: "25"
           STOP_LOSS_PCT: ${{ secrets.STOP_LOSS_PCT }}
           MAX_CONCURRENT_LOTTERY: ${{ secrets.MAX_CONCURRENT_LOTTERY }}
           SAM_GOV_API_KEY: ${{ secrets.SAM_GOV_API_KEY }}
+          ACCOUNT_SIZE_GBP: "4000"
+          MAX_CONCURRENT: "2"
+          MAX_DRAWDOWN_PCT: "20"
+          MAX_LOSS_STREAK: "3"
+          GOAL_TARGET_GBP: "20000"
+          GOAL_DEADLINE_ISO: "2026-11-29"
+          BARCHART_API_KEY: ${{ secrets.BARCHART_API_KEY }}
+          UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
         run: python scripts/run_daily_scan.py
       - name: Commit tracker data + scan JSON for email job
         if: always()

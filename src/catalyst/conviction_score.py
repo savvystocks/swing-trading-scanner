@@ -193,31 +193,21 @@ def _trends_component(pick):
 
 
 WEIGHTS = {
-    "llm_and_overall": 0.25,
-    "insider": 0.13,
-    "pead": 0.12,
+    "llm_and_overall": 0.35,
+    "stage2": 0.20,
+    "insider": 0.20,
+    "pead": 0.15,
     "buyback_guidance": 0.10,
-    "options_flow": 0.08,
-    "stage2": 0.08,
-    "analyst": 0.06,
-    "whisper": 0.06,
-    "whalewisdom": 0.06,
-    "trends": 0.06,
 }
 
 
 def compute_conviction_score(pick):
     components = {
         "llm_and_overall": _llm_component(pick),
+        "stage2": _stage2_component(pick),
         "insider": _insider_component(pick),
         "pead": _pead_component(pick),
         "buyback_guidance": _buyback_guidance_component(pick),
-        "options_flow": _options_flow_component(pick),
-        "stage2": _stage2_component(pick),
-        "analyst": _analyst_component(pick),
-        "whisper": _whisper_component(pick),
-        "whalewisdom": _whalewisdom_component(pick),
-        "trends": _trends_component(pick),
     }
     weighted = sum(components[k] * WEIGHTS[k] for k in WEIGHTS)
 

@@ -1428,6 +1428,20 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             print(f"  conviction_journal pipeline failed (non-fatal): {type(e).__name__}: {e}")
             traceback.print_exc()
 
+    try:
+        from src.catalyst.barchart_premier import annotate_picks_with_barchart
+        annotate_picks_with_barchart(ranked_picks[:20], verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  barchart annotate failed (non-fatal): {type(e).__name__}: {e}")
+
+    try:
+        from src.catalyst.unusual_whales import annotate_picks_with_flow
+        annotate_picks_with_flow(ranked_picks[:20], verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  unusual_whales annotate failed (non-fatal): {type(e).__name__}: {e}")
+
     guardrail_state = None
     try:
         from src.catalyst.guardrails import evaluate as evaluate_guardrails

@@ -200,8 +200,8 @@ def main():
         review_mode = gs.get("mode") == "REVIEW_MODE"
         review_prefix = "[REVIEW MODE] " if review_mode else ""
         drift_alerts = scan.get("conviction_drift_alerts") or []
-        high_alerts = sum(1 for a in drift_alerts if a.get("severity") == "HIGH")
-        alert_prefix = f"[{high_alerts} EXIT ALERT{'S' if high_alerts != 1 else ''}] " if high_alerts else ""
+        live_high_alerts = sum(1 for a in drift_alerts if a.get("severity") == "HIGH" and a.get("is_live"))
+        alert_prefix = f"[{live_high_alerts} EXIT ALERT{'S' if live_high_alerts != 1 else ''}] " if live_high_alerts else ""
         macro_root = scan.get("macro") or {}
         macro_regime_block = macro_root.get("macro_regime") or {}
         regime = macro_regime_block.get("regime") or macro_root.get("regime") or "UNKNOWN"

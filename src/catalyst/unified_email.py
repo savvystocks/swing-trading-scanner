@@ -1076,6 +1076,7 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
     scan_date = scan.get("scan_date") or datetime.utcnow().date().isoformat()
     if drift_alerts is None:
         drift_alerts = scan.get("conviction_drift_alerts") or []
+    drift_alerts = [a for a in drift_alerts if a.get("is_live")]
     if guardrail_state is None:
         guardrail_state = scan.get("guardrail_state")
     if guardrail_state is None:

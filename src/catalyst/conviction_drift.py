@@ -81,6 +81,14 @@ def _index_today_picks(scan):
     return out
 
 
+def _load_live_tickers():
+    try:
+        from src.catalyst.guardrails import get_live_positions
+        return {p.get("ticker") for p in get_live_positions() if p.get("ticker")}
+    except Exception:
+        return set()
+
+
 def check_drift(scan, verbose=False):
     scan_date = scan.get("scan_date")
     if not scan_date:
@@ -92,6 +100,7 @@ def check_drift(scan, verbose=False):
             print(f"  conviction_drift: no open positions to check")
         return []
 
+    live_tickers = _load_live_tickers()
     today_by_ticker = _index_today_picks(scan)
     seen = _load_seen()
     alerts = []
@@ -131,6 +140,7 @@ def check_drift(scan, verbose=False):
                 "score_drop_pts": None,
                 "side_flipped": False,
                 "today_side": None,
+                "is_live": ticker in live_tickers,
                 "message": f"{ticker} no longer scoring A-grade for {age_days} days (entry score {entry_score}). Re-evaluate or close.",
             })
             update_position_drift(scan_date, ticker, 0, 0, "GONE")
@@ -193,6 +203,7 @@ def check_drift(scan, verbose=False):
             "side_flipped": side_flipped,
             "entry_price": pos.get("entry_price"),
             "current_price": today.get("price"),
+            "is_live": ticker in live_tickers,
             "message": message,
         })
 

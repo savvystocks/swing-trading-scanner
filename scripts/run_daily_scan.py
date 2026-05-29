@@ -97,8 +97,10 @@ def main():
         drift_alerts = scan.get("conviction_drift_alerts") or []
         high_alerts = sum(1 for a in drift_alerts if a.get("severity") == "HIGH")
         alert_prefix = f"[{high_alerts} EXIT ALERT{'S' if high_alerts != 1 else ''}] " if high_alerts else ""
-        macro_block = (scan.get("macro") or {}).get("macro_regime") or {}
-        regime = macro_block.get("regime") or "UNKNOWN"
+        macro_root = scan.get("macro") or {}
+        macro_regime_block = macro_root.get("macro_regime") or {}
+        regime = macro_regime_block.get("regime") or macro_root.get("regime") or "UNKNOWN"
+        regime = str(regime).upper()
         n_take = len([p for tier in ("A++","A+","A") for p in (aa_results.get(tier) or []) if ((p.get("_action_signal") or {}).get("action") == "TAKE")])
         take_label = "SIT OUT" if n_take == 0 else f"{n_take} TAKE"
         subject = f"{review_prefix}{alert_prefix}{regime} — {take_label} — {scan['scan_date']}"

@@ -1249,16 +1249,25 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
 
     macro_block = (scan.get("macro") or {})
     macro_regime_block = macro_block.get("macro_regime") or {}
-    macro_regime_label = macro_regime_block.get("regime") or regime_label
+    macro_regime_label = (macro_regime_block.get("regime") or macro_block.get("regime") or regime_label or "UNKNOWN")
+    macro_regime_label = str(macro_regime_label).upper()
     vix_val = (macro_block.get("vix") or macro_regime_block.get("components", {}).get("vix")) if macro_block else None
     try:
         vix_display = f"{float(vix_val):.1f}" if vix_val is not None else "n/a"
     except Exception:
         vix_display = "n/a"
 
-    cal = macro_block.get("calendar") or {}
-    fomc_days = cal.get("days_to_fomc") if cal else None
-    cpi_days = cal.get("days_to_cpi") if cal else None
+    fomc_days = macro_block.get("days_to_next_fomc")
+    cpi_days = macro_block.get("days_to_next_cpi")
+    if fomc_days is None or cpi_days is None:
+        try:
+            from src.catalyst.calendar_signals import next_fomc_days, next_cpi_days
+            if fomc_days is None:
+                fomc_days = next_fomc_days()
+            if cpi_days is None:
+                cpi_days = next_cpi_days()
+        except Exception:
+            pass
 
     gs = guardrail_state or {}
     pace = gs.get("pace") or {}

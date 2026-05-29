@@ -212,6 +212,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       <span class="pick-name">{{ p.name }}{% if p.sector %} · {{ p.sector }}{% endif %}</span>
       <span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:#065f46; color:#fff;">TAKE {{ p.conviction.score }}</span>
       {% if p.forward_catalyst_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.forward_catalyst_badge.color }}; color:#fff;" title="{{ p.forward_catalyst_badge.date }}">{{ p.forward_catalyst_badge.label }}</span>{% endif %}
+      {% if p.vcp_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.vcp_badge.color }}; color:#fff;">{{ p.vcp_badge.label }}</span>{% endif %}
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
 
@@ -753,6 +754,14 @@ def _build_pick(pick, rank, guardrail_state=None):
         elif days < 2:
             forward_catalyst_badge = {"label": f"{fc['type'].upper().replace('_', ' ')} IN {days}d - IV CRUSH RISK", "color": "#b91c1c", "date": fc.get("date")}
 
+    vcp = pick.get("_vcp_setup") or {}
+    vcp_badge = None
+    if vcp.get("badge_label"):
+        vcp_badge = {
+            "label": vcp["badge_label"],
+            "color": "#7c2d12" if vcp.get("verdict") == "PRIME_BREAKOUT" else "#9a3412",
+        }
+
     trade_line = _build_trade_line(pick)
     live_option = pick.get("_live_option")
     outcomes = []
@@ -1051,6 +1060,7 @@ def _build_pick(pick, rank, guardrail_state=None):
         "what_kills": what_kills,
         "robinhood_order": robinhood_order,
         "forward_catalyst_badge": forward_catalyst_badge,
+        "vcp_badge": vcp_badge,
     }
 
 

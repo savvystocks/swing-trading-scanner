@@ -193,12 +193,13 @@ def _trends_component(pick):
 
 
 WEIGHTS = {
-    "llm_and_overall": 0.28,
-    "stage2": 0.17,
-    "catalyst_window": 0.20,
-    "insider": 0.15,
-    "pead": 0.12,
-    "buyback_guidance": 0.08,
+    "llm_and_overall": 0.24,
+    "catalyst_window": 0.18,
+    "vcp_setup": 0.15,
+    "stage2": 0.14,
+    "insider": 0.13,
+    "pead": 0.10,
+    "buyback_guidance": 0.06,
 }
 
 
@@ -210,11 +211,20 @@ def _catalyst_window_component(pick):
     return score
 
 
+def _vcp_setup_component(pick):
+    vcp = pick.get("_vcp_setup") or {}
+    score = vcp.get("vcp_score")
+    if score is None:
+        return 50
+    return score
+
+
 def compute_conviction_score(pick):
     components = {
         "llm_and_overall": _llm_component(pick),
-        "stage2": _stage2_component(pick),
         "catalyst_window": _catalyst_window_component(pick),
+        "vcp_setup": _vcp_setup_component(pick),
+        "stage2": _stage2_component(pick),
         "insider": _insider_component(pick),
         "pead": _pead_component(pick),
         "buyback_guidance": _buyback_guidance_component(pick),

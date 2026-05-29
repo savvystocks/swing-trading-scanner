@@ -156,29 +156,38 @@ def check_drift(scan, verbose=False):
         side_flipped = today_side != entry_side
         score_drop = entry_score - today_score
 
-        if side_flipped and SIDE_FLIP_ALWAYS_ALERT:
+        bs = today.get("bearish_signals") or {}
+        has_event_bear = bool(
+            bs.get("insider_selling_cluster")
+            or bs.get("dilution")
+            or bs.get("going_concern")
+            or bs.get("downgrade_cluster")
+            or bs.get("earnings_miss")
+            or bs.get("restatement")
+            or bs.get("executive_departure")
+        )
+
+        if side_flipped and SIDE_FLIP_ALWAYS_ALERT and has_event_bear:
             severity = "HIGH"
-            alert_type = "SIDE_FLIP"
+            alert_type = "SIDE_FLIP_ON_EVENT"
             message = (
-                f"{ticker} thesis FLIPPED: opened as {entry_side} on {entry_scan_date} "
-                f"(score {entry_score}), now scoring {today_side} ({today_score}). "
-                f"Close the position - direction signal reversed."
+                f"{ticker} thesis FLIPPED with NEW bearish event: opened as {entry_side} on "
+                f"{entry_scan_date} (score {entry_score}), now {today_side} ({today_score}). "
+                f"Specific bearish catalyst now in data - close the position."
             )
-        elif score_drop >= DRIFT_HARD_PCT_DROP:
+        elif score_drop >= DRIFT_HARD_PCT_DROP and has_event_bear:
             severity = "HIGH"
-            alert_type = "CONVICTION_COLLAPSE"
+            alert_type = "CONVICTION_COLLAPSE_ON_EVENT"
             message = (
-                f"{ticker} conviction COLLAPSED: opened at {entry_score} on {entry_scan_date}, "
-                f"now {today_score} (drop {score_drop} pts). Close or trim aggressively."
+                f"{ticker} conviction collapsed from {entry_score} to {today_score} AND "
+                f"new bearish catalyst is in the data. Close or trim aggressively."
             )
-        elif score_drop >= DRIFT_WARN_PCT_DROP:
+        elif score_drop >= DRIFT_WARN_PCT_DROP and has_event_bear:
             severity = "MED"
-            alert_type = "CONVICTION_DECAY"
-            bearish_count = sum(1 for v in (today.get("bearish_signals") or {}).values() if v)
+            alert_type = "CONVICTION_DECAY_ON_EVENT"
             message = (
-                f"{ticker} conviction decaying: opened at {entry_score} on {entry_scan_date}, "
-                f"now {today_score} (drop {score_drop} pts). "
-                f"{bearish_count} bearish signals firing. Review thesis."
+                f"{ticker} conviction decaying from {entry_score} to {today_score} with new "
+                f"bearish event. Review thesis."
             )
         else:
             continue

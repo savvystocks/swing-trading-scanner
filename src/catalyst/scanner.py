@@ -1344,6 +1344,29 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             if verbose:
                 print(f"  catalyst_performance failed (non-fatal): {type(e).__name__}: {e}")
 
+        try:
+            from src.catalyst.position_intelligence import confirm_new_pick
+            from src.catalyst.action_signal import compute_action
+            confirmed = 0
+            blocked = 0
+            for p in ranked_picks[:15]:
+                action = (p.get("_action_signal") or compute_action(p)).get("action")
+                if action != "TAKE":
+                    continue
+                passes, _ = confirm_new_pick(p, verbose=False)
+                if not passes:
+                    p["_action_signal"] = {"action": "SKIP", "badge": "SKIP",
+                                           "reason_code": "entry_intel_blocked",
+                                           "why": "Failed 7-factor entry check (need 3+ pass, max 1 fail)"}
+                    blocked += 1
+                else:
+                    confirmed += 1
+            if verbose:
+                print(f"  entry_intelligence: {confirmed} TAKE picks confirmed, {blocked} downgraded to SKIP")
+        except Exception as e:
+            if verbose:
+                print(f"  entry_intelligence failed (non-fatal): {type(e).__name__}: {e}")
+
         all_picks_flat = []
         for bracket in ("micro", "small", "mid"):
             all_picks_flat.extend(aa_picks.get(bracket, []))
@@ -1450,6 +1473,14 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         if verbose:
             print(f"  guardrails evaluate failed (non-fatal): {type(e).__name__}: {e}")
 
+    position_intel = []
+    try:
+        from src.catalyst.position_intelligence import analyze_all_live_positions
+        position_intel = analyze_all_live_positions(verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  position_intelligence failed (non-fatal): {type(e).__name__}: {e}")
+
     return {
         "scan_date": scan_date_str,
         "macro": macro,
@@ -1458,6 +1489,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         "conviction_drift_alerts": conviction_drift_alerts,
         "conviction_journal_stats": conviction_journal_stats,
         "guardrail_state": guardrail_state,
+        "position_intelligence": position_intel,
         "candidates_total": len(per_ticker),
         "enriched_total": len(enriched),
         "scored_total": len(final_scored),

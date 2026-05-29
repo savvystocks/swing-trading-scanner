@@ -170,6 +170,28 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   {% endfor %}
   {% endif %}
 
+  {% if position_intel %}
+  <hr class="section-rule">
+  <div class="section-label">POSITION INTELLIGENCE · Your live trades — daily HOLD/TRIM/SELL verdict</div>
+  {% for pos in position_intel %}
+  <div style="padding:14px 16px; margin:10px 0; background:{% if pos.verdict == 'SELL' %}#fef2f2{% elif pos.verdict == 'TRIM' %}#fefce8{% else %}#ecfdf5{% endif %}; border-left:4px solid {% if pos.verdict == 'SELL' %}#b91c1c{% elif pos.verdict == 'TRIM' %}#a16207{% else %}#15803d{% endif %}; border-radius:6px;">
+    <div style="font-weight:800; font-size:14px; color:{% if pos.verdict == 'SELL' %}#b91c1c{% elif pos.verdict == 'TRIM' %}#a16207{% else %}#15803d{% endif %};">
+      {{ pos.ticker }} — {{ pos.verdict }} ({{ pos.confidence }}) — {{ pos.pass_count }}/7 factors confirm
+    </div>
+    <div style="font-size:12px; color:#374151; margin-top:6px; line-height:1.5;">{{ pos.plain_english }}</div>
+    <div style="font-size:11px; color:#4b5563; margin-top:8px; line-height:1.6;">
+      {% for fk, fv in pos.factors.items() %}
+      <div>
+        <span style="display:inline-block; width:14px; color:{% if fv.pass == true %}#15803d{% elif fv.pass == false %}#b91c1c{% else %}#6b7280{% endif %}; font-weight:800;">{% if fv.pass == true %}+{% elif fv.pass == false %}-{% else %}?{% endif %}</span>
+        <span style="font-weight:600; text-transform:capitalize;">{{ fk|replace('_', ' ') }}:</span>
+        {{ fv.detail }}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
   {% if sit_out_today %}
   <hr class="section-rule">
   <div style="padding:24px 20px; background:#f9fafb; border:2px solid #6b7280; border-radius:10px; text-align:center; margin:18px 0;">
@@ -1072,7 +1094,7 @@ def _build_pre_earnings_row(pick):
     }
 
 
-def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=None, execution_ctx=None, drift_alerts=None, guardrail_state=None):
+def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=None, execution_ctx=None, drift_alerts=None, guardrail_state=None, position_intel=None):
     scan_date = scan.get("scan_date") or datetime.utcnow().date().isoformat()
     if drift_alerts is None:
         drift_alerts = scan.get("conviction_drift_alerts") or []
@@ -1085,6 +1107,14 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
             guardrail_state = evaluate_guardrails(verbose=False)
         except Exception:
             guardrail_state = None
+    if position_intel is None:
+        position_intel = scan.get("position_intelligence") or []
+    if not position_intel:
+        try:
+            from src.catalyst.position_intelligence import analyze_all_live_positions
+            position_intel = analyze_all_live_positions(verbose=False)
+        except Exception:
+            position_intel = []
     try:
         scan_day_label = datetime.strptime(scan_date, "%Y-%m-%d").strftime("%A %d %B %Y")
     except Exception:
@@ -1312,4 +1342,5 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         at_glance=at_glance,
         review_mode=review_mode,
         review_triggers=review_triggers,
+        position_intel=position_intel,
     )

@@ -211,6 +211,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       <span class="pick-ticker">{{ p.ticker }}</span>
       <span class="pick-name">{{ p.name }}{% if p.sector %} · {{ p.sector }}{% endif %}</span>
       <span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:#065f46; color:#fff;">TAKE {{ p.conviction.score }}</span>
+      {% if p.forward_catalyst_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.forward_catalyst_badge.color }}; color:#fff;" title="{{ p.forward_catalyst_badge.date }}">{{ p.forward_catalyst_badge.label }}</span>{% endif %}
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
 
@@ -741,6 +742,16 @@ def _build_pick(pick, rank, guardrail_state=None):
     confirming = _build_confirming_signals(pick)
     what_kills = _build_what_kills(pick)
     robinhood_order, ro_fail_reason = _build_robinhood_order(pick, guardrail_state)
+    fc = pick.get("_forward_catalyst")
+    forward_catalyst_badge = None
+    if fc and fc.get("days_until") is not None:
+        days = fc["days_until"]
+        if days <= 21 and days >= 2:
+            label = f"{fc['type'].upper().replace('_', ' ')} IN {days}d"
+            color = "#15803d" if 5 <= days <= 21 else "#a16207"
+            forward_catalyst_badge = {"label": label, "color": color, "date": fc.get("date")}
+        elif days < 2:
+            forward_catalyst_badge = {"label": f"{fc['type'].upper().replace('_', ' ')} IN {days}d - IV CRUSH RISK", "color": "#b91c1c", "date": fc.get("date")}
 
     trade_line = _build_trade_line(pick)
     live_option = pick.get("_live_option")
@@ -1039,6 +1050,7 @@ def _build_pick(pick, rank, guardrail_state=None):
         "confirming": confirming,
         "what_kills": what_kills,
         "robinhood_order": robinhood_order,
+        "forward_catalyst_badge": forward_catalyst_badge,
     }
 
 

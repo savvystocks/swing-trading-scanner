@@ -3,6 +3,188 @@ from datetime import datetime, timedelta
 from src.catalyst.calendar import upcoming_earnings
 
 
+# === Module 1: Per-ticker forward catalyst lookup ===
+
+def get_next_earnings_date(ticker, fundamentals=None):
+    """Return next earnings date (datetime.date) for a ticker, or None."""
+    try:
+        if fundamentals is None:
+            from src.eodhd import EODHDClient
+            client = EODHDClient()
+            fundamentals = client.fundamentals(f"{ticker}.US" if "." not in ticker else ticker)
+    except Exception:
+        return None
+    if not fundamentals:
+        return None
+    history = ((fundamentals.get("Earnings") or {}).get("History")) or {}
+    today = datetime.utcnow().date()
+    soonest = None
+    for _k, v in history.items():
+        rd = v.get("reportDate")
+        if not rd:
+            continue
+        try:
+            d = datetime.strptime(rd, "%Y-%m-%d").date()
+        except Exception:
+            continue
+        if d > today and (soonest is None or d < soonest):
+            soonest = d
+    return soonest
+
+
+_FDA_CACHE = {"data": None, "fetched_at": None}
+
+
+def _fetch_fda_pdufa_calendar():
+    """Scrape biopharmcatalyst.com PDUFA calendar (free, no auth).
+
+    Returns list of {ticker, date, drug, indication}. Cached 6 hours."""
+    if _FDA_CACHE["fetched_at"]:
+        age = (datetime.utcnow() - _FDA_CACHE["fetched_at"]).total_seconds()
+        if age < 21600:
+            return _FDA_CACHE["data"] or []
+    try:
+        import requests
+        from bs4 import BeautifulSoup
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; SwingScanner/1.0)"}
+        r = requests.get("https://www.biopharmcatalyst.com/calendars/fda-calendar", headers=headers, timeout=15)
+        if r.status_code != 200:
+            return _FDA_CACHE["data"] or []
+        soup = BeautifulSoup(r.text, "html.parser")
+        rows = []
+        for tr in soup.select("table.events-table tr, table tbody tr"):
+            cells = [c.get_text(strip=True) for c in tr.select("td")]
+            if len(cells) < 3:
+                continue
+            ticker_match = None
+            for c in cells:
+                if c.isupper() and 2 <= len(c) <= 5 and c.isalpha():
+                    ticker_match = c
+                    break
+            date_str = None
+            for c in cells:
+                try:
+                    d = datetime.strptime(c, "%m/%d/%Y").date()
+                    date_str = d.isoformat()
+                    break
+                except Exception:
+                    continue
+            if ticker_match and date_str:
+                rows.append({
+                    "ticker": ticker_match,
+                    "date": date_str,
+                    "details": " | ".join(cells[:4]),
+                })
+        _FDA_CACHE["data"] = rows
+        _FDA_CACHE["fetched_at"] = datetime.utcnow()
+        return rows
+    except Exception:
+        return _FDA_CACHE["data"] or []
+
+
+def get_next_fda_event(ticker):
+    today = datetime.utcnow().date()
+    cal = _fetch_fda_pdufa_calendar()
+    soonest = None
+    soonest_details = None
+    for row in cal:
+        if row["ticker"] != ticker:
+            continue
+        try:
+            d = datetime.strptime(row["date"], "%Y-%m-%d").date()
+        except Exception:
+            continue
+        if d > today and (soonest is None or d < soonest):
+            soonest = d
+            soonest_details = row.get("details")
+    if soonest:
+        return {"date": soonest, "type": "fda_pdufa", "details": soonest_details}
+    return None
+
+
+def get_next_catalyst_for_ticker(ticker, fundamentals=None, sector=None):
+    """Find the nearest dated catalyst across earnings/FDA/macro for this ticker."""
+    candidates = []
+    earn = get_next_earnings_date(ticker, fundamentals)
+    if earn:
+        candidates.append({"date": earn, "type": "earnings", "details": "Quarterly earnings"})
+
+    if sector and any(s in (sector or "").lower() for s in ("biotech", "pharma", "drug")):
+        fda = get_next_fda_event(ticker)
+        if fda:
+            candidates.append(fda)
+
+    if not candidates:
+        return None
+
+    today = datetime.utcnow().date()
+    candidates.sort(key=lambda c: c["date"])
+    chosen = candidates[0]
+    days = (chosen["date"] - today).days
+    return {
+        "type": chosen["type"],
+        "date": chosen["date"].isoformat(),
+        "days_until": days,
+        "details": chosen.get("details", ""),
+        "all_candidates": [
+            {"type": c["type"], "date": c["date"].isoformat(), "days_until": (c["date"] - today).days}
+            for c in candidates
+        ],
+    }
+
+
+def catalyst_window_score(days_until):
+    """Convert days-to-next-catalyst into a 0-100 conviction component.
+
+    Sweet spot 5-21 days (IV expansion zone, time to play out):
+      5-21 days   -> 75-90 (best - catalyst run-up trade)
+      22-45 days  -> 55-70 (good - thesis anchor)
+      <5 days     -> 30-40 (IV crush risk, theta cliff)
+      >45 days    -> 40-50 (too far to drive a 1-2 week move)
+      None        -> 50 (neutral)
+    """
+    if days_until is None:
+        return 50
+    if 5 <= days_until <= 21:
+        if 10 <= days_until <= 16:
+            return 90
+        return 75
+    if 22 <= days_until <= 45:
+        return 65
+    if days_until < 5:
+        if days_until <= 2:
+            return 30
+        return 40
+    return 45
+
+
+def enrich_picks_with_forward_catalyst(picks, max_picks=30, verbose=False):
+    """Attach _forward_catalyst dict to top picks. Free data only."""
+    if not picks:
+        return picks
+    enriched = 0
+    catalyst_within_window = 0
+    for p in picks[:max_picks]:
+        ticker = p.get("ticker")
+        if not ticker or "." in ticker:
+            continue
+        sector = p.get("sector", "")
+        fund = p.get("_fundamentals") or p.get("_raw_fundamentals")
+        try:
+            cat = get_next_catalyst_for_ticker(ticker, fundamentals=fund, sector=sector)
+        except Exception:
+            cat = None
+        if cat:
+            cat["window_score"] = catalyst_window_score(cat["days_until"])
+            p["_forward_catalyst"] = cat
+            enriched += 1
+            if 5 <= cat["days_until"] <= 21:
+                catalyst_within_window += 1
+    if verbose:
+        print(f"  forward_calendar: enriched {enriched}/{min(max_picks, len(picks))} picks, {catalyst_within_window} in 5-21d sweet spot")
+    return picks
+
+
 FOMC_DATES_2026 = [
     "2026-01-28", "2026-03-18", "2026-04-29", "2026-06-17",
     "2026-07-29", "2026-09-16", "2026-11-04", "2026-12-16",

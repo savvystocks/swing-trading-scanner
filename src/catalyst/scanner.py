@@ -1329,6 +1329,13 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  vcp_detector enrichment failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.iv_window import enrich_picks_with_iv_window
+            enrich_picks_with_iv_window(ranked_picks, max_picks=30, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  iv_window enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.conviction_score import apply_conviction_scores as _apply_final_conviction
             _apply_final_conviction(ranked_picks, verbose=verbose, max_picks=60)
             from src.catalyst.bear_conviction_score import apply_bear_conviction as _apply_final_bear
@@ -1478,6 +1485,13 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
     except Exception as e:
         if verbose:
             print(f"  unusual_whales annotate failed (non-fatal): {type(e).__name__}: {e}")
+
+    try:
+        from src.catalyst.insiderfinance import annotate_picks_with_insiderfinance
+        annotate_picks_with_insiderfinance(ranked_picks[:20], verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  insiderfinance annotate failed (non-fatal): {type(e).__name__}: {e}")
 
     guardrail_state = None
     try:

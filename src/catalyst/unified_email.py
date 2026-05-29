@@ -213,6 +213,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       <span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:#065f46; color:#fff;">TAKE {{ p.conviction.score }}</span>
       {% if p.forward_catalyst_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.forward_catalyst_badge.color }}; color:#fff;" title="{{ p.forward_catalyst_badge.date }}">{{ p.forward_catalyst_badge.label }}</span>{% endif %}
       {% if p.vcp_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.vcp_badge.color }}; color:#fff;">{{ p.vcp_badge.label }}</span>{% endif %}
+      {% if p.iv_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.iv_badge.color }}; color:#fff;">{{ p.iv_badge.label }}</span>{% endif %}
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
 
@@ -762,6 +763,14 @@ def _build_pick(pick, rank, guardrail_state=None):
             "color": "#7c2d12" if vcp.get("verdict") == "PRIME_BREAKOUT" else "#9a3412",
         }
 
+    ivw = pick.get("_iv_window") or {}
+    iv_badge = None
+    if ivw.get("badge_label"):
+        iv_badge = {
+            "label": ivw["badge_label"],
+            "color": "#0c4a6e" if ivw.get("verdict") == "IV_CHEAP_WINDOW" else "#6b21a8",
+        }
+
     trade_line = _build_trade_line(pick)
     live_option = pick.get("_live_option")
     outcomes = []
@@ -1061,6 +1070,7 @@ def _build_pick(pick, rank, guardrail_state=None):
         "robinhood_order": robinhood_order,
         "forward_catalyst_badge": forward_catalyst_badge,
         "vcp_badge": vcp_badge,
+        "iv_badge": iv_badge,
     }
 
 

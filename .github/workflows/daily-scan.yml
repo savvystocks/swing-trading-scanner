@@ -58,6 +58,7 @@ jobs:
           GOAL_DEADLINE_ISO: "2026-11-29"
           BARCHART_API_KEY: ${{ secrets.BARCHART_API_KEY }}
           UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+          INSIDERFINANCE_TOKEN: ${{ secrets.INSIDERFINANCE_TOKEN }}
         run: python scripts/run_daily_scan.py
       - name: Commit tracker data + scan JSON for email job
         if: always()

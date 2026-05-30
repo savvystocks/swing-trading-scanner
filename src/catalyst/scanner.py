@@ -1357,6 +1357,20 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  mtf_trend enrichment failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.pocket_pivot import enrich_picks_with_pocket_pivot
+            enrich_picks_with_pocket_pivot(ranked_picks, max_picks=30, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  pocket_pivot enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.index_rebalance import enrich_picks_with_index_rebalance
+            enrich_picks_with_index_rebalance(ranked_picks, days_ahead=45, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  index_rebalance enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.confluence import apply_confluence
             apply_confluence(ranked_picks, verbose=verbose)
         except Exception as e:

@@ -29,7 +29,7 @@ The signals counted here are INDEPENDENT (not correlated):
 from datetime import datetime
 
 
-CATALYST_SIGNALS = ("catalyst_window", "activist_13d", "earnings_history_bullish")
+CATALYST_SIGNALS = ("catalyst_window", "activist_13d", "earnings_history_bullish", "index_rebalance")
 TECHNICAL_SIGNALS = ("vcp_setup", "mtf_trend", "quiet_rs", "stage2", "pocket_pivot")
 OPTIONS_SIGNALS = ("iv_window", "uw_flow", "gex_favorable", "dark_pool")
 SMART_MONEY_SIGNALS = ("insider_cluster", "edgar_buyback", "edgar_guidance_raise")
@@ -105,7 +105,16 @@ def _check_stage2(pick):
 def _check_pocket_pivot(pick):
     pp = pick.get("_pocket_pivot") or {}
     if pp.get("fires"):
-        return {"fires": True, "label": "pocket pivot", "score": 75}
+        return {"fires": True, "label": pp.get("label", "pocket pivot"), "score": 75}
+    return None
+
+
+def _check_index_rebalance(pick):
+    ir = pick.get("_index_rebalance") or []
+    if isinstance(ir, list) and ir:
+        match = ir[0]
+        if match.get("days_until") is not None and match["days_until"] <= 30:
+            return {"fires": True, "label": match.get("label", "index rebalance"), "score": 85}
     return None
 
 
@@ -175,6 +184,7 @@ SIGNAL_CHECKERS = [
     ("catalyst_window", _check_catalyst_window, "CATALYST"),
     ("activist_13d", _check_activist_13d, "CATALYST"),
     ("earnings_history_bullish", _check_earnings_history_bullish, "CATALYST"),
+    ("index_rebalance", _check_index_rebalance, "CATALYST"),
     ("vcp_setup", _check_vcp_setup, "TECHNICAL"),
     ("mtf_trend", _check_mtf_trend, "TECHNICAL"),
     ("quiet_rs", _check_quiet_rs, "TECHNICAL"),

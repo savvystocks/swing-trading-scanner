@@ -251,6 +251,12 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
     </div>
     {% endif %}
 
+    {% if p.earnings_history_line %}
+    <div style="padding:10px 14px; background:#f0f9ff; border-left:3px solid #0369a1; border-radius:5px; margin:10px 0; font-size:12px; color:#0c4a6e; line-height:1.55;">
+      <strong>Earnings reaction history:</strong> {{ p.earnings_history_line }}
+    </div>
+    {% endif %}
+
     {% if p.what_kills %}
     <div style="padding:10px 14px; background:#fef2f2; border-left:3px solid #b91c1c; border-radius:5px; margin:10px 0; font-size:12px; color:#7f1d1d; line-height:1.55;">
       <strong>What kills this trade:</strong> {{ p.what_kills }}
@@ -794,6 +800,19 @@ def _build_pick(pick, rank, guardrail_state=None):
             "color": "#581c87",
         }
 
+    eh = pick.get("_earnings_history") or {}
+    earnings_history_line = None
+    if eh.get("summary_string"):
+        pattern = eh.get("pattern", "")
+        pattern_label = {
+            "BEAT_AND_RIP": "beat-and-rip pattern",
+            "SELL_THE_NEWS": "sell-the-news pattern",
+            "POSITIVE_LEAN": "lean bullish historically",
+            "VOLATILE": "volatile reactions",
+            "MIXED": "mixed history",
+        }.get(pattern, "")
+        earnings_history_line = f"{eh['summary_string']} ({pattern_label})"
+
     trade_line = _build_trade_line(pick)
     live_option = pick.get("_live_option")
     outcomes = []
@@ -1096,6 +1115,7 @@ def _build_pick(pick, rank, guardrail_state=None):
         "iv_badge": iv_badge,
         "confluence_badge": confluence_badge,
         "activist_badge": activist_badge,
+        "earnings_history_line": earnings_history_line,
     }
 
 

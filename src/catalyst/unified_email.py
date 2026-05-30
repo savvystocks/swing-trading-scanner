@@ -214,6 +214,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       {% if p.forward_catalyst_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.forward_catalyst_badge.color }}; color:#fff;" title="{{ p.forward_catalyst_badge.date }}">{{ p.forward_catalyst_badge.label }}</span>{% endif %}
       {% if p.vcp_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.vcp_badge.color }}; color:#fff;">{{ p.vcp_badge.label }}</span>{% endif %}
       {% if p.iv_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.iv_badge.color }}; color:#fff;">{{ p.iv_badge.label }}</span>{% endif %}
+      {% if p.confluence_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.confluence_badge.color }}; color:#fff;">{{ p.confluence_badge.label }}</span>{% endif %}
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
 
@@ -686,7 +687,8 @@ def _build_robinhood_order(pick, guardrail_state):
     try:
         from src.catalyst.guardrails import position_size_for_pick
         mid = float(live_option.get("mid") or 0)
-        contracts, total_gbp, fail = position_size_for_pick(guardrail_state, mid)
+        confluence = pick.get("_confluence")
+        contracts, total_gbp, fail = position_size_for_pick(guardrail_state, mid, confluence=confluence)
         if fail:
             return None, fail
 
@@ -769,6 +771,18 @@ def _build_pick(pick, rank, guardrail_state=None):
         iv_badge = {
             "label": ivw["badge_label"],
             "color": "#0c4a6e" if ivw.get("verdict") == "IV_CHEAP_WINDOW" else "#6b21a8",
+        }
+
+    conf = pick.get("_confluence") or {}
+    confluence_badge = None
+    if conf.get("sizing_tier") in ("ELITE", "STRONG", "MODERATE"):
+        tier = conf["sizing_tier"]
+        count = conf.get("confluence_count", 0)
+        breadth = conf.get("category_breadth", 0)
+        color = {"ELITE": "#7f1d1d", "STRONG": "#15803d", "MODERATE": "#a16207"}[tier]
+        confluence_badge = {
+            "label": f"{tier} {count}/15 signals ({breadth} categories)",
+            "color": color,
         }
 
     trade_line = _build_trade_line(pick)
@@ -1071,6 +1085,7 @@ def _build_pick(pick, rank, guardrail_state=None):
         "forward_catalyst_badge": forward_catalyst_badge,
         "vcp_badge": vcp_badge,
         "iv_badge": iv_badge,
+        "confluence_badge": confluence_badge,
     }
 
 

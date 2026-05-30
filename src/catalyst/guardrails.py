@@ -301,23 +301,45 @@ def evaluate(config=None, verbose=False):
     return state
 
 
-def position_size_for_pick(state, contract_mid_usd):
-    """Return (contracts, gbp_cost, hit_cap_reason or None) for a new pick."""
+def position_size_for_pick(state, contract_mid_usd, confluence=None):
+    """Return (contracts, gbp_cost, hit_cap_reason or None) for a new pick.
+
+    confluence param: dict with 'recommended_size_pct' and 'sizing_tier'.
+    When provided, overrides the default 25% with confluence-tiered sizing:
+      ELITE (5+ signals, 3+ categories) -> 33%
+      STRONG (4+ signals, 2+ categories) -> 25%
+      MODERATE (3+ signals) -> 20%
+      WEAK or NONE -> 0% (don't trade)
+    """
     config = state["config"]
     fx = config["gbp_usd_rate"]
     account_gbp = state["current_account_gbp"]
-    pos_gbp_budget = account_gbp * (config["position_size_pct"] / 100.0)
+
+    if confluence and confluence.get("recommended_size_pct") is not None:
+        size_pct = confluence["recommended_size_pct"]
+        tier = confluence.get("sizing_tier", "UNKNOWN")
+    else:
+        size_pct = config["position_size_pct"]
+        tier = "DEFAULT"
+
+    if size_pct <= 0:
+        return 0, 0.0, f"confluence tier {tier} = below take threshold (need 3+ signals)"
+
+    pos_gbp_budget = account_gbp * (size_pct / 100.0)
 
     open_n = state["open_positions"]
-    if open_n >= config["max_concurrent"]:
-        return 0, 0.0, f"max {config['max_concurrent']} positions already open"
+    max_concurrent = config["max_concurrent"]
+    if tier == "ELITE":
+        max_concurrent = max(max_concurrent, 3)
+    if open_n >= max_concurrent:
+        return 0, 0.0, f"max {max_concurrent} positions already open"
 
     if contract_mid_usd <= 0:
         return 0, 0.0, "no live contract price"
 
     contract_cost_gbp = (contract_mid_usd * 100) / fx
     if contract_cost_gbp > pos_gbp_budget * 1.4:
-        return 0, 0.0, f"single contract £{contract_cost_gbp:.0f} > 140% of position budget £{pos_gbp_budget:.0f}"
+        return 0, 0.0, f"single contract £{contract_cost_gbp:.0f} > 140% of {tier} budget £{pos_gbp_budget:.0f}"
 
     contracts = max(1, int(round(pos_gbp_budget / contract_cost_gbp)))
     total_cost_gbp = contracts * contract_cost_gbp

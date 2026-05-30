@@ -215,6 +215,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       {% if p.vcp_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.vcp_badge.color }}; color:#fff;">{{ p.vcp_badge.label }}</span>{% endif %}
       {% if p.iv_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.iv_badge.color }}; color:#fff;">{{ p.iv_badge.label }}</span>{% endif %}
       {% if p.confluence_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.confluence_badge.color }}; color:#fff;">{{ p.confluence_badge.label }}</span>{% endif %}
+      {% if p.activist_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.activist_badge.color }}; color:#fff;">{{ p.activist_badge.label }}</span>{% endif %}
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
 
@@ -785,6 +786,14 @@ def _build_pick(pick, rank, guardrail_state=None):
             "color": color,
         }
 
+    a13d = pick.get("_activist_13d") or {}
+    activist_badge = None
+    if a13d.get("fires") and a13d.get("name"):
+        activist_badge = {
+            "label": f"ACTIVIST: {a13d['name']}",
+            "color": "#581c87",
+        }
+
     trade_line = _build_trade_line(pick)
     live_option = pick.get("_live_option")
     outcomes = []
@@ -1086,6 +1095,7 @@ def _build_pick(pick, rank, guardrail_state=None):
         "vcp_badge": vcp_badge,
         "iv_badge": iv_badge,
         "confluence_badge": confluence_badge,
+        "activist_badge": activist_badge,
     }
 
 

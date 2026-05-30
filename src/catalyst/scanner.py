@@ -1336,6 +1336,13 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  iv_window enrichment failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.activist_13d import enrich_picks_with_activist_13d
+            enrich_picks_with_activist_13d(ranked_picks, edgar, days_back=14, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  activist_13d enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.confluence import apply_confluence
             apply_confluence(ranked_picks, verbose=verbose)
         except Exception as e:

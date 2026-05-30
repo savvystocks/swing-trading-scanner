@@ -216,6 +216,7 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       {% if p.iv_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.iv_badge.color }}; color:#fff;">{{ p.iv_badge.label }}</span>{% endif %}
       {% if p.confluence_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.confluence_badge.color }}; color:#fff;">{{ p.confluence_badge.label }}</span>{% endif %}
       {% if p.activist_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.activist_badge.color }}; color:#fff;">{{ p.activist_badge.label }}</span>{% endif %}
+      {% if p.mtf_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.mtf_badge.color }}; color:#fff;">{{ p.mtf_badge.label }}</span>{% endif %}
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
 
@@ -813,6 +814,13 @@ def _build_pick(pick, rank, guardrail_state=None):
         }.get(pattern, "")
         earnings_history_line = f"{eh['summary_string']} ({pattern_label})"
 
+    mtf = pick.get("_mtf_trend") or {}
+    mtf_badge = None
+    if mtf.get("aligned_up"):
+        mtf_badge = {"label": "D+W+M ALIGNED", "color": "#0f766e"}
+    elif mtf.get("aligned_down"):
+        mtf_badge = {"label": "D+W+M DOWN", "color": "#7f1d1d"}
+
     trade_line = _build_trade_line(pick)
     live_option = pick.get("_live_option")
     outcomes = []
@@ -1116,6 +1124,7 @@ def _build_pick(pick, rank, guardrail_state=None):
         "confluence_badge": confluence_badge,
         "activist_badge": activist_badge,
         "earnings_history_line": earnings_history_line,
+        "mtf_badge": mtf_badge,
     }
 
 

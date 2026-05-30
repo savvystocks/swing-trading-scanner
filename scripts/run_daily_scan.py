@@ -118,6 +118,14 @@ def main():
     except Exception as e:
         print(f"Telegram alert failed: {type(e).__name__}: {e}")
 
+    try:
+        from src.telegram import send_priority_alerts
+        n = send_priority_alerts(scan)
+        if n:
+            print(f"Telegram priority alerts sent: {n}")
+    except Exception as e:
+        print(f"Telegram priority alerts failed: {type(e).__name__}: {e}")
+
     if not email_sent:
         sys.exit(1)
 

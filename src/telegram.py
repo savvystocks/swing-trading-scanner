@@ -25,6 +25,71 @@ def send_alert(text):
         return False
 
 
+def send_priority_alerts(scan):
+    """Fire phone push alerts for the high-priority signals in today's scan.
+
+    Three alert types:
+    1. REVIEW MODE triggered (drawdown or loss streak)
+    2. EXIT WARNINGS on live positions (drift detector)
+    3. ELITE confluence picks (5+ signals, 3+ categories)
+    """
+    if not BOT_TOKEN or not CHAT_ID:
+        return 0
+    sent = 0
+    scan_date = scan.get("scan_date", "?")
+
+    gs = scan.get("guardrail_state") or {}
+    if gs.get("mode") == "REVIEW_MODE":
+        triggers = gs.get("triggers") or []
+        high_triggers = [t for t in triggers if t.get("severity") == "HIGH"]
+        if high_triggers:
+            lines = ["<b>REVIEW MODE TRIGGERED</b>", f"Date: {scan_date}", ""]
+            for t in high_triggers:
+                lines.append(f"- {t.get('message', '')}")
+            lines.append("")
+            lines.append("Pause new entries until you've reviewed thesis.")
+            if send_alert("\n".join(lines)):
+                sent += 1
+
+    drift = scan.get("conviction_drift_alerts") or []
+    live_high = [a for a in drift if a.get("severity") == "HIGH" and a.get("is_live")]
+    for alert in live_high[:3]:
+        lines = [
+            f"<b>EXIT ALERT: {alert.get('ticker')}</b>",
+            f"Type: {(alert.get('alert_type') or '').replace('_', ' ')}",
+            f"{alert.get('message', '')}",
+        ]
+        if send_alert("\n".join(lines)):
+            sent += 1
+
+    aa = scan.get("aa_results") or {}
+    elite_picks = []
+    for tier in ("A++", "A+", "A"):
+        for p in aa.get(tier) or []:
+            conf = p.get("_confluence") or {}
+            action = (p.get("_action_signal") or {}).get("action")
+            if action == "TAKE" and conf.get("sizing_tier") == "ELITE":
+                elite_picks.append(p)
+    for p in elite_picks[:3]:
+        conf = p.get("_confluence") or {}
+        ticker = p.get("ticker")
+        firing = conf.get("signals_firing") or []
+        signal_labels = [s.get("label") for s in firing[:5] if s.get("label")]
+        lines = [
+            f"<b>ELITE PICK: {ticker}</b>",
+            f"Confluence: {conf.get('confluence_count')}/16 across {conf.get('category_breadth')} categories",
+            f"Sizing: {conf.get('recommended_size_pct')}% (max position)",
+            "",
+            "Signals firing:",
+        ]
+        for s in signal_labels:
+            lines.append(f"- {s}")
+        if send_alert("\n".join(lines)):
+            sent += 1
+
+    return sent
+
+
 def _first_sentence(text, max_len=200):
     if not text:
         return ""

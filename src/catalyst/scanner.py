@@ -1371,6 +1371,20 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  index_rebalance enrichment failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.iv_rank_diy import enrich_picks_with_diy_iv_rank
+            enrich_picks_with_diy_iv_rank(ranked_picks, max_picks=20, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  iv_rank_diy enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.uoa_diy import enrich_picks_with_diy_uoa
+            enrich_picks_with_diy_uoa(ranked_picks, max_picks=20, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  uoa_diy enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.confluence import apply_confluence
             apply_confluence(ranked_picks, verbose=verbose)
         except Exception as e:

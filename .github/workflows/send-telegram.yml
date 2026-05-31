@@ -1,6 +1,13 @@
 name: send-telegram
 
+# Runs automatically every time data/telegram_outbox/latest.txt is updated.
+# Also triggerable manually with a custom message file.
+
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/telegram_outbox/latest.txt'
   workflow_dispatch:
     inputs:
       message_file:
@@ -22,4 +29,4 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python scripts/send_telegram_message.py "${{ inputs.message_file }}"
+        run: python scripts/send_telegram_message.py "${{ inputs.message_file || 'data/telegram_outbox/latest.txt' }}"

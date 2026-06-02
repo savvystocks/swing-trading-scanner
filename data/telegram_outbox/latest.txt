@@ -1,34 +1,26 @@
-THEME 1 SHIPPED: CFTC COT Tracker - Tue 02 Jun 21:30 BST
+THEME 2 SHIPPED: DIY Dealer GEX - Tue 02 Jun 21:45 BST
 
-CFTC positioning data is now live in the system. Pulled real data from cftc.gov for E-mini S&P, Nasdaq, VIX, Crude.
+Dealer gamma calculator is now live. Free, no subscription needed - uses our existing Alpaca options chain.
 
-WHAT IT JUST FOUND (data as of Tue May 26 report):
+WHAT IT DOES:
+- Pulls full call + put chains for any ticker
+- Black-Scholes gamma per contract
+- Net dealer gamma per strike (calls = dealer short gamma, puts = dealer long gamma)
+- Finds zero-gamma flip strike
+- Classifies regime:
+  * Spot BELOW flip = NEGATIVE_AMP (dealers amplify moves, big swings)
+  * Spot ABOVE flip = POSITIVE_PIN (dealers pin price, range-bound)
 
-E-MINI S&P 500:
-- Asset managers net long: +1,003,607 contracts (88.5th percentile of 52-week range)
-- Leveraged funds net short: -457,780 contracts (9.6th percentile - extremely short)
-- REGIME: CROWDED LONG
+WHY THIS MATTERS FOR YOUR OPTIONS:
+- Long calls in NEGATIVE GEX regime = your calls breathe, moves compound
+- Long calls in POSITIVE GEX regime = your calls die, IV crushes, you bleed theta
+- The flip strike acts as actual mechanical support/resistance
 
-NASDAQ 100:
-- Asset managers net long: +85,063 (94.2nd percentile - very extreme)
-- Leveraged funds: -51,679 (3.8th percentile - extremely short)
-- REGIME: CROWDED LONG
+WIRED INTO CONFLUENCE:
+- New signal: dealer_gex_regime
+- Fires when negative GEX (amplification) on your ticker
+- Joins POSITIONING category alongside CFTC COT
 
-VIX FUTURES:
-- Leveraged funds: -49,336 (50th percentile - neutral)
-- REGIME: MODERATELY LONG
+NEXT: Theme 3 - Options Market Positioning (P/C ratio, SKEW, VIX term structure, VVIX)
 
-CRUDE OIL:
-- Refreshed, tracking
-
-WHAT THIS MEANS FOR YOUR TRADING RIGHT NOW:
-- Asset managers are MAX positioned long S&P + Nasdaq right now
-- Leveraged funds (hedge funds) are MAX short
-- Setup: when asset managers unwind even slightly, hedge fund short cover creates squeeze. But the CROWDED LONG side is the bigger risk - if asset managers reduce, broad market falls.
-- For options: be CAUTIOUS adding NEW long-side beta exposure on tech/S&P names right now. The crowd is already there.
-
-IMPLICATION FOR ETOR: fintech small-cap, would map to RTY/ES positioning. Broad market crowded long = limited upside if rally peters out. Theta cliff in 9 days makes this more urgent.
-
-NEXT: Theme 2 - DIY Dealer GEX Calculator. Will tell you whether dealers are amplifying or pinning moves today.
-
-10 themes left to ship.
+8 themes left.

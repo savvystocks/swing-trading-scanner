@@ -33,6 +33,7 @@ CATALYST_SIGNALS = ("catalyst_window", "activist_13d", "earnings_history_bullish
 TECHNICAL_SIGNALS = ("vcp_setup", "mtf_trend", "quiet_rs", "stage2", "pocket_pivot")
 OPTIONS_SIGNALS = ("iv_window", "uw_flow", "gex_favorable", "dark_pool")
 SMART_MONEY_SIGNALS = ("insider_cluster", "edgar_buyback", "edgar_guidance_raise")
+POSITIONING_SIGNALS = ("cot_extreme", "dealer_gex_regime", "pb_flow_aligned")
 
 
 def _check_catalyst_window(pick):
@@ -118,6 +119,35 @@ def _check_index_rebalance(pick):
     return None
 
 
+def _check_cot_extreme(pick):
+    cot = pick.get("_cot_positioning") or {}
+    regime = cot.get("regime")
+    if regime in ("CROWDED_SHORT",):
+        return {"fires": True, "label": cot.get("label", "COT crowded short = long edge"), "score": 85}
+    if regime in ("MODERATELY_SHORT",):
+        return {"fires": True, "label": cot.get("label", "COT lean short = long edge"), "score": 65}
+    if regime in ("CROWDED_LONG",):
+        return {"fires": False, "label": cot.get("label"), "score": 25}
+    return None
+
+
+def _check_dealer_gex_regime(pick):
+    gex = pick.get("_dealer_gex") or pick.get("_if_gex") or {}
+    regime = gex.get("regime")
+    if regime in ("NEGATIVE_AMP", "AMPLIFICATION"):
+        return {"fires": True, "label": "negative GEX (amplification regime)", "score": 80}
+    if regime in ("POSITIVE_PIN", "PINNING"):
+        return {"fires": False, "label": "positive GEX (pinning regime)", "score": 40}
+    return None
+
+
+def _check_pb_flow_aligned(pick):
+    pb = pick.get("_pb_flow") or {}
+    if pb.get("aligned"):
+        return {"fires": True, "label": pb.get("label", "PB flow aligned with thesis"), "score": 80}
+    return None
+
+
 def _check_iv_window(pick):
     ivw = pick.get("_iv_window") or {}
     verdict = ivw.get("verdict")
@@ -197,13 +227,16 @@ SIGNAL_CHECKERS = [
     ("insider_cluster", _check_insider_cluster, "SMART_MONEY"),
     ("edgar_buyback", _check_edgar_buyback, "SMART_MONEY"),
     ("edgar_guidance_raise", _check_edgar_guidance, "SMART_MONEY"),
+    ("cot_extreme", _check_cot_extreme, "POSITIONING"),
+    ("dealer_gex_regime", _check_dealer_gex_regime, "POSITIONING"),
+    ("pb_flow_aligned", _check_pb_flow_aligned, "POSITIONING"),
 ]
 
 
 def compute_confluence(pick):
     """Returns dict with confluence_count, signals_firing list, confluence_score, sizing_tier."""
     firing = []
-    by_category = {"CATALYST": 0, "TECHNICAL": 0, "OPTIONS": 0, "SMART_MONEY": 0}
+    by_category = {"CATALYST": 0, "TECHNICAL": 0, "OPTIONS": 0, "SMART_MONEY": 0, "POSITIONING": 0}
     for key, checker, category in SIGNAL_CHECKERS:
         try:
             res = checker(pick)

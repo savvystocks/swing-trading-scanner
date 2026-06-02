@@ -1385,6 +1385,13 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  uoa_diy enrichment failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.cftc_cot import enrich_picks_with_cot
+            enrich_picks_with_cot(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  cftc_cot enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.confluence import apply_confluence
             apply_confluence(ranked_picks, verbose=verbose)
         except Exception as e:

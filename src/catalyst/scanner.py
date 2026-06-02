@@ -1420,6 +1420,27 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  macro_positioning enrichment failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.sentiment_stack import enrich_picks_with_sentiment
+            enrich_picks_with_sentiment(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  sentiment_stack enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.auction_market import enrich_picks_with_auction_levels
+            enrich_picks_with_auction_levels(ranked_picks, max_picks=20, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  auction_market enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.forward_data import enrich_picks_with_forward_data
+            enrich_picks_with_forward_data(ranked_picks, max_picks=20, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  forward_data enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.confluence import apply_confluence
             apply_confluence(ranked_picks, verbose=verbose)
         except Exception as e:

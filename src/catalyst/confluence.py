@@ -148,6 +148,37 @@ def _check_pb_flow_aligned(pick):
     return None
 
 
+def _check_squeeze_loaded(pick):
+    sq = pick.get("_squeeze_setup") or {}
+    if sq.get("fires"):
+        return {"fires": True, "label": sq.get("label", "squeeze setup"), "score": sq.get("score", 75)}
+    return None
+
+
+def _check_analyst_revisions_positive(pick):
+    ar = pick.get("_analyst_revisions") or {}
+    if ar.get("verdict") == "POSITIVE_REVISIONS":
+        return {"fires": True, "label": ar.get("label", "positive analyst revisions"), "score": 75}
+    return None
+
+
+def _check_auction_levels(pick):
+    al = pick.get("_auction_levels") or {}
+    position = al.get("position")
+    if position == "ABOVE_VALUE":
+        return {"fires": True, "label": f"auction: above value (POC ${al.get('poc')})", "score": 75}
+    return None
+
+
+def _check_macro_risk_on(pick):
+    mp = pick.get("_macro_positioning") or {}
+    if mp.get("regime") == "RISK_ON":
+        return {"fires": True, "label": "macro regime: risk-on", "score": 70}
+    if mp.get("regime") == "RISK_OFF_PRESSURE":
+        return {"fires": False, "label": "macro regime: risk-off pressure", "score": 25}
+    return None
+
+
 def _check_iv_window(pick):
     ivw = pick.get("_iv_window") or {}
     verdict = ivw.get("verdict")
@@ -230,6 +261,10 @@ SIGNAL_CHECKERS = [
     ("cot_extreme", _check_cot_extreme, "POSITIONING"),
     ("dealer_gex_regime", _check_dealer_gex_regime, "POSITIONING"),
     ("pb_flow_aligned", _check_pb_flow_aligned, "POSITIONING"),
+    ("squeeze_loaded", _check_squeeze_loaded, "POSITIONING"),
+    ("macro_regime", _check_macro_risk_on, "POSITIONING"),
+    ("analyst_revisions_positive", _check_analyst_revisions_positive, "SMART_MONEY"),
+    ("auction_above_value", _check_auction_levels, "TECHNICAL"),
 ]
 
 

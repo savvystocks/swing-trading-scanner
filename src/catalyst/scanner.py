@@ -1406,6 +1406,20 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  options_positioning enrichment failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.squeeze_setup import enrich_picks_with_squeeze
+            enrich_picks_with_squeeze(ranked_picks, max_picks=30, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  squeeze_setup enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.macro_positioning import enrich_picks_with_macro
+            enrich_picks_with_macro(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  macro_positioning enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.confluence import apply_confluence
             apply_confluence(ranked_picks, verbose=verbose)
         except Exception as e:

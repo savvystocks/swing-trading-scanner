@@ -1,26 +1,30 @@
-THEME 2 SHIPPED: DIY Dealer GEX - Tue 02 Jun 21:45 BST
+THEME 3 SHIPPED: Options Market Positioning - Tue 02 Jun 22:00 BST
 
-Dealer gamma calculator is now live. Free, no subscription needed - uses our existing Alpaca options chain.
+Live vol regime data flowing. SKEW, VIX term structure, VVIX all reading the broader options market positioning.
 
-WHAT IT DOES:
-- Pulls full call + put chains for any ticker
-- Black-Scholes gamma per contract
-- Net dealer gamma per strike (calls = dealer short gamma, puts = dealer long gamma)
-- Finds zero-gamma flip strike
-- Classifies regime:
-  * Spot BELOW flip = NEGATIVE_AMP (dealers amplify moves, big swings)
-  * Spot ABOVE flip = POSITIVE_PIN (dealers pin price, range-bound)
+CURRENT MARKET POSITIONING (just pulled):
+- VIX: 15.77 (normal vol)
+- VIX9D: 13.41 (no near-term concern)
+- VIX3M: 19.4 (higher than VIX = contango = complacency)
+- VVIX: 90.72 (vol-of-vol normal)
+- SKEW: 142.46 (just below elevated 145 threshold)
+- VIX/VIX3M ratio: 0.81 = STEEP CONTANGO = complacency regime
 
-WHY THIS MATTERS FOR YOUR OPTIONS:
-- Long calls in NEGATIVE GEX regime = your calls breathe, moves compound
-- Long calls in POSITIVE GEX regime = your calls die, IV crushes, you bleed theta
-- The flip strike acts as actual mechanical support/resistance
+THE FULL POSITIONING PICTURE NOW VISIBLE:
+1. CFTC: Asset managers MAX LONG S&P + Nasdaq (88-94th percentile)
+2. CFTC: Leveraged funds MAX SHORT (3-9th percentile)
+3. Vol: COMPLACENT (steep contango, low VIX9D, normal VVIX)
+4. SKEW: 142 (just shy of crash-hedging extreme)
 
-WIRED INTO CONFLUENCE:
-- New signal: dealer_gex_regime
-- Fires when negative GEX (amplification) on your ticker
-- Joins POSITIONING category alongside CFTC COT
+THIS IS A CLASSIC PEAK POSITIONING SETUP. The crowd is positioned for continued rally. Vol is priced for calm. SKEW says no one is hedging much.
 
-NEXT: Theme 3 - Options Market Positioning (P/C ratio, SKEW, VIX term structure, VVIX)
+In this regime:
+- New aggressive long-side beta exposure is HIGH RISK
+- Vol-buying setups (long calls/puts on individual names) are CHEAP relative to history
+- The next move down would surprise the most people
 
-8 themes left.
+For your ETOR position: long call on small-cap fintech. Sector beta will follow broad market. With this much positioning crowding, broad market unwind hurts you more than the stock thesis helps.
+
+NEXT: Theme 4 - Short Squeeze Positioning
+
+7 themes left.

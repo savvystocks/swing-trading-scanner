@@ -1399,6 +1399,13 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 print(f"  dealer_gex enrichment failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
+            from src.catalyst.options_positioning import enrich_picks_with_options_positioning
+            enrich_picks_with_options_positioning(ranked_picks, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  options_positioning enrichment failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
             from src.catalyst.confluence import apply_confluence
             apply_confluence(ranked_picks, verbose=verbose)
         except Exception as e:

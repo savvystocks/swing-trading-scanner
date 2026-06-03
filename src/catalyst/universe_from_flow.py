@@ -139,20 +139,36 @@ def _add_to_universe(universe, ticker, source, premium=0, extra=None):
             slot.setdefault(k, v)
 
 
-def build_flow_universe(uw_client=None, max_tickers=50, min_premium=50_000, verbose=False):
-    """Build TODAY's universe via UNION of multiple UW selection methods.
+# Source-to-pattern coverage matrix.
+# Each source surfaces tickers that are likely to score on certain confluence patterns.
+# Patterns: P1=NOPE Extreme, P2=Gamma Flip, P3=Sweeps+Floor, P4=Vol>OI,
+#           P5=Above-Ask Urgency, P6=$250k Institutional, P7=Whisper Delta
+SOURCE_PATTERN_MAP = {
+    "premium_top30":   ["P1", "P5", "P6"],      # high concentrated premium
+    "sweep_volume":    ["P3", "P5"],            # sweep urgency
+    "top_movers":      ["P2", "P5"],            # % movers hit gamma walls
+    "congress":        ["P6"],                  # smart money positioning
+    "insider_today":   ["P6"],                  # insider conviction
+    "net_call_premium":["P1", "P6"],            # directional CALL flow
+    "net_put_premium": ["P1", "P6"],            # directional PUT flow
+    "high_volume":     ["P3", "P4"],            # volume leaders
+    "oi_changers":     ["P4"],                  # OI building = new positioning
+    "earnings_today":  ["P7"],                  # whisper opportunities
+    "earnings_tmrw":   ["P7"],                  # tomorrow's catalyst
+    "darkpool_top":    ["P6"],                  # institutional dark prints
+    "news_today":      ["P5", "P7"],            # news-driven flow
+    "shorts_squeeze":  ["P5"],                  # squeeze setups
+}
 
-    Sources we pull (each gives ~15-30 tickers, union ~40-60 unique):
-      1. Top by flow premium                  - the "main" institutional flow
-      2. Top by sweep volume                  - retail-aggressive entries
-      3. Top by block trades                  - off-exchange institutional
-      4. Top by % move today                  - momentum/news driven
-      5. Recent congressional trades          - politician flow (smart money)
-      6. Top sectors by ETF flow              - sector rotation candidates
 
-    Tickers ranked by: TOTAL # of sources they appear in (multi-source = higher conviction),
-    tiebreak by total premium. This way a stock that appears in 4 sources beats a stock
-    that's just #1 by premium alone.
+def build_flow_universe(uw_client=None, max_tickers=60, min_premium=50_000, verbose=False):
+    """Build TODAY's universe via UNION of ~11 UW selection methods.
+
+    Each source pulls top 25-30 tickers from a DIFFERENT angle so we don't
+    self-select on one metric. Ranked by # of sources appeared in (multi-source
+    = higher conviction), tiebreak by total premium.
+
+    See SOURCE_PATTERN_MAP for which patterns each source feeds.
 
     Returns: list of {ticker, total_premium, trade_count, calls, puts, sources}
     """
@@ -170,6 +186,14 @@ def build_flow_universe(uw_client=None, max_tickers=50, min_premium=50_000, verb
                   "sector": e.get("sector"), "sources": ["static"]} for e in static]
 
     universe = {}
+    source_counts = {}
+
+    def _log_source(idx, name, intent):
+        n = len([u for u in universe.values() if name in u["sources"]])
+        source_counts[name] = n
+        patterns = SOURCE_PATTERN_MAP.get(name, [])
+        if verbose:
+            print(f"  [src {idx:2}] {name:18} {n:3}t  {intent:38} -> {','.join(patterns)}")
 
     # SOURCE 1: top by flow premium (whole-market flow alerts)
     alerts = uw_client.flow_alerts(limit=500, min_premium=min_premium) or []
@@ -178,14 +202,12 @@ def build_flow_universe(uw_client=None, max_tickers=50, min_premium=50_000, verb
     by_ticker = _aggregate_flow_by_ticker(alerts, min_premium=min_premium)
     for t, slot in sorted(by_ticker.items(), key=lambda kv: -kv[1]["total_premium"])[:30]:
         _add_to_universe(universe, t, "premium_top30", premium=slot["total_premium"])
-        # also merge the trade counts
         universe[t]["trade_count"] = slot["trade_count"]
         universe[t]["calls"] = slot["calls"]
         universe[t]["puts"] = slot["puts"]
-    if verbose:
-        print(f"  universe[source 1]: top by premium = {len([u for u in universe.values() if 'premium_top30' in u['sources']])} tickers")
+    _log_source(1, "premium_top30", "highest total option premium")
 
-    # SOURCE 2: top by sweep volume via contract_screener
+    # SOURCE 2: top by sweep volume
     try:
         sweep_screen = uw_client.contract_screener(sort_by="sweep_volume", limit=30)
         if sweep_screen:
@@ -194,13 +216,12 @@ def build_flow_universe(uw_client=None, max_tickers=50, min_premium=50_000, verb
                 t = _extract_ticker_from_contract(c)
                 _add_to_universe(universe, t, "sweep_volume",
                                   premium=float(c.get("premium") or 0) if c.get("premium") else 0)
-        if verbose:
-            print(f"  universe[source 2]: top sweep volume = {len([u for u in universe.values() if 'sweep_volume' in u['sources']])} added")
+        _log_source(2, "sweep_volume", "retail-aggressive sweep urgency")
     except Exception as e:
         if verbose:
-            print(f"  universe source 2 (sweeps) failed: {type(e).__name__}: {e}")
+            print(f"  [src  2] sweep_volume FAILED: {type(e).__name__}: {e}")
 
-    # SOURCE 3: top movers (% gainers/losers today) - intel/movers
+    # SOURCE 3: top movers (% gainers/losers)
     try:
         movers = uw_client._request("/intel/movers", {"limit": 30}, cache_key="darkpool_recent", ttl=300)
         if movers:
@@ -208,15 +229,13 @@ def build_flow_universe(uw_client=None, max_tickers=50, min_premium=50_000, verb
             for m in (rows or [])[:20]:
                 if not isinstance(m, dict):
                     continue
-                t = m.get("ticker") or m.get("symbol")
-                _add_to_universe(universe, t, "top_movers")
-        if verbose:
-            print(f"  universe[source 3]: top movers = {len([u for u in universe.values() if 'top_movers' in u['sources']])} added")
+                _add_to_universe(universe, m.get("ticker") or m.get("symbol"), "top_movers")
+        _log_source(3, "top_movers", "biggest % moves today")
     except Exception as e:
         if verbose:
-            print(f"  universe source 3 (movers) failed: {type(e).__name__}: {e}")
+            print(f"  [src  3] top_movers FAILED: {type(e).__name__}: {e}")
 
-    # SOURCE 4: recent congressional trades (last 7 days)
+    # SOURCE 4: recent congressional trades
     try:
         congress = uw_client.congress_recent_trades(limit=30)
         if congress:
@@ -224,13 +243,11 @@ def build_flow_universe(uw_client=None, max_tickers=50, min_premium=50_000, verb
             for c in (rows or [])[:30]:
                 if not isinstance(c, dict):
                     continue
-                t = c.get("ticker") or c.get("symbol")
-                _add_to_universe(universe, t, "congress")
-        if verbose:
-            print(f"  universe[source 4]: congress = {len([u for u in universe.values() if 'congress' in u['sources']])} added")
+                _add_to_universe(universe, c.get("ticker") or c.get("symbol"), "congress")
+        _log_source(4, "congress", "politicians' recent buys/sells")
     except Exception as e:
         if verbose:
-            print(f"  universe source 4 (congress) failed: {type(e).__name__}: {e}")
+            print(f"  [src  4] congress FAILED: {type(e).__name__}: {e}")
 
     # SOURCE 5: insider buy/sells today
     try:
@@ -240,36 +257,85 @@ def build_flow_universe(uw_client=None, max_tickers=50, min_premium=50_000, verb
             for i in (rows or [])[:20]:
                 if not isinstance(i, dict):
                     continue
-                t = i.get("ticker") or i.get("symbol")
-                _add_to_universe(universe, t, "insider_today")
-        if verbose:
-            print(f"  universe[source 5]: insiders = {len([u for u in universe.values() if 'insider_today' in u['sources']])} added")
+                _add_to_universe(universe, i.get("ticker") or i.get("symbol"), "insider_today")
+        _log_source(5, "insider_today", "Form 4 buys/sells today")
     except Exception as e:
         if verbose:
-            print(f"  universe source 5 (insider) failed: {type(e).__name__}: {e}")
+            print(f"  [src  5] insider_today FAILED: {type(e).__name__}: {e}")
 
-    # SOURCE 6: net premium tickers (where institutions are NET buying/selling)
-    # Already captured in flow_alerts but the contract_screener with different sort surfaces additional.
+    # SOURCE 6 + 7: net CALL premium / PUT premium tickers
     try:
-        net_prem = uw_client.contract_screener(sort_by="premium", limit=30, side="call")
-        if net_prem:
-            rows = net_prem.get("data") if isinstance(net_prem, dict) else net_prem
+        net_call = uw_client.contract_screener(sort_by="premium", limit=30, side="call")
+        if net_call:
+            rows = net_call.get("data") if isinstance(net_call, dict) else net_call
             for c in (rows or [])[:15]:
-                t = _extract_ticker_from_contract(c)
-                _add_to_universe(universe, t, "net_call_premium")
+                _add_to_universe(universe, _extract_ticker_from_contract(c), "net_call_premium")
+        _log_source(6, "net_call_premium", "biggest CALL-side premium")
     except Exception as e:
         if verbose:
-            print(f"  universe source 6 failed: {type(e).__name__}: {e}")
+            print(f"  [src  6] net_call_premium FAILED: {type(e).__name__}: {e}")
 
     try:
         net_put = uw_client.contract_screener(sort_by="premium", limit=30, side="put")
         if net_put:
             rows = net_put.get("data") if isinstance(net_put, dict) else net_put
             for c in (rows or [])[:15]:
-                t = _extract_ticker_from_contract(c)
-                _add_to_universe(universe, t, "net_put_premium")
+                _add_to_universe(universe, _extract_ticker_from_contract(c), "net_put_premium")
+        _log_source(7, "net_put_premium", "biggest PUT-side premium")
     except Exception as e:
-        pass
+        if verbose:
+            print(f"  [src  7] net_put_premium FAILED: {type(e).__name__}: {e}")
+
+    # SOURCE 8: top volume contracts (different from premium - captures retail+0DTE)
+    try:
+        vol_screen = uw_client.contract_screener(sort_by="volume", limit=30)
+        if vol_screen:
+            rows = vol_screen.get("data") if isinstance(vol_screen, dict) else vol_screen
+            for c in (rows or [])[:25]:
+                _add_to_universe(universe, _extract_ticker_from_contract(c), "high_volume")
+        _log_source(8, "high_volume", "highest contract volume")
+    except Exception as e:
+        if verbose:
+            print(f"  [src  8] high_volume FAILED: {type(e).__name__}: {e}")
+
+    # SOURCE 9: today's earnings (premarket + afterhours) - whisper plays
+    try:
+        ern_pm = uw_client.earnings_premarket() or {}
+        ern_ah = uw_client.earnings_afterhours() or {}
+        for src_data, label in ((ern_pm, "earnings_today"), (ern_ah, "earnings_tmrw")):
+            rows = src_data.get("data") if isinstance(src_data, dict) else src_data
+            for e_row in (rows or [])[:20]:
+                if not isinstance(e_row, dict):
+                    continue
+                _add_to_universe(universe, e_row.get("ticker") or e_row.get("symbol"), label)
+        _log_source(9, "earnings_today", "reporting before open")
+        _log_source(10, "earnings_tmrw", "reporting after close")
+    except Exception as e:
+        if verbose:
+            print(f"  [src 9-10] earnings FAILED: {type(e).__name__}: {e}")
+
+    # SOURCE 11: darkpool top tickers - institutional dark prints
+    try:
+        dp = uw_client.darkpool_recent(limit=60)
+        if dp:
+            rows = dp.get("data") if isinstance(dp, dict) else dp
+            # Aggregate by ticker, top 20 by $ volume
+            dp_by_ticker = {}
+            for r in (rows or []):
+                if not isinstance(r, dict):
+                    continue
+                t = r.get("ticker") or r.get("symbol")
+                if not t:
+                    continue
+                size = _to_float(r.get("size") or r.get("volume"))
+                price = _to_float(r.get("price"))
+                dp_by_ticker[t] = dp_by_ticker.get(t, 0) + (size * price)
+            for t, _v in sorted(dp_by_ticker.items(), key=lambda kv: -kv[1])[:20]:
+                _add_to_universe(universe, t, "darkpool_top")
+        _log_source(11, "darkpool_top", "biggest dark pool $ prints")
+    except Exception as e:
+        if verbose:
+            print(f"  [src 11] darkpool_top FAILED: {type(e).__name__}: {e}")
 
     # Rank by # of sources (multi-source = higher conviction), tiebreak by total_premium
     ranked = sorted(
@@ -280,10 +346,19 @@ def build_flow_universe(uw_client=None, max_tickers=50, min_premium=50_000, verb
     top = ranked[:max_tickers]
 
     if verbose:
-        print(f"  universe_from_flow: {len(universe)} unique tickers across all sources, top {len(top)} selected")
-        for t in top[:10]:
+        multi = sum(1 for u in top if len(u["sources"]) >= 2)
+        print(f"")
+        print(f"  UNIVERSE SUMMARY: {len(universe)} unique tickers across {len(source_counts)} sources")
+        print(f"  Selected top {len(top)} ({multi} multi-source = higher conviction)")
+        print(f"")
+        print(f"  TOP 15 TICKERS BY CONVICTION (# sources, then premium):")
+        for t in top[:15]:
             srcs = "+".join(t["sources"])
-            print(f"    {t['ticker']:6} sources={len(t['sources'])} ({srcs[:40]:40}) ${t['total_premium']/1e6:.1f}M")
+            patterns = set()
+            for s in t["sources"]:
+                patterns.update(SOURCE_PATTERN_MAP.get(s, []))
+            pat_str = ",".join(sorted(patterns)) if patterns else "-"
+            print(f"    {t['ticker']:6} {len(t['sources'])}src  patterns={pat_str:20}  ${t['total_premium']/1e6:5.1f}M  ({srcs[:55]})")
 
     return top
 

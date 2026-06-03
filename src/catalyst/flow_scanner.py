@@ -262,6 +262,18 @@ def run_flow_scan(target_date=None, verbose=True):
         print(f"  Macro: {tide_label}")
         print(f"  UW calls used: {uw_client.calls_made}")
 
+    # Sector concentration warnings
+    try:
+        from src.catalyst.sector_concentration import check_concentration
+        concentration_warnings = check_concentration(ranked)
+        if verbose and concentration_warnings:
+            for w in concentration_warnings:
+                print(f"  [{w['level']}] {w['label']}")
+    except Exception as e:
+        concentration_warnings = []
+        if verbose:
+            print(f"  sector concentration failed: {type(e).__name__}: {e}")
+
     return {
         "scan_date": scan_date,
         "macro": macro,
@@ -271,4 +283,5 @@ def run_flow_scan(target_date=None, verbose=True):
         "puts": puts[:5],
         "by_tier": by_tier,
         "uw_calls_made": uw_client.calls_made,
+        "concentration_warnings": concentration_warnings,
     }

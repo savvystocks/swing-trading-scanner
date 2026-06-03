@@ -1,11 +1,30 @@
 """Trade ticket builder.
 
 Turns a confluence pick into an actionable order: exact strike, expiry,
-contract symbol, and live premium so the user can paste into Robinhood
-without further lookup.
+contract symbol, live premium, delta, IV, OI, volume.
 """
 
+import math
 from datetime import date, timedelta
+
+
+def _norm_cdf(x):
+    """Standard normal CDF using math.erf - no scipy needed."""
+    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
+
+
+def _bs_delta(side, spot, strike, dte_days, iv, r=0.05):
+    """Black-Scholes delta. dte_days in calendar days, iv as decimal (0.30 = 30%)."""
+    if not spot or not strike or not iv or dte_days is None or dte_days <= 0:
+        return None
+    try:
+        T = dte_days / 365.0
+        d1 = (math.log(spot / strike) + (r + 0.5 * iv * iv) * T) / (iv * math.sqrt(T))
+        if side == "CALL":
+            return round(_norm_cdf(d1), 3)
+        return round(_norm_cdf(d1) - 1, 3)
+    except (ValueError, ZeroDivisionError):
+        return None
 
 
 def _round_strike(price, side, vehicle):
@@ -114,35 +133,37 @@ def _find_best_contract(uw_client, ticker, side, target_expiry, target_strike):
     return best
 
 
-def _fetch_intraday_quote(uw_client, symbol):
-    """Pull intraday OHLC + premium data for a specific contract symbol."""
+def _fetch_contract_data(uw_client, ticker, target_symbol):
+    """Pull contract-level data: NBBO quotes, IV, OI, volume, sweep/floor share."""
     try:
-        data = uw_client._request(f"/option-contract/{symbol}/intraday", None,
-                                   cache_key="flow_alerts", ttl=300)
+        data = uw_client._request(f"/stock/{ticker}/option-contracts", None,
+                                   cache_key="oi_per_strike", ttl=600)
     except Exception:
         return None
     if not data:
         return None
     rows = data.get("data") if isinstance(data, dict) else data
-    if not rows:
+    if not isinstance(rows, list):
         return None
-    latest = rows[-1] if isinstance(rows[-1], dict) else rows[0]
-    bid_prem = _safe_float(latest.get("premium_bid_side"))
-    ask_prem = _safe_float(latest.get("premium_ask_side"))
-    bid_vol = _safe_float(latest.get("volume_bid_side"))
-    ask_vol = _safe_float(latest.get("volume_ask_side"))
-    bid = (bid_prem / bid_vol / 100) if (bid_prem and bid_vol) else None
-    ask = (ask_prem / ask_vol / 100) if (ask_prem and ask_vol) else None
-    return {
-        "bid": round(bid, 2) if bid else None,
-        "ask": round(ask, 2) if ask else None,
-        "last": _safe_float(latest.get("close")),
-        "high": _safe_float(latest.get("high")),
-        "low": _safe_float(latest.get("low")),
-        "iv_high": _safe_float(latest.get("iv_high")),
-        "iv_low": _safe_float(latest.get("iv_low")),
-        "volume": latest.get("volume_no_side"),
-    }
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        if r.get("option_symbol") == target_symbol:
+            return {
+                "bid": _safe_float(r.get("nbbo_bid")),
+                "ask": _safe_float(r.get("nbbo_ask")),
+                "last": _safe_float(r.get("last_price")),
+                "iv": _safe_float(r.get("implied_volatility")),
+                "volume": r.get("volume"),
+                "open_interest": r.get("open_interest"),
+                "prev_oi": r.get("prev_oi"),
+                "sweep_volume": r.get("sweep_volume"),
+                "floor_volume": r.get("floor_volume"),
+                "ask_volume": r.get("ask_volume"),
+                "bid_volume": r.get("bid_volume"),
+                "total_premium": _safe_float(r.get("total_premium")),
+            }
+    return None
 
 
 def _safe_float(v):
@@ -181,13 +202,12 @@ def compute_trade_ticket(ticker, spot, side, vehicle, uw_client=None, today=None
         best = _find_best_contract(uw_client, ticker, side, expiry, strike)
         if best:
             actual_sym, actual_expiry, actual_strike = best
-            # Use validated contract symbol/strike/expiry
             ticket["occ_symbol"] = actual_sym
             ticket["strike"] = actual_strike
             ticket["expiry"] = actual_expiry.isoformat()
             ticket["dte"] = (actual_expiry - today).days
-            # Step 2: pull live quote
-            quote = _fetch_intraday_quote(uw_client, actual_sym)
+            # Step 2: pull live contract data (NBBO, IV, OI, volume)
+            quote = _fetch_contract_data(uw_client, ticker, actual_sym)
             if quote:
                 ticket["quote"] = quote
                 bid = quote.get("bid") or 0
@@ -196,6 +216,12 @@ def compute_trade_ticket(ticker, spot, side, vehicle, uw_client=None, today=None
                     ticket["mid"] = round((bid + ask) / 2, 2)
                 elif quote.get("last"):
                     ticket["mid"] = quote.get("last")
+                # Step 3: compute delta from BS using IV + spot + strike + dte
+                iv = quote.get("iv")
+                if iv:
+                    delta = _bs_delta(side, spot, ticket["strike"], ticket["dte"], iv)
+                    if delta is not None:
+                        ticket["delta"] = delta
 
     return ticket
 

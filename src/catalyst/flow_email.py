@@ -48,6 +48,14 @@ hr { border: none; border-top: 1px solid #e5e7eb; margin: 22px 0; }
   <strong>MACRO REGIME:</strong> {{ macro_regime }}  ·  <strong>{{ regime_label }}</strong>
 </div>
 
+{% if concentration_warnings %}
+{% for w in concentration_warnings %}
+<div style="background:{% if w.level == 'CRITICAL' %}#7f1d1d{% else %}#a16207{% endif %};color:#fff;padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:12px;">
+  <strong>{{ w.level }}:</strong> {{ w.label }}
+</div>
+{% endfor %}
+{% endif %}
+
 {% if not calls and not puts %}
 <div class="sit-out">
   <strong>SIT OUT TODAY.</strong> No setup cleared the MODERATE confluence threshold.<br>
@@ -69,7 +77,7 @@ hr { border: none; border-top: 1px solid #e5e7eb; margin: 22px 0; }
     {% if p.trade_ticket %}
     <div class="trade-ticket">
       <div class="order">{{ p.trade_ticket.ticker }} {{ p.trade_ticket.side }} ${{ p.trade_ticket.strike }} exp {{ p.trade_ticket.expiry }} ({{ p.trade_ticket.dte }}d){% if p.trade_ticket.mid %}  @ ${{ "%.2f"|format(p.trade_ticket.mid) }} mid{% endif %}</div>
-      <div class="meta">{{ p.trade_ticket.occ_symbol }}{% if p.trade_ticket.quote %}  ·  bid ${{ p.trade_ticket.quote.bid }} / ask ${{ p.trade_ticket.quote.ask }}{% if p.trade_ticket.quote.delta %}  ·  delta {{ "%.2f"|format(p.trade_ticket.quote.delta) }}{% endif %}{% if p.trade_ticket.quote.iv %}  ·  IV {{ "%.0f"|format(p.trade_ticket.quote.iv * 100) }}%{% endif %}{% endif %}</div>
+      <div class="meta">{{ p.trade_ticket.occ_symbol }}{% if p.trade_ticket.quote %}  ·  bid ${{ p.trade_ticket.quote.bid }} / ask ${{ p.trade_ticket.quote.ask }}{% endif %}{% if p.trade_ticket.delta %}  ·  delta {{ "%.2f"|format(p.trade_ticket.delta) }}{% endif %}{% if p.trade_ticket.quote and p.trade_ticket.quote.iv %}  ·  IV {{ "%.0f"|format(p.trade_ticket.quote.iv * 100) }}%{% endif %}{% if p.trade_ticket.quote and p.trade_ticket.quote.open_interest %}  ·  OI {{ p.trade_ticket.quote.open_interest }}{% endif %}</div>
     </div>
     {% endif %}
     <div class="size-target">
@@ -103,7 +111,7 @@ hr { border: none; border-top: 1px solid #e5e7eb; margin: 22px 0; }
     {% if p.trade_ticket %}
     <div class="trade-ticket">
       <div class="order">{{ p.trade_ticket.ticker }} {{ p.trade_ticket.side }} ${{ p.trade_ticket.strike }} exp {{ p.trade_ticket.expiry }} ({{ p.trade_ticket.dte }}d){% if p.trade_ticket.mid %}  @ ${{ "%.2f"|format(p.trade_ticket.mid) }} mid{% endif %}</div>
-      <div class="meta">{{ p.trade_ticket.occ_symbol }}{% if p.trade_ticket.quote %}  ·  bid ${{ p.trade_ticket.quote.bid }} / ask ${{ p.trade_ticket.quote.ask }}{% if p.trade_ticket.quote.delta %}  ·  delta {{ "%.2f"|format(p.trade_ticket.quote.delta) }}{% endif %}{% if p.trade_ticket.quote.iv %}  ·  IV {{ "%.0f"|format(p.trade_ticket.quote.iv * 100) }}%{% endif %}{% endif %}</div>
+      <div class="meta">{{ p.trade_ticket.occ_symbol }}{% if p.trade_ticket.quote %}  ·  bid ${{ p.trade_ticket.quote.bid }} / ask ${{ p.trade_ticket.quote.ask }}{% endif %}{% if p.trade_ticket.delta %}  ·  delta {{ "%.2f"|format(p.trade_ticket.delta) }}{% endif %}{% if p.trade_ticket.quote and p.trade_ticket.quote.iv %}  ·  IV {{ "%.0f"|format(p.trade_ticket.quote.iv * 100) }}%{% endif %}{% if p.trade_ticket.quote and p.trade_ticket.quote.open_interest %}  ·  OI {{ p.trade_ticket.quote.open_interest }}{% endif %}</div>
     </div>
     {% endif %}
     <div class="size-target">
@@ -177,4 +185,5 @@ def render_flow_email(scan):
         regime_label=notes or label,
         calls=calls,
         puts=puts,
+        concentration_warnings=scan.get("concentration_warnings", []),
     )

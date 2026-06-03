@@ -60,11 +60,12 @@ def detect(uw_client, ticker, pick=None):
     if total_trades == 0:
         return {"fires": False, "side": None, "score": 0, "label": None, "details": None}
 
+    # Concentration threshold lowered 65% -> 55% (real institutional flow rarely 65%+ one-sided)
     call_ratio = calls / total_trades
-    if call_ratio >= 0.65:
+    if call_ratio >= 0.55:
         side = "CALL"
         concentration_pct = call_ratio
-    elif call_ratio <= 0.35:
+    elif call_ratio <= 0.45:
         side = "PUT"
         concentration_pct = 1 - call_ratio
     else:

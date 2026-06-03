@@ -48,12 +48,12 @@ def detect(uw_client, ticker, pick=None):
         elif ask > 0 and price >= ask:
             side_premiums[side]["above_ask"] += prem
 
-    # Find dominant side with >=50% above-ask ratio
+    # Threshold lowered: 40% above-ask ratio (was 50% - too strict for normal market days)
     triggers = []
     for side, p in side_premiums.items():
         if p["total"] >= 250_000:
             ratio = p["above_ask"] / p["total"] if p["total"] > 0 else 0
-            if ratio >= 0.5:
+            if ratio >= 0.4:
                 triggers.append({"side": side, "total": p["total"], "above_ask": p["above_ask"], "ratio": ratio})
 
     if not triggers:

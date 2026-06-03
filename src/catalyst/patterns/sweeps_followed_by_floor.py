@@ -33,19 +33,17 @@ def detect(uw_client, ticker, pick=None):
         except (TypeError, ValueError):
             return default
 
+    # UW uses booleans has_sweep / has_floor (NOT a string field).
+    # `type` is "call" or "put" only.
     sweeps = []
     floors = []
     for r in rows:
         if not isinstance(r, dict):
             continue
-        type_field = (r.get("type") or r.get("trade_type") or "").lower()
-        is_sweep = "sweep" in type_field
-        is_floor = "floor" in type_field
-        side = None
-        if "call" in type_field:
-            side = "CALL"
-        elif "put" in type_field:
-            side = "PUT"
+        is_sweep = bool(r.get("has_sweep"))
+        is_floor = bool(r.get("has_floor"))
+        type_field = (r.get("type") or "").lower()
+        side = "CALL" if "call" in type_field else ("PUT" if "put" in type_field else None)
         ts = _parse_time(r.get("created_at") or r.get("start_time"))
         prem = _to_float(r.get("total_premium") or r.get("premium"))
         if is_sweep:
@@ -53,20 +51,21 @@ def detect(uw_client, ticker, pick=None):
         if is_floor:
             floors.append({"ts": ts, "side": side, "premium": prem})
 
-    if len(sweeps) < 10 or not floors:
+    # Threshold lowered: 5+ sweeps + 1 floor (was 10 - rarely fires)
+    if len(sweeps) < 5 or not floors:
         return {"fires": False, "side": None, "score": 0,
-                "label": f"sweeps={len(sweeps)}, floors={len(floors)} - pattern requires 10+ sweeps + floor",
+                "label": f"sweeps={len(sweeps)}, floors={len(floors)} - need 5+ sweeps + 1 floor",
                 "details": {"sweep_count": len(sweeps), "floor_count": len(floors)}}
 
     # For each floor trade, count sweeps in 30 min before it on same side
     best_setup = None
     for f in floors:
-        if not f["ts"] or not f["side"] or f["premium"] < 100_000:
+        if not f["ts"] or not f["side"] or f["premium"] < 50_000:
             continue
         window_start = f["ts"] - timedelta(minutes=30)
         same_side_sweeps = [s for s in sweeps if s["ts"] and s["side"] == f["side"]
                             and window_start <= s["ts"] <= f["ts"]]
-        if len(same_side_sweeps) >= 10:
+        if len(same_side_sweeps) >= 5:
             total_sweep_prem = sum(s["premium"] for s in same_side_sweeps)
             setup = {
                 "side": f["side"],

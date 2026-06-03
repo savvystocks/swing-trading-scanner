@@ -28,25 +28,35 @@ def detect(uw_client, ticker, pick=None):
     except (TypeError, ValueError):
         return {"fires": False, "side": None, "score": 0, "label": None, "details": None}
 
+    # Calibrated to actual UW NOPE distribution (typical range -0.5 to +0.5,
+    # extremes around +/- 2.0+). Was 10x too high - never fired.
     side = None
     score = 0
     label = None
-    if nope_val >= 3:
+    if nope_val >= 1.5:
         side = "CALL"
         score = 25
-        label = f"NOPE +{nope_val:.1f} = dealer delta pressure UPWARD = CALL bias"
-    elif nope_val <= -3:
+        label = f"NOPE +{nope_val:.2f} = strong dealer delta pressure UPWARD = CALL bias"
+    elif nope_val <= -1.5:
         side = "PUT"
         score = 25
-        label = f"NOPE {nope_val:.1f} = dealer delta pressure DOWNWARD = PUT bias"
-    elif nope_val >= 2:
+        label = f"NOPE {nope_val:.2f} = strong dealer delta pressure DOWNWARD = PUT bias"
+    elif nope_val >= 0.8:
         side = "CALL"
-        score = 12
-        label = f"NOPE +{nope_val:.1f} = moderate call pressure"
-    elif nope_val <= -2:
+        score = 15
+        label = f"NOPE +{nope_val:.2f} = elevated call pressure"
+    elif nope_val <= -0.8:
         side = "PUT"
-        score = 12
-        label = f"NOPE {nope_val:.1f} = moderate put pressure"
+        score = 15
+        label = f"NOPE {nope_val:.2f} = elevated put pressure"
+    elif nope_val >= 0.4:
+        side = "CALL"
+        score = 8
+        label = f"NOPE +{nope_val:.2f} = mild call lean"
+    elif nope_val <= -0.4:
+        side = "PUT"
+        score = 8
+        label = f"NOPE {nope_val:.2f} = mild put lean"
     else:
         return {"fires": False, "side": None, "score": 0,
                 "label": f"NOPE {nope_val:+.2f} (neutral, no signal)",

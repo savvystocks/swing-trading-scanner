@@ -46,10 +46,15 @@ def detect(uw_client, ticker, pick=None):
             pairs.append((k, cg + pg))
     pairs.sort(key=lambda x: x[0])
 
+    # Only consider strikes within +/- 30% of spot (deep OTM artifacts produce junk flips)
+    near_spot = [(k, g) for k, g in pairs if abs(k - spot_val) / spot_val <= 0.30]
+    if not near_spot:
+        near_spot = pairs
+
     cumulative = 0
     flip_strike = None
     prev_sign = None
-    for strike, g in pairs:
+    for strike, g in near_spot:
         cumulative += g
         cur_sign = 1 if cumulative > 0 else (-1 if cumulative < 0 else 0)
         if prev_sign is not None and prev_sign != cur_sign and prev_sign != 0:
@@ -67,12 +72,19 @@ def detect(uw_client, ticker, pick=None):
     net_gex_total = sum(g for _, g in pairs)
     regime = "NEGATIVE_AMP" if net_gex_total < 0 else ("POSITIVE_PIN" if net_gex_total > 0 else "NEUTRAL")
 
-    if distance_pct > 0.5:
+    # Widened from 0.5% to 1.5% - real strikes are rarely within 0.5% of spot
+    if distance_pct > 1.5:
         return {"fires": False, "side": None, "score": 0,
                 "label": f"flip strike ${flip_strike:.2f} ({distance_pct:.2f}% away from spot - not in magnet zone)",
                 "details": {"flip_strike": flip_strike, "spot": spot_val, "distance_pct": distance_pct, "regime": regime}}
 
-    # Within 0.5% - magnet zone fires
+    # Within 1.5% - magnet zone fires. Closer = more score.
+    if distance_pct <= 0.5:
+        magnet_score = 25
+    elif distance_pct <= 1.0:
+        magnet_score = 18
+    else:
+        magnet_score = 12
     if regime == "NEGATIVE_AMP":
         # Negative gamma amplifies moves - price will accelerate away from current position
         if spot_val < flip_strike:
@@ -93,7 +105,7 @@ def detect(uw_client, ticker, pick=None):
     return {
         "fires": True,
         "side": side,
-        "score": 25,
+        "score": magnet_score,
         "label": label,
         "details": {
             "flip_strike": flip_strike,

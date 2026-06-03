@@ -15,13 +15,13 @@ on:
     types: [run-flow-scan]
   schedule:
     # Summer (Mar-Oct, BST/EDT): US market 13:30-20:00 UTC
-    # Every 15 min during regular hours - alerts/JSON always, email only at designated windows.
-    - cron: "30,45 13 * 3-10 1-5"        # 13:30, 13:45 UTC (open + post-open)
-    - cron: "0,15,30,45 14-19 * 3-10 1-5" # 14:00-19:45 every 15 min
-    - cron: "0 20 * 3-10 1-5"             # 20:00 UTC (close)
+    # Every 30 min during regular hours - balances freshness vs UW API budget.
+    - cron: "30 13 * 3-10 1-5"        # 13:30 UTC (open)
+    - cron: "0,30 14-19 * 3-10 1-5"   # 14:00-19:30 every 30 min
+    - cron: "0 20 * 3-10 1-5"         # 20:00 UTC (close)
     # Winter (Nov-Mar, GMT/EST): US market 14:30-21:00 UTC
-    - cron: "30,45 14 * 1-2,11-12 1-5"
-    - cron: "0,15,30,45 15-20 * 1-2,11-12 1-5"
+    - cron: "30 14 * 1-2,11-12 1-5"
+    - cron: "0,30 15-20 * 1-2,11-12 1-5"
     - cron: "0 21 * 1-2,11-12 1-5"
 
 jobs:

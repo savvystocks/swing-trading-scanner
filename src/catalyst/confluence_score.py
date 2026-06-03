@@ -47,18 +47,18 @@ PATTERNS = [
 
 
 def _tier_from_score(score):
-    """Tiers tuned for aggressive trader with active UW signal stream.
-    Conservative trader can raise the floors; aggressive lowers them.
-    These thresholds assume max possible score ~200 (7 patterns + positioning + tide)."""
-    if score >= 160:
-        return ("GAMMA_BOMB", 15)
-    if score >= 130:
-        return ("MAX_CONVICTION", 40)
+    """Pure flow-based tiers (macro stripped from scoring).
+    Max possible from 7 patterns: ~140 (25+25+20+20+20+15+15).
+    Realistic on a strong day: 60-80 (3-4 patterns firing in unison)."""
     if score >= 100:
+        return ("GAMMA_BOMB", 15)
+    if score >= 80:
+        return ("MAX_CONVICTION", 40)
+    if score >= 60:
         return ("ELITE", 30)
-    if score >= 75:
+    if score >= 45:
         return ("STRONG", 20)
-    if score >= 50:
+    if score >= 30:
         return ("MODERATE", 10)
     return ("PASS", 0)
 
@@ -140,37 +140,23 @@ def compute_confluence(pick, uw_client, macro=None, verbose=False):
         side = None
         base_pattern_score = max(call_score, put_score)
 
-    # Add positioning_first contribution (already computed on pick if present)
-    pf = pick.get("_positioning_first") or {}
-    pf_score = pf.get("score", 0)
-    try:
-        pf_score = float(pf_score)
-    except (TypeError, ValueError):
-        pf_score = 0
-    # Scale positioning_first 0-100 into the 0-50 range (since other patterns add up to 200)
-    pf_contribution = min(pf_score * 0.5, 50)
-    # Only count if same side as pattern majority
-    pf_side = pf.get("side")
-    if pf_side and side and pf_side == side:
-        positioning_contribution = pf_contribution
-    elif pf_side and side and pf_side != side:
-        positioning_contribution = -pf_contribution * 0.5  # fighting positioning_first = penalty
-    else:
-        positioning_contribution = 0
+    # Macro stripped from scoring per user direction - we follow whales, not tea leaves.
+    # positioning_first (CFTC/AAII/FINRA) and market_tide remain INFORMATIONAL ONLY
+    # in the email banner for context, but do NOT affect tier/size.
+    positioning_contribution = 0
+    tide_score = 0
 
-    # Market tide alignment
+    # Still compute tide for display (no score impact)
     if side:
         tide_result = market_tide_alignment.detect(uw_client, ticker, pick=pick, intended_side=side)
-        tide_score = tide_result.get("score", 0)
-        if tide_result.get("fires") or tide_score != 0:
+        if tide_result.get("fires") or tide_result.get("score", 0) != 0:
             patterns_fired.append({
-                "key": "market_tide", "side": side, "score": tide_score,
-                "label": tide_result.get("label"), "details": tide_result.get("details"),
+                "key": "market_tide_info", "side": side, "score": 0,
+                "label": f"[INFO] {tide_result.get('label')}",
+                "details": tide_result.get("details"),
             })
-    else:
-        tide_score = 0
 
-    total_score = base_pattern_score + positioning_contribution + tide_score
+    total_score = base_pattern_score
     total_score = max(0, total_score)
 
     tier, size_pct = _tier_from_score(total_score)

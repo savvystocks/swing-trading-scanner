@@ -231,6 +231,84 @@ class UnusualWhalesClient:
         return self._request(f"/darkpool/{ticker}", {"limit": limit},
                             cache_key="darkpool_ticker", ttl=CACHE_TTL_SECONDS["darkpool_ticker"])
 
+    # === PROPRIETARY METRICS (NOPE, market tide, etc.) ===
+
+    def nope(self, ticker):
+        """Net Option Position Effect - dealer-induced delta pressure on stock."""
+        return self._request(f"/stock/{ticker}/nope", None,
+                            cache_key="oi_change", ttl=300)
+
+    def net_prem_ticks(self, ticker):
+        """Net premium tick-by-tick (live flow direction)."""
+        return self._request(f"/stock/{ticker}/net-prem-ticks", None,
+                            cache_key="flow_recent", ttl=300)
+
+    def market_tide(self):
+        """Overall market flow direction (real-time)."""
+        return self._request("/market/market-tide", None,
+                            cache_key="darkpool_recent", ttl=300)
+
+    def etf_tide(self):
+        """Sector ETF flow direction."""
+        return self._request("/market/etf-tide", None,
+                            cache_key="darkpool_recent", ttl=300)
+
+    def historical_risk_reversal_skew(self, ticker):
+        """25-delta skew dynamics over time."""
+        return self._request(f"/stock/{ticker}/historical-risk-reversal-skew", None,
+                            cache_key="iv_rank", ttl=1800)
+
+    # === SMART MONEY ===
+
+    def congress_recent_trades(self, limit=50):
+        return self._request("/congress/recent-trades", {"limit": limit},
+                            cache_key="oi_change", ttl=3600)
+
+    def institution_activity(self, ticker):
+        return self._request(f"/institution/activity", {"ticker": ticker},
+                            cache_key="oi_change", ttl=3600)
+
+    def insider_ticker_flow(self, ticker):
+        return self._request(f"/insiders/ticker-flow", {"ticker": ticker},
+                            cache_key="oi_change", ttl=3600)
+
+    # === EARNINGS ===
+
+    def earnings_premarket(self):
+        return self._request("/earnings/premarket", None,
+                            cache_key="oi_change", ttl=1800)
+
+    def earnings_afterhours(self):
+        return self._request("/earnings/afterhours", None,
+                            cache_key="oi_change", ttl=1800)
+
+    def earnings_ticker(self, ticker):
+        return self._request(f"/earnings/{ticker}", None,
+                            cache_key="oi_change", ttl=3600)
+
+    def earnings_estimates(self, ticker):
+        return self._request(f"/companies/earnings-estimates", {"ticker": ticker},
+                            cache_key="iv_rank", ttl=3600)
+
+    # === STOCK INFO (replaces EODHD fundamentals) ===
+
+    def stock_info(self, ticker):
+        return self._request(f"/stock/{ticker}/info", None,
+                            cache_key="oi_per_strike", ttl=3600)
+
+    def stock_ohlc(self, ticker, candle_size="1d"):
+        return self._request(f"/stock/{ticker}/ohlc/{candle_size}", None,
+                            cache_key="oi_per_strike", ttl=1800)
+
+    # === NEWS ===
+
+    def news_headlines(self, ticker=None, limit=50):
+        params = {"limit": limit}
+        if ticker:
+            params["ticker"] = ticker
+        return self._request("/news/headlines", params,
+                            cache_key="flow_alerts", ttl=300)
+
 
 # Module-level singleton
 _CLIENT = None

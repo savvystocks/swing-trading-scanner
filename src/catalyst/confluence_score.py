@@ -1,0 +1,241 @@
+"""Master Confluence Scoring Engine.
+
+Stacks all 7 patterns + positioning + macro alignment into a single 0-250 score
+that drives the trade tier and sizing decision.
+
+PATTERN POINTS (when fires):
+  NOPE Extreme (Tier S)              25
+  Gamma Flip Magnet (Tier S)         25
+  Sweeps Followed by Floor (Tier A)  20
+  Volume > OI (Tier A)               20
+  Above-Ask Urgency (Tier B)         15
+  Institutional $250k+ (Tier B)      15-20
+  Whisper Delta (Tier C, situational) 15
+  Market Tide Alignment              +10 / -10
+  positioning_first.score            (0-100, scaled in)
+
+TIER MAPPING (total score):
+  200-250    GAMMA_BOMB        15% size, 0-3 DTE far OTM
+  160-200    MAX_CONVICTION    40% size, 0.5 ITM call/put
+  130-160    ELITE             30% size, ATM call/put
+  100-130    STRONG            20% size, ATM call/put
+  70-100     MODERATE          10% size, debit spread
+  <70        PASS              skip
+"""
+
+from src.catalyst.patterns import (
+    nope_extreme,
+    gamma_flip_magnet,
+    sweeps_followed_by_floor,
+    volume_vs_oi,
+    above_ask_urgency,
+    institutional_size,
+    whisper_delta,
+    market_tide_alignment,
+)
+
+
+PATTERNS = [
+    ("nope", nope_extreme.detect),
+    ("gamma_flip", gamma_flip_magnet.detect),
+    ("sweeps_floor", sweeps_followed_by_floor.detect),
+    ("volume_oi", volume_vs_oi.detect),
+    ("above_ask", above_ask_urgency.detect),
+    ("institutional", institutional_size.detect),
+    ("whisper", whisper_delta.detect),
+]
+
+
+def _tier_from_score(score):
+    """Tiers tuned for aggressive trader with active UW signal stream.
+    Conservative trader can raise the floors; aggressive lowers them.
+    These thresholds assume max possible score ~200 (7 patterns + positioning + tide)."""
+    if score >= 160:
+        return ("GAMMA_BOMB", 15)
+    if score >= 130:
+        return ("MAX_CONVICTION", 40)
+    if score >= 100:
+        return ("ELITE", 30)
+    if score >= 75:
+        return ("STRONG", 20)
+    if score >= 50:
+        return ("MODERATE", 10)
+    return ("PASS", 0)
+
+
+def _vehicle_for_tier(tier):
+    return {
+        "GAMMA_BOMB": "0-3 DTE far OTM call/put",
+        "MAX_CONVICTION": "0.5 ITM call/put, 21-30d",
+        "ELITE": "ATM call/put, 21-30d",
+        "STRONG": "ATM call/put, 21-30d",
+        "MODERATE": "ATM debit spread, 21-30d",
+        "PASS": "skip",
+    }.get(tier, "skip")
+
+
+def _rr_for_tier(tier):
+    """Target gain / max loss for the tier."""
+    return {
+        "GAMMA_BOMB": {"target_pct": 500, "stop_pct": -100, "max_hold_days": 3},
+        "MAX_CONVICTION": {"target_pct": 200, "stop_pct": -50, "max_hold_days": 14},
+        "ELITE": {"target_pct": 150, "stop_pct": -50, "max_hold_days": 14},
+        "STRONG": {"target_pct": 100, "stop_pct": -50, "max_hold_days": 10},
+        "MODERATE": {"target_pct": 75, "stop_pct": -50, "max_hold_days": 7},
+        "PASS": {"target_pct": 0, "stop_pct": 0, "max_hold_days": 0},
+    }.get(tier, {})
+
+
+def compute_confluence(pick, uw_client, macro=None, verbose=False):
+    """Score a single ticker against all confluence patterns.
+
+    Returns dict with:
+      score: total confluence score
+      side: 'CALL' or 'PUT' (whichever side has more agreement)
+      tier: GAMMA_BOMB / MAX_CONVICTION / ELITE / STRONG / MODERATE / PASS
+      size_pct: recommended account % for the trade
+      vehicle: suggested option structure
+      target_pct / stop_pct / max_hold_days
+      patterns_fired: list of pattern results
+      thesis: one-sentence summary
+    """
+    ticker = pick.get("ticker")
+    if not ticker or not uw_client.enabled:
+        return None
+
+    # Run each pattern detector
+    patterns_fired = []
+    call_score = 0
+    put_score = 0
+    pattern_log = {}
+
+    for key, detect_fn in PATTERNS:
+        try:
+            result = detect_fn(uw_client, ticker, pick=pick)
+        except Exception as e:
+            if verbose:
+                print(f"  pattern {key} failed for {ticker}: {type(e).__name__}: {e}")
+            result = {"fires": False, "side": None, "score": 0, "label": f"{key} error", "details": None}
+        pattern_log[key] = result
+        if result.get("fires"):
+            pts = result.get("score", 0)
+            side = result.get("side")
+            if side == "CALL":
+                call_score += pts
+            elif side == "PUT":
+                put_score += pts
+            patterns_fired.append({
+                "key": key, "side": side, "score": pts,
+                "label": result.get("label"), "details": result.get("details"),
+            })
+
+    # Determine dominant side
+    if call_score > put_score:
+        side = "CALL"
+        base_pattern_score = call_score
+    elif put_score > call_score:
+        side = "PUT"
+        base_pattern_score = put_score
+    else:
+        side = None
+        base_pattern_score = max(call_score, put_score)
+
+    # Add positioning_first contribution (already computed on pick if present)
+    pf = pick.get("_positioning_first") or {}
+    pf_score = pf.get("score", 0)
+    try:
+        pf_score = float(pf_score)
+    except (TypeError, ValueError):
+        pf_score = 0
+    # Scale positioning_first 0-100 into the 0-50 range (since other patterns add up to 200)
+    pf_contribution = min(pf_score * 0.5, 50)
+    # Only count if same side as pattern majority
+    pf_side = pf.get("side")
+    if pf_side and side and pf_side == side:
+        positioning_contribution = pf_contribution
+    elif pf_side and side and pf_side != side:
+        positioning_contribution = -pf_contribution * 0.5  # fighting positioning_first = penalty
+    else:
+        positioning_contribution = 0
+
+    # Market tide alignment
+    if side:
+        tide_result = market_tide_alignment.detect(uw_client, ticker, pick=pick, intended_side=side)
+        tide_score = tide_result.get("score", 0)
+        if tide_result.get("fires") or tide_score != 0:
+            patterns_fired.append({
+                "key": "market_tide", "side": side, "score": tide_score,
+                "label": tide_result.get("label"), "details": tide_result.get("details"),
+            })
+    else:
+        tide_score = 0
+
+    total_score = base_pattern_score + positioning_contribution + tide_score
+    total_score = max(0, total_score)
+
+    tier, size_pct = _tier_from_score(total_score)
+    rr = _rr_for_tier(tier)
+    vehicle = _vehicle_for_tier(tier)
+
+    # Build plain-English thesis
+    fired_labels = [p["label"] for p in patterns_fired if p.get("fires") != False and p.get("label")]
+    top_3 = fired_labels[:3]
+    if side and top_3:
+        thesis = f"{ticker} {side} ({tier}): " + "; ".join(top_3)
+    else:
+        thesis = f"{ticker}: insufficient confluence - PASS"
+
+    return {
+        "ticker": ticker,
+        "score": int(total_score),
+        "side": side,
+        "tier": tier,
+        "size_pct": size_pct,
+        "vehicle": vehicle,
+        "target_pct": rr.get("target_pct"),
+        "stop_pct": rr.get("stop_pct"),
+        "max_hold_days": rr.get("max_hold_days"),
+        "patterns_fired": patterns_fired,
+        "call_score": call_score,
+        "put_score": put_score,
+        "positioning_contribution": positioning_contribution,
+        "tide_score": tide_score,
+        "thesis": thesis,
+    }
+
+
+def apply_confluence_scoring(picks, uw_client, macro=None, verbose=False):
+    """Apply confluence scoring to every pick. Attaches `_confluence` dict."""
+    if not picks:
+        return picks
+    if not uw_client.enabled:
+        if verbose:
+            print("  confluence_score: UW token missing - skipping")
+        return picks
+
+    scored = 0
+    by_tier = {}
+    for p in picks:
+        try:
+            res = compute_confluence(p, uw_client, macro=macro, verbose=verbose)
+            if res:
+                p["_confluence"] = res
+                scored += 1
+                by_tier[res["tier"]] = by_tier.get(res["tier"], 0) + 1
+        except Exception as e:
+            if verbose:
+                print(f"  confluence fail for {p.get('ticker')}: {type(e).__name__}: {e}")
+            continue
+
+    if verbose:
+        tier_str = " ".join(f"{t}={c}" for t, c in sorted(by_tier.items()))
+        print(f"  confluence_score: scored {scored} picks. Tiers: {tier_str}")
+
+    return picks
+
+
+def rank_picks_by_confluence(picks, top_n=10):
+    """Sort picks by confluence score (highest first). Return top N."""
+    scored = [p for p in picks if p.get("_confluence", {}).get("tier") != "PASS"]
+    scored.sort(key=lambda p: p.get("_confluence", {}).get("score", 0), reverse=True)
+    return scored[:top_n]

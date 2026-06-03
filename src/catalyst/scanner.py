@@ -375,22 +375,83 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         # SCAN_LIMIT env var caps universe size for fast local testing.
         scan_limit_env = os.environ.get("SCAN_LIMIT", "").strip()
         max_universe = int(scan_limit_env) if scan_limit_env.isdigit() else 1200
-        if verbose:
-            print(f"Step 1+2/6: universe build (positioning-first mode, max_universe={max_universe})")
-            print(f"  loading universe.json + applying liquidity floor + earnings-7d filter")
-        try:
-            from src.catalyst.universe_builder import build_positioning_universe
-            enriched = build_positioning_universe(client, max_universe=max_universe, verbose=verbose)
-            # Catalysts are intentionally empty - they'll be surfaced as ENRICHMENT later
-            # via news_score detectors and EDGAR keyword scanner on positioning-ranked top 600.
-            catalysts = {"earnings": {}, "earnings_lead_up": {}, "material": {}, "activist": {},
-                         "insider": {}, "cohorts": {}, "index_inclusion": {}}
-            per_ticker = {}
-            skipped = 0
-        except Exception as e:
+
+        # Flow-first mode: if UW token set, build a 20-30 ticker universe from today's
+        # institutional flow instead of scanning 1108 EODHD names. The educator's
+        # framing: "scan the best trades, not the whole market".
+        from src.unusual_whales_api import get_client as get_uw_client
+        uw_client = get_uw_client()
+        flow_first_mode = uw_client.enabled
+
+        if flow_first_mode:
+            uw_max = int(scan_limit_env) if scan_limit_env.isdigit() else 30
             if verbose:
-                print(f"  universe builder failed, falling back to catalyst mode: {type(e).__name__}: {e}")
-            positioning_first_mode = False
+                print(f"Step 1+2/6: FLOW-FIRST universe build via UW (target {uw_max} tickers)")
+            try:
+                from src.catalyst.universe_from_flow import build_flow_universe, merge_live_positions_into_universe
+                flow_universe = build_flow_universe(uw_client=uw_client, max_tickers=uw_max,
+                                                    min_premium=50_000, verbose=verbose)
+                flow_universe = merge_live_positions_into_universe(flow_universe, verbose=verbose)
+
+                # Enrich each ticker with OHLCV + fundamentals (top 30 - 50 EODHD calls instead of 1108)
+                enriched = []
+                for entry in flow_universe:
+                    ticker_short = entry["ticker"]
+                    try:
+                        data = enrich_ticker(client, ticker_short, signals=[], fetch_news=False)
+                    except Exception:
+                        data = None
+                    if not data or not data.get("price") or data["price"] < 1.0:
+                        continue
+                    enriched.append({
+                        "ticker": ticker_short,
+                        "company": data.get("name") or "",
+                        "signals": [],
+                        "sources": entry.get("sources", ["uw_flow"]),
+                        "data": data,
+                        "name": data.get("name"),
+                        "sector": data.get("sector"),
+                        "_uw_flow_initial": {
+                            "total_premium": entry.get("total_premium", 0),
+                            "trade_count": entry.get("trade_count", 0),
+                            "calls": entry.get("calls", 0),
+                            "puts": entry.get("puts", 0),
+                        },
+                    })
+
+                if verbose:
+                    print(f"  flow universe enriched: {len(enriched)} of {len(flow_universe)} tickers")
+
+                # Enrich with full UW per-ticker signals (GEX, IV, OI, dark pool, max pain)
+                from src.catalyst.uw_enrichment import enrich_universe_with_uw
+                enrich_universe_with_uw(enriched, uw_client=uw_client, max_picks=len(enriched), verbose=verbose)
+
+                catalysts = {"earnings": {}, "earnings_lead_up": {}, "material": {}, "activist": {},
+                             "insider": {}, "cohorts": {}, "index_inclusion": {}}
+                per_ticker = {}
+                skipped = 0
+            except Exception as e:
+                if verbose:
+                    print(f"  flow-first universe failed, falling back to static: {type(e).__name__}: {e}")
+                flow_first_mode = False
+
+        if not flow_first_mode:
+            if verbose:
+                print(f"Step 1+2/6: universe build (positioning-first mode, max_universe={max_universe})")
+                print(f"  loading universe.json + applying liquidity floor + earnings-7d filter")
+            try:
+                from src.catalyst.universe_builder import build_positioning_universe
+                enriched = build_positioning_universe(client, max_universe=max_universe, verbose=verbose)
+                # Catalysts are intentionally empty - they'll be surfaced as ENRICHMENT later
+                # via news_score detectors and EDGAR keyword scanner on positioning-ranked top 600.
+                catalysts = {"earnings": {}, "earnings_lead_up": {}, "material": {}, "activist": {},
+                             "insider": {}, "cohorts": {}, "index_inclusion": {}}
+                per_ticker = {}
+                skipped = 0
+            except Exception as e:
+                if verbose:
+                    print(f"  universe builder failed, falling back to catalyst mode: {type(e).__name__}: {e}")
+                positioning_first_mode = False
 
     if not positioning_first_mode:
         if verbose:

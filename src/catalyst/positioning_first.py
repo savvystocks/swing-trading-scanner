@@ -118,6 +118,43 @@ def _bull_positioning_score(pick, macro_regime):
         score += 10
         signals.append({"key": "margin_capitulation", "label": margin.get("label") or "margin debt capitulation", "pts": 10})
 
+    # === Unusual Whales institutional signals (educator's 6 signals) ===
+
+    uw_flow = pick.get("_uw_flow") or {}
+    if uw_flow.get("dominant_side") == "CALL" and uw_flow.get("call_put_ratio", 0) >= 2:
+        score += 18
+        signals.append({"key": "uw_call_dominant_flow",
+                        "label": f"UW: {uw_flow['calls']} calls / {uw_flow['puts']} puts (${uw_flow['total_premium']/1e6:.1f}M premium) = institutional call buying",
+                        "pts": 18})
+
+    uw_gex = pick.get("_uw_gex") or {}
+    if uw_gex.get("dealer_regime") == "NEGATIVE_AMP":
+        score += 15
+        signals.append({"key": "uw_negative_gex",
+                        "label": uw_gex.get("label") or "negative net GEX = dealer amplification regime",
+                        "pts": 15})
+
+    # 0DTE call dominance = squeeze setup
+    if uw_flow.get("zero_dte_share", 0) >= 0.30 and uw_flow.get("dominant_side") == "CALL":
+        score += 12
+        signals.append({"key": "uw_0dte_call_squeeze",
+                        "label": f"UW: {int(uw_flow['zero_dte_share']*100)}% of flow is 0DTE calls = gamma squeeze risk",
+                        "pts": 12})
+
+    uw_iv = pick.get("_uw_iv") or {}
+    if uw_iv.get("iv_rank") is not None and uw_iv["iv_rank"] < 30:
+        score += 8
+        signals.append({"key": "uw_iv_cheap",
+                        "label": f"UW: IV rank {uw_iv['iv_rank']:.0f} = options cheap, asymmetric upside",
+                        "pts": 8})
+
+    uw_dp = pick.get("_uw_dark_pool") or {}
+    if uw_dp.get("total_value_usd", 0) >= 5_000_000:
+        score += 8
+        signals.append({"key": "uw_dark_pool_accumulation",
+                        "label": f"UW: ${uw_dp['total_value_usd']/1e6:.1f}M dark pool prints = institutional accumulation",
+                        "pts": 8})
+
     # Lever 2: free per-ticker bull signals from data already attached in Step 2 enrichment.
     # Zero API cost - all derived from price action + fundamentals already on disk.
 
@@ -267,6 +304,37 @@ def _bear_positioning_score(pick, macro_regime):
     if la.get("flag") == "DO_NOT_CHASE":
         per_ticker_pts += 12
         signals.append({"key": "intraday_chase_risk", "label": la.get("label") or "intraday chase risk - PUT entry", "pts": 12})
+
+    # === UW per-ticker bear signals ===
+
+    uw_flow = pick.get("_uw_flow") or {}
+    # Put-dominant flow with high call extension = institutions hedging the top
+    if uw_flow.get("dominant_side") == "PUT" and uw_flow.get("call_put_ratio", 100) <= 0.5:
+        per_ticker_pts += 15
+        signals.append({"key": "uw_put_dominant_flow",
+                        "label": f"UW: {uw_flow['puts']} puts / {uw_flow['calls']} calls (${uw_flow['total_premium']/1e6:.1f}M premium) = institutional put buying",
+                        "pts": 15})
+
+    uw_gex = pick.get("_uw_gex") or {}
+    flip = uw_gex.get("gamma_flip_strike")
+    if flip is not None and uw_gex.get("above_gamma_flip") is False:
+        per_ticker_pts += 10
+        signals.append({"key": "uw_below_gamma_flip",
+                        "label": uw_gex.get("label") or "below gamma flip = downside vol amplification regime",
+                        "pts": 10})
+
+    if uw_flow.get("zero_dte_share", 0) >= 0.30 and uw_flow.get("dominant_side") == "PUT":
+        per_ticker_pts += 10
+        signals.append({"key": "uw_0dte_put_dominance",
+                        "label": f"UW: {int(uw_flow['zero_dte_share']*100)}% 0DTE puts = institutional intraday hedging",
+                        "pts": 10})
+
+    uw_iv = pick.get("_uw_iv") or {}
+    if uw_iv.get("iv_rank") is not None and uw_iv["iv_rank"] > 75:
+        per_ticker_pts += 5
+        signals.append({"key": "uw_iv_extreme",
+                        "label": f"UW: IV rank {uw_iv['iv_rank']:.0f} = vol elevated, premium overpriced",
+                        "pts": 5})
 
     score += per_ticker_pts
 

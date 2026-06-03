@@ -34,6 +34,9 @@ h1 { font-size: 22px; margin-bottom: 4px; }
 .patterns .pat { display: block; margin: 2px 0; }
 .patterns .pat-fired { color: #047857; }
 .uw-flow { display: inline-block; font-size: 11px; color: #6b7280; }
+.trade-ticket { background: #111827; color: #f9fafb; padding: 12px 16px; border-radius: 8px; margin: 10px 0; font-family: Menlo, Consolas, monospace; }
+.trade-ticket .order { font-size: 16px; font-weight: 700; color: #fbbf24; margin-bottom: 4px; }
+.trade-ticket .meta { font-size: 11px; color: #9ca3af; }
 .sit-out { background: #f9fafb; border: 2px solid #6b7280; border-radius: 10px; padding: 20px; text-align: center; font-size: 14px; color: #4b5563; }
 hr { border: none; border-top: 1px solid #e5e7eb; margin: 22px 0; }
 </style></head><body>
@@ -63,6 +66,12 @@ hr { border: none; border-top: 1px solid #e5e7eb; margin: 22px 0; }
       <span style="font-size:14px;color:#6b7280;">score {{ p.score }} / 200</span>
     </div>
     <div class="thesis">{{ p.thesis }}</div>
+    {% if p.trade_ticket %}
+    <div class="trade-ticket">
+      <div class="order">{{ p.trade_ticket.ticker }} {{ p.trade_ticket.side }} ${{ p.trade_ticket.strike }} exp {{ p.trade_ticket.expiry }} ({{ p.trade_ticket.dte }}d){% if p.trade_ticket.mid %}  @ ${{ "%.2f"|format(p.trade_ticket.mid) }} mid{% endif %}</div>
+      <div class="meta">{{ p.trade_ticket.occ_symbol }}{% if p.trade_ticket.quote %}  ·  bid ${{ p.trade_ticket.quote.bid }} / ask ${{ p.trade_ticket.quote.ask }}{% if p.trade_ticket.quote.delta %}  ·  delta {{ "%.2f"|format(p.trade_ticket.quote.delta) }}{% endif %}{% if p.trade_ticket.quote.iv %}  ·  IV {{ "%.0f"|format(p.trade_ticket.quote.iv * 100) }}%{% endif %}{% endif %}</div>
+    </div>
+    {% endif %}
     <div class="size-target">
       <span>Size: <strong>{{ p.size_pct }}%</strong></span>
       <span>Vehicle: <strong>{{ p.vehicle }}</strong></span>
@@ -91,6 +100,12 @@ hr { border: none; border-top: 1px solid #e5e7eb; margin: 22px 0; }
       <span style="font-size:14px;color:#6b7280;">score {{ p.score }} / 200</span>
     </div>
     <div class="thesis">{{ p.thesis }}</div>
+    {% if p.trade_ticket %}
+    <div class="trade-ticket">
+      <div class="order">{{ p.trade_ticket.ticker }} {{ p.trade_ticket.side }} ${{ p.trade_ticket.strike }} exp {{ p.trade_ticket.expiry }} ({{ p.trade_ticket.dte }}d){% if p.trade_ticket.mid %}  @ ${{ "%.2f"|format(p.trade_ticket.mid) }} mid{% endif %}</div>
+      <div class="meta">{{ p.trade_ticket.occ_symbol }}{% if p.trade_ticket.quote %}  ·  bid ${{ p.trade_ticket.quote.bid }} / ask ${{ p.trade_ticket.quote.ask }}{% if p.trade_ticket.quote.delta %}  ·  delta {{ "%.2f"|format(p.trade_ticket.quote.delta) }}{% endif %}{% if p.trade_ticket.quote.iv %}  ·  IV {{ "%.0f"|format(p.trade_ticket.quote.iv * 100) }}%{% endif %}{% endif %}</div>
+    </div>
+    {% endif %}
     <div class="size-target">
       <span>Size: <strong>{{ p.size_pct }}%</strong></span>
       <span>Vehicle: <strong>{{ p.vehicle }}</strong></span>
@@ -135,6 +150,7 @@ def _build_pick_row(p):
         "flow_premium": flow.get("total_premium", 0),
         "flow_calls": flow.get("calls", 0),
         "flow_puts": flow.get("puts", 0),
+        "trade_ticket": c.get("trade_ticket"),
     }
 
 

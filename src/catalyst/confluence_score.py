@@ -47,18 +47,17 @@ PATTERNS = [
 
 
 def _tier_from_score(score):
-    """Pure flow-based tiers (macro stripped from scoring).
-    Max possible from 7 patterns: ~140 (25+25+20+20+20+15+15).
-    Realistic on a strong day: 60-80 (3-4 patterns firing in unison)."""
+    """Pure flow-based tiers. One elite pattern alone qualifies as MODERATE.
+    Multi-pattern confluence naturally tiers up to STRONG/ELITE/MAX/GAMMA_BOMB."""
     if score >= 100:
         return ("GAMMA_BOMB", 15)
     if score >= 80:
         return ("MAX_CONVICTION", 40)
     if score >= 60:
         return ("ELITE", 30)
-    if score >= 45:
+    if score >= 40:
         return ("STRONG", 20)
-    if score >= 30:
+    if score >= 20:
         return ("MODERATE", 10)
     return ("PASS", 0)
 
@@ -171,6 +170,17 @@ def compute_confluence(pick, uw_client, macro=None, verbose=False):
     else:
         thesis = f"{ticker}: insufficient confluence - PASS"
 
+    # Build trade ticket (strike + expiry + premium) for actionable picks only
+    trade_ticket = None
+    if tier != "PASS" and side:
+        try:
+            from src.catalyst.trade_ticket import compute_trade_ticket
+            spot = pick.get("live_spot") or pick.get("price")
+            trade_ticket = compute_trade_ticket(ticker, spot, side, vehicle, uw_client=uw_client)
+        except Exception as e:
+            if verbose:
+                print(f"  trade ticket build failed for {ticker}: {type(e).__name__}: {e}")
+
     return {
         "ticker": ticker,
         "score": int(total_score),
@@ -187,6 +197,7 @@ def compute_confluence(pick, uw_client, macro=None, verbose=False):
         "positioning_contribution": positioning_contribution,
         "tide_score": tide_score,
         "thesis": thesis,
+        "trade_ticket": trade_ticket,
     }
 
 

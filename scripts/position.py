@@ -13,6 +13,7 @@ The worker auto-detects changes within 60s.
 import argparse
 import os
 import sys
+import pathlib
 import subprocess
 
 
@@ -50,17 +51,20 @@ def cmd_list(_args):
         print(f"  {p['ticker']:6} {p['side']:4} ${p['strike']} exp {p['expiry']} {size} {entry}")
 
 
-def cmd_push(args):
-    """SCP positions.json to Vultr."""
-    target = f"root@{args.vultr_ip}:/opt/flow-ws/data/positions.json"
-    cmd = ["scp", str(POSITIONS_PATH), target]
-    print(f"Running: {' '.join(cmd)}")
-    r = subprocess.run(cmd)
-    if r.returncode == 0:
-        print(f"Pushed positions.json to {args.vultr_ip}")
-        print(f"Worker will pick up changes within 60s.")
-    else:
-        print(f"SCP failed (exit {r.returncode})")
+def cmd_push(_args):
+    """Commit + push positions.json to git so GitHub Actions monitor sees it."""
+    repo = pathlib.Path(POSITIONS_PATH).parent.parent
+    for cmd in (
+        ["git", "add", "-f", "data/positions.json"],
+        ["git", "commit", "-m", "positions update [skip ci]"],
+        ["git", "push"],
+    ):
+        print(f"  $ {' '.join(cmd)}")
+        r = subprocess.run(cmd, cwd=str(repo))
+        if r.returncode != 0 and "commit" in cmd:
+            print("  (nothing to commit - already up to date)")
+            return
+    print("Pushed. Next position-monitor run picks it up within 10 min.")
 
 
 def main():
@@ -85,8 +89,7 @@ def main():
     ls = sub.add_parser("list", help="List active positions")
     ls.set_defaults(func=cmd_list)
 
-    push = sub.add_parser("push", help="SCP positions.json to Vultr")
-    push.add_argument("vultr_ip")
+    push = sub.add_parser("push", help="Commit + push positions.json to GitHub")
     push.set_defaults(func=cmd_push)
 
     args = ap.parse_args()

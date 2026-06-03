@@ -235,9 +235,11 @@ def build_flow_universe(uw_client=None, max_tickers=60, min_premium=50_000, verb
     by_ticker = _aggregate_flow_by_ticker(alerts, min_premium=min_premium)
     for t, slot in sorted(by_ticker.items(), key=lambda kv: -kv[1]["total_premium"])[:30]:
         _add_to_universe(universe, t, "premium_top30", premium=slot["total_premium"])
-        universe[t]["trade_count"] = slot["trade_count"]
-        universe[t]["calls"] = slot["calls"]
-        universe[t]["puts"] = slot["puts"]
+        # ETFs/indexes get filtered inside _add_to_universe - only update if survived
+        if t in universe:
+            universe[t]["trade_count"] = slot["trade_count"]
+            universe[t]["calls"] = slot["calls"]
+            universe[t]["puts"] = slot["puts"]
     _log_source(1, "premium_top30", "highest total option premium")
 
     # SOURCE 2: top by sweep volume

@@ -160,7 +160,6 @@ def compute_confluence(pick, uw_client, macro=None, verbose=False):
             })
 
     # Source-count bonus: more universe sources = higher conviction
-    # 1 src=0, 2=5, 3=10, 4=15, 5+=20
     src_count = len(set(pick.get("sources") or []))
     source_bonus = min(20, max(0, (src_count - 1) * 5))
     if source_bonus > 0 and side:
@@ -172,7 +171,41 @@ def compute_confluence(pick, uw_client, macro=None, verbose=False):
             "details": {"source_count": src_count},
         })
 
-    total_score = base_pattern_score + source_bonus
+    # Velocity bonus / Decay penalty: track score trajectory across recent scans
+    # FORWARD-LOOKING signal: accelerating flow = build, decaying = take profit
+    velocity_bonus = 0
+    velocity_label = None
+    score_history = pick.get("_score_history") or []
+    if not score_history:
+        # First appearance of this ticker - flow is FRESH
+        velocity_bonus = 10
+        velocity_label = f"FRESH FLOW: first scan appearance (+{velocity_bonus})"
+    elif len(score_history) >= 2:
+        prior_scores = [h.get("score", 0) for h in score_history[:3]]
+        cur_provisional = base_pattern_score + source_bonus
+        # ACCELERATING: each recent score higher than the one before
+        if all(prior_scores[i] >= prior_scores[i+1] - 2 for i in range(len(prior_scores)-1)) \
+                and cur_provisional > prior_scores[0] + 5:
+            velocity_bonus = 15
+            velocity_label = f"ACCELERATING: flow building ({prior_scores[-1]}->{prior_scores[0]}->{cur_provisional}) (+{velocity_bonus})"
+        # DECAYING: each recent score lower than the one before
+        elif all(prior_scores[i] <= prior_scores[i+1] + 2 for i in range(len(prior_scores)-1)) \
+                and cur_provisional < prior_scores[0] - 5:
+            velocity_bonus = -15
+            velocity_label = f"DECAYING: flow cooling ({prior_scores[-1]}->{prior_scores[0]}->{cur_provisional}) ({velocity_bonus})"
+        else:
+            velocity_label = f"STABLE: score ~{prior_scores[0]} for {len(prior_scores)} scans"
+
+    if velocity_label and side:
+        patterns_fired.append({
+            "key": "velocity",
+            "side": side,
+            "score": velocity_bonus,
+            "label": velocity_label,
+            "details": {"prior_scores": [h.get("score") for h in score_history[:3]]},
+        })
+
+    total_score = base_pattern_score + source_bonus + velocity_bonus
     total_score = max(0, total_score)
 
     tier, size_pct = _tier_from_score(total_score)

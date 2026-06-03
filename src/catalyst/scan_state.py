@@ -130,13 +130,37 @@ def diff_scans(scan, prev_state):
     return events, current
 
 
+def load_score_history():
+    """Per-ticker score trajectory over last N scans for velocity/decay detection."""
+    state = load_state()
+    return state.get("score_history") or {}
+
+
 def update_state(scan):
-    """Diff current scan against last persisted state, return events, save updated state."""
+    """Diff current scan against last persisted state, return events, save updated state.
+    Also keeps a per-ticker score history (last 5 scans) for velocity tracking."""
     prev_state = load_state()
     events, current = diff_scans(scan, prev_state)
+
+    # Update score history: append current score, keep last 5 per ticker
+    history = prev_state.get("score_history") or {}
+    now = datetime.utcnow().isoformat() + "Z"
+    for ticker, cur in current.items():
+        hist = history.get(ticker) or []
+        hist.insert(0, {
+            "ts": now,
+            "score": cur.get("score", 0),
+            "tier": cur.get("tier"),
+            "side": cur.get("side"),
+        })
+        history[ticker] = hist[:5]
+    # Drop history for tickers no longer in the universe (saves bloat)
+    history = {t: h for t, h in history.items() if t in current}
+
     new_state = {
-        "last_scan": datetime.utcnow().isoformat() + "Z",
+        "last_scan": now,
         "tickers": current,
+        "score_history": history,
     }
     save_state(new_state)
     return events

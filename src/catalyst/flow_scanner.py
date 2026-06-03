@@ -209,9 +209,21 @@ def run_flow_scan(target_date=None, verbose=True):
         if verbose:
             print(f"  positioning_first failed: {type(e).__name__}: {e}")
 
-    # Step 5: master confluence scoring (7 patterns + positioning + tide)
+    # Step 5: master confluence scoring (7 patterns + source + velocity)
     if verbose:
         print(f"Step 5/8: master confluence scoring")
+    # Load score history for velocity/decay detection (FORWARD-LOOKING signal)
+    try:
+        from src.catalyst.scan_state import load_score_history
+        score_history = load_score_history()
+        for p in enriched_picks:
+            t = p.get("ticker")
+            if t and t in score_history:
+                p["_score_history"] = score_history[t]
+    except Exception as e:
+        if verbose:
+            print(f"  score history load failed: {type(e).__name__}: {e}")
+
     try:
         from src.catalyst.confluence_score import apply_confluence_scoring, rank_picks_by_confluence
         apply_confluence_scoring(enriched_picks, uw_client=uw_client, macro=macro, verbose=verbose)

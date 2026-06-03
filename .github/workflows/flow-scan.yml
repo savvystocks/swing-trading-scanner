@@ -7,26 +7,32 @@ on:
         description: "Override target date (YYYY-MM-DD)"
         required: false
         default: ""
+      force_email:
+        description: "Force email send even outside email window (1=yes)"
+        required: false
+        default: ""
   repository_dispatch:
     types: [run-flow-scan]
-  # 3 entry windows for the aggressive trader:
-  # Morning  14:00 UTC (15:00 BST summer) - pre-market + overnight flow context
-  # Midday   17:30 UTC (18:30 BST summer) - new flow that emerged after open
-  # Power    20:30 UTC (21:30 BST summer) - late institutional rebalancing
   schedule:
-    - cron: "0 14 * 3-10 1-5"
-    - cron: "30 17 * 3-10 1-5"
-    - cron: "30 20 * 3-10 1-5"
-    - cron: "0 15 * 1-2,11-12 1-5"
-    - cron: "30 18 * 1-2,11-12 1-5"
-    - cron: "30 21 * 1-2,11-12 1-5"
+    # Summer (Mar-Oct, BST/EDT): US market 13:30-20:00 UTC
+    # Every 15 min during regular hours - alerts/JSON always, email only at designated windows.
+    - cron: "30,45 13 * 3-10 1-5"        # 13:30, 13:45 UTC (open + post-open)
+    - cron: "0,15,30,45 14-19 * 3-10 1-5" # 14:00-19:45 every 15 min
+    - cron: "0 20 * 3-10 1-5"             # 20:00 UTC (close)
+    # Winter (Nov-Mar, GMT/EST): US market 14:30-21:00 UTC
+    - cron: "30,45 14 * 1-2,11-12 1-5"
+    - cron: "0,15,30,45 15-20 * 1-2,11-12 1-5"
+    - cron: "0 21 * 1-2,11-12 1-5"
 
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     permissions:
       contents: write
+    concurrency:
+      group: flow-scan-${{ github.workflow }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -45,22 +51,22 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           CATALYST_DATE: ${{ inputs.target_date }}
+          FORCE_EMAIL: ${{ inputs.force_email }}
           ACCOUNT_SIZE_GBP: "4000"
           GOAL_TARGET_GBP: "20000"
           GOAL_DEADLINE_ISO: "2026-11-29"
-          SKIP_EMAIL: ${{ github.event_name == 'schedule' && '' || '' }}
         run: python scripts/run_flow_scan.py
-      - name: Commit scan output
+      - name: Commit scan output + state
         if: always()
         run: |
           git config user.name "flow-scan-bot"
           git config user.email "noreply@github.com"
-          git add -f data/results/flow_scan_*.json data/results/flow_email_*.html 2>/dev/null || true
+          git add -f data/results/flow_scan_*.json data/results/flow_email_*.html data/flow_state/state.json 2>/dev/null || true
           git diff --cached --quiet || git commit -m "flow-scan: $(date -u +%Y-%m-%d_%H:%M) [skip ci]"
           git push || true
       - name: Upload artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: flow-scan-result
+          name: flow-scan-result-${{ github.run_id }}
           path: data/results/flow_*

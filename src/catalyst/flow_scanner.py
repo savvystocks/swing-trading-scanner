@@ -108,7 +108,7 @@ def run_flow_scan(target_date=None, verbose=True):
             print("  flow universe empty - cannot proceed")
         return {"scan_date": scan_date, "macro": macro, "picks": []}
 
-    # Step 2: enrich each ticker with stock info + live spot (Alpaca)
+    # Step 2: enrich each ticker with stock info + live spot (UW only)
     if verbose:
         print(f"Step 2/8: enrich tickers with stock info + live spot")
     enriched_picks = []
@@ -122,11 +122,24 @@ def run_flow_scan(target_date=None, verbose=True):
         except Exception:
             info = None
 
+        # Live spot from UW stock_info.close (already fetched - no extra call)
+        live_spot = None
         try:
-            from src.alpaca_options import get_live_price
-            live_spot = get_live_price(ticker)
-        except Exception:
+            live_spot = float((info or {}).get("close") or 0) or None
+        except (TypeError, ValueError):
             live_spot = None
+
+        # Fallback to UW 1-minute candle if close is missing
+        if live_spot is None:
+            try:
+                ohlc = uw_client.stock_ohlc(ticker, candle_size="1m")
+                if ohlc:
+                    rows = ohlc.get("data") if isinstance(ohlc, dict) else ohlc
+                    if rows:
+                        latest = rows[-1] if isinstance(rows[-1], dict) else rows[0]
+                        live_spot = float(latest.get("close") or 0) or None
+            except Exception:
+                pass
 
         pick = {
             "ticker": ticker,
@@ -135,7 +148,7 @@ def run_flow_scan(target_date=None, verbose=True):
             "market_cap": (info or {}).get("marketcap"),
             "next_earnings_date": (info or {}).get("next_earnings_date"),
             "beta": (info or {}).get("beta"),
-            "price": live_spot or float((info or {}).get("close") or 0),
+            "price": live_spot or 0,
             "live_spot": live_spot,
             "_uw_flow_initial": {
                 "total_premium": entry.get("total_premium", 0),

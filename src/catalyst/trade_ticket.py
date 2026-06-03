@@ -28,13 +28,25 @@ def _bs_delta(side, spot, strike, dte_days, iv, r=0.05):
 
 
 def _round_strike(price, side, vehicle):
-    """Pick a strike based on vehicle intent + current spot."""
-    if "far OTM" in vehicle:
-        offset = 0.05 if side == "CALL" else -0.05
-    elif "0.5 ITM" in vehicle or "ITM" in vehicle:
+    """Pick a strike based on vehicle intent + current spot.
+
+    Parses 'N% OTM' / 'N% ITM' / 'ATM' from vehicle string. For CALLs OTM
+    means strike above spot; for PUTs OTM means strike below spot.
+    """
+    import re
+    offset = 0.0
+    m = re.search(r"(\d+(?:\.\d+)?)\s*%\s*(OTM|ITM)", vehicle, re.IGNORECASE)
+    if m:
+        pct = float(m.group(1)) / 100.0
+        if m.group(2).upper() == "OTM":
+            offset = pct if side == "CALL" else -pct
+        else:  # ITM
+            offset = -pct if side == "CALL" else pct
+    elif "far OTM" in vehicle:
+        offset = 0.07 if side == "CALL" else -0.07
+    elif "ITM" in vehicle:
         offset = -0.015 if side == "CALL" else 0.015
-    else:
-        offset = 0
+    # else: ATM (offset stays 0)
 
     target = price * (1 + offset)
 

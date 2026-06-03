@@ -64,24 +64,27 @@ def _tier_from_score(score):
 
 
 def _vehicle_for_tier(tier):
+    """Slightly OTM across the board - cheaper, higher leverage, exits work
+    on % of premium without needing to reach the strike."""
     return {
-        "GAMMA_BOMB": "0-3 DTE far OTM call/put",
-        "MAX_CONVICTION": "0.5 ITM call/put, 21-30d",
-        "ELITE": "ATM call/put, 21-30d",
-        "STRONG": "ATM call/put, 21-30d",
-        "MODERATE": "ATM debit spread, 21-30d",
+        "GAMMA_BOMB": "7% OTM call/put, 0-3 DTE",
+        "MAX_CONVICTION": "2% OTM call/put, 21-30d",
+        "ELITE": "3% OTM call/put, 21-30d",
+        "STRONG": "4% OTM call/put, 21-30d",
+        "MODERATE": "5% OTM call/put, 14-21d",
         "PASS": "skip",
     }.get(tier, "skip")
 
 
 def _rr_for_tier(tier):
-    """Target gain / max loss for the tier."""
+    """Target gain / max loss for the tier. OTM = higher leverage so
+    target % climbs accordingly. Stop stays -50% across the board."""
     return {
-        "GAMMA_BOMB": {"target_pct": 500, "stop_pct": -100, "max_hold_days": 3},
-        "MAX_CONVICTION": {"target_pct": 200, "stop_pct": -50, "max_hold_days": 14},
-        "ELITE": {"target_pct": 150, "stop_pct": -50, "max_hold_days": 14},
-        "STRONG": {"target_pct": 100, "stop_pct": -50, "max_hold_days": 10},
-        "MODERATE": {"target_pct": 75, "stop_pct": -50, "max_hold_days": 7},
+        "GAMMA_BOMB": {"target_pct": 500, "stop_pct": -50, "max_hold_days": 3},
+        "MAX_CONVICTION": {"target_pct": 250, "stop_pct": -50, "max_hold_days": 14},
+        "ELITE": {"target_pct": 180, "stop_pct": -50, "max_hold_days": 14},
+        "STRONG": {"target_pct": 130, "stop_pct": -50, "max_hold_days": 10},
+        "MODERATE": {"target_pct": 100, "stop_pct": -50, "max_hold_days": 7},
         "PASS": {"target_pct": 0, "stop_pct": 0, "max_hold_days": 0},
     }.get(tier, {})
 

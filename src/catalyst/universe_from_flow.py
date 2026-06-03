@@ -25,34 +25,81 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
+import re
+
+_OPTION_SYM_RE = re.compile(r"^([A-Z]{1,6})\d{6}([CP])\d+")
+
+
+def _extract_ticker_and_side(option_chain):
+    """Parse UW option_chain symbol like 'AAPL260717C00200000' -> ('AAPL', 'CALL')."""
+    if not option_chain:
+        return None, None
+    m = _OPTION_SYM_RE.match(option_chain.upper())
+    if not m:
+        return None, None
+    return m.group(1), ("CALL" if m.group(2) == "C" else "PUT")
+
+
+def _to_float(v, default=0):
+    if v is None:
+        return default
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return default
+
+
 def _aggregate_flow_by_ticker(alerts, min_premium=50_000):
-    """Group flow alerts by underlying ticker, sum premium, count trades."""
+    """Group flow alerts by underlying ticker, sum premium, count trades.
+
+    UW field shapes (from live API probe):
+      - option_chain: 'AAPL260717C00200000' (contains ticker + side + strike)
+      - total_premium: string number
+      - volume, open_interest: numbers
+      - issue_type: null for indexes (SPX/NDX), 'ETF', 'Common Stock' for tradeable
+      - next_earnings_date: optional date
+      - type: per-ticker endpoint uses 'type' field directly ('call_sweep', etc)
+    """
     if not alerts:
         return {}
     by_ticker = {}
+    skip_indexes = {"SPX", "NDX", "RUT", "VIX", "VVIX", "DJX", "SPXW", "RUTW", "NDXP"}
     for a in alerts:
         if not isinstance(a, dict):
             continue
-        ticker = a.get("ticker") or a.get("underlying_symbol") or a.get("symbol")
+
+        # Try to extract from option_chain FIRST (most reliable across endpoints)
+        oc_ticker, oc_side = _extract_ticker_and_side(a.get("option_chain") or "")
+
+        # Direct ticker field overrides
+        ticker = a.get("ticker") or a.get("underlying_symbol") or a.get("symbol") or oc_ticker
         if not ticker:
             continue
-        prem = 0
-        for k in ("premium", "total_premium", "trade_value", "total_size_usd"):
-            v = a.get(k)
-            if v is not None:
-                try:
-                    prem = max(prem, float(v))
-                except (TypeError, ValueError):
-                    pass
+
+        # Skip indexes (can't trade on Robinhood retail)
+        if ticker in skip_indexes:
+            continue
+
+        # Determine side
+        side = oc_side  # from option_chain regex
+        if not side:
+            # Per-ticker endpoint uses 'type' field with values like 'call_sweep', 'put_sweep'
+            type_field = (a.get("type") or a.get("option_type") or a.get("side") or "").lower()
+            if "call" in type_field:
+                side = "CALL"
+            elif "put" in type_field:
+                side = "PUT"
+
+        prem = _to_float(a.get("total_premium") or a.get("premium") or a.get("trade_value"))
         if prem < min_premium:
             continue
+
         slot = by_ticker.setdefault(ticker, {"ticker": ticker, "total_premium": 0, "trade_count": 0, "calls": 0, "puts": 0})
         slot["total_premium"] += prem
         slot["trade_count"] += 1
-        side = (a.get("option_type") or a.get("side") or "").lower()
-        if "call" in side:
+        if side == "CALL":
             slot["calls"] += 1
-        elif "put" in side:
+        elif side == "PUT":
             slot["puts"] += 1
     return by_ticker
 

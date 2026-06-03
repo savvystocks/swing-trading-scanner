@@ -103,41 +103,83 @@ def _summarize_flow(flow_data, ticker):
     }
 
 
-def _summarize_gex(gex_data, gex_by_strike, ticker, spot):
-    if not gex_data:
+def _to_float(v):
+    if v is None:
         return None
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _summarize_gex(gex_data, gex_by_strike, ticker, spot):
+    """UW shapes (from live probe):
+      greek_exposure returns: data[].call_gamma, put_gamma, call_delta, put_delta,
+                              call_charm, put_charm, call_vanna, put_vanna, date
+      greek_exposure_by_strike returns: data[].strike, call_gex, put_gex (signed),
+                                        call_delta, put_delta, charm, vanna per side
+      Net GEX = sum(call_gex + put_gex) across all strikes.
+    """
     net_gex = None
-    if isinstance(gex_data, dict):
-        for k in ("net_gex", "total_gex", "gamma_exposure", "gex"):
-            v = gex_data.get(k)
-            if v is not None:
-                try:
-                    net_gex = float(v)
-                    break
-                except (TypeError, ValueError):
-                    pass
+    # Aggregate net GEX from the per-strike data (more reliable than aggregate endpoint)
+    strikes_payload = None
+    if isinstance(gex_by_strike, dict):
+        strikes_payload = gex_by_strike.get("data") or gex_by_strike.get("strikes")
+    elif isinstance(gex_by_strike, list):
+        strikes_payload = gex_by_strike
+
+    if strikes_payload:
+        total = 0
+        for s in strikes_payload:
+            if not isinstance(s, dict):
+                continue
+            cg = _to_float(s.get("call_gex"))
+            pg = _to_float(s.get("put_gex"))
+            if cg is not None:
+                total += cg
+            if pg is not None:
+                total += pg
+        net_gex = total
+
+    # Fallback: derive from aggregate endpoint (call_gamma + put_gamma)
+    if net_gex is None and isinstance(gex_data, dict):
+        data = gex_data.get("data")
+        if isinstance(data, list) and data:
+            latest = data[-1] if isinstance(data[-1], dict) else data[0]
+            cg = _to_float(latest.get("call_gamma"))
+            pg = _to_float(latest.get("put_gamma"))
+            if cg is not None or pg is not None:
+                net_gex = (cg or 0) + (pg or 0)
+
     # Find zero-gamma flip strike from strike-distributed GEX
     flip_strike = None
-    if isinstance(gex_by_strike, dict):
-        strikes = gex_by_strike.get("data") or gex_by_strike.get("strikes") or []
-    elif isinstance(gex_by_strike, list):
-        strikes = gex_by_strike
-    else:
-        strikes = []
-    # Find the strike where cumulative GEX crosses zero
-    if strikes and spot:
-        sorted_strikes = sorted([(float(s.get("strike", 0)), float(s.get("gex", 0))) for s in strikes if s.get("strike") is not None], key=lambda x: x[0])
-        cumulative = 0
-        prev_sign = None
-        for strike, g in sorted_strikes:
-            cumulative += g
-            cur_sign = 1 if cumulative > 0 else (-1 if cumulative < 0 else 0)
-            if prev_sign is not None and prev_sign != cur_sign and prev_sign != 0:
-                flip_strike = strike
-                break
-            prev_sign = cur_sign
+    if strikes_payload and spot is not None:
+        try:
+            spot_val = float(spot)
+        except (TypeError, ValueError):
+            spot_val = None
+        if spot_val:
+            sorted_strikes = []
+            for s in strikes_payload:
+                if not isinstance(s, dict):
+                    continue
+                k = _to_float(s.get("strike"))
+                cg = _to_float(s.get("call_gex")) or 0
+                pg = _to_float(s.get("put_gex")) or 0
+                if k is not None:
+                    sorted_strikes.append((k, cg + pg))
+            sorted_strikes.sort(key=lambda x: x[0])
+            cumulative = 0
+            prev_sign = None
+            for strike, g in sorted_strikes:
+                cumulative += g
+                cur_sign = 1 if cumulative > 0 else (-1 if cumulative < 0 else 0)
+                if prev_sign is not None and prev_sign != cur_sign and prev_sign != 0:
+                    flip_strike = strike
+                    break
+                prev_sign = cur_sign
 
-    regime = _classify_gex_regime(net_gex, spot=spot, flip_strike=flip_strike)
+    regime = _classify_gex_regime(net_gex)
     above_flip = None
     if flip_strike is not None and spot is not None:
         try:
@@ -165,19 +207,25 @@ def _gex_label(net_gex, flip_strike, spot, above_flip):
 
 
 def _summarize_iv(iv_rank_data, ticker):
-    if not iv_rank_data:
+    """UW shape: data[].close, date, volatility, iv_rank_1y. Take latest entry."""
+    if not iv_rank_data or not isinstance(iv_rank_data, dict):
         return None
-    if isinstance(iv_rank_data, dict):
-        rank = iv_rank_data.get("iv_rank") or iv_rank_data.get("rank") or iv_rank_data.get("ivr")
-        atm = iv_rank_data.get("atm_iv") or iv_rank_data.get("implied_volatility")
-        try:
-            return {
-                "iv_rank": float(rank) if rank is not None else None,
-                "atm_iv": float(atm) if atm is not None else None,
-            }
-        except (TypeError, ValueError):
-            return None
-    return None
+    rows = iv_rank_data.get("data")
+    if not isinstance(rows, list) or not rows:
+        return None
+    # Latest entry (highest date)
+    latest = max(rows, key=lambda r: r.get("date") or "") if rows else None
+    if not latest or not isinstance(latest, dict):
+        return None
+    rank = _to_float(latest.get("iv_rank_1y") or latest.get("iv_rank") or latest.get("ivr"))
+    atm = _to_float(latest.get("volatility") or latest.get("atm_iv") or latest.get("implied_volatility"))
+    if rank is None and atm is None:
+        return None
+    return {
+        "iv_rank": rank,
+        "atm_iv": atm,
+        "as_of_date": latest.get("date"),
+    }
 
 
 def enrich_pick_with_uw(pick, uw_client=None, verbose=False):

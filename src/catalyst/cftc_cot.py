@@ -38,8 +38,10 @@ COT_HISTORY_DIR.mkdir(parents=True, exist_ok=True)
 # CFTC market codes - dataset endpoint varies by contract type
 # TFF (Traders in Financial Futures) covers equity indexes, VIX, currencies
 # Disaggregated Futures Only covers commodities (crude, gold etc)
+# Legacy Combined covers treasuries (10y/2y/30y notes & bonds)
 TFF_ENDPOINT = "https://publicreporting.cftc.gov/resource/gpe5-46if.json"
 DISAGG_ENDPOINT = "https://publicreporting.cftc.gov/resource/72hh-3qpy.json"
+LEGACY_ENDPOINT = "https://publicreporting.cftc.gov/resource/6dca-aqww.json"
 
 CFTC_CONTRACTS = {
     "ES": {"market_code": "13874A", "label": "E-mini S&P 500", "type": "equity_index", "endpoint": TFF_ENDPOINT},
@@ -47,6 +49,13 @@ CFTC_CONTRACTS = {
     "RTY": {"market_code": "239741", "label": "Russell 2000 Stock Index", "type": "equity_index", "endpoint": TFF_ENDPOINT},
     "VX": {"market_code": "1170E1", "label": "VIX Futures", "type": "volatility", "endpoint": TFF_ENDPOINT},
     "CL": {"market_code": "067411", "label": "WTI Crude Oil", "type": "energy", "endpoint": DISAGG_ENDPOINT},
+    # Path 3 gap-fill 2: Treasury COT via Legacy endpoint (long/short by managed money proxied via non-commercials)
+    "ZN": {"market_code": "043602", "label": "10Y Treasury Note", "type": "treasury", "endpoint": LEGACY_ENDPOINT},
+    "ZB": {"market_code": "020601", "label": "30Y Treasury Bond", "type": "treasury", "endpoint": LEGACY_ENDPOINT},
+    "ZT": {"market_code": "042601", "label": "2Y Treasury Note", "type": "treasury", "endpoint": LEGACY_ENDPOINT},
+    # Path 3 gap-fill 5: DXY + Gold COT
+    "DX": {"market_code": "098662", "label": "US Dollar Index", "type": "currency", "endpoint": LEGACY_ENDPOINT},
+    "GC": {"market_code": "088691", "label": "Gold", "type": "metals", "endpoint": DISAGG_ENDPOINT},
 }
 
 HISTORY_WINDOW_WEEKS = 52
@@ -102,7 +111,13 @@ def fetch_cftc_data(market_code, endpoint, weeks_back=104):
 
 
 def _parse_cot_row(row):
-    """Extract managed money + asset manager + leveraged fund nets."""
+    """Extract managed money + asset manager + leveraged fund nets.
+
+    Handles three CFTC endpoint schemas:
+    - TFF (equity indexes, VIX): m_money_*, asset_mgr_*, lev_money_*
+    - Disaggregated (commodities, gold): m_money_*, swap_*, prod_merc_*
+    - Legacy (treasuries, DXY): noncomm_positions_*, comm_positions_*
+    """
     try:
         date_str = row.get("report_date_as_yyyy_mm_dd", "")[:10]
         def _num(key):
@@ -121,6 +136,18 @@ def _parse_cot_row(row):
         lev_long = _num("lev_money_positions_long")
         lev_short = _num("lev_money_positions_short")
         oi = _num("open_interest_all")
+
+        # Legacy endpoint fallback - treasuries and DXY use non-commercial as "speculators".
+        # We map non-commercial to managed_money for percentile consistency.
+        if mm_long == 0 and mm_short == 0:
+            noncomm_long = _num("noncomm_positions_long_all")
+            noncomm_short = _num("noncomm_positions_short_all")
+            if noncomm_long or noncomm_short:
+                mm_long = noncomm_long
+                mm_short = noncomm_short
+                # asset_manager_* unavailable in Legacy - mirror non-commercial
+                am_long = noncomm_long
+                am_short = noncomm_short
 
         return {
             "date": date_str,
@@ -180,16 +207,22 @@ def compute_positioning_percentile(symbol):
     am_nets = [w["asset_manager_net"] for w in window]
     lev_nets = [w["leveraged_net"] for w in window]
 
+    # Detect when am/lev fields are artifacts (always 0 in history) - those
+    # endpoints don't publish those cohorts so the percentile is meaningless.
+    am_has_data = any(v != 0 for v in am_nets)
+    lev_has_data = any(v != 0 for v in lev_nets)
+
     return {
         "symbol": symbol,
         "label": CFTC_CONTRACTS[symbol]["label"],
+        "contract_type": CFTC_CONTRACTS[symbol].get("type"),
         "report_date": current["date"],
         "managed_money_net": current["managed_money_net"],
         "managed_money_pctile": _pctile(mm_nets, current["managed_money_net"]),
-        "asset_manager_net": current["asset_manager_net"],
-        "asset_manager_pctile": _pctile(am_nets, current["asset_manager_net"]),
-        "leveraged_net": current["leveraged_net"],
-        "leveraged_pctile": _pctile(lev_nets, current["leveraged_net"]),
+        "asset_manager_net": current["asset_manager_net"] if am_has_data else None,
+        "asset_manager_pctile": _pctile(am_nets, current["asset_manager_net"]) if am_has_data else None,
+        "leveraged_net": current["leveraged_net"] if lev_has_data else None,
+        "leveraged_pctile": _pctile(lev_nets, current["leveraged_net"]) if lev_has_data else None,
         "weeks_history": len(window),
     }
 
@@ -199,11 +232,28 @@ def classify_positioning(pctile_dict):
     if not pctile_dict:
         return None
     mm = pctile_dict.get("managed_money_pctile", 50)
-    am = pctile_dict.get("asset_manager_pctile", 50)
-    lev = pctile_dict.get("leveraged_pctile", 50)
+    am = pctile_dict.get("asset_manager_pctile")
+    lev = pctile_dict.get("leveraged_pctile")
 
-    extreme_long_count = sum(1 for v in (mm, am, lev) if v >= 85)
-    extreme_short_count = sum(1 for v in (mm, am, lev) if v <= 15)
+    # Skip cohorts where the underlying field isn't published for this contract type.
+    # This prevents Legacy/Disaggregated artifacts (0 history → 100th pctile) from
+    # triggering false CROWDED_LONG/SHORT regimes.
+    cohorts = [mm]
+    if am is not None:
+        cohorts.append(am)
+    if lev is not None:
+        cohorts.append(lev)
+
+    extreme_long_count = sum(1 for v in cohorts if v >= 85)
+    extreme_short_count = sum(1 for v in cohorts if v <= 15)
+
+    # For single-cohort contracts (treasuries / DXY / commodities via Legacy/Disagg),
+    # require the mm cohort itself to be at the extreme - don't rely on count >= 2.
+    if len(cohorts) == 1:
+        if mm >= 85:
+            extreme_long_count = 2
+        elif mm <= 15:
+            extreme_short_count = 2
 
     if extreme_long_count >= 2:
         return {
@@ -278,6 +328,9 @@ def enrich_picks_with_cot(picks, snapshot=None, verbose=False):
     nq_class = (snapshot.get("NQ") or {}).get("classification")
     rty_class = (snapshot.get("RTY") or {}).get("classification")
     cl_class = (snapshot.get("CL") or {}).get("classification")
+    zn_class = (snapshot.get("ZN") or {}).get("classification")
+    dx_class = (snapshot.get("DX") or {}).get("classification")
+    gc_class = (snapshot.get("GC") or {}).get("classification")
 
     flagged = 0
     for p in picks:
@@ -288,12 +341,19 @@ def enrich_picks_with_cot(picks, snapshot=None, verbose=False):
         except Exception:
             mcap = 0
 
+        industry = (p.get("industry") or "").lower()
         if "technology" in sector or "communication" in sector:
             relevant = nq_class
             contract = "NQ"
         elif "energy" in sector:
             relevant = cl_class
             contract = "CL"
+        elif "financial" in sector and ("bank" in industry or "insurance" in industry):
+            relevant = zn_class or es_class
+            contract = "ZN" if zn_class else "ES"
+        elif "material" in sector and ("gold" in industry or "mining" in industry or "precious" in industry):
+            relevant = gc_class or es_class
+            contract = "GC" if gc_class else "ES"
         elif mcap and mcap < 2_000_000_000:
             relevant = rty_class
             contract = "RTY"
@@ -309,6 +369,13 @@ def enrich_picks_with_cot(picks, snapshot=None, verbose=False):
                 "label": relevant["label"],
                 "score": relevant["score"],
             }
+            # Attach global macro COT context (DXY positioning affects internationals/exporters)
+            if dx_class:
+                p["_cot_dollar_regime"] = {
+                    "contract": "DX",
+                    "regime": dx_class["regime"],
+                    "label": dx_class["label"],
+                }
             flagged += 1
 
     if verbose:

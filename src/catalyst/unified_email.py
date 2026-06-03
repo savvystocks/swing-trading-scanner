@@ -200,6 +200,57 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
   </div>
   {% endif %}
 
+  {% if bidirectional and (bidirectional.summary.n_calls > 0 or bidirectional.summary.n_puts > 0) %}
+  <hr class="section-rule">
+  <div class="section-label">Positioning Signal — Bidirectional</div>
+  <div style="padding:14px 18px; background:#f9fafb; border:2px solid #1f2937; border-radius:10px; margin:12px 0; font-size:13px;">
+    <div style="font-weight:800; color:#1f2937; margin-bottom:6px;">{{ bidirectional.summary.thesis_summary }}</div>
+    <div style="color:#6b7280; font-size:12px;">Macro regime: <strong>{{ bidirectional.summary.macro_regime }}</strong>  ·  {{ bidirectional.summary.n_calls }} CALL ({{ bidirectional.summary.elite_calls }} elite), {{ bidirectional.summary.n_puts }} PUT ({{ bidirectional.summary.elite_puts }} elite)</div>
+  </div>
+  <table style="width:100%; border-collapse:separate; border-spacing:8px 0; margin:8px 0;">
+    <tr style="vertical-align:top;">
+      <td style="width:55%; padding:0;">
+        <div style="background:#ecfdf5; border:2px solid #15803d; border-radius:8px; padding:14px 16px;">
+          <div style="font-size:11px; letter-spacing:1.5px; color:#15803d; font-weight:800; margin-bottom:8px;">CALL CANDIDATES (LONG)</div>
+          {% if bidirectional.calls %}
+            {% for c in bidirectional.calls[:8] %}
+            <div style="padding:8px 0; border-bottom:1px solid #d1fae5; font-size:12.5px; color:#064e3b;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">{{ c.ticker }}</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#15803d; color:#fff; margin-left:6px;">{{ c._positioning_first.conviction_tier }} {{ c._positioning_first.score }}</span>
+              {% if c._positioning_first.recommended_size_pct > 0 %}<span style="font-size:11px; color:#065f46;"> · size {{ c._positioning_first.recommended_size_pct }}%</span>{% endif %}
+              <div style="font-size:11px; color:#047857; margin-top:3px; line-height:1.5;">
+                {% for s in c._positioning_first.positioning_signals[:3] %}{{ s.label }}{% if not loop.last %}; {% endif %}{% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div style="color:#6b7280; font-size:12px; padding:8px 0;">No CALL candidates from positioning extremes.</div>
+          {% endif %}
+        </div>
+      </td>
+      <td style="width:45%; padding:0;">
+        <div style="background:#fef2f2; border:2px solid #b91c1c; border-radius:8px; padding:14px 16px;">
+          <div style="font-size:11px; letter-spacing:1.5px; color:#b91c1c; font-weight:800; margin-bottom:8px;">PUT CANDIDATES (SHORT)</div>
+          {% if bidirectional.puts %}
+            {% for c in bidirectional.puts[:5] %}
+            <div style="padding:8px 0; border-bottom:1px solid #fecaca; font-size:12.5px; color:#7f1d1d;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">{{ c.ticker }}</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#b91c1c; color:#fff; margin-left:6px;">{{ c._positioning_first.conviction_tier }} {{ c._positioning_first.score }}</span>
+              {% if c._positioning_first.recommended_size_pct > 0 %}<span style="font-size:11px; color:#7f1d1d;"> · size {{ c._positioning_first.recommended_size_pct }}%</span>{% endif %}
+              <div style="font-size:11px; color:#991b1b; margin-top:3px; line-height:1.5;">
+                {% for s in c._positioning_first.positioning_signals[:3] %}{{ s.label }}{% if not loop.last %}; {% endif %}{% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div style="color:#6b7280; font-size:12px; padding:8px 0;">No PUT candidates from positioning extremes.</div>
+          {% endif %}
+        </div>
+      </td>
+    </tr>
+  </table>
+  {% endif %}
+
   {% if picks %}
   <hr class="section-rule">
   <div class="section-label">The Picks</div>
@@ -219,8 +270,17 @@ EMAIL_TEMPLATE = """<!DOCTYPE html>
       {% if p.mtf_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.mtf_badge.color }}; color:#fff;">{{ p.mtf_badge.label }}</span>{% endif %}
       {% if p.pocket_pivot_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.pocket_pivot_badge.color }}; color:#fff;">{{ p.pocket_pivot_badge.label }}</span>{% endif %}
       {% if p.index_rebalance_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.index_rebalance_badge.color }}; color:#fff;">{{ p.index_rebalance_badge.label }}</span>{% endif %}
+      {% if p.live_action_badge %}<span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:800; background:{{ p.live_action_badge.color }}; color:#fff;">{{ p.live_action_badge.label }}</span>{% endif %}
       <span class="pick-price">${{ p.price_fmt }}{% if p.move_pct_fmt %} <span class="{{ p.move_class }}">{{ p.move_pct_fmt }}</span>{% endif %}</span>
     </div>
+
+    {% if p.live_chain %}
+    <div style="padding:8px 12px; background:#f0f9ff; border-left:3px solid #0369a1; border-radius:5px; margin:8px 0; font-size:11.5px; color:#0c4a6e; line-height:1.5; font-family:Menlo, Consolas, monospace;">
+      <strong>LIVE chain @ {{ p.live_chain.fetched_at[:16] }}Z:</strong>
+      {% if p.live_chain.atm_call_iv_pct %}call ${{ p.live_chain.atm_call_strike }} IV {{ p.live_chain.atm_call_iv_pct }}% d{{ p.live_chain.atm_call_delta }}{% endif %}
+      {% if p.live_chain.atm_put_iv_pct %} · put ${{ p.live_chain.atm_put_strike }} IV {{ p.live_chain.atm_put_iv_pct }}% d{{ p.live_chain.atm_put_delta }}{% endif %}
+    </div>
+    {% endif %}
 
     {% if p.thesis_plain %}
     <div style="padding:12px 14px; background:#f9fafb; border-left:3px solid #374151; border-radius:5px; margin:10px 0; font-size:13px; color:#1f2937; line-height:1.55;">
@@ -688,6 +748,23 @@ def _build_what_kills(pick):
     return None
 
 
+def _build_live_action_badge(pick):
+    """Surface live-refresh chase risk + gap as a header badge."""
+    la = pick.get("_live_action") or {}
+    flag = la.get("flag")
+    gap = la.get("gap_pct")
+    if flag == "DO_NOT_CHASE":
+        return {"label": f"DO NOT CHASE +{gap:.1f}%", "color": "#b91c1c"}
+    if flag == "THESIS_BROKEN":
+        return {"label": f"THESIS BROKEN {gap:+.1f}%", "color": "#7f1d1d"}
+    if flag == "GAP_NOTABLE" and gap is not None:
+        if gap > 0:
+            return {"label": f"LIVE +{gap:.1f}%", "color": "#15803d"}
+        else:
+            return {"label": f"LIVE {gap:.1f}%", "color": "#9a3412"}
+    return None
+
+
 def _build_robinhood_order(pick, guardrail_state):
     """Build the exact Robinhood-typeable order from live_option + guardrails."""
     live_option = pick.get("_live_option")
@@ -1144,6 +1221,8 @@ def _build_pick(pick, rank, guardrail_state=None):
         "mtf_badge": mtf_badge,
         "pocket_pivot_badge": pocket_pivot_badge,
         "index_rebalance_badge": index_rebalance_badge,
+        "live_action_badge": _build_live_action_badge(pick),
+        "live_chain": pick.get("_live_chain"),
     }
 
 
@@ -1423,6 +1502,8 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
     review_mode = gs.get("mode") == "REVIEW_MODE"
     review_triggers = [t for t in (gs.get("triggers") or []) if t.get("severity") == "HIGH"]
 
+    bidirectional = scan.get("bidirectional") if isinstance(scan, dict) else None
+
     template = Template(EMAIL_TEMPLATE)
     return template.render(
         scan_date=scan_date,
@@ -1448,4 +1529,5 @@ def render_unified_email(scan, aa_results, aa_picks, aa_rejections, regime_info=
         review_mode=review_mode,
         review_triggers=review_triggers,
         position_intel=position_intel,
+        bidirectional=bidirectional,
     )

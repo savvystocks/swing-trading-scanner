@@ -290,15 +290,24 @@ def compute_confluence(pick):
 
     confluence_count = len(firing)
     category_breadth = sum(1 for v in by_category.values() if v > 0)
+    positioning_count = by_category.get("POSITIONING", 0)
 
-    if confluence_count >= 5 and category_breadth >= 3:
+    # Path 3 / Option C: positioning must be present to reach ELITE/STRONG tiers.
+    # Backward-looking technical signals alone can no longer drive max sizing -
+    # they're at half-weight conviction inputs. Positioning is the alpha source.
+    if confluence_count >= 5 and category_breadth >= 3 and positioning_count >= 1:
         sizing_tier = "ELITE"
         confluence_score = 90
         sizing_pct = 33
-    elif confluence_count >= 4 and category_breadth >= 2:
+    elif confluence_count >= 4 and category_breadth >= 2 and positioning_count >= 1:
         sizing_tier = "STRONG"
         confluence_score = 80
         sizing_pct = 25
+    elif confluence_count >= 5 and category_breadth >= 3:
+        # backward-only stack (no positioning) - cap at STRONG, smaller size
+        sizing_tier = "STRONG_BACKWARD_ONLY"
+        confluence_score = 70
+        sizing_pct = 20
     elif confluence_count >= 3:
         sizing_tier = "MODERATE"
         confluence_score = 65
@@ -327,7 +336,7 @@ def compute_confluence(pick):
 def apply_confluence(picks, verbose=False):
     if not picks:
         return picks
-    by_tier = {"ELITE": 0, "STRONG": 0, "MODERATE": 0, "WEAK": 0, "NONE": 0}
+    by_tier = {"ELITE": 0, "STRONG": 0, "STRONG_BACKWARD_ONLY": 0, "MODERATE": 0, "WEAK": 0, "NONE": 0}
     for p in picks:
         try:
             res = compute_confluence(p)
@@ -336,5 +345,7 @@ def apply_confluence(picks, verbose=False):
         except Exception:
             continue
     if verbose:
-        print(f"  confluence: ELITE={by_tier['ELITE']} STRONG={by_tier['STRONG']} MODERATE={by_tier['MODERATE']} WEAK={by_tier['WEAK']} NONE={by_tier['NONE']}")
+        print(f"  confluence: ELITE={by_tier['ELITE']} STRONG={by_tier['STRONG']} "
+              f"STRONG_BACKWARD_ONLY={by_tier['STRONG_BACKWARD_ONLY']} "
+              f"MODERATE={by_tier['MODERATE']} WEAK={by_tier['WEAK']} NONE={by_tier['NONE']}")
     return picks

@@ -21,7 +21,7 @@ from src.email_report import send_email
 def main():
     target_date = os.environ.get("CATALYST_DATE") or None
     llm_max_env = os.environ.get("CATALYST_LLM_MAX", "").strip()
-    llm_max = int(llm_max_env) if llm_max_env.isdigit() else 50
+    llm_max = int(llm_max_env) if llm_max_env.isdigit() else 10
 
     print(f"Starting catalyst scan v2 (target_date={target_date}, llm_max={llm_max})")
 

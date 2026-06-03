@@ -19,13 +19,40 @@ def determine_direction(pick):
     except (TypeError, ValueError):
         put_score = 0
 
+    # Path 3 / Option C: positioning-first overrides conviction-based direction.
+    # If positioning has a clear bullish/bearish extreme (STRONG/ELITE tier),
+    # that determines direction regardless of backward-looking conviction scores.
+    pf = pick.get("_positioning_first") or {}
+    pf_side = pf.get("side")
+    pf_tier = pf.get("conviction_tier")
+    pf_score = pf.get("score") or 0
+    try:
+        pf_score = float(pf_score)
+    except (TypeError, ValueError):
+        pf_score = 0
+
+    if pf_tier in ("ELITE", "STRONG") and pf_side in ("CALL", "PUT"):
+        # positioning_first wins — use positioning score as the winning score
+        return {
+            "side": pf_side,
+            "winning_score": max(pf_score, call_score if pf_side == "CALL" else put_score),
+            "call_score": call_score,
+            "put_score": put_score,
+            "positioning_first_score": pf_score,
+            "edge_pts": pf_score,
+            "driver": f"positioning_first {pf_tier}",
+            "label": "📈 CALL" if pf_side == "CALL" else "📉 PUT",
+        }
+
     if put_score > call_score and put_score >= 60:
         return {
             "side": "PUT",
             "winning_score": put_score,
             "call_score": call_score,
             "put_score": put_score,
+            "positioning_first_score": pf_score,
             "edge_pts": put_score - call_score,
+            "driver": "bear conviction",
             "label": "📉 PUT",
         }
     elif call_score >= put_score and call_score >= 50:
@@ -34,7 +61,9 @@ def determine_direction(pick):
             "winning_score": call_score,
             "call_score": call_score,
             "put_score": put_score,
+            "positioning_first_score": pf_score,
             "edge_pts": call_score - put_score,
+            "driver": "bull conviction",
             "label": "📈 CALL",
         }
     else:
@@ -45,7 +74,9 @@ def determine_direction(pick):
             "winning_score": winning,
             "call_score": call_score,
             "put_score": put_score,
+            "positioning_first_score": pf_score,
             "edge_pts": abs(call_score - put_score),
+            "driver": "default",
             "label": f"📈 CALL" if side == "CALL" else "📉 PUT",
         }
 

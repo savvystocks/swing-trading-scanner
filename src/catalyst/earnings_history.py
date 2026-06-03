@@ -214,7 +214,9 @@ def enrich_picks_with_earnings_history(picks, max_picks=20, verbose=False):
         if not ticker or "." in ticker:
             continue
         try:
-            res = get_earnings_reaction_history(ticker, fundamentals=p.get("_fundamentals"))
+            # Use already-fetched fundamentals from Step 2 enrichment (correct field is _raw_fundamentals)
+            pre_fetched = p.get("_raw_fundamentals") or p.get("_fundamentals")
+            res = get_earnings_reaction_history(ticker, fundamentals=pre_fetched)
         except Exception:
             res = None
         if not res:

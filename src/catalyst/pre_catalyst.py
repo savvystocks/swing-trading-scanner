@@ -13,14 +13,22 @@ CONFERENCE_CALENDAR = [
 KNOWN_PDUFA_DATES = {}
 
 
-def get_upcoming_earnings(client, eodhd_tickers, days_min=1, days_max=45, verbose=False):
+def get_upcoming_earnings(client, eodhd_tickers, days_min=1, days_max=45, verbose=False, prefetched_fundamentals=None):
+    """If prefetched_fundamentals dict (eodhd_ticker -> fund dict) is passed, use that
+    instead of refetching from EODHD. Saves ~38 calls/scan in steady state."""
     today = datetime.utcnow().date()
     upcoming = {}
     fetched = 0
+    reused = 0
+    prefetched = prefetched_fundamentals or {}
     for ticker in eodhd_tickers:
         try:
-            fund = client.fundamentals(ticker)
-            fetched += 1
+            fund = prefetched.get(ticker)
+            if fund:
+                reused += 1
+            else:
+                fund = client.fundamentals(ticker)
+                fetched += 1
             if not fund:
                 continue
             earnings = (fund.get("Earnings") or {}).get("History") or {}
@@ -52,7 +60,7 @@ def get_upcoming_earnings(client, eodhd_tickers, days_min=1, days_max=45, verbos
         except Exception:
             continue
     if verbose:
-        print(f"  pre_catalyst: fetched fundamentals for {fetched} candidates, found {len(upcoming)} earnings in {days_min}-{days_max}d window")
+        print(f"  pre_catalyst: fetched {fetched} new fundamentals (reused {reused} from pick cache), found {len(upcoming)} earnings in {days_min}-{days_max}d window")
     return upcoming
 
 
@@ -170,7 +178,20 @@ def build_pre_catalyst_watchlist(client, scored_results, cohort_tickers,
         else:
             eodhd_tickers.append(f"{tk}.US")
 
-    upcoming_earnings = get_upcoming_earnings(client, eodhd_tickers, days_min, days_max, verbose=verbose)
+    # Build prefetched fundamentals map from scored_results so we don't refetch
+    # what Step 2 already pulled. Key by eodhd_ticker (with .US/.LSE suffix).
+    prefetched = {}
+    for s in scored_results:
+        eo_tk = s.get("eodhd_ticker")
+        if not eo_tk:
+            tk = s.get("ticker")
+            eo_tk = f"{tk}.US" if tk and "." not in tk else tk
+        fund = s.get("_raw_fundamentals") or s.get("_fundamentals")
+        if eo_tk and fund:
+            prefetched[eo_tk] = fund
+
+    upcoming_earnings = get_upcoming_earnings(client, eodhd_tickers, days_min, days_max,
+                                               verbose=verbose, prefetched_fundamentals=prefetched)
 
     watchlist = []
     for eodhd_tk, event in upcoming_earnings.items():

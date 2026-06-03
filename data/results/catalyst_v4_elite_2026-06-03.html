@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; background:#f6f7f9; margin:0; padding:18px; color:#1a1a1a; }
+  .wrap { max-width:820px; margin:0 auto; background:#fff; padding:28px 32px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+  h1 { font-size:22px; margin:0 0 4px; font-weight:700; letter-spacing:-0.3px; }
+  .header-meta { color:#666; font-size:12px; margin-bottom:24px; }
+  .section-rule { border:0; height:1px; background:#e5e7eb; margin:28px 0 14px; }
+  .section-label { font-size:11px; font-weight:700; letter-spacing:1.2px; color:#6b7280; text-transform:uppercase; margin-bottom:14px; }
+
+  .pick { margin-bottom:30px; padding:18px 20px 20px; border:1px solid #e5e7eb; border-radius:10px; background:#fcfcfd; }
+  .pick-header { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .pick-rank { font-size:13px; font-weight:700; color:#9ca3af; }
+  .pick-ticker { font-size:22px; font-weight:800; color:#111; letter-spacing:-0.3px; }
+  .pick-name { font-size:12px; color:#4b5563; flex:1; min-width:160px; }
+  .pick-price { font-size:14px; font-weight:700; color:#111; }
+  .pick-move-up { color:#15803d; font-weight:700; }
+  .pick-move-down { color:#b91c1c; font-weight:700; }
+
+  .overall-score-box { display:flex; align-items:center; gap:14px; margin:8px 0 16px; padding:14px 18px; border-radius:10px; border:2px solid; }
+  .overall-score-box.overall-strong { background:#ecfdf5; border-color:#065f46; }
+  .overall-score-box.overall-good { background:#f0fdf4; border-color:#15803d; }
+  .overall-score-box.overall-borderline { background:#fefce8; border-color:#a16207; }
+  .overall-score-box.overall-watch { background:#f9fafb; border-color:#6b7280; }
+  .overall-score-box.overall-avoid { background:#fef2f2; border-color:#b91c1c; }
+  .score-circle { font-size:32px; font-weight:800; min-width:64px; text-align:center; }
+  .overall-strong .score-circle { color:#065f46; }
+  .overall-good .score-circle { color:#15803d; }
+  .overall-borderline .score-circle { color:#a16207; }
+  .overall-watch .score-circle { color:#6b7280; }
+  .overall-avoid .score-circle { color:#b91c1c; }
+  .score-info { flex:1; }
+  .score-verdict { font-size:16px; font-weight:800; margin-bottom:2px; }
+  .overall-strong .score-verdict { color:#065f46; }
+  .overall-good .score-verdict { color:#15803d; }
+  .overall-borderline .score-verdict { color:#a16207; }
+  .overall-watch .score-verdict { color:#6b7280; }
+  .overall-avoid .score-verdict { color:#b91c1c; }
+  .score-plain { font-size:12px; color:#374151; line-height:1.5; }
+
+  .key-numbers { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 14px; }
+  .key-num { flex:1; min-width:130px; padding:10px 12px; background:#fff; border:1px solid #e5e7eb; border-radius:8px; }
+  .key-num-label { font-size:10px; font-weight:700; color:#6b7280; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:3px; }
+  .key-num-value { font-size:18px; font-weight:800; color:#111; }
+  .key-num-value.win { color:#15803d; }
+  .key-num-value.lose { color:#b91c1c; }
+
+  .trade-block { margin:10px 0 12px; padding:14px 16px; background:#eff6ff; border-left:4px solid #2563eb; border-radius:6px; }
+  .trade-block-label { font-size:11px; font-weight:800; letter-spacing:0.8px; color:#1d4ed8; text-transform:uppercase; margin-bottom:4px; }
+  .trade-block-text { font-size:14px; font-weight:700; color:#111; line-height:1.5; }
+  .trade-block-detail { font-size:12px; color:#4b5563; margin-top:6px; line-height:1.5; }
+
+  .why-block, .risks-block, .catalysts-block { margin:10px 0; }
+  .why-block { padding:10px 14px; background:#ecfdf5; border-left:3px solid #15803d; border-radius:5px; font-size:13px; color:#065f46; line-height:1.55; }
+  .risks-block { padding:10px 14px; background:#fef2f2; border-left:3px solid #b91c1c; border-radius:5px; font-size:12px; color:#7f1d1d; line-height:1.55; }
+  .catalysts-block { padding:8px 14px; background:#f9fafb; border-left:3px solid #6b7280; border-radius:5px; font-size:13px; color:#374151; line-height:1.55; }
+  .catalysts-block strong, .why-block strong, .risks-block strong { font-weight:800; display:block; margin-bottom:4px; font-size:11px; letter-spacing:0.5px; text-transform:uppercase; }
+  .catalysts-list { list-style:none; padding-left:0; margin:0; }
+  .catalysts-list li { padding:2px 0; }
+
+  .grade-pill { display:inline-block; padding:2px 7px; border-radius:3px; font-size:10px; font-weight:800; letter-spacing:0.4px; }
+  .grade-pill.highest { background:#065f46; color:#fff; }
+  .grade-pill.high { background:#15803d; color:#fff; }
+  .grade-pill.med { background:#ca8a04; color:#fff; }
+  .grade-pill.low { background:#9ca3af; color:#fff; }
+
+  .table { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
+  .table th { background:#f9fafb; padding:6px 10px; text-align:left; font-weight:700; color:#4b5563; font-size:11px; border-bottom:1px solid #e5e7eb; }
+  .table td { padding:6px 10px; border-bottom:1px solid #f3f4f6; vertical-align:top; }
+  .table td.tkr { font-weight:700; color:#111; }
+  .subsection-label { font-size:12px; font-weight:700; color:#111; margin-bottom:4px; }
+  .subsection-hint { font-size:11px; color:#6b7280; margin-bottom:8px; }
+  .skip-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .skip-table td { padding:4px 8px; border-bottom:1px solid #f3f4f6; color:#4b5563; }
+  .skip-table td.tkr { font-weight:700; color:#374151; min-width:60px; }
+  .discipline { background:#f9fafb; padding:14px 18px; border-radius:6px; font-size:12px; line-height:1.7; color:#4b5563; }
+  .discipline strong { color:#111; }
+  .empty-state { text-align:center; padding:40px 20px; color:#6b7280; font-size:13px; }
+  .footer { margin-top:28px; padding-top:14px; border-top:1px solid #e5e7eb; font-size:10px; color:#9ca3af; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Today's Top Trades</h1>
+  <div class="header-meta">
+    Wednesday 03 June 2026 · 0 picks surfaced
+  </div>
+
+  <div style="background:#1a1a1a; color:#fff; padding:12px 16px; border-radius:8px; margin:14px 0; font-size:12px; line-height:1.7;">
+    <div style="display:flex; flex-wrap:wrap; gap:14px;">
+      <span><strong style="color:#86efac;">STRONG_BULL</strong> regime</span>
+      <span>VIX <strong>15.8</strong></span>
+      <span>FOMC in <strong>14d</strong></span>
+      <span>CPI in <strong>9d</strong></span>
+      <span>Account <strong>£4000</strong></span>
+      <span>Open <strong>1/2</strong></span>
+      <span>Pace to £20k: <strong style="color:#86efac;">ON TRACK</strong> (25.6w left, need 6.5%/wk)</span>
+    </div>
+  </div>
+
+  
+
+  
+
+  
+  <hr class="section-rule">
+  <div class="section-label">POSITION INTELLIGENCE · Your live trades — daily HOLD/TRIM/SELL verdict</div>
+  
+  <div style="padding:14px 16px; margin:10px 0; background:#ecfdf5; border-left:4px solid #15803d; border-radius:6px;">
+    <div style="font-weight:800; font-size:14px; color:#15803d;">
+      ETOR — HOLD (MED) — 3/7 factors confirm
+    </div>
+    <div style="font-size:12px; color:#374151; margin-top:6px; line-height:1.5;">HOLD with med confidence. Supporting: red day on light volume (79% of 20d avg) | close $40.67 above 20dMA $39.83 | no material news in last 24h.</div>
+    <div style="font-size:11px; color:#4b5563; margin-top:8px; line-height:1.6;">
+      
+      <div>
+        <span style="display:inline-block; width:14px; color:#15803d; font-weight:800;">+</span>
+        <span style="font-weight:600; text-transform:capitalize;">volume context:</span>
+        red day on light volume (79% of 20d avg) - looks like profit-taking, not distribution
+      </div>
+      
+      <div>
+        <span style="display:inline-block; width:14px; color:#b91c1c; font-weight:800;">-</span>
+        <span style="font-weight:600; text-transform:capitalize;">sector peer:</span>
+        stock -2.4% but XLF only +0.1% - stock-specific weakness, investigate
+      </div>
+      
+      <div>
+        <span style="display:inline-block; width:14px; color:#15803d; font-weight:800;">+</span>
+        <span style="font-weight:600; text-transform:capitalize;">support levels:</span>
+        close $40.67 above 20dMA $39.83 - uptrend intact
+      </div>
+      
+      <div>
+        <span style="display:inline-block; width:14px; color:#6b7280; font-weight:800;">?</span>
+        <span style="font-weight:600; text-transform:capitalize;">rsi context:</span>
+        RSI 60, trend +9 - inconclusive
+      </div>
+      
+      <div>
+        <span style="display:inline-block; width:14px; color:#15803d; font-weight:800;">+</span>
+        <span style="font-weight:600; text-transform:capitalize;">news today:</span>
+        no material news in last 24h - any move is price action, not new information
+      </div>
+      
+      <div>
+        <span style="display:inline-block; width:14px; color:#6b7280; font-weight:800;">?</span>
+        <span style="font-weight:600; text-transform:capitalize;">greeks change:</span>
+        14 days to expiry - manageable but watch theta
+      </div>
+      
+      <div>
+        <span style="display:inline-block; width:14px; color:#6b7280; font-weight:800;">?</span>
+        <span style="font-weight:600; text-transform:capitalize;">next catalyst:</span>
+        next earnings 69d away - too far to drive a 1-2 week move on its own
+      </div>
+      
+    </div>
+  </div>
+  
+  
+
+  
+  <hr class="section-rule">
+  <div style="padding:24px 20px; background:#f9fafb; border:2px solid #6b7280; border-radius:10px; text-align:center; margin:18px 0;">
+    <div style="font-size:18px; font-weight:800; color:#374151; margin-bottom:8px;">Sit out today</div>
+    <div style="font-size:13px; color:#6b7280; line-height:1.5;">No setup clears the TAKE-grade bar. The system would rather show you nothing than push borderline picks. Cash is a position. Come back tomorrow.</div>
+  </div>
+  
+
+  
+  <hr class="section-rule">
+  <div class="section-label">Positioning Signal — Bidirectional</div>
+  <div style="padding:14px 18px; background:#f9fafb; border:2px solid #1f2937; border-radius:10px; margin:12px 0; font-size:13px;">
+    <div style="font-weight:800; color:#1f2937; margin-bottom:6px;">BALANCED (0 elite CALLs, 0 elite PUTs). Neutral macro regime - positioning extremes drive selection.</div>
+    <div style="color:#6b7280; font-size:12px;">Macro regime: <strong>NEUTRAL</strong>  ·  10 CALL (0 elite), 5 PUT (0 elite)</div>
+  </div>
+  <table style="width:100%; border-collapse:separate; border-spacing:8px 0; margin:8px 0;">
+    <tr style="vertical-align:top;">
+      <td style="width:55%; padding:0;">
+        <div style="background:#ecfdf5; border:2px solid #15803d; border-radius:8px; padding:14px 16px;">
+          <div style="font-size:11px; letter-spacing:1.5px; color:#15803d; font-weight:800; margin-bottom:8px;">CALL CANDIDATES (LONG)</div>
+          
+            
+            <div style="padding:8px 0; border-bottom:1px solid #d1fae5; font-size:12.5px; color:#064e3b;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">PRU</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#15803d; color:#fff; margin-left:6px;">STRONG 67</span>
+              <span style="font-size:11px; color:#065f46;"> · size 25%</span>
+              <div style="font-size:11px; color:#047857; margin-top:3px; line-height:1.5;">
+                negative GEX (amplification regime - gamma squeeze tailwind); macro: neutral (no tailwind/headwind); VIX deep contango = complacency dispelled on rallies
+              </div>
+            </div>
+            
+            <div style="padding:8px 0; border-bottom:1px solid #d1fae5; font-size:12.5px; color:#064e3b;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">FOXA</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#15803d; color:#fff; margin-left:6px;">STRONG 62</span>
+              <span style="font-size:11px; color:#065f46;"> · size 25%</span>
+              <div style="font-size:11px; color:#047857; margin-top:3px; line-height:1.5;">
+                negative GEX (amplification regime - gamma squeeze tailwind); macro: neutral (no tailwind/headwind); VIX deep contango = complacency dispelled on rallies
+              </div>
+            </div>
+            
+            <div style="padding:8px 0; border-bottom:1px solid #d1fae5; font-size:12.5px; color:#064e3b;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">TROW</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#15803d; color:#fff; margin-left:6px;">MODERATE 50</span>
+              <span style="font-size:11px; color:#065f46;"> · size 20%</span>
+              <div style="font-size:11px; color:#047857; margin-top:3px; line-height:1.5;">
+                macro: neutral (no tailwind/headwind); VIX deep contango = complacency dispelled on rallies; price +3.2% from 200dma = base build near key MA
+              </div>
+            </div>
+            
+            <div style="padding:8px 0; border-bottom:1px solid #d1fae5; font-size:12.5px; color:#064e3b;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">SWK</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#15803d; color:#fff; margin-left:6px;">MODERATE 50</span>
+              <span style="font-size:11px; color:#065f46;"> · size 20%</span>
+              <div style="font-size:11px; color:#047857; margin-top:3px; line-height:1.5;">
+                macro: neutral (no tailwind/headwind); VIX deep contango = complacency dispelled on rallies; price +4.9% from 200dma = base build near key MA
+              </div>
+            </div>
+            
+            <div style="padding:8px 0; border-bottom:1px solid #d1fae5; font-size:12.5px; color:#064e3b;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">AVB</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#15803d; color:#fff; margin-left:6px;">MODERATE 50</span>
+              <span style="font-size:11px; color:#065f46;"> · size 20%</span>
+              <div style="font-size:11px; color:#047857; margin-top:3px; line-height:1.5;">
+                macro: neutral (no tailwind/headwind); VIX deep contango = complacency dispelled on rallies; price +1.5% from 200dma = base build near key MA
+              </div>
+            </div>
+            
+            <div style="padding:8px 0; border-bottom:1px solid #d1fae5; font-size:12.5px; color:#064e3b;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">INVH</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#15803d; color:#fff; margin-left:6px;">MODERATE 50</span>
+              <span style="font-size:11px; color:#065f46;"> · size 20%</span>
+              <div style="font-size:11px; color:#047857; margin-top:3px; line-height:1.5;">
+                macro: neutral (no tailwind/headwind); VIX deep contango = complacency dispelled on rallies; price +4.2% from 200dma = base build near key MA
+              </div>
+            </div>
+            
+            <div style="padding:8px 0; border-bottom:1px solid #d1fae5; font-size:12.5px; color:#064e3b;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">CPT</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#15803d; color:#fff; margin-left:6px;">MODERATE 47</span>
+              <span style="font-size:11px; color:#065f46;"> · size 20%</span>
+              <div style="font-size:11px; color:#047857; margin-top:3px; line-height:1.5;">
+                macro: neutral (no tailwind/headwind); VIX deep contango = complacency dispelled on rallies; price +0.8% from 200dma = base build near key MA
+              </div>
+            </div>
+            
+            <div style="padding:8px 0; border-bottom:1px solid #d1fae5; font-size:12.5px; color:#064e3b;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">JKHY</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#15803d; color:#fff; margin-left:6px;">MODERATE 43</span>
+              <span style="font-size:11px; color:#065f46;"> · size 20%</span>
+              <div style="font-size:11px; color:#047857; margin-top:3px; line-height:1.5;">
+                negative GEX (amplification regime - gamma squeeze tailwind); macro: neutral (no tailwind/headwind); VIX deep contango = complacency dispelled on rallies
+              </div>
+            </div>
+            
+          
+        </div>
+      </td>
+      <td style="width:45%; padding:0;">
+        <div style="background:#fef2f2; border:2px solid #b91c1c; border-radius:8px; padding:14px 16px;">
+          <div style="font-size:11px; letter-spacing:1.5px; color:#b91c1c; font-weight:800; margin-bottom:8px;">PUT CANDIDATES (SHORT)</div>
+          
+            
+            <div style="padding:8px 0; border-bottom:1px solid #fecaca; font-size:12.5px; color:#7f1d1d;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">TXT</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#b91c1c; color:#fff; margin-left:6px;">MODERATE 40</span>
+              <span style="font-size:11px; color:#7f1d1d;"> · size 20%</span>
+              <div style="font-size:11px; color:#991b1b; margin-top:3px; line-height:1.5;">
+                E-mini S&P 500: Managed money 100.0th %ile + asset mgr 88.5th %ile = CROWDED long. Contrarian short bias.; Margin debt +26% YoY $905B - late-cycle euphoria, contrarian short bias
+              </div>
+            </div>
+            
+            <div style="padding:8px 0; border-bottom:1px solid #fecaca; font-size:12.5px; color:#7f1d1d;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">IR</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#b91c1c; color:#fff; margin-left:6px;">MODERATE 47</span>
+              <span style="font-size:11px; color:#7f1d1d;"> · size 20%</span>
+              <div style="font-size:11px; color:#991b1b; margin-top:3px; line-height:1.5;">
+                E-mini S&P 500: Managed money 100.0th %ile + asset mgr 88.5th %ile = CROWDED long. Contrarian short bias.; Margin debt +26% YoY $905B - late-cycle euphoria, contrarian short bias
+              </div>
+            </div>
+            
+            <div style="padding:8px 0; border-bottom:1px solid #fecaca; font-size:12.5px; color:#7f1d1d;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">LVS</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#b91c1c; color:#fff; margin-left:6px;">MODERATE 47</span>
+              <span style="font-size:11px; color:#7f1d1d;"> · size 20%</span>
+              <div style="font-size:11px; color:#991b1b; margin-top:3px; line-height:1.5;">
+                E-mini S&P 500: Managed money 100.0th %ile + asset mgr 88.5th %ile = CROWDED long. Contrarian short bias.; Margin debt +26% YoY $905B - late-cycle euphoria, contrarian short bias
+              </div>
+            </div>
+            
+            <div style="padding:8px 0; border-bottom:1px solid #fecaca; font-size:12.5px; color:#7f1d1d;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">POOL</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#b91c1c; color:#fff; margin-left:6px;">MODERATE 47</span>
+              <span style="font-size:11px; color:#7f1d1d;"> · size 20%</span>
+              <div style="font-size:11px; color:#991b1b; margin-top:3px; line-height:1.5;">
+                E-mini S&P 500: Managed money 100.0th %ile + asset mgr 88.5th %ile = CROWDED long. Contrarian short bias.; Margin debt +26% YoY $905B - late-cycle euphoria, contrarian short bias
+              </div>
+            </div>
+            
+            <div style="padding:8px 0; border-bottom:1px solid #fecaca; font-size:12.5px; color:#7f1d1d;">
+              <strong style="font-size:14px; font-family:Menlo, Consolas, monospace;">PODD</strong>
+              <span style="display:inline-block; padding:1px 8px; border-radius:8px; font-size:10px; font-weight:800; background:#b91c1c; color:#fff; margin-left:6px;">MODERATE 47</span>
+              <span style="font-size:11px; color:#7f1d1d;"> · size 20%</span>
+              <div style="font-size:11px; color:#991b1b; margin-top:3px; line-height:1.5;">
+                E-mini S&P 500: Managed money 100.0th %ile + asset mgr 88.5th %ile = CROWDED long. Contrarian short bias.; Margin debt +26% YoY $905B - late-cycle euphoria, contrarian short bias
+              </div>
+            </div>
+            
+          
+        </div>
+      </td>
+    </tr>
+  </table>
+  
+
+  
+
+  
+
+  
+  <hr class="section-rule">
+  <div class="section-label">Skip List · Top 15 Rejected</div>
+  <table class="skip-table">
+    
+    <tr><td class="tkr">MRNA</td><td>sector headwind too strong</td></tr>
+    
+    <tr><td class="tkr">INCY</td><td>sector headwind too strong</td></tr>
+    
+    <tr><td class="tkr">SARO</td><td>only 1 stacked categories (mid needs 4+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">LOAR</td><td>only 2 stacked categories (mid needs 4+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">TTEK</td><td>only 1 stacked categories (mid needs 4+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">DRS</td><td>only 2 stacked categories (mid needs 4+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">HXL</td><td>only 2 stacked categories (mid needs 4+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">MTZ</td><td>only 1 stacked categories (mid needs 4+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">WWD</td><td>only 1 stacked categories (mid needs 4+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">FTAI</td><td>only 1 stacked categories (mid needs 4+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">KRMN</td><td>only 1 stacked categories (mid needs 4+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">LAZ</td><td>only 2 stacked categories (small needs 3+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">SHC</td><td>only 1 stacked categories (small needs 3+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">EXPO</td><td>only 1 stacked categories (small needs 3+ for A) and no positioning edge</td></tr>
+    
+    <tr><td class="tkr">FOUR</td><td>only 1 stacked categories (small needs 3+ for A) and no positioning edge</td></tr>
+    
+  </table>
+  
+
+  <hr class="section-rule">
+  <div class="section-label">Discipline</div>
+  <div class="discipline">
+    Vol regime: <strong>NORMAL</strong> · position size × 1.0<br>
+    Win rate (30d): <strong>no data yet</strong><br>
+    Open positions: <strong>1 of 2 slots</strong>
+  </div>
+
+  <div class="footer">v4 scanner · 2026-06-03 · catalyst stack engine · auto-generated</div>
+</div>
+</body>
+</html>

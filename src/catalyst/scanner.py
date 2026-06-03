@@ -92,13 +92,20 @@ def gather_catalysts(client, edgar, target_date=None):
     else:
         end_date = datetime.utcnow().date()
 
-    print(f"  pulling earnings calendar for {end_date} -> tomorrow...")
-    earnings = earnings_signals_for_tomorrow(client, target_date=end_date)
-    print(f"    {len(earnings)} earnings signals")
+    # Rebuild B4: drop earnings_signals_for_tomorrow entirely (no edge in knowing
+    # tomorrow's reporters if we're not gambling on prints). Keep earnings_lead_up
+    # but narrow to the IV-expansion sweet spot 15-21d window.
+    earnings = {}
 
-    print(f"  pulling earnings lead-up window (1-15d ahead)...")
-    earnings_lead_up = earnings_lead_up_window(client, target_date=end_date, days_ahead=15)
-    print(f"    {len(earnings_lead_up)} tickers with earnings in next 15d")
+    print(f"  pulling earnings lead-up window (15-21d sweet spot for IV expansion)...")
+    earnings_lead_up_raw = earnings_lead_up_window(client, target_date=end_date, days_ahead=25)
+    # Filter to 15-21d only
+    earnings_lead_up = {}
+    for ticker, info in (earnings_lead_up_raw or {}).items():
+        days_until = info.get("days_until") if isinstance(info, dict) else None
+        if days_until is not None and 15 <= days_until <= 21:
+            earnings_lead_up[ticker] = info
+    print(f"    {len(earnings_lead_up)} tickers with earnings 15-21d out (IV expansion window)")
 
     print(f"  pulling EDGAR 8-K / 6-K material filings (2 day window)...")
     material = collect_material_signals(edgar, days_back=2, end_date=end_date)
@@ -264,6 +271,9 @@ def enrich_ticker(client, ticker_short, signals, suffix_hint=None, fetch_news=Fa
     if df is None:
         return None
 
+    # Always-fresh fundamentals per Savvas directive. With 1,108 universe + Alpaca-free
+    # OHLCV the monthly burn is ~32k/100k cap. No cache means no staleness or
+    # invalidation bugs. Trade ~2 min slower scan for always-fresh data.
     try:
         fund = client.fundamentals(eodhd_ticker)
     except Exception:
@@ -317,7 +327,7 @@ def enrich_ticker(client, ticker_short, signals, suffix_hint=None, fetch_news=Fa
 
 
 def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
-                       news_max_fetch=150, llm_max_grade=50,
+                       news_max_fetch=150, llm_max_grade=10,
                        insider_max_fetch=80, options_max_fetch=30, min_base_pts=2.0, verbose=True):
     client = EODHDClient()
     edgar = EDGARClient()
@@ -356,51 +366,79 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             print(f"  paper trading sim failed: {e}")
     if verbose:
         print(f"  measured outcomes for {measured_total} prior predictions")
-        print(f"Step 1/6: gather catalyst signals")
 
-    catalysts = gather_catalysts(client, edgar, target_date=target_date)
-    per_ticker = build_signals_per_ticker(catalysts)
-    if verbose:
-        print(f"  raw candidates with any signal: {len(per_ticker)}")
+    # Rebuild B5: universe-first mode (positioning_first leads the scan, not catalysts).
+    # Set POSITIONING_FIRST_MODE=0 to revert to the old catalyst-driven Step 1/2 path.
+    positioning_first_mode = os.environ.get("POSITIONING_FIRST_MODE", "1") == "1"
 
-    pre_filtered = {
-        t: info for t, info in per_ticker.items()
-        if max_possible_base(info["signals"]) >= min_base_pts
-    }
-    if verbose:
-        print(f"  passing min base catalyst >= {min_base_pts}: {len(pre_filtered)}")
-        print(f"Step 2/6: enrich {len(pre_filtered)} tickers (OHLCV + fundamentals)")
-    per_ticker = pre_filtered
-
-    enriched = []
-    skipped = 0
-    start = time.time()
-    for i, (ticker_short, info) in enumerate(per_ticker.items()):
-        if verbose and i > 0 and i % 50 == 0:
-            elapsed = time.time() - start
-            rate = i / elapsed if elapsed > 0 else 0
-            print(f"  [{i}/{len(per_ticker)}] enriched={len(enriched)} skipped={skipped} rate={rate:.1f}/s")
+    if positioning_first_mode:
+        # SCAN_LIMIT env var caps universe size for fast local testing.
+        scan_limit_env = os.environ.get("SCAN_LIMIT", "").strip()
+        max_universe = int(scan_limit_env) if scan_limit_env.isdigit() else 1200
+        if verbose:
+            print(f"Step 1+2/6: universe build (positioning-first mode, max_universe={max_universe})")
+            print(f"  loading universe.json + applying liquidity floor + earnings-7d filter")
         try:
-            data = enrich_ticker(client, ticker_short, info["signals"])
-            if not data:
-                skipped += 1
-                continue
-            if not data.get("price") or data["price"] < 1.0:
-                skipped += 1
-                continue
-            enriched.append({
-                "ticker": ticker_short,
-                "company": info.get("company") or data.get("name") or "",
-                "signals": info["signals"],
-                "sources": info.get("sources", []),
-                "data": data,
-                "name": data.get("name"),
-                "sector": data.get("sector"),
-            })
+            from src.catalyst.universe_builder import build_positioning_universe
+            enriched = build_positioning_universe(client, max_universe=max_universe, verbose=verbose)
+            # Catalysts are intentionally empty - they'll be surfaced as ENRICHMENT later
+            # via news_score detectors and EDGAR keyword scanner on positioning-ranked top 600.
+            catalysts = {"earnings": {}, "earnings_lead_up": {}, "material": {}, "activist": {},
+                         "insider": {}, "cohorts": {}, "index_inclusion": {}}
+            per_ticker = {}
+            skipped = 0
         except Exception as e:
-            skipped += 1
-            if verbose and skipped < 5:
-                print(f"  enrich failed for {ticker_short}: {type(e).__name__}: {e}")
+            if verbose:
+                print(f"  universe builder failed, falling back to catalyst mode: {type(e).__name__}: {e}")
+            positioning_first_mode = False
+
+    if not positioning_first_mode:
+        if verbose:
+            print(f"Step 1/6: gather catalyst signals (legacy catalyst-driven mode)")
+
+        catalysts = gather_catalysts(client, edgar, target_date=target_date)
+        per_ticker = build_signals_per_ticker(catalysts)
+        if verbose:
+            print(f"  raw candidates with any signal: {len(per_ticker)}")
+
+        pre_filtered = {
+            t: info for t, info in per_ticker.items()
+            if max_possible_base(info["signals"]) >= min_base_pts
+        }
+        if verbose:
+            print(f"  passing min base catalyst >= {min_base_pts}: {len(pre_filtered)}")
+            print(f"Step 2/6: enrich {len(pre_filtered)} tickers (OHLCV + fundamentals)")
+        per_ticker = pre_filtered
+
+        enriched = []
+        skipped = 0
+        start = time.time()
+        for i, (ticker_short, info) in enumerate(per_ticker.items()):
+            if verbose and i > 0 and i % 50 == 0:
+                elapsed = time.time() - start
+                rate = i / elapsed if elapsed > 0 else 0
+                print(f"  [{i}/{len(per_ticker)}] enriched={len(enriched)} skipped={skipped} rate={rate:.1f}/s")
+            try:
+                data = enrich_ticker(client, ticker_short, info["signals"])
+                if not data:
+                    skipped += 1
+                    continue
+                if not data.get("price") or data["price"] < 1.0:
+                    skipped += 1
+                    continue
+                enriched.append({
+                    "ticker": ticker_short,
+                    "company": info.get("company") or data.get("name") or "",
+                    "signals": info["signals"],
+                    "sources": info.get("sources", []),
+                    "data": data,
+                    "name": data.get("name"),
+                    "sector": data.get("sector"),
+                })
+            except Exception as e:
+                skipped += 1
+                if verbose and skipped < 5:
+                    print(f"  enrich failed for {ticker_short}: {type(e).__name__}: {e}")
 
     if verbose:
         print(f"  enriched: {len(enriched)}, skipped: {skipped}")
@@ -501,7 +539,106 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
     pre_scored.sort(key=lambda x: x["score"], reverse=True)
     if verbose:
         print(f"  pre-scored: {len(pre_scored)}")
-        print(f"Step 4/6: fetch news for top {min(news_max_fetch, len(pre_scored))} candidates")
+        print(f"Step 3.5/6: wide-pool positioning enrichment + positioning_first PASS 1 (positioning signals only)")
+
+    # Path 3 deep rebuild: positioning_first runs HERE, before news fetch and LLM grading
+    # filter the pool down by backward score. This is the architectural fix that makes
+    # positioning genuinely lead the pipeline - the top 150 by positioning extremes
+    # get news fetch + LLM grade, not the top 150 by backward catalyst score.
+    try:
+        from src.catalyst.wide_pool_positioning import apply_wide_pool_positioning
+        pre_scored, macro = apply_wide_pool_positioning(pre_scored, macro=macro, verbose=verbose, max_picks=600)
+    except Exception as e:
+        if verbose:
+            print(f"  wide_pool_positioning (Step 3.5) failed (non-fatal): {type(e).__name__}: {e}")
+
+    try:
+        from src.catalyst.positioning_first import apply_positioning_first
+        apply_positioning_first(pre_scored, macro=macro, verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  positioning_first (pass 1) failed (non-fatal): {type(e).__name__}: {e}")
+
+    # Sort by positioning_first.score with backward catalyst score as tiebreaker.
+    def _positioning_then_backward(p):
+        pf = (p.get("_positioning_first") or {}).get("score", 0)
+        bw = p.get("score", 0) or 0
+        try:
+            return (float(pf), float(bw))
+        except (TypeError, ValueError):
+            return (0.0, 0.0)
+    pre_scored.sort(key=_positioning_then_backward, reverse=True)
+
+    # Lever 1: run cheap technical enrichment (VCP, pocket pivot, MTF trend, quiet RS,
+    # auction levels) on the TOP 600 by positioning_first.score - all pure OHLCV pandas
+    # math, zero API cost. Differentiates the middle of the pack so ties on macro overlay
+    # alone don't bury per-ticker tilt signals.
+    TECH_ENRICH_TOP_K = 600
+    tech_pool = pre_scored[:TECH_ENRICH_TOP_K]
+    if verbose:
+        print(f"Step 3.6/6: technical enrichment on top {len(tech_pool)} (VCP, pocket pivot, MTF, quiet RS, auction)")
+    try:
+        from src.catalyst.vcp_detector import enrich_picks_with_vcp
+        enrich_picks_with_vcp(tech_pool, max_picks=len(tech_pool), verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  vcp (top 600) failed (non-fatal): {type(e).__name__}: {e}")
+    try:
+        from src.catalyst.mtf_trend import enrich_picks_with_mtf_trend
+        enrich_picks_with_mtf_trend(tech_pool, max_picks=len(tech_pool), verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  mtf_trend (top 600) failed (non-fatal): {type(e).__name__}: {e}")
+    try:
+        from src.catalyst.pocket_pivot import enrich_picks_with_pocket_pivot
+        enrich_picks_with_pocket_pivot(tech_pool, max_picks=len(tech_pool), verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  pocket_pivot (top 600) failed (non-fatal): {type(e).__name__}: {e}")
+    try:
+        from src.catalyst.auction_market import enrich_picks_with_auction_levels
+        enrich_picks_with_auction_levels(tech_pool, max_picks=len(tech_pool), verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  auction_levels (top 600) failed (non-fatal): {type(e).__name__}: {e}")
+
+    # Lever 3: cheap GEX direction proxy on top 300 via Alpaca chain call/put OI ratio.
+    # NOT a Black-Scholes computation (that runs later on top 15). This is a fast
+    # directional flag so positioning_first has GEX context for the wider pool.
+    GEX_PROXY_TOP_K = 300
+    if verbose:
+        print(f"Step 3.65/6: cheap GEX proxy on top {min(GEX_PROXY_TOP_K, len(tech_pool))} via Alpaca chain OI")
+    try:
+        from src.catalyst.gex_proxy import enrich_picks_with_gex_proxy
+        enrich_picks_with_gex_proxy(tech_pool, max_picks=GEX_PROXY_TOP_K, verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  gex_proxy failed (non-fatal): {type(e).__name__}: {e}")
+
+    # Pass 2: re-run positioning_first on top 600 now that technical signals are attached.
+    # The _technical_half_weight_score in positioning_first now picks up VCP/pocket pivot/
+    # quiet RS/MTF/auction signals and adds them at half weight to bull or bear score.
+    # Now also picks up the cheap GEX proxy signal.
+    if verbose:
+        print(f"Step 3.7/6: positioning_first PASS 2 (now includes half-weight technicals + GEX proxy)")
+    try:
+        apply_positioning_first(tech_pool, macro=macro, verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  positioning_first (pass 2) failed (non-fatal): {type(e).__name__}: {e}")
+
+    # Re-sort the wide pool. tech_pool is the top 600 now with refined scores; the
+    # remainder of pre_scored keeps its pass-1 score.
+    pre_scored.sort(key=_positioning_then_backward, reverse=True)
+
+    if verbose:
+        top_5_pf = [(p.get("ticker"),
+                      (p.get("_positioning_first") or {}).get("conviction_tier"),
+                      (p.get("_positioning_first") or {}).get("side"),
+                      int((p.get("_positioning_first") or {}).get("score", 0)))
+                     for p in pre_scored[:5]]
+        print(f"  re-ranked by positioning_first (PASS 2). top 5 = {top_5_pf}")
+        print(f"Step 4/6: fetch news for top {min(news_max_fetch, len(pre_scored))} candidates (now ordered by positioning + technical differentiation)")
 
     top_for_news = pre_scored[:news_max_fetch]
     new_signals_added_total = 0
@@ -625,8 +762,10 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
             pass
 
     if verbose:
-        print(f"Step 5/6: LLM grading top {llm_max_grade} candidates")
+        print(f"Step 5/6: LLM grading top {llm_max_grade} candidates (positioning-first order)")
 
+    # pre_scored is already ordered by positioning_first.score from Step 3.7.
+    # grade_candidates takes the top N - so top N here = top N by positioning extreme.
     llm_grades = grade_candidates(pre_scored, max_grade=llm_max_grade, verbose=verbose)
 
     final_scored = []
@@ -872,6 +1011,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
     aa_rejections = []
     regime_info = None
     v4_stats = None
+    bidirectional = None
     try:
         if verbose:
             print(f"=== V4 ELITE PIPELINE: bracket routing → A-only gates ===")
@@ -885,6 +1025,15 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         enrich_news_quality(final_scored, verbose=verbose)
         apply_peer_benchmarking(final_scored, verbose=verbose)
         apply_sector_rotation_gate(final_scored, macro, verbose=verbose)
+
+        # Path 3 deep rebuild: wide_pool_positioning + positioning_first already ran in
+        # Step 3.5 (before news fetch). We re-sort by positioning_first.score here so the
+        # V4 ELITE pipeline (bracket routing / AA gates / final picks) consumes a pool
+        # already ranked by positioning extremes, not backward catalyst score.
+        try:
+            final_scored.sort(key=lambda p: (p.get("_positioning_first") or {}).get("score", 0), reverse=True)
+        except Exception:
+            pass
         try:
             from src.catalyst.catalyst_windows import apply_catalyst_windows
             earnings_lookup = catalysts.get("earnings_lead_up") or {}
@@ -1233,29 +1382,27 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
                 return "Materials"
             return "Other"
 
-        LLM_CONVICTION_THRESHOLD = 50
-        LLM_HARD_CAP = 30
+        # Per Savvas directive: LLM only on top 10 by positioning_first.score.
+        # No re-arbitration by LLM - positioning IS the ranker, LLM is verification + trap detector.
+        LLM_CONVICTION_THRESHOLD = 0
+        LLM_HARD_CAP = 10
 
-        def _overall_of(p):
-            c = (p.get("_conviction") or {}).get("score")
-            if c is not None:
-                try:
-                    return float(c)
-                except (TypeError, ValueError):
-                    pass
-            v = (p.get("_overall_score") or {}).get("score")
+        def _positioning_score_of(p):
+            pf = (p.get("_positioning_first") or {}).get("score")
             try:
-                return float(v) if v is not None else -1
+                return float(pf) if pf is not None else -1
             except (TypeError, ValueError):
                 return -1
 
-        haiku_targets = [p for p in ranked_picks if _overall_of(p) >= LLM_CONVICTION_THRESHOLD][:LLM_HARD_CAP]
+        # Top 10 by positioning_first.score - positioning is the ranker, LLM verifies these only.
+        ranked_for_llm = sorted(ranked_picks, key=_positioning_score_of, reverse=True)
+        haiku_targets = ranked_for_llm[:LLM_HARD_CAP]
 
         if haiku_targets:
             if verbose:
                 est_cost = len(haiku_targets) * 0.005
                 tickers = [p.get("ticker") for p in haiku_targets]
-                print(f"  haiku_synthesis: {len(haiku_targets)} Haiku bull calls (all picks Conviction >= {LLM_CONVICTION_THRESHOLD}): {', '.join(tickers[:10])}{'...' if len(tickers) > 10 else ''} ~${est_cost:.3f}")
+                print(f"  haiku_synthesis: {len(haiku_targets)} Haiku bull calls (top {LLM_HARD_CAP} by positioning_first.score): {', '.join(tickers[:10])} ~${est_cost:.3f}")
             try:
                 apply_haiku_synthesis(haiku_targets, max_calls=len(haiku_targets), verbose=verbose)
             except Exception as e:
@@ -1446,6 +1593,60 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         except Exception as e:
             if verbose:
                 print(f"  confluence detector failed (non-fatal): {type(e).__name__}: {e}")
+
+        try:
+            from src.catalyst.positioning_first import apply_positioning_first
+            apply_positioning_first(ranked_picks, macro=macro, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  positioning_first (ranked) failed (non-fatal): {type(e).__name__}: {e}")
+
+        bidirectional = None
+        try:
+            from src.catalyst.bidirectional_output import build_bidirectional
+            bidirectional = build_bidirectional(
+                ranked_picks, macro=macro,
+                max_calls=10, max_puts=5,
+                min_call_score=40, min_put_score=40,
+                verbose=verbose,
+            )
+        except Exception as e:
+            if verbose:
+                print(f"  bidirectional_output failed (non-fatal): {type(e).__name__}: {e}")
+
+        # LIVE REFRESH: pull intraday spots + option chains for top picks BEFORE
+        # final scoring so the score reflects current-market reality, not
+        # yesterday's close. Updates pct_above_200dma, ret_5d, ret_30d, etc.
+        # Re-runs positioning_first on refreshed signals.
+        try:
+            from src.catalyst.live_refresh import apply_live_refresh
+            apply_live_refresh(ranked_picks, macro=macro, top_n_spot=30, top_n_chain=10, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  live_refresh failed (non-fatal): {type(e).__name__}: {e}")
+
+        # Re-build bidirectional_output now that scores reflect live data
+        try:
+            from src.catalyst.bidirectional_output import build_bidirectional
+            bidirectional = build_bidirectional(
+                ranked_picks, macro=macro,
+                max_calls=10, max_puts=5,
+                min_call_score=40, min_put_score=40,
+                verbose=verbose,
+            )
+        except Exception as e:
+            if verbose:
+                print(f"  bidirectional_output (post-live-refresh) failed (non-fatal): {type(e).__name__}: {e}")
+
+        # Rebuild B3: SCORE COMPUTATION HAPPENS HERE - at the END of the pipeline.
+        # All data is collected: positioning (twice + live refresh), technicals, news,
+        # LLM verdicts, confluence, survival. Compute the one final number.
+        try:
+            from src.catalyst.final_score import apply_final_scores
+            apply_final_scores(ranked_picks, verbose=verbose, max_picks=60)
+        except Exception as e:
+            if verbose:
+                print(f"  final_score failed (non-fatal): {type(e).__name__}: {e}")
 
         try:
             from src.catalyst.conviction_score import apply_conviction_scores as _apply_final_conviction
@@ -1650,6 +1851,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         "aa_rejections": aa_rejections,
         "vol_regime_info": regime_info,
         "v4_stats": v4_stats,
+        "bidirectional": bidirectional,
         "eodhd_calls": client.calls_made,
         "edgar_calls": edgar.calls_made,
         "llm_graded": len(llm_grades),

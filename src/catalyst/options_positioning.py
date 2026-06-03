@@ -25,6 +25,10 @@ VOL_INDICES = {
     "VIX3M": "VIX3M.INDX",
     "VVIX": "VVIX.INDX",
     "SKEW": "SKEW.INDX",
+    # Path 3 gap-fill 4: CBOE total put/call ratio (CPC)
+    "CPC": "CPC.INDX",
+    # Equity-only P/C (CPCE) is more retail-driven and better contrarian signal
+    "CPCE": "CPCE.INDX",
 }
 
 
@@ -65,6 +69,8 @@ def get_options_market_snapshot(verbose=False):
     vix3m = snap.get("VIX3M")
     vvix = snap.get("VVIX")
     skew = snap.get("SKEW")
+    cpc = snap.get("CPC")
+    cpce = snap.get("CPCE")
 
     findings = []
     score = 50
@@ -90,6 +96,20 @@ def get_options_market_snapshot(verbose=False):
     if vvix is not None:
         if vvix >= 110:
             findings.append({"signal": "VVIX_ELEVATED", "label": f"VVIX {vvix:.1f} >= 110 = vol-of-vol high, VIX expansion likely", "bearish_for_longs": True})
+
+    # Total CPC (CBOE all options put/call)
+    if cpc is not None and cpc > 0:
+        if cpc >= 1.20:
+            findings.append({"signal": "CPC_EXTREME_PUTS", "label": f"CPC {cpc:.2f} >= 1.20 = heavy put buying, contrarian bullish setup", "bearish_for_longs": False, "contrarian": "LONG"})
+        elif cpc <= 0.70:
+            findings.append({"signal": "CPC_EXTREME_CALLS", "label": f"CPC {cpc:.2f} <= 0.70 = heavy call buying / complacency, contrarian bearish", "bearish_for_longs": True, "contrarian": "SHORT"})
+
+    # Equity-only CPCE - retail/speculative options. Stronger contrarian signal than CPC.
+    if cpce is not None and cpce > 0:
+        if cpce >= 1.00:
+            findings.append({"signal": "CPCE_RETAIL_PUTS", "label": f"CPCE {cpce:.2f} >= 1.00 = retail panic puts, contrarian long edge", "bearish_for_longs": False, "contrarian": "LONG"})
+        elif cpce <= 0.50:
+            findings.append({"signal": "CPCE_RETAIL_CALLS", "label": f"CPCE {cpce:.2f} <= 0.50 = retail mania calls, contrarian short edge", "bearish_for_longs": True, "contrarian": "SHORT"})
 
     if vix is not None:
         if vix >= 25:
@@ -129,10 +149,12 @@ def enrich_picks_with_options_positioning(picks, market_snapshot=None, verbose=F
             "regime": market_snapshot.get("regime"),
             "vix": market_snapshot["snapshot"].get("VIX"),
             "skew": market_snapshot["snapshot"].get("SKEW"),
+            "cpc": market_snapshot["snapshot"].get("CPC"),
+            "cpce": market_snapshot["snapshot"].get("CPCE"),
             "vix9d_vix_ratio": (market_snapshot["snapshot"].get("VIX9D") or 0) / (market_snapshot["snapshot"].get("VIX") or 1) if market_snapshot["snapshot"].get("VIX") else None,
             "bearish_signal_count": len(bearish_signals),
             "bullish_signal_count": len(bullish_signals),
-            "findings": [f.get("label") for f in findings],
+            "findings": findings,
         }
 
     if verbose:

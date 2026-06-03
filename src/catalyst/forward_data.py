@@ -120,7 +120,9 @@ def enrich_picks_with_forward_data(picks, max_picks=20, verbose=False):
                 auto_tagged += 1
                 break
         try:
-            ar = get_analyst_revision_flow(ticker, fundamentals=p.get("_fundamentals"))
+            # Use already-fetched fundamentals from Step 2 enrichment (correct field is _raw_fundamentals)
+            pre_fetched = p.get("_raw_fundamentals") or p.get("_fundamentals")
+            ar = get_analyst_revision_flow(ticker, fundamentals=pre_fetched)
         except Exception:
             ar = None
         if ar:

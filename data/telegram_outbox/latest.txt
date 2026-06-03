@@ -1,34 +1,78 @@
-FULL POSITIONING REBUILD COMPLETE - Tue 02 Jun 22:40 BST
+POSITIONING-FIRST REBUILD COMPLETE - Tue 02 Jun 23:59 BST
 
-All 11 themes shipped. Scanner is now genuinely institutional-grade.
+All 3 levers + 7 rebuild tasks done. Pipeline now genuinely positioning-led.
 
-FINAL STATE:
-23 signals across 5 categories in confluence detector:
-- POSITIONING (5): CFTC COT extremes, dealer GEX regime, PB flow, squeeze setup, macro regime
-- CATALYST (4): catalyst window, activist 13D, earnings history, index rebalance
-- TECHNICAL (6): VCP, MTF trend, quiet RS, stage 2, pocket pivot, auction above value
-- OPTIONS (4): IV window, UW flow / DIY UOA, GEX favourable, dark pool
-- SMART MONEY (4): insider cluster, EDGAR buyback, EDGAR guidance, positive analyst revisions
+WHAT THE NEW PIPELINE LOOKS LIKE:
 
-WHAT JUST GOT BUILT TODAY:
-1. CFTC COT - institutional positioning extremes (live: S&P 88th %ile crowded long)
-2. Dealer GEX - amplification vs pinning regime per ticker
-3. Options Market Positioning - VIX TS / SKEW / VVIX (live: complacent regime)
-4. Short Squeeze Detector - multi-factor squeeze loaded scoring
-5. Macro Positioning - HYG/LQD, copper/gold, dollar, TLT regime
-6. Sentiment Stack - CNN F&G + Zerohedge PB scraper
-7. Auction Market Theory - volume profile + POC + VAH/VAL
-8. Higher-Freq Forward Data - Tesla deliveries, semis cycle, defense
-9. Analyst Revision Flow - 3-month forward EPS revision velocity
-10. + Refactor of confluence detector
+Step 0: macro snapshot + measure prior outcomes (unchanged)
 
-CURRENT MARKET READ (from live data):
-- CFTC: Asset managers MAX LONG S&P + Nasdaq (88-94th percentile)
-- Vol: Complacent regime (steep contango, low VIX9D, normal VVIX)
-- SKEW: 142 (just below tail-hedging extreme)
+Step 1+2 (positioning-first mode):
+  - Load universe.json (1108 tickers: SP500 + SP400 + Russell 1000)
+  - Enrich every ticker with OHLCV (Alpaca free) + fundamentals (7d cache)
+  - Liquidity floor: mcap GBP 200M+, dollar vol GBP 2M+
+  - Filter earnings-within-7d (no gambling on prints)
+  - Result: ~700-900 candidates ready for positioning ranking
 
-This is a CLASSIC PEAK POSITIONING SETUP. Aggressive new long-beta exposure is high risk. ETOR thesis has positioning headwinds against it.
+Step 3.5: wide-pool positioning enrichment + positioning_first PASS 1
+  - CFTC COT (8 contracts) + macro + options + sentiment + FINRA margin
+  - Per-ticker bull_score + bear_score + side classification
+  - Now includes 6 free per-ticker bull signals (short %, days-to-cover,
+    base near 200dma, near 52w low, volatility contraction, accumulation)
 
-Cost: STAYS at GBP 100/month (EODHD only). All 11 themes use free data.
+Step 3.6: technical enrichment on top 600 by positioning
+  - VCP, pocket pivot, MTF trend, quiet RS, auction levels
+  - All zero-API-cost pandas math
+  - Solves the macro-tie differentiation problem
 
-Tomorrow's 14:09 UTC scan will run the full 23-signal positioning-aware system. Pick stream will be much more selective. ELITE tier requires 5+ signals across 3+ categories now genuinely meaningful.
+Step 3.65: cheap GEX proxy on top 300 via Alpaca call/put OI ratio
+  - One Alpaca chain call per ticker, ~200ms each
+  - Tags _dealer_gex regime as NEGATIVE_AMP / POSITIVE_PIN / NEUTRAL
+  - Per-ticker GEX direction without Black-Scholes cost
+
+Step 3.7: positioning_first PASS 2 (now includes half-weight technicals + GEX proxy)
+  - Final positioning ranking with full signal stack
+
+Step 4: news fetch on top 150 BY POSITIONING SCORE (not backward catalyst score)
+Step 5: LLM grading on top 50 BY POSITIONING SCORE
+
+Step 6: V4 ELITE
+  - Bracket routing + AA tier (ADVISORY only - positioning auto-promotes)
+  - Per-ticker GEX full Black-Scholes on top 15
+  - Confluence detector (requires POSITIONING category for ELITE)
+  - Bidirectional output: CALL + PUT streams from positioning extremes
+
+Step 7: FINAL SCORE (computed ONCE at the very end)
+  - 40% positioning + 15% confluence + 15% LLM verdict + 10% technical
+    + 10% survival + 5% earnings quality + 5% catalyst
+  - This is THE number. No pre-rank score anywhere upstream.
+
+EARNINGS WINDOW:
+- Dropped tomorrow-only sweep (no edge)
+- Narrowed lead-up to 15-21 day sweet spot (IV expansion window)
+
+COST ECONOMICS:
+- Old: ~3,650 EODHD/day -> 80k/month
+- New: ~500 EODHD/day (fundamentals 7d cache, batch Mon/Tue/Wed)
+  -> ~20k/month. WAY under 100k cap.
+
+NEW MODULES BUILT:
+- universe_builder.py - loads 1108 universe + liquidity floor + earnings filter
+- fundamentals_cache.py - 7-day TTL cache, staggered batch
+- positioning_first.py - bidirectional scoring engine
+- wide_pool_positioning.py - cheap global enrichers
+- bidirectional_output.py - CALL + PUT stream builder
+- gex_proxy.py - cheap GEX direction proxy via OI ratio
+- final_score.py - score-at-end verdict (replaces initial_score gate)
+- finra_margin.py - monthly margin debt regime
+
+SAFETY NET:
+- candidate_aggregator still runs to catch any high-conviction catalyst-only
+  ticker the positioning sort missed
+- POSITIONING_FIRST_MODE=0 env var reverts to old catalyst-driven pipeline
+
+CRON STAYS PAUSED until you give the word to re-enable. To test live:
+  SCAN_LIMIT=50 SKIP_EMAIL=1 POSITIONING_FIRST_MODE=1 python scripts/run_daily_scan.py
+
+When you're ready to re-enable scheduled runs:
+- Uncomment the schedule block in .github/workflows/daily-scan.yml
+- The new pipeline will run automatically with no other changes

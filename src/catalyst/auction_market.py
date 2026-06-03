@@ -10,7 +10,32 @@ Free data from Alpaca daily bars.
 from datetime import datetime, timedelta
 
 
-def _get_bars(ticker, days=90):
+def _get_bars(ticker, days=90, pick=None):
+    """Get OHLCV bars. Prefer reuse of already-fetched data on the pick to avoid
+    duplicate Alpaca calls during a single scan."""
+    # First try to reuse OHLCV from the pick's _enriched_data (already pulled in Step 2)
+    if pick is not None:
+        enriched = pick.get("_enriched_data") or {}
+        df = enriched.get("df")
+        if df is not None and len(df) >= 20:
+            # Convert the trailing `days` of dataframe rows to list-of-dict shape
+            tail = df.tail(min(days, len(df)))
+            bars = []
+            for idx, row in tail.iterrows():
+                try:
+                    bars.append({
+                        "date": str(idx)[:10],
+                        "high": float(row["high"]),
+                        "low": float(row["low"]),
+                        "close": float(row["close"]),
+                        "volume": float(row.get("volume") or 0),
+                    })
+                except Exception:
+                    continue
+            if bars:
+                return bars
+
+    # Fallback: fresh Alpaca call (kept for backward compat when caller can't pass pick)
     try:
         from src.alpaca_ohlcv import get_daily_bars
         from datetime import date
@@ -112,8 +137,8 @@ def compute_anchored_vwap(bars, anchor_date_str):
     return round(cum_pv / cum_v, 2)
 
 
-def analyze_auction_levels(ticker, current_price=None, verbose=False):
-    bars = _get_bars(ticker, days=90)
+def analyze_auction_levels(ticker, current_price=None, verbose=False, pick=None):
+    bars = _get_bars(ticker, days=90, pick=pick)
     if len(bars) < 20:
         return None
     profile = compute_volume_profile(bars)
@@ -161,17 +186,25 @@ def enrich_picks_with_auction_levels(picks, max_picks=20, verbose=False):
     if not picks:
         return picks
     enriched = 0
+    skipped_no_data = 0
     for p in picks[:max_picks]:
         ticker = p.get("ticker")
         if not ticker or "." in ticker:
             continue
         try:
-            res = analyze_auction_levels(ticker, current_price=p.get("live_spot") or p.get("price"), verbose=False)
+            res = analyze_auction_levels(
+                ticker,
+                current_price=p.get("live_spot") or p.get("price"),
+                verbose=False,
+                pick=p,  # reuse OHLCV from _enriched_data.df to avoid fresh Alpaca call
+            )
         except Exception:
             res = None
         if res:
             p["_auction_levels"] = res
             enriched += 1
+        else:
+            skipped_no_data += 1
     if verbose:
-        print(f"  auction_market: {enriched} picks analyzed")
+        print(f"  auction_market: {enriched} picks analyzed ({skipped_no_data} skipped - insufficient data)")
     return picks

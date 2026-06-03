@@ -28,15 +28,47 @@ def send_alert(text):
 def send_priority_alerts(scan):
     """Fire phone push alerts for the high-priority signals in today's scan.
 
-    Three alert types:
+    Four alert types:
     1. REVIEW MODE triggered (drawdown or loss streak)
     2. EXIT WARNINGS on live positions (drift detector)
-    3. ELITE confluence picks (5+ signals, 3+ categories)
+    3. ELITE confluence picks (5+ signals, 3+ categories, includes positioning)
+    4. Bidirectional positioning summary (CALL + PUT extremes)
     """
     if not BOT_TOKEN or not CHAT_ID:
         return 0
     sent = 0
     scan_date = scan.get("scan_date", "?")
+
+    bidir = scan.get("bidirectional") or {}
+    bidir_summary = bidir.get("summary") or {}
+    elite_calls = bidir_summary.get("elite_calls", 0)
+    elite_puts = bidir_summary.get("elite_puts", 0)
+    if elite_calls >= 1 or elite_puts >= 1:
+        lines = [
+            "<b>POSITIONING SIGNAL</b>",
+            f"Date: {scan_date}",
+            f"Macro: {bidir_summary.get('macro_regime', 'NEUTRAL')}",
+            "",
+            bidir_summary.get("thesis_summary", ""),
+            "",
+        ]
+        calls = (bidir.get("calls") or [])[:3]
+        if calls:
+            lines.append("<b>CALL candidates:</b>")
+            for c in calls:
+                pf = c.get("_positioning_first") or {}
+                top_signals = [s.get("key", "?") for s in (pf.get("positioning_signals") or [])[:2]]
+                lines.append(f"- {c.get('ticker', '?')} ({pf.get('conviction_tier', '?')} {pf.get('score', 0)}): {', '.join(top_signals)}")
+            lines.append("")
+        puts = (bidir.get("puts") or [])[:3]
+        if puts:
+            lines.append("<b>PUT candidates:</b>")
+            for c in puts:
+                pf = c.get("_positioning_first") or {}
+                top_signals = [s.get("key", "?") for s in (pf.get("positioning_signals") or [])[:2]]
+                lines.append(f"- {c.get('ticker', '?')} ({pf.get('conviction_tier', '?')} {pf.get('score', 0)}): {', '.join(top_signals)}")
+        if send_alert("\n".join(lines)):
+            sent += 1
 
     gs = scan.get("guardrail_state") or {}
     if gs.get("mode") == "REVIEW_MODE":

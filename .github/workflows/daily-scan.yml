@@ -13,18 +13,19 @@ on:
         default: ""
   repository_dispatch:
     types: [run-daily-scan]
-  # Target: 30 min after US market open every weekday.
-  # US market opens 14:30 BST (Mar-Nov, BST/EDT both in summer) -> scan 15:00 BST = 14:00 UTC.
-  # US market opens 14:30 GMT (Nov-Mar, GMT/EST both in winter) -> scan 15:00 GMT = 15:00 UTC.
-  # Two crons keep us on schedule across DST changes without manual flips.
-  schedule:
-    - cron: "0 14 * 3-10 1-5"
-    - cron: "0 15 * 1-2,11-12 1-5"
+  # PAUSED 2026-06-02 for Path 3 (Option C) architectural rebuild.
+  # Backward-gated system disabled; manual workflow_dispatch only during rebuild.
+  # Re-enable after positioning_first engine is live (target: ~7-9 days).
+  # schedule:
+  #   - cron: "0 14 * 3-10 1-5"
+  #   - cron: "0 15 * 1-2,11-12 1-5"
 
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Bumped from 30 to 45 min - new positioning-first pipeline takes ~30-40 min on full 1108
+    # universe (wide_pool positioning + technicals on top 600 + GEX proxy on top 300 + live refresh).
+    timeout-minutes: 45
     permissions:
       contents: write
     steps:

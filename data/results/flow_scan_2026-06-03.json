@@ -18,7 +18,7 @@
     },
     "sentiment_stack": {
       "fear_greed": {
-        "current": 54.2571428571429,
+        "current": 54.2285714285714,
         "rating": "neutral",
         "previous_1_week": 60.6,
         "previous_1_month": 71.17142857142856
@@ -58,7 +58,7 @@
       "extreme_contrarian_count": 1,
       "extreme_count_long": 0,
       "extreme_count_short": 1,
-      "evaluated_at": "2026-06-03T16:27:30.505854Z"
+      "evaluated_at": "2026-06-03T16:32:14.614665Z"
     },
     "options_positioning": {
       "snapshot": {
@@ -73,14 +73,14 @@
       "regime": "UNKNOWN",
       "findings": [],
       "options_positioning_score": 50,
-      "evaluated_at": "2026-06-03T16:27:30.508976Z"
+      "evaluated_at": "2026-06-03T16:32:14.617532Z"
     },
     "macro_positioning": {
       "regime": "NEUTRAL",
       "risk_score": 50,
       "findings": [],
       "snapshot": {},
-      "evaluated_at": "2026-06-03T16:27:30.510110Z"
+      "evaluated_at": "2026-06-03T16:32:14.618640Z"
     },
     "meta_regime": {
       "regime": "RISK_OFF_PRESSURE",
@@ -101,8 +101,462 @@
     }
   },
   "universe_size": 50,
-  "calls": [],
-  "puts": [],
-  "by_tier": {},
-  "uw_calls_made": 491
+  "calls": [
+    {
+      "ticker": "TSLA",
+      "name": "TESLA",
+      "sector": "Consumer Cyclical",
+      "market_cap": "1590055528900",
+      "next_earnings_date": "2026-07-22",
+      "beta": "2.0616",
+      "price": 422.4,
+      "live_spot": 422.4,
+      "_uw_flow_initial": {
+        "total_premium": 30494169.0,
+        "trade_count": 15,
+        "calls": 8,
+        "puts": 7
+      },
+      "sources": [
+        "premium_top30",
+        "sweep_volume",
+        "high_volume",
+        "darkpool_top"
+      ],
+      "_uw_flow": {
+        "total_premium": 26779979.0,
+        "trade_count": 100,
+        "calls": 76,
+        "puts": 24,
+        "sweeps": 26,
+        "blocks": 0,
+        "zero_dte_count": 0,
+        "zero_dte_share": 0.0,
+        "dominant_side": "CALL",
+        "call_put_ratio": 3.17
+      },
+      "_uw_gex": {
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
+      },
+      "_positioning_first": {
+        "score": 18,
+        "side": "NEUTRAL",
+        "bull_score": 18,
+        "bear_score": 0,
+        "technical_half_weight_score": 0,
+        "positioning_signals": [
+          {
+            "key": "uw_call_dominant_flow",
+            "label": "UW: 76 calls / 24 puts ($26.8M premium) = institutional call buying",
+            "pts": 18
+          }
+        ],
+        "technical_signals_half_weight": [],
+        "n_positioning_signals": 1,
+        "conviction_tier": "NONE",
+        "recommended_size_pct": 0,
+        "regime_context": "RISK_OFF_PRESSURE",
+        "thesis": "TSLA: positioning signals firing but no clear directional edge.",
+        "evaluated_at": "2026-06-03T16:32:33.623077Z"
+      },
+      "_confluence": {
+        "ticker": "TSLA",
+        "score": 35,
+        "side": "CALL",
+        "tier": "MODERATE",
+        "size_pct": 10,
+        "vehicle": "ATM debit spread, 21-30d",
+        "target_pct": 75,
+        "stop_pct": -50,
+        "max_hold_days": 7,
+        "patterns_fired": [
+          {
+            "key": "above_ask",
+            "side": "CALL",
+            "score": 15,
+            "label": "ABOVE-ASK URGENCY: CALL side has $9.9M / $17.9M (55%) executed at ask or above = pro urgency",
+            "details": {
+              "side": "CALL",
+              "total": 17941971.0,
+              "above_ask": 9891652.0,
+              "ratio": 0.5513135652710619
+            }
+          },
+          {
+            "key": "institutional",
+            "side": "CALL",
+            "score": 20,
+            "label": "INSTITUTIONAL: $26.8M premium, 76C/24P (76% CALL concentration)",
+            "details": {
+              "total_premium": 26779979.0,
+              "trade_count": 100,
+              "calls": 76,
+              "puts": 24,
+              "sweeps": 26,
+              "blocks": 0,
+              "zero_dte_count": 0,
+              "zero_dte_share": 0.0,
+              "dominant_side": "CALL",
+              "call_put_ratio": 3.17
+            }
+          }
+        ],
+        "call_score": 35,
+        "put_score": 0,
+        "positioning_contribution": 0,
+        "tide_score": 0,
+        "thesis": "TSLA CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $9.9M / $17.9M (55%) executed at ask or above = pro urgency; INSTITUTIONAL: $26.8M premium, 76C/24P (76% CALL concentration)"
+      },
+      "catalysts": [
+        {
+          "label": "TSLA CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $9.9M / $17.9M (55%) executed at ask or above = pro urgency; INSTITUTIONAL: $26.8M premium, 76C/24P (76% CALL concentration)",
+          "key": "confluence"
+        }
+      ]
+    },
+    {
+      "ticker": "AMZN",
+      "name": "AMAZON ",
+      "sector": "Consumer Cyclical",
+      "market_cap": "2759413712523",
+      "next_earnings_date": "2026-07-30",
+      "beta": "1.4432",
+      "price": 249.07,
+      "live_spot": 249.07,
+      "_uw_flow_initial": {
+        "total_premium": 4292941.0,
+        "trade_count": 9,
+        "calls": 8,
+        "puts": 1
+      },
+      "sources": [
+        "premium_top30",
+        "darkpool_top",
+        "oi_changers"
+      ],
+      "_uw_flow": {
+        "total_premium": 23209826.0,
+        "trade_count": 100,
+        "calls": 71,
+        "puts": 29,
+        "sweeps": 25,
+        "blocks": 0,
+        "zero_dte_count": 0,
+        "zero_dte_share": 0.0,
+        "dominant_side": "CALL",
+        "call_put_ratio": 2.45
+      },
+      "_uw_gex": {
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
+      },
+      "_positioning_first": {
+        "score": 18,
+        "side": "NEUTRAL",
+        "bull_score": 18,
+        "bear_score": 0,
+        "technical_half_weight_score": 0,
+        "positioning_signals": [
+          {
+            "key": "uw_call_dominant_flow",
+            "label": "UW: 71 calls / 29 puts ($23.2M premium) = institutional call buying",
+            "pts": 18
+          }
+        ],
+        "technical_signals_half_weight": [],
+        "n_positioning_signals": 1,
+        "conviction_tier": "NONE",
+        "recommended_size_pct": 0,
+        "regime_context": "RISK_OFF_PRESSURE",
+        "thesis": "AMZN: positioning signals firing but no clear directional edge.",
+        "evaluated_at": "2026-06-03T16:32:33.623125Z"
+      },
+      "_confluence": {
+        "ticker": "AMZN",
+        "score": 35,
+        "side": "CALL",
+        "tier": "MODERATE",
+        "size_pct": 10,
+        "vehicle": "ATM debit spread, 21-30d",
+        "target_pct": 75,
+        "stop_pct": -50,
+        "max_hold_days": 7,
+        "patterns_fired": [
+          {
+            "key": "above_ask",
+            "side": "CALL",
+            "score": 15,
+            "label": "ABOVE-ASK URGENCY: CALL side has $7.9M / $16.3M (48%) executed at ask or above = pro urgency",
+            "details": {
+              "side": "CALL",
+              "total": 16304166.0,
+              "above_ask": 7912276.0,
+              "ratio": 0.48529167330607403
+            }
+          },
+          {
+            "key": "institutional",
+            "side": "CALL",
+            "score": 20,
+            "label": "INSTITUTIONAL: $23.2M premium, 71C/29P (71% CALL concentration)",
+            "details": {
+              "total_premium": 23209826.0,
+              "trade_count": 100,
+              "calls": 71,
+              "puts": 29,
+              "sweeps": 25,
+              "blocks": 0,
+              "zero_dte_count": 0,
+              "zero_dte_share": 0.0,
+              "dominant_side": "CALL",
+              "call_put_ratio": 2.45
+            }
+          }
+        ],
+        "call_score": 35,
+        "put_score": 0,
+        "positioning_contribution": 0,
+        "tide_score": 0,
+        "thesis": "AMZN CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $7.9M / $16.3M (48%) executed at ask or above = pro urgency; INSTITUTIONAL: $23.2M premium, 71C/29P (71% CALL concentration)"
+      },
+      "catalysts": [
+        {
+          "label": "AMZN CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $7.9M / $16.3M (48%) executed at ask or above = pro urgency; INSTITUTIONAL: $23.2M premium, 71C/29P (71% CALL concentration)",
+          "key": "confluence"
+        }
+      ]
+    }
+  ],
+  "puts": [
+    {
+      "ticker": "QQQ",
+      "name": "INVESCO QQQ ",
+      "sector": null,
+      "market_cap": "494282537972",
+      "next_earnings_date": null,
+      "beta": "1.2805",
+      "price": 742.63,
+      "live_spot": 742.63,
+      "_uw_flow_initial": {
+        "total_premium": 30774665.0,
+        "trade_count": 48,
+        "calls": 29,
+        "puts": 19
+      },
+      "sources": [
+        "premium_top30",
+        "sweep_volume",
+        "high_volume",
+        "darkpool_top"
+      ],
+      "_uw_flow": {
+        "total_premium": 23438174.0,
+        "trade_count": 100,
+        "calls": 42,
+        "puts": 58,
+        "sweeps": 31,
+        "blocks": 0,
+        "zero_dte_count": 0,
+        "zero_dte_share": 0.0,
+        "dominant_side": "PUT",
+        "call_put_ratio": 0.72
+      },
+      "_uw_gex": {
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
+      },
+      "_positioning_first": {
+        "score": 0,
+        "side": "NEUTRAL",
+        "bull_score": 0,
+        "bear_score": 0,
+        "technical_half_weight_score": 0,
+        "positioning_signals": [],
+        "technical_signals_half_weight": [],
+        "n_positioning_signals": 0,
+        "conviction_tier": "NONE",
+        "recommended_size_pct": 0,
+        "regime_context": "RISK_OFF_PRESSURE",
+        "thesis": "QQQ: no firing positioning signals - neutral.",
+        "evaluated_at": "2026-06-03T16:32:33.623056Z"
+      },
+      "_confluence": {
+        "ticker": "QQQ",
+        "score": 35,
+        "side": "PUT",
+        "tier": "MODERATE",
+        "size_pct": 10,
+        "vehicle": "ATM debit spread, 21-30d",
+        "target_pct": 75,
+        "stop_pct": -50,
+        "max_hold_days": 7,
+        "patterns_fired": [
+          {
+            "key": "above_ask",
+            "side": "PUT",
+            "score": 15,
+            "label": "ABOVE-ASK URGENCY: PUT side has $6.4M / $12.3M (51%) executed at ask or above = pro urgency",
+            "details": {
+              "side": "PUT",
+              "total": 12306586.0,
+              "above_ask": 6379063.0,
+              "ratio": 0.518345461527673
+            }
+          },
+          {
+            "key": "institutional",
+            "side": "PUT",
+            "score": 20,
+            "label": "INSTITUTIONAL: $23.4M premium, 42C/58P (58% PUT concentration)",
+            "details": {
+              "total_premium": 23438174.0,
+              "trade_count": 100,
+              "calls": 42,
+              "puts": 58,
+              "sweeps": 31,
+              "blocks": 0,
+              "zero_dte_count": 0,
+              "zero_dte_share": 0.0,
+              "dominant_side": "PUT",
+              "call_put_ratio": 0.72
+            }
+          }
+        ],
+        "call_score": 0,
+        "put_score": 35,
+        "positioning_contribution": 0,
+        "tide_score": 0,
+        "thesis": "QQQ PUT (MODERATE): ABOVE-ASK URGENCY: PUT side has $6.4M / $12.3M (51%) executed at ask or above = pro urgency; INSTITUTIONAL: $23.4M premium, 42C/58P (58% PUT concentration)"
+      },
+      "catalysts": [
+        {
+          "label": "QQQ PUT (MODERATE): ABOVE-ASK URGENCY: PUT side has $6.4M / $12.3M (51%) executed at ask or above = pro urgency; INSTITUTIONAL: $23.4M premium, 42C/58P (58% PUT concentration)",
+          "key": "confluence"
+        }
+      ]
+    },
+    {
+      "ticker": "SPY",
+      "name": "SPDR S&P 500 ETF",
+      "sector": null,
+      "market_cap": "759.318519",
+      "next_earnings_date": null,
+      "beta": "1",
+      "price": 754.355,
+      "live_spot": 754.355,
+      "_uw_flow_initial": {
+        "total_premium": 35142828.0,
+        "trade_count": 24,
+        "calls": 5,
+        "puts": 19
+      },
+      "sources": [
+        "premium_top30",
+        "sweep_volume",
+        "high_volume"
+      ],
+      "_uw_flow": {
+        "total_premium": 28148799.0,
+        "trade_count": 100,
+        "calls": 35,
+        "puts": 65,
+        "sweeps": 26,
+        "blocks": 0,
+        "zero_dte_count": 0,
+        "zero_dte_share": 0.0,
+        "dominant_side": "PUT",
+        "call_put_ratio": 0.54
+      },
+      "_uw_gex": {
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
+      },
+      "_positioning_first": {
+        "score": 0,
+        "side": "NEUTRAL",
+        "bull_score": 0,
+        "bear_score": 0,
+        "technical_half_weight_score": 0,
+        "positioning_signals": [],
+        "technical_signals_half_weight": [],
+        "n_positioning_signals": 0,
+        "conviction_tier": "NONE",
+        "recommended_size_pct": 0,
+        "regime_context": "RISK_OFF_PRESSURE",
+        "thesis": "SPY: no firing positioning signals - neutral.",
+        "evaluated_at": "2026-06-03T16:32:33.623101Z"
+      },
+      "_confluence": {
+        "ticker": "SPY",
+        "score": 35,
+        "side": "PUT",
+        "tier": "MODERATE",
+        "size_pct": 10,
+        "vehicle": "ATM debit spread, 21-30d",
+        "target_pct": 75,
+        "stop_pct": -50,
+        "max_hold_days": 7,
+        "patterns_fired": [
+          {
+            "key": "above_ask",
+            "side": "PUT",
+            "score": 15,
+            "label": "ABOVE-ASK URGENCY: PUT side has $14.0M / $20.4M (68%) executed at ask or above = pro urgency",
+            "details": {
+              "side": "PUT",
+              "total": 20388075.0,
+              "above_ask": 13967633.0,
+              "ratio": 0.6850883666064599
+            }
+          },
+          {
+            "key": "institutional",
+            "side": "PUT",
+            "score": 20,
+            "label": "INSTITUTIONAL: $28.1M premium, 35C/65P (65% PUT concentration)",
+            "details": {
+              "total_premium": 28148799.0,
+              "trade_count": 100,
+              "calls": 35,
+              "puts": 65,
+              "sweeps": 26,
+              "blocks": 0,
+              "zero_dte_count": 0,
+              "zero_dte_share": 0.0,
+              "dominant_side": "PUT",
+              "call_put_ratio": 0.54
+            }
+          }
+        ],
+        "call_score": 0,
+        "put_score": 35,
+        "positioning_contribution": 0,
+        "tide_score": 0,
+        "thesis": "SPY PUT (MODERATE): ABOVE-ASK URGENCY: PUT side has $14.0M / $20.4M (68%) executed at ask or above = pro urgency; INSTITUTIONAL: $28.1M premium, 35C/65P (65% PUT concentration)"
+      },
+      "catalysts": [
+        {
+          "label": "SPY PUT (MODERATE): ABOVE-ASK URGENCY: PUT side has $14.0M / $20.4M (68%) executed at ask or above = pro urgency; INSTITUTIONAL: $28.1M premium, 35C/65P (65% PUT concentration)",
+          "key": "confluence"
+        }
+      ]
+    }
+  ],
+  "by_tier": {
+    "MODERATE": 4
+  },
+  "uw_calls_made": 494
 }

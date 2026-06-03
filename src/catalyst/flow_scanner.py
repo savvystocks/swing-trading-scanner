@@ -127,6 +127,7 @@ def run_flow_scan(target_date=None, verbose=True):
     if verbose:
         print(f"Step 2/8: enrich tickers with stock info + live spot")
     enriched_picks = []
+    dropped_etf = 0
     for entry in flow_universe:
         ticker = entry["ticker"]
         try:
@@ -136,6 +137,12 @@ def run_flow_scan(target_date=None, verbose=True):
                 info = stock_info.get("data")
         except Exception:
             info = None
+
+        # Stocks only - drop ETFs (universe blacklist is first pass, this is backstop)
+        issue_type = (info or {}).get("issue_type") or ""
+        if "ETF" in issue_type.upper():
+            dropped_etf += 1
+            continue
 
         # Live spot from UW stock_state (current close, sub-minute fresh during market hours)
         live_spot = None
@@ -180,7 +187,7 @@ def run_flow_scan(target_date=None, verbose=True):
             enriched_picks.append(pick)
 
     if verbose:
-        print(f"  enriched: {len(enriched_picks)} of {len(flow_universe)}")
+        print(f"  enriched: {len(enriched_picks)} of {len(flow_universe)} (dropped {dropped_etf} ETFs)")
 
     # Step 3: per-ticker UW enrichment (GEX, IV, OI, dark pool)
     if verbose:

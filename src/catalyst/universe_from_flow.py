@@ -116,11 +116,41 @@ def _extract_ticker_from_contract(c):
     return t2
 
 
+ETF_BLACKLIST = {
+    # Broad index trackers
+    "SPY", "QQQ", "IWM", "DIA", "VOO", "VTI", "IVV", "SPLG", "VEA", "VWO", "EFA", "EEM",
+    # Sector SPDRs
+    "XLE", "XLF", "XLK", "XLV", "XLP", "XLB", "XLY", "XLI", "XLU", "XLRE", "XLC",
+    # Leveraged
+    "TQQQ", "SQQQ", "SOXL", "SOXS", "SPXL", "SPXS", "UPRO", "SPXU",
+    "FAS", "FAZ", "TNA", "TZA", "LABU", "LABD",
+    "NUGT", "JNUG", "DUST", "JDST", "UVXY", "VXX", "SVXY", "VIXY",
+    "URTY", "SRTY", "TECL", "TECS", "FNGU", "FNGD", "WEBL", "WEBS",
+    "BOIL", "KOLD", "ERX", "ERY",
+    # Bond / rate
+    "TLT", "IEF", "SHY", "LQD", "HYG", "AGG", "BND", "TBT", "TMF",
+    # Commodity
+    "GLD", "SLV", "USO", "UNG", "GDX", "GDXJ", "GLDM", "IAU",
+    # Country / regional
+    "EWZ", "FXI", "INDA", "MCHI", "EWJ", "EWG", "EWY",
+    # Crypto-adjacent
+    "GBTC", "ETHE", "BITO", "BITX", "IBIT", "FBTC", "ETHA",
+    # Innovation / thematic
+    "ARKK", "ARKG", "ARKW", "ARKQ", "ARKF",
+    # Dividend / value
+    "SCHD", "DGRO", "VYM", "VIG", "JEPI", "JEPQ",
+    # Other levered single-name
+    "TSLL", "TSDD", "NVDL", "NVDS", "MSFU", "AAPU", "AAPD",
+}
+
+
 def _add_to_universe(universe, ticker, source, premium=0, extra=None):
     """Add or merge a ticker into the universe dict with source tagging."""
     if not ticker:
         return
     if ticker in {"SPX", "NDX", "RUT", "VIX", "VVIX", "DJX", "SPXW", "RUTW", "NDXP"}:
+        return
+    if ticker in ETF_BLACKLIST:
         return
     slot = universe.setdefault(ticker, {
         "ticker": ticker,

@@ -72,14 +72,16 @@ def _summarize_flow(flow_data, ticker):
                 except (TypeError, ValueError):
                     pass
         total_prem += prem
-        side = (a.get("option_type") or a.get("side") or "").lower()
+        # UW uses `type` field with values "call"/"put"
+        side = (a.get("type") or a.get("option_type") or a.get("side") or "").lower()
         if "call" in side:
             calls += 1
         elif "put" in side:
             puts += 1
-        if a.get("is_sweep") or "sweep" in (a.get("trade_type") or "").lower():
+        # UW uses has_sweep / has_floor / has_multileg booleans
+        if a.get("has_sweep") or "sweep" in (a.get("trade_type") or "").lower():
             sweeps += 1
-        if a.get("is_block") or "block" in (a.get("trade_type") or "").lower():
+        if a.get("has_floor") or "block" in (a.get("trade_type") or "").lower():
             blocks += 1
         dte = a.get("dte")
         if dte is not None:

@@ -75,21 +75,23 @@ def detect(uw_client, ticker, pick=None):
     delta_sd = (whisper - consensus) / sd_est
 
     side = None
-    if delta_sd >= 1.0:
-        side = "CALL"
-        label = f"WHISPER {whisper:.2f} > consensus {consensus:.2f} by {delta_sd:.1f}SD = traders expect BEAT"
-    elif delta_sd <= -1.0:
-        side = "PUT"
-        label = f"WHISPER {whisper:.2f} < consensus {consensus:.2f} by {abs(delta_sd):.1f}SD = traders expect MISS"
-    else:
+    abs_sd = abs(delta_sd)
+    if abs_sd < 1.0:
         return {"fires": False, "side": None, "score": 0,
                 "label": f"whisper-consensus delta {delta_sd:+.2f}SD (within normal range)",
                 "details": {"consensus": consensus, "whisper": whisper, "delta_sd": delta_sd}}
 
+    side = "CALL" if delta_sd > 0 else "PUT"
+    # Continuous: 1SD=10, 1.5SD=14, 2SD=18, 3SD+=25
+    score = round(min(25, 6 + abs_sd * 6))
+    direction = "BEAT" if side == "CALL" else "MISS"
+    cmp = ">" if side == "CALL" else "<"
+    label = f"WHISPER {whisper:.2f} {cmp} consensus {consensus:.2f} by {abs_sd:.1f}SD = traders expect {direction}"
+
     return {
         "fires": True,
         "side": side,
-        "score": 15,
+        "score": score,
         "label": label,
         "details": {"consensus": consensus, "whisper": whisper, "delta_sd": delta_sd,
                     "report_date": upcoming.get("date_expected")},

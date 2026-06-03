@@ -47,17 +47,18 @@ PATTERNS = [
 
 
 def _tier_from_score(score):
-    """Pure flow-based tiers. One elite pattern alone qualifies as MODERATE.
-    Multi-pattern confluence naturally tiers up to STRONG/ELITE/MAX/GAMMA_BOMB."""
-    if score >= 100:
+    """Continuous-scoring tiers on a ~180 max scale.
+    Max possible: ~180 (35+32+30+30+27+25+20 = 199 pattern cap + 20 source bonus).
+    Realistic strong day: 80-120. Quiet day: 30-50."""
+    if score >= 130:
         return ("GAMMA_BOMB", 15)
-    if score >= 80:
+    if score >= 100:
         return ("MAX_CONVICTION", 40)
-    if score >= 60:
+    if score >= 75:
         return ("ELITE", 30)
-    if score >= 40:
+    if score >= 55:
         return ("STRONG", 20)
-    if score >= 20:
+    if score >= 30:
         return ("MODERATE", 10)
     return ("PASS", 0)
 
@@ -155,7 +156,20 @@ def compute_confluence(pick, uw_client, macro=None, verbose=False):
                 "details": tide_result.get("details"),
             })
 
-    total_score = base_pattern_score
+    # Source-count bonus: more universe sources = higher conviction
+    # 1 src=0, 2=5, 3=10, 4=15, 5+=20
+    src_count = len(set(pick.get("sources") or []))
+    source_bonus = min(20, max(0, (src_count - 1) * 5))
+    if source_bonus > 0 and side:
+        patterns_fired.append({
+            "key": "source_count",
+            "side": side,
+            "score": source_bonus,
+            "label": f"MULTI-SOURCE CONVICTION: ticker surfaces in {src_count} universe sources (+{source_bonus})",
+            "details": {"source_count": src_count},
+        })
+
+    total_score = base_pattern_score + source_bonus
     total_score = max(0, total_score)
 
     tier, size_pct = _tier_from_score(total_score)

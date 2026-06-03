@@ -69,14 +69,23 @@ def detect(uw_client, ticker, pick=None):
     triggers.sort(key=lambda x: x["vol_oi_ratio"], reverse=True)
     top = triggers[0]
 
+    # Continuous score by ratio + absolute volume
+    # 1x=10, 3x=17, 10x=24, 30x=29, 100x+=32
+    import math
+    ratio = top["vol_oi_ratio"]
+    score = round(min(32, 10 + math.log10(ratio) * 8))
+    # Volume size boost
+    if top["volume"] >= 10000:
+        score = round(min(32, score * 1.1))
+
     label = (f"VOL > OI fired on ${top['strike']:.2f} {top['side']}: "
              f"vol {top['volume']} vs OI {top['open_interest']} "
-             f"(ratio {top['vol_oi_ratio']:.1f}x) = NEW positioning")
+             f"(ratio {ratio:.1f}x) = NEW positioning")
 
     return {
         "fires": True,
         "side": top["side"],
-        "score": 20,
+        "score": score,
         "label": label,
         "details": top,
     }

@@ -65,14 +65,21 @@ def detect(uw_client, ticker, pick=None):
     triggers.sort(key=lambda x: (x["ratio"], x["total"]), reverse=True)
     top = triggers[0]
 
+    # Continuous score: 40%=10, 50%=14, 60%=18, 70%=22, 85%+=27
+    ratio = top["ratio"]
+    score = round(min(27, 10 + (ratio - 0.4) * 40))
+    # Premium size boost on top of urgency
+    if top["total"] >= 5_000_000:
+        score = round(min(27, score * 1.1))
+
     label = (f"ABOVE-ASK URGENCY: {top['side']} side has "
              f"${top['above_ask']/1e6:.1f}M / ${top['total']/1e6:.1f}M "
-             f"({int(top['ratio']*100)}%) executed at ask or above = pro urgency")
+             f"({int(ratio*100)}%) executed at ask or above = pro urgency")
 
     return {
         "fires": True,
         "side": top["side"],
-        "score": 15,
+        "score": score,
         "label": label,
         "details": top,
     }

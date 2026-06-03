@@ -71,7 +71,7 @@ hr { border: none; border-top: 1px solid #e5e7eb; margin: 22px 0; }
     <div class="pick-header">
       <span class="tier-badge tier-{{ p.tier }}">{{ p.tier }}</span>
       <span class="ticker">{{ p.ticker }}</span>
-      <span style="font-size:14px;color:#6b7280;">score {{ p.score }} / 200</span>
+      <span style="font-size:14px;color:#6b7280;">score {{ p.score }} / 180</span>
     </div>
     <div class="thesis">{{ p.thesis }}</div>
     {% if p.trade_ticket %}
@@ -105,7 +105,7 @@ hr { border: none; border-top: 1px solid #e5e7eb; margin: 22px 0; }
     <div class="pick-header">
       <span class="tier-badge tier-{{ p.tier }}">{{ p.tier }}</span>
       <span class="ticker">{{ p.ticker }}</span>
-      <span style="font-size:14px;color:#6b7280;">score {{ p.score }} / 200</span>
+      <span style="font-size:14px;color:#6b7280;">score {{ p.score }} / 180</span>
     </div>
     <div class="thesis">{{ p.thesis }}</div>
     {% if p.trade_ticket %}

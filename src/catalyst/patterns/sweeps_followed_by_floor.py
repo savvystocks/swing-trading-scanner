@@ -81,14 +81,20 @@ def detect(uw_client, ticker, pick=None):
         return {"fires": False, "side": None, "score": 0, "label": None, "details": None}
 
     side = best_setup["side"]
-    label = (f"SWEEPS-FOLLOWED-BY-FLOOR fired: {best_setup['sweep_count']} {side} sweeps "
+    # Continuous score: 5 sweeps + $50k floor = 15, scale up with both
+    sweep_pts = min(8, best_setup["sweep_count"] * 0.5)   # max 8 at 16+ sweeps
+    floor_pts = min(7, best_setup["floor_premium"] / 75_000)  # max 7 at $525k+ floor
+    score = round(15 + sweep_pts + floor_pts)  # base 15 + up to +15
+    score = min(30, score)
+
+    label = (f"SWEEPS-FOLLOWED-BY-FLOOR: {best_setup['sweep_count']} {side} sweeps "
              f"(${best_setup['total_sweep_premium']/1e6:.1f}M premium) "
-             f"followed by ${best_setup['floor_premium']/1e3:.0f}k floor trade")
+             f"followed by ${best_setup['floor_premium']/1e3:.0f}k floor")
 
     return {
         "fires": True,
         "side": side,
-        "score": 20,
+        "score": score,
         "label": label,
         "details": best_setup,
     }

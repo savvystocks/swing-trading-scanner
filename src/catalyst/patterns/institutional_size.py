@@ -60,7 +60,7 @@ def detect(uw_client, ticker, pick=None):
     if total_trades == 0:
         return {"fires": False, "side": None, "score": 0, "label": None, "details": None}
 
-    # Concentration threshold lowered 65% -> 55% (real institutional flow rarely 65%+ one-sided)
+    # Direction concentration
     call_ratio = calls / total_trades
     if call_ratio >= 0.55:
         side = "CALL"
@@ -73,9 +73,16 @@ def detect(uw_client, ticker, pick=None):
                 "label": f"${total_prem/1e6:.1f}M but no directional concentration ({calls}C/{puts}P)",
                 "details": uw_flow}
 
-    score = 15
-    if total_prem >= 5_000_000:
-        score = 20  # bonus for heavy commitment
+    # Continuous premium-based score: log10 scale
+    # $250k=7, $1M=12, $5M=20, $25M=28, $100M=35
+    import math
+    base = min(35, 7 + math.log10(max(total_prem / 250_000, 1)) * 7.5)
+    # Concentration multiplier: 0.55=1.0, 0.70=1.10, 0.85=1.20
+    if concentration_pct >= 0.85:
+        base *= 1.20
+    elif concentration_pct >= 0.70:
+        base *= 1.10
+    score = round(min(35, base))
 
     label = (f"INSTITUTIONAL: ${total_prem/1e6:.1f}M premium, "
              f"{calls}C/{puts}P ({int(concentration_pct*100)}% {side} concentration)")

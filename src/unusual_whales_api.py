@@ -296,6 +296,11 @@ class UnusualWhalesClient:
         return self._request(f"/stock/{ticker}/info", None,
                             cache_key="oi_per_strike", ttl=3600)
 
+    def stock_state(self, ticker):
+        """Live stock state with current close price."""
+        return self._request(f"/stock/{ticker}/stock-state", None,
+                            cache_key="spot_exposures", ttl=60)
+
     def stock_ohlc(self, ticker, candle_size="1d"):
         return self._request(f"/stock/{ticker}/ohlc/{candle_size}", None,
                             cache_key="oi_per_strike", ttl=1800)

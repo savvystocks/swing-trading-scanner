@@ -122,21 +122,24 @@ def run_flow_scan(target_date=None, verbose=True):
         except Exception:
             info = None
 
-        # Live spot from UW stock_info.close (already fetched - no extra call)
+        # Live spot from UW stock_state (current close, sub-minute fresh during market hours)
         live_spot = None
         try:
-            live_spot = float((info or {}).get("close") or 0) or None
-        except (TypeError, ValueError):
+            state = uw_client.stock_state(ticker)
+            if state and isinstance(state, dict):
+                state_data = state.get("data") or state
+                live_spot = float(state_data.get("close") or 0) or None
+        except Exception:
             live_spot = None
 
-        # Fallback to UW 1-minute candle if close is missing
+        # Fallback to UW 1-minute candle latest bar
         if live_spot is None:
             try:
                 ohlc = uw_client.stock_ohlc(ticker, candle_size="1m")
                 if ohlc:
                     rows = ohlc.get("data") if isinstance(ohlc, dict) else ohlc
                     if rows:
-                        latest = rows[-1] if isinstance(rows[-1], dict) else rows[0]
+                        latest = rows[0] if isinstance(rows[0], dict) else rows[-1]
                         live_spot = float(latest.get("close") or 0) or None
             except Exception:
                 pass

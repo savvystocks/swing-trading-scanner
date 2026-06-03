@@ -122,6 +122,57 @@ systemctl stop flow-ws       # stop now
 systemctl disable flow-ws    # don't auto-start on boot
 ```
 
+## Position monitoring
+
+The worker also monitors any open positions you tell it about. When a position
+is active, it subscribes to `gex:TICKER` + `net_flow:TICKER` for that ticker and
+fires Telegram alerts on:
+
+- **Dealer regime flip** (POSITIVE_PIN <-> NEGATIVE_AMP) - severity depends on
+  your side
+- **Spot crossing gamma flip strike** - hedging regime change
+- **Heavy opposite-side flow** - $2M+ premium 2x+ vs your side = institutions
+  positioning against you
+
+### Add a position (from PowerShell on your laptop)
+
+```powershell
+# After you've bought, log it:
+python "C:\Users\savva\OneDrive\Documents\Swing Trading\scripts\position.py" add NVDA CALL 215 2026-07-02 14.63 --size 30
+
+# Push to Vultr (replace VULTR_IP):
+python "C:\Users\savva\OneDrive\Documents\Swing Trading\scripts\position.py" push VULTR_IP
+```
+
+Worker auto-detects within 60s and Telegrams "Position monitor: Active: NVDA".
+
+### Remove (after exit)
+
+```powershell
+python "C:\Users\savva\OneDrive\Documents\Swing Trading\scripts\position.py" remove NVDA CALL 215
+python "C:\Users\savva\OneDrive\Documents\Swing Trading\scripts\position.py" push VULTR_IP
+```
+
+### List active
+
+```powershell
+python "C:\Users\savva\OneDrive\Documents\Swing Trading\scripts\position.py" list
+```
+
+The positions file lives at `/opt/flow-ws/data/positions.json` on the Vultr box.
+You can also `ssh` in and `nano` it directly if PS isn't handy.
+
+### One-time setup for position monitoring
+
+Make sure the data dir exists on Vultr:
+
+```bash
+mkdir -p /opt/flow-ws/data
+chown -R flowws:flowws /opt/flow-ws/data
+```
+
+(Already covered if you did the main setup above.)
+
 ## Debugging
 
 ```bash

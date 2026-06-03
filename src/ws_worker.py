@@ -62,6 +62,12 @@ log = logging.getLogger("ws_worker")
 # Recent alerts cache (avoid spamming on same ticker repeatedly)
 recent_alerts = deque(maxlen=500)
 
+# Position state - dealer regime per ticker, latest spot vs flip
+position_state = {}      # ticker -> {"dealer_regime": "POSITIVE_PIN"|"NEGATIVE_AMP", "flip_strike": float, "spot": float}
+subscribed_tickers = set()  # tickers we have per-position channels joined for
+positions_mtime = 0
+positions_cache = []
+
 
 def _is_recently_alerted(key):
     now = time.time()
@@ -198,7 +204,165 @@ def handle_trading_halt(payload):
     log.warning(f"halt: {ticker} {status} {reason}")
 
 
-# Channel router
+def _classify_regime(net_gex):
+    if net_gex is None:
+        return None
+    try:
+        ng = float(net_gex)
+    except (TypeError, ValueError):
+        return None
+    if ng > 0:
+        return "POSITIVE_PIN"
+    if ng < 0:
+        return "NEGATIVE_AMP"
+    return "NEUTRAL"
+
+
+def _our_positions_for(ticker):
+    """Active positions on the given ticker."""
+    return [p for p in positions_cache if p.get("ticker") == ticker]
+
+
+def handle_gex(ticker, payload):
+    """Per-ticker GEX updates - detect regime flips against our positions."""
+    if not isinstance(payload, dict):
+        return
+    positions = _our_positions_for(ticker)
+    if not positions:
+        return
+
+    net_gex = payload.get("net_gex") or payload.get("gex")
+    flip_strike = payload.get("gamma_flip_strike") or payload.get("flip_strike")
+    spot = payload.get("spot") or payload.get("price")
+
+    state = position_state.setdefault(ticker, {})
+    prev_regime = state.get("dealer_regime")
+    new_regime = _classify_regime(net_gex)
+
+    # REGIME FLIP alert
+    if new_regime and prev_regime and new_regime != prev_regime:
+        for pos in positions:
+            side = pos.get("side", "?")
+            bad_for_calls = new_regime == "NEGATIVE_AMP"
+            bad_for_puts = new_regime == "POSITIVE_PIN"
+            warn = (side == "CALL" and bad_for_calls) or (side == "PUT" and bad_for_puts)
+            severity = "WARN" if warn else "INFO"
+            key = f"regime_flip|{ticker}|{new_regime}"
+            if _is_recently_alerted(key):
+                continue
+            msg = (
+                f"<b>POSITION ALERT [{severity}]: {ticker} {side} ${pos.get('strike')}</b>\n"
+                f"Dealer regime flipped {prev_regime} -> {new_regime}\n"
+                f"{'Watch for accelerated move against you' if warn else 'Move may decelerate'}"
+            )
+            send_telegram(msg)
+            log.warning(f"regime flip {ticker} {prev_regime}->{new_regime} (your {side})")
+
+    # SPOT CROSSED FLIP STRIKE alert
+    prev_spot = state.get("spot")
+    prev_flip = state.get("flip_strike")
+    if (spot and prev_spot and flip_strike and
+            prev_flip is not None and
+            ((prev_spot >= prev_flip) != (float(spot) >= float(flip_strike)))):
+        for pos in positions:
+            side = pos.get("side", "?")
+            key = f"flip_cross|{ticker}"
+            if _is_recently_alerted(key):
+                continue
+            msg = (
+                f"<b>POSITION ALERT: {ticker} {side} ${pos.get('strike')}</b>\n"
+                f"Spot ${float(spot):.2f} crossed gamma flip strike ${float(flip_strike):.2f}\n"
+                f"Hedging regime change - reassess thesis"
+            )
+            send_telegram(msg)
+            log.warning(f"flip crossed {ticker} spot {spot} flip {flip_strike}")
+
+    state["dealer_regime"] = new_regime
+    state["flip_strike"] = float(flip_strike) if flip_strike else state.get("flip_strike")
+    state["spot"] = float(spot) if spot else state.get("spot")
+
+
+def handle_net_flow(ticker, payload):
+    """Per-ticker net call/put premium - warn on heavy opposite-side flow."""
+    if not isinstance(payload, dict):
+        return
+    positions = _our_positions_for(ticker)
+    if not positions:
+        return
+
+    call_prem = float(payload.get("net_call_premium") or 0)
+    put_prem = float(payload.get("net_put_premium") or 0)
+
+    for pos in positions:
+        side = pos.get("side", "?")
+        # If we're long calls but heavy put flow, that's bearish
+        if side == "CALL" and put_prem > 2_000_000 and put_prem > 2 * call_prem:
+            key = f"netflow_bearish|{ticker}|{int(put_prem // 1_000_000)}M"
+            if _is_recently_alerted(key):
+                continue
+            msg = (
+                f"<b>POSITION WARN: {ticker} CALL ${pos.get('strike')}</b>\n"
+                f"Heavy PUT flow ${put_prem/1e6:.1f}M vs CALL ${call_prem/1e6:.1f}M (2x+)\n"
+                f"Institutions positioning AGAINST your call - watch for downside"
+            )
+            send_telegram(msg)
+            log.warning(f"opposite flow on long CALL {ticker}: PUT ${put_prem/1e6:.1f}M")
+        if side == "PUT" and call_prem > 2_000_000 and call_prem > 2 * put_prem:
+            key = f"netflow_bullish|{ticker}|{int(call_prem // 1_000_000)}M"
+            if _is_recently_alerted(key):
+                continue
+            msg = (
+                f"<b>POSITION WARN: {ticker} PUT ${pos.get('strike')}</b>\n"
+                f"Heavy CALL flow ${call_prem/1e6:.1f}M vs PUT ${put_prem/1e6:.1f}M (2x+)\n"
+                f"Institutions positioning AGAINST your put - watch for upside"
+            )
+            send_telegram(msg)
+            log.warning(f"opposite flow on long PUT {ticker}: CALL ${call_prem/1e6:.1f}M")
+
+
+def sync_position_subscriptions(ws):
+    """Reload positions.json, subscribe to channels for new tickers, log departures."""
+    global positions_cache, positions_mtime, subscribed_tickers
+    try:
+        from src.positions import load_positions, file_mtime
+    except ImportError:
+        return
+    mtime = file_mtime()
+    if mtime == positions_mtime:
+        return
+    positions_cache = load_positions()
+    positions_mtime = mtime
+    active_tickers = {p["ticker"] for p in positions_cache if p.get("ticker")}
+
+    # New tickers - subscribe
+    new_tickers = active_tickers - subscribed_tickers
+    for t in new_tickers:
+        for ch in (f"gex:{t}", f"net_flow:{t}"):
+            try:
+                ws.send(json.dumps({"channel": ch, "msg_type": "join"}))
+                log.info(f"position sub: {ch}")
+            except Exception as e:
+                log.error(f"failed to join {ch}: {e}")
+        subscribed_tickers.add(t)
+
+    # Removed tickers - leave (UW supports leave message)
+    gone = subscribed_tickers - active_tickers
+    for t in gone:
+        for ch in (f"gex:{t}", f"net_flow:{t}"):
+            try:
+                ws.send(json.dumps({"channel": ch, "msg_type": "leave"}))
+                log.info(f"position unsub: {ch}")
+            except Exception:
+                pass
+        subscribed_tickers.discard(t)
+        position_state.pop(t, None)
+
+    if new_tickers or gone:
+        msg = f"<b>Position monitor</b>\nActive: {', '.join(sorted(active_tickers)) or 'none'}"
+        send_telegram(msg)
+
+
+# Channel router for plain channels
 CHANNEL_HANDLERS = {
     "flow-alerts": handle_flow_alert,
     "news": handle_news,
@@ -225,6 +389,17 @@ def on_message(ws, raw):
             handler(payload)
         except Exception as e:
             log.error(f"handler {channel} failed: {type(e).__name__}: {e}")
+        return
+    # Per-ticker channels: gex:NVDA, net_flow:NVDA, etc
+    if ":" in channel:
+        ch_type, ticker = channel.split(":", 1)
+        try:
+            if ch_type == "gex":
+                handle_gex(ticker, payload)
+            elif ch_type == "net_flow":
+                handle_net_flow(ticker, payload)
+        except Exception as e:
+            log.error(f"per-ticker handler {channel} failed: {type(e).__name__}: {e}")
 
 
 def on_error(ws, error):
@@ -239,6 +414,19 @@ def on_open(ws):
     log.info("WS open - subscribing to channels")
     for ch in ("flow-alerts", "news", "trading_halts"):
         ws.send(json.dumps({"channel": ch, "msg_type": "join"}))
+    # Initial position sync
+    sync_position_subscriptions(ws)
+    # Start background poller for position file changes
+    import threading
+    def poll_positions():
+        import time as _t
+        while True:
+            _t.sleep(60)
+            try:
+                sync_position_subscriptions(ws)
+            except Exception as e:
+                log.error(f"position sync failed: {e}")
+    threading.Thread(target=poll_positions, daemon=True).start()
 
 
 def run_forever():

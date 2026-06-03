@@ -91,9 +91,9 @@ def run_flow_scan(target_date=None, verbose=True):
         if verbose:
             print(f"  meta regime failed: {type(e).__name__}: {e}")
 
-    # Step 1: flow universe
+    # Step 1: flow universe (50 candidates from 14 UW screeners)
     if verbose:
-        print(f"Step 1/8: flow universe (top tickers by UW premium today)")
+        print(f"Step 1/8: flow universe (50 candidates from 14 UW screeners)")
     try:
         from src.catalyst.universe_from_flow import build_flow_universe, merge_live_positions_into_universe
         flow_universe = build_flow_universe(uw_client=uw_client, max_tickers=50, min_premium=250_000, verbose=verbose)
@@ -107,6 +107,21 @@ def run_flow_scan(target_date=None, verbose=True):
         if verbose:
             print("  flow universe empty - cannot proceed")
         return {"scan_date": scan_date, "macro": macro, "picks": []}
+
+    # Step 1b: FUNNEL - take top 20 by conviction (# sources + premium)
+    # Bottom 30 of universe rarely score MODERATE+ but burn API calls if enriched.
+    # Save budget by dropping them BEFORE enrichment.
+    flow_universe.sort(
+        key=lambda u: (len(u.get("sources") or []), u.get("total_premium", 0)),
+        reverse=True,
+    )
+    deep_n = 20
+    flow_universe = flow_universe[:deep_n]
+    if verbose:
+        print(f"  funnel: top {len(flow_universe)} by conviction selected for deep dive")
+        for u in flow_universe[:10]:
+            srcs = "+".join(u.get("sources") or [])
+            print(f"    {u['ticker']:6} {len(u.get('sources') or []):1}src  ${u.get('total_premium',0)/1e6:5.1f}M  ({srcs[:50]})")
 
     # Step 2: enrich each ticker with stock info + live spot (UW only)
     if verbose:

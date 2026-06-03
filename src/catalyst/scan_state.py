@@ -46,15 +46,20 @@ def save_state(state):
 def diff_scans(scan, prev_state):
     """Compare current scan to previous state, return list of significant events.
 
+    Per Savvas: Telegram only fires on ELITE/MAX_CONVICTION/GAMMA_BOMB tier events.
+    STRONG and MODERATE changes are visible in the 3 daily emails but don't push.
+
     Event types:
       NEW_ELITE_PLUS    new ticker entering ELITE/MAX_CONVICTION/GAMMA_BOMB
-      TIER_UPGRADE      existing ticker moved up at least 1 tier
-      TIER_DOWNGRADE    existing ticker moved down (only fires on holdings)
-      SIDE_FLIP         direction flipped CALL <-> PUT
-      DROPPED_FROM_TOP  was elite previously, now PASS
+      TIER_UPGRADE      existing ELITE+ ticker upgraded further (e.g. ELITE -> MAX)
+                        OR ticker upgraded INTO ELITE+ from below
+      SIDE_FLIP         direction flipped CALL <-> PUT on ELITE+ ticker
+      DROPPED_FROM_TOP  was ELITE+ previously, now below ELITE
     """
     events = []
     current = {}
+
+    ELITE_RANK = TIER_RANK["ELITE"]  # 3
 
     for stream_name in ("calls", "puts"):
         for p in scan.get(stream_name, []):
@@ -75,7 +80,12 @@ def diff_scans(scan, prev_state):
         cur_rank = TIER_RANK.get(cur["tier"], 0)
         prev_rank = TIER_RANK.get(prev.get("tier", "PASS"), 0)
 
-        if cur_rank >= 3 and prev_rank < 3:
+        # Only fire if current OR previous tier is ELITE+
+        is_elite_event = cur_rank >= ELITE_RANK or prev_rank >= ELITE_RANK
+        if not is_elite_event:
+            continue
+
+        if cur_rank >= ELITE_RANK and prev_rank < ELITE_RANK:
             events.append({
                 "event": "NEW_ELITE_PLUS",
                 "ticker": t,
@@ -85,7 +95,7 @@ def diff_scans(scan, prev_state):
                 "thesis": cur["thesis"],
                 "size_pct": cur["size_pct"],
             })
-        elif cur_rank > prev_rank:
+        elif cur_rank > prev_rank and cur_rank >= ELITE_RANK:
             events.append({
                 "event": "TIER_UPGRADE",
                 "ticker": t,
@@ -95,7 +105,9 @@ def diff_scans(scan, prev_state):
                 "score": cur["score"],
                 "thesis": cur["thesis"],
             })
-        if prev.get("side") and cur["side"] and prev["side"] != cur["side"] and cur_rank >= 2:
+
+        if (prev.get("side") and cur["side"] and prev["side"] != cur["side"]
+                and cur_rank >= ELITE_RANK):
             events.append({
                 "event": "SIDE_FLIP",
                 "ticker": t,
@@ -105,9 +117,10 @@ def diff_scans(scan, prev_state):
                 "score": cur["score"],
             })
 
+    # Detect tickers that dropped out of the top picks entirely
     for t, prev in prev_tickers.items():
         if t not in current:
-            if TIER_RANK.get(prev.get("tier", "PASS"), 0) >= 3:
+            if TIER_RANK.get(prev.get("tier", "PASS"), 0) >= ELITE_RANK:
                 events.append({
                     "event": "DROPPED_FROM_TOP",
                     "ticker": t,

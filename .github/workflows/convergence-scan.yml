@@ -1,0 +1,31 @@
+name: convergence-scan
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Hourly during US market hours (summer BST, Mar-Oct)
+    - cron: "30 13 * 3-10 1-5"
+    - cron: "30 14-19 * 3-10 1-5"
+    - cron: "0 20 * 3-10 1-5"
+    # Hourly during US market hours (winter GMT, Nov-Feb)
+    - cron: "30 14 * 1-2,11-12 1-5"
+    - cron: "30 15-20 * 1-2,11-12 1-5"
+    - cron: "0 21 * 1-2,11-12 1-5"
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install requests
+      - name: Run convergence scanner
+        env:
+          UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python scripts/convergence_scanner.py

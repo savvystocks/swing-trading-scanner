@@ -274,6 +274,20 @@ def run_flow_scan(target_date=None, verbose=True):
         print(f"  Macro: {tide_label}")
         print(f"  UW calls used: {uw_client.calls_made}")
 
+    # Append ELITE+ picks to the conviction paper trail
+    try:
+        from src.catalyst.conviction_log import append_picks
+        _scan_for_log = {
+            "scan_date": scan_date,
+            "macro": macro,
+            "calls": calls,
+            "puts": puts,
+        }
+        append_picks(_scan_for_log, verbose=verbose)
+    except Exception as e:
+        if verbose:
+            print(f"  conviction_log append failed: {type(e).__name__}: {e}")
+
     # Sector concentration warnings
     try:
         from src.catalyst.sector_concentration import check_concentration

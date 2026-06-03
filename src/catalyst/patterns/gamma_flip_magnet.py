@@ -18,6 +18,11 @@ def _to_float(v):
 
 
 def detect(uw_client, ticker, pick=None):
+    # Skip if pick has no _uw_gex (means not in deep-enrichment tier, save API call)
+    if pick and not pick.get("_uw_gex"):
+        return {"fires": False, "side": None, "score": 0,
+                "label": "gamma_flip skipped (not in deep tier)", "details": None}
+
     # Get the per-strike GEX to compute flip
     gex_strike = uw_client.greek_exposure_by_strike(ticker)
     spot = (pick or {}).get("live_spot") or (pick or {}).get("price")

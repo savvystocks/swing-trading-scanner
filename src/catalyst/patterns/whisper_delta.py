@@ -22,6 +22,18 @@ def _to_float(v, default=0):
 
 
 def detect(uw_client, ticker, pick=None):
+    # Skip unless ticker has upcoming earnings (from universe earnings sources or stock_info)
+    has_earnings = False
+    if pick:
+        sources = pick.get("sources") or []
+        if "earnings_today" in sources or "earnings_tmrw" in sources:
+            has_earnings = True
+        if pick.get("next_earnings_date"):
+            has_earnings = True
+    if not has_earnings:
+        return {"fires": False, "side": None, "score": 0,
+                "label": "whisper skipped (no upcoming earnings)", "details": None}
+
     estimates = uw_client.earnings_estimates(ticker)
     if not estimates:
         return {"fires": False, "side": None, "score": 0, "label": None, "details": None}

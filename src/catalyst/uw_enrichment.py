@@ -228,8 +228,15 @@ def _summarize_iv(iv_rank_data, ticker):
     }
 
 
-def enrich_pick_with_uw(pick, uw_client=None, verbose=False):
-    """Pull all UW signals for a single ticker and attach to pick."""
+def enrich_pick_with_uw(pick, uw_client=None, verbose=False, deep=False):
+    """Pull UW signals for a single ticker and attach to pick.
+
+    deep=False (default): only flow_alerts (1 call) - feeds 4 patterns.
+    deep=True: also greek_exposure_by_strike (1 call) - feeds gamma_flip.
+
+    Removed unused calls: max_pain, iv_rank, darkpool_ticker, greek_exposure
+    aggregate. They cost calls but no pattern reads their output.
+    """
     if uw_client is None:
         from src.unusual_whales_api import get_client
         uw_client = get_client()
@@ -242,17 +249,20 @@ def enrich_pick_with_uw(pick, uw_client=None, verbose=False):
 
     spot = pick.get("live_spot") or pick.get("price")
 
+    # CHEAP: flow_alerts - feeds sweeps, volume_oi, above_ask, institutional patterns
     flow_alerts = uw_client.flow_alerts(ticker=ticker, limit=100)
     flow_summary = _summarize_flow(flow_alerts, ticker)
     if flow_summary:
         pick["_uw_flow"] = flow_summary
 
-    gex = uw_client.greek_exposure(ticker)
+    if not deep:
+        return True
+
+    # DEEP only on top-N picks: greek_exposure_by_strike for gamma_flip pattern
     gex_by_strike = uw_client.greek_exposure_by_strike(ticker)
-    gex_summary = _summarize_gex(gex, gex_by_strike, ticker, spot)
+    gex_summary = _summarize_gex(None, gex_by_strike, ticker, spot)
     if gex_summary:
         pick["_uw_gex"] = gex_summary
-        # Override the cheap gex_proxy with proper net GEX
         regime = gex_summary.get("dealer_regime")
         if regime:
             pick["_dealer_gex"] = {
@@ -263,34 +273,14 @@ def enrich_pick_with_uw(pick, uw_client=None, verbose=False):
                 "_source": "uw_api",
             }
 
-    iv_rank = uw_client.iv_rank(ticker)
-    iv_summary = _summarize_iv(iv_rank, ticker)
-    if iv_summary:
-        pick["_uw_iv"] = iv_summary
-
-    try:
-        max_pain = uw_client.max_pain(ticker)
-        if max_pain and isinstance(max_pain, dict):
-            mp = max_pain.get("max_pain") or max_pain.get("strike")
-            if mp:
-                pick["_uw_max_pain"] = {"strike": float(mp)}
-    except Exception:
-        pass
-
-    try:
-        darkpool = uw_client.darkpool_ticker(ticker, limit=20)
-        if darkpool:
-            prints = darkpool if isinstance(darkpool, list) else darkpool.get("data") or []
-            if prints:
-                total = sum(float(p.get("size", 0)) * float(p.get("price", 0)) for p in prints if p.get("size") and p.get("price"))
-                pick["_uw_dark_pool"] = {"print_count": len(prints), "total_value_usd": total}
-    except Exception:
-        pass
-
     return True
 
 
-def enrich_universe_with_uw(picks, uw_client=None, max_picks=30, verbose=False):
+def enrich_universe_with_uw(picks, uw_client=None, max_picks=50, deep_top_n=20, verbose=False):
+    """Tiered enrichment:
+       - All picks get cheap flow_alerts (1 call each)
+       - Top deep_top_n by conviction get deep enrichment (gamma_flip data)
+    """
     if not picks:
         return picks
     if uw_client is None:
@@ -301,11 +291,24 @@ def enrich_universe_with_uw(picks, uw_client=None, max_picks=30, verbose=False):
             print(f"  uw_enrichment: UW token missing - skipping (positioning stack still fires)")
         return picks
 
+    # Tier 1: cheap on all
     enriched = 0
     for p in picks[:max_picks]:
-        if enrich_pick_with_uw(p, uw_client=uw_client, verbose=verbose):
+        if enrich_pick_with_uw(p, uw_client=uw_client, verbose=verbose, deep=False):
             enriched += 1
 
+    # Tier 2: deep on top N (ranked by # universe sources, then total premium)
+    top_n = sorted(
+        picks[:max_picks],
+        key=lambda p: (len(p.get("sources") or []),
+                       (p.get("_uw_flow") or {}).get("total_premium", 0)),
+        reverse=True,
+    )[:deep_top_n]
+    deep_count = 0
+    for p in top_n:
+        if enrich_pick_with_uw(p, uw_client=uw_client, verbose=verbose, deep=True):
+            deep_count += 1
+
     if verbose:
-        print(f"  uw_enrichment: enriched {enriched}/{len(picks[:max_picks])} picks with UW flow + GEX + IV + OI")
+        print(f"  uw_enrichment: cheap={enriched} deep={deep_count} (top {deep_top_n} by conviction)")
     return picks

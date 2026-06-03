@@ -96,7 +96,7 @@ def run_flow_scan(target_date=None, verbose=True):
         print(f"Step 1/8: flow universe (top tickers by UW premium today)")
     try:
         from src.catalyst.universe_from_flow import build_flow_universe, merge_live_positions_into_universe
-        flow_universe = build_flow_universe(uw_client=uw_client, max_tickers=30, min_premium=250_000, verbose=verbose)
+        flow_universe = build_flow_universe(uw_client=uw_client, max_tickers=50, min_premium=250_000, verbose=verbose)
         flow_universe = merge_live_positions_into_universe(flow_universe, verbose=verbose)
     except Exception as e:
         if verbose:

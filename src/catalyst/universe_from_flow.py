@@ -158,11 +158,12 @@ SOURCE_PATTERN_MAP = {
     "darkpool_top":    ["P6"],                  # institutional dark prints
     "news_today":      ["P5", "P7"],            # news-driven flow
     "shorts_squeeze":  ["P5"],                  # squeeze setups
+    "analyst_changes": ["P5", "P6"],            # rating moves drive flow
 }
 
 
 def build_flow_universe(uw_client=None, max_tickers=60, min_premium=50_000, verbose=False):
-    """Build TODAY's universe via UNION of ~11 UW selection methods.
+    """Build TODAY's universe via UNION of 14 UW selection methods.
 
     Each source pulls top 25-30 tickers from a DIFFERENT angle so we don't
     self-select on one metric. Ranked by # of sources appeared in (multi-source
@@ -336,6 +337,54 @@ def build_flow_universe(uw_client=None, max_tickers=60, min_premium=50_000, verb
     except Exception as e:
         if verbose:
             print(f"  [src 11] darkpool_top FAILED: {type(e).__name__}: {e}")
+
+    # SOURCE 12: short squeeze candidates (highest short interest)
+    try:
+        shorts = uw_client._request("/shorts/most-shorted", {"limit": 30},
+                                     cache_key="oi_change", ttl=3600)
+        if not shorts:
+            shorts = uw_client._request("/short/short_screener", {"limit": 30},
+                                         cache_key="oi_change", ttl=3600)
+        if shorts:
+            rows = shorts.get("data") if isinstance(shorts, dict) else shorts
+            for s in (rows or [])[:20]:
+                if not isinstance(s, dict):
+                    continue
+                _add_to_universe(universe, s.get("ticker") or s.get("symbol"), "shorts_squeeze")
+        _log_source(12, "shorts_squeeze", "highest short interest")
+    except Exception as e:
+        if verbose:
+            print(f"  [src 12] shorts_squeeze FAILED: {type(e).__name__}: {e}")
+
+    # SOURCE 13: analyst rating changes today (upgrade/downgrade momentum)
+    try:
+        analyst = uw_client._request("/screener/analyst_ratings", {"limit": 30},
+                                      cache_key="oi_change", ttl=3600)
+        if not analyst:
+            analyst = uw_client._request("/screener/analyst-ratings", {"limit": 30},
+                                          cache_key="oi_change", ttl=3600)
+        if analyst:
+            rows = analyst.get("data") if isinstance(analyst, dict) else analyst
+            for a in (rows or [])[:20]:
+                if not isinstance(a, dict):
+                    continue
+                _add_to_universe(universe, a.get("ticker") or a.get("symbol"), "analyst_changes")
+        _log_source(13, "analyst_changes", "rating upgrades/downgrades")
+    except Exception as e:
+        if verbose:
+            print(f"  [src 13] analyst_changes FAILED: {type(e).__name__}: {e}")
+
+    # SOURCE 14: contracts with largest OI change today (NEW positioning building)
+    try:
+        oi_screen = uw_client.contract_screener(sort_by="oi_change", limit=30)
+        if oi_screen:
+            rows = oi_screen.get("data") if isinstance(oi_screen, dict) else oi_screen
+            for c in (rows or [])[:25]:
+                _add_to_universe(universe, _extract_ticker_from_contract(c), "oi_changers")
+        _log_source(14, "oi_changers", "biggest OI build today")
+    except Exception as e:
+        if verbose:
+            print(f"  [src 14] oi_changers FAILED: {type(e).__name__}: {e}")
 
     # Rank by # of sources (multi-source = higher conviction), tiebreak by total_premium
     ranked = sorted(

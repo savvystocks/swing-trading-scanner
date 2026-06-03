@@ -154,6 +154,7 @@ def _fetch_contract_data(uw_client, ticker, target_symbol):
                 "ask": _safe_float(r.get("nbbo_ask")),
                 "last": _safe_float(r.get("last_price")),
                 "iv": _safe_float(r.get("implied_volatility")),
+                "delta": _safe_float(r.get("delta")),
                 "volume": r.get("volume"),
                 "open_interest": r.get("open_interest"),
                 "prev_oi": r.get("prev_oi"),
@@ -216,12 +217,15 @@ def compute_trade_ticket(ticker, spot, side, vehicle, uw_client=None, today=None
                     ticket["mid"] = round((bid + ask) / 2, 2)
                 elif quote.get("last"):
                     ticket["mid"] = quote.get("last")
-                # Step 3: compute delta from BS using IV + spot + strike + dte
-                iv = quote.get("iv")
-                if iv:
-                    delta = _bs_delta(side, spot, ticket["strike"], ticket["dte"], iv)
-                    if delta is not None:
-                        ticket["delta"] = delta
+                # Step 3: prefer UW native delta if present, fall back to BS calc
+                if quote.get("delta") is not None:
+                    ticket["delta"] = round(quote["delta"], 3)
+                else:
+                    iv = quote.get("iv")
+                    if iv:
+                        delta = _bs_delta(side, spot, ticket["strike"], ticket["dte"], iv)
+                        if delta is not None:
+                            ticket["delta"] = delta
 
     return ticket
 

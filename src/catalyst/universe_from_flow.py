@@ -181,6 +181,8 @@ SOURCE_PATTERN_MAP = {
     "insider_today":   ["P6"],                  # insider conviction
     "net_call_premium":["P1", "P6"],            # directional CALL flow
     "net_put_premium": ["P1", "P6"],            # directional PUT flow
+    "pattern_calls":   ["P4", "P5", "P6"],      # pre-matched stack via screener filters
+    "pattern_puts":    ["P4", "P5", "P6"],      # pre-matched stack via screener filters
     "high_volume":     ["P3", "P4"],            # volume leaders
     "oi_changers":     ["P4"],                  # OI building = new positioning
     "earnings_today":  ["P7"],                  # whisper opportunities
@@ -294,28 +296,47 @@ def build_flow_universe(uw_client=None, max_tickers=60, min_premium=50_000, verb
         if verbose:
             print(f"  [src  5] insider_today FAILED: {type(e).__name__}: {e}")
 
-    # SOURCE 6 + 7: net CALL premium / PUT premium tickers
+    # SOURCE 6: PATTERN-MATCHED CALLS — pre-filter for P4+P5+P6 stack in one query
+    # Filters: $250k+ premium, 40%+ above ask, vol>OI ratio >= 1.0, calls only
     try:
-        net_call = uw_client.contract_screener(sort_by="premium", limit=30, side="call")
-        if net_call:
-            rows = net_call.get("data") if isinstance(net_call, dict) else net_call
-            for c in (rows or [])[:15]:
-                _add_to_universe(universe, _extract_ticker_from_contract(c), "net_call_premium")
-        _log_source(6, "net_call_premium", "biggest CALL-side premium")
+        pat_calls = uw_client._request("/screener/option-contracts",
+                                        {"order": "premium", "limit": 30,
+                                         "min_premium": 250000,
+                                         "min_ask_pct": 0.4,
+                                         "min_volume_oi_ratio": 1.0,
+                                         "option_type": "call"},
+                                        cache_key="contract_screener", ttl=300)
+        if pat_calls:
+            rows = pat_calls.get("data") if isinstance(pat_calls, dict) else pat_calls
+            for c in (rows or [])[:20]:
+                # Filter stocks only (skip ETFs in screener response)
+                if isinstance(c, dict) and (c.get("issue_type") or "").upper() == "ETF":
+                    continue
+                _add_to_universe(universe, _extract_ticker_from_contract(c), "pattern_calls")
+        _log_source(6, "pattern_calls", "pre-matched: P4+P5+P6 calls")
     except Exception as e:
         if verbose:
-            print(f"  [src  6] net_call_premium FAILED: {type(e).__name__}: {e}")
+            print(f"  [src  6] pattern_calls FAILED: {type(e).__name__}: {e}")
 
+    # SOURCE 7: PATTERN-MATCHED PUTS — same stack, put side
     try:
-        net_put = uw_client.contract_screener(sort_by="premium", limit=30, side="put")
-        if net_put:
-            rows = net_put.get("data") if isinstance(net_put, dict) else net_put
-            for c in (rows or [])[:15]:
-                _add_to_universe(universe, _extract_ticker_from_contract(c), "net_put_premium")
-        _log_source(7, "net_put_premium", "biggest PUT-side premium")
+        pat_puts = uw_client._request("/screener/option-contracts",
+                                       {"order": "premium", "limit": 30,
+                                        "min_premium": 250000,
+                                        "min_ask_pct": 0.4,
+                                        "min_volume_oi_ratio": 1.0,
+                                        "option_type": "put"},
+                                       cache_key="contract_screener", ttl=300)
+        if pat_puts:
+            rows = pat_puts.get("data") if isinstance(pat_puts, dict) else pat_puts
+            for c in (rows or [])[:20]:
+                if isinstance(c, dict) and (c.get("issue_type") or "").upper() == "ETF":
+                    continue
+                _add_to_universe(universe, _extract_ticker_from_contract(c), "pattern_puts")
+        _log_source(7, "pattern_puts", "pre-matched: P4+P5+P6 puts")
     except Exception as e:
         if verbose:
-            print(f"  [src  7] net_put_premium FAILED: {type(e).__name__}: {e}")
+            print(f"  [src  7] pattern_puts FAILED: {type(e).__name__}: {e}")
 
     # SOURCE 8: top volume contracts (different from premium - captures retail+0DTE)
     try:

@@ -26,8 +26,28 @@ weekly + monthly client-side.
 from datetime import datetime, timedelta
 
 
-def _get_daily_bars(ticker, days=420):
-    """Pull ~14 months of daily bars. Free Alpaca first, EODHD fallback."""
+def _get_daily_bars(ticker, days=420, pick=None):
+    """Pull ~14 months of daily bars. Prefer already-fetched OHLCV from pick._enriched_data.df."""
+    if pick is not None:
+        enriched = pick.get("_enriched_data") or {}
+        df = enriched.get("df")
+        if df is not None and len(df) >= 50:
+            tail = df.tail(min(days, len(df)))
+            bars = []
+            for idx, row in tail.iterrows():
+                try:
+                    bars.append({
+                        "date": str(idx)[:10],
+                        "high": float(row["high"]),
+                        "low": float(row["low"]),
+                        "close": float(row["close"]),
+                        "open": float(row.get("open", row["close"])),
+                        "volume": float(row.get("volume") or 0),
+                    })
+                except Exception:
+                    continue
+            if bars:
+                return bars
     try:
         from src.alpaca_ohlcv import get_daily_bars
         from datetime import date
@@ -101,9 +121,9 @@ def _trend_above_sma(closes, sma_period):
     return closes[-1] > sma, round(closes[-1], 2), round(sma, 2)
 
 
-def analyze_mtf_trend(ticker, bars=None, verbose=False):
+def analyze_mtf_trend(ticker, bars=None, verbose=False, pick=None):
     """Returns dict {daily_up, weekly_up, monthly_up, aligned_up, aligned_down}."""
-    bars = bars or _get_daily_bars(ticker, days=420)
+    bars = bars or _get_daily_bars(ticker, days=420, pick=pick)
     if not bars or len(bars) < 50:
         return {"aligned_up": False, "aligned_down": False, "detail": f"insufficient bars ({len(bars)})"}
 
@@ -170,7 +190,7 @@ def enrich_picks_with_mtf_trend(picks, max_picks=30, verbose=False):
         if not ticker or "." in ticker:
             continue
         try:
-            res = analyze_mtf_trend(ticker, verbose=False)
+            res = analyze_mtf_trend(ticker, verbose=False, pick=p)
         except Exception:
             continue
         p["_mtf_trend"] = res

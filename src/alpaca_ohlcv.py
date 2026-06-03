@@ -20,10 +20,21 @@ def _cache_path(symbol, from_date, to_date):
     return CACHE_DIR / f"{key}.json"
 
 
+def _normalize_alpaca_symbol(symbol):
+    """Alpaca uses dot for class shares (BRK.B), not dash (BRK-B)."""
+    if not symbol:
+        return symbol
+    if "-" in symbol and len(symbol) <= 6:
+        # BRK-B / BF-B / MOG-A / HEI-A style
+        return symbol.replace("-", ".")
+    return symbol
+
+
 def get_daily_bars_eodhd_format(symbol, from_date=None, to_date=None):
     if not os.environ.get("ALPACA_API_KEY") or not os.environ.get("ALPACA_SECRET_KEY"):
         return None
 
+    symbol = _normalize_alpaca_symbol(symbol)
     cache = _cache_path(symbol, from_date, to_date)
     if cache.exists():
         age = time.time() - cache.stat().st_mtime

@@ -39,6 +39,42 @@ Respond with ONLY a JSON object:
 {"score": X.X, "reasoning": "1-2 sentence justification", "key_signal": "the strongest single signal"}"""
 
 
+BEAR_SYSTEM_PROMPT = """You are a swing trading analyst grading PUT/SHORT setups.
+
+For each ticker, you receive:
+- Positioning context (this ticker is flagged as a potential SHORT/PUT trade)
+- Recent news headlines
+- Company context (sector, market cap)
+- Why positioning thinks it's extended/euphoric
+
+Rate the BEARISH strength for the next 5-15 day stock move on a 0-10 scale:
+0-2: No short edge (no extension, no negative catalysts, positioning is wrong)
+3-4: Weak bearish (mild extension, sector weakness only)
+5-6: Moderate bearish (extended technicals + macro headwind, no positive catalysts)
+7-8: Strong bearish (vertical move + negative news + extension above 200dma + crowded long)
+9-10: Exceptional short (climax run + earnings miss + insider selling + sector breakdown + crowded positioning)
+
+Consider for SHORT:
+- Pct extended above 200dma + recent vertical move = climax risk
+- COT crowded long + macro RISK_OFF + IV skew (call buying mania) = positioning exhaustion
+- Negative analyst revisions + insider selling + competition disruption
+- Sector breakdown + relative underperformance vs peers
+
+Beware:
+- Squeeze risk - high short interest + retail buying flow can squeeze a "shorting setup"
+- Acquisition rumors - any cash buyout = SKIP the short
+- Dividend dates - shorting through ex-div is expensive
+- Federal/government action - antitrust could cut either way
+
+Reward in scoring:
+- Hard evidence of overheated positioning (specific COT percentiles, specific extension %, specific recent return)
+- Negative catalysts converging (downgrade + miss + guidance cut)
+- Technical breakdown confirmation (broken support, MA cross down)
+
+Respond with ONLY a JSON object:
+{"score": X.X, "reasoning": "1-2 sentence justification", "key_signal": "the strongest single short signal", "squeeze_risk": "LOW|MED|HIGH"}"""
+
+
 def _build_user_prompt(ticker, name, sector, mcap, catalysts, news_headlines):
     mcap_str = f"${mcap/1e9:.2f}B" if mcap else "n/a"
     cat_lines = []
@@ -63,15 +99,19 @@ Recent news:
 Grade this catalyst setup."""
 
 
-def grade_one(client, ticker, name, sector, mcap, catalysts, news_headlines):
+def grade_one(client, ticker, name, sector, mcap, catalysts, news_headlines, side="CALL", positioning_signals=None):
     user_prompt = _build_user_prompt(ticker, name, sector, mcap, catalysts, news_headlines)
+    if side == "PUT" and positioning_signals:
+        sig_lines = "\n".join(f"- {s.get('label', s.get('key', ''))}" for s in positioning_signals[:5])
+        user_prompt = user_prompt + f"\n\nPositioning context (why flagged SHORT):\n{sig_lines}\n\nGrade the BEARISH/PUT setup."
+    system_prompt_text = BEAR_SYSTEM_PROMPT if side == "PUT" else SYSTEM_PROMPT
     try:
         response = client.messages.create(
             model=MODEL,
             max_tokens=500,
             system=[{
                 "type": "text",
-                "text": SYSTEM_PROMPT,
+                "text": system_prompt_text,
                 "cache_control": {"type": "ephemeral"},
             }],
             messages=[{"role": "user", "content": user_prompt}],
@@ -130,6 +170,8 @@ def grade_candidates(candidates, max_grade=50, verbose=True):
 
     def _grade_safely(c):
         try:
+            pf = c.get("_positioning_first") or {}
+            side = pf.get("side") or "CALL"
             grade = grade_one(
                 client,
                 ticker=c["ticker"],
@@ -138,7 +180,11 @@ def grade_candidates(candidates, max_grade=50, verbose=True):
                 mcap=c.get("market_cap"),
                 catalysts=c.get("catalysts") or [],
                 news_headlines=(c.get("news") or {}).get("headlines") or [],
+                side=side,
+                positioning_signals=pf.get("positioning_signals") or [],
             )
+            if grade:
+                grade["side"] = side
             return c["ticker"], grade, None
         except Exception as e:
             return c.get("ticker"), None, e

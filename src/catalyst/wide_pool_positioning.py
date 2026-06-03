@@ -99,6 +99,20 @@ def apply_wide_pool_positioning(picks, macro=None, verbose=False, max_picks=400)
         if verbose:
             print(f"  wide_pool finra_margin failed: {type(e).__name__}: {e}")
 
+    # Build COT meta + classify macro meta-regime from the full positioning stack.
+    try:
+        from src.catalyst.macro_meta_regime import classify_meta_regime, build_cot_meta
+        from src.catalyst.cftc_cot import get_market_positioning_snapshot
+        if isinstance(macro, dict):
+            cot_snap = get_market_positioning_snapshot(refresh=False, verbose=False)
+            macro["cot_meta"] = build_cot_meta(cot_snap)
+            meta = classify_meta_regime(macro, verbose=verbose)
+            if meta:
+                macro["meta_regime"] = meta
+    except Exception as e:
+        if verbose:
+            print(f"  macro_meta_regime failed: {type(e).__name__}: {e}")
+
     if verbose:
         cot_tagged = sum(1 for p in pool if p.get("_cot_positioning"))
         macro_tagged = sum(1 for p in pool if p.get("_macro_positioning"))

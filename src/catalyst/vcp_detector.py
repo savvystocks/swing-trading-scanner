@@ -39,7 +39,28 @@ SECTOR_ETF_MAP = {
 }
 
 
-def _get_bars(ticker, days=220):
+def _get_bars(ticker, days=220, pick=None):
+    # Path 3 Fix 4: prefer already-fetched OHLCV from Step 2 enrichment.
+    if pick is not None:
+        enriched = pick.get("_enriched_data") or {}
+        df = enriched.get("df")
+        if df is not None and len(df) >= 20:
+            tail = df.tail(min(days, len(df)))
+            bars = []
+            for idx, row in tail.iterrows():
+                try:
+                    bars.append({
+                        "date": str(idx)[:10],
+                        "high": float(row["high"]),
+                        "low": float(row["low"]),
+                        "close": float(row["close"]),
+                        "open": float(row.get("open", row["close"])),
+                        "volume": float(row.get("volume") or 0),
+                    })
+                except Exception:
+                    continue
+            if bars:
+                return bars
     try:
         from src.alpaca_ohlcv import get_daily_bars
         from datetime import date
@@ -166,9 +187,9 @@ def check_quiet_rs(ticker, sector, bars=None):
     return {"pass": None, "verdict": "NEUTRAL", "detail": f"{rs:+.1f}% RS vs {etf}, {pct_off_high:.1f}% off high - inconclusive", "rs": round(rs, 1), "pct_off_high": round(pct_off_high, 1)}
 
 
-def detect_vcp(ticker, sector, bars=None, verbose=False):
+def detect_vcp(ticker, sector, bars=None, verbose=False, pick=None):
     """Run all 3 checks. Returns dict with overall verdict."""
-    bars = bars or _get_bars(ticker, days=180)
+    bars = bars or _get_bars(ticker, days=180, pick=pick)
     bb = check_bollinger_squeeze(ticker, bars=bars)
     atr = check_atr_contraction(ticker, bars=bars)
     rs = check_quiet_rs(ticker, sector, bars=bars)
@@ -225,7 +246,7 @@ def enrich_picks_with_vcp(picks, max_picks=30, verbose=False):
             continue
         sector = p.get("sector", "")
         try:
-            res = detect_vcp(ticker, sector, verbose=False)
+            res = detect_vcp(ticker, sector, verbose=False, pick=p)
         except Exception:
             continue
         p["_vcp_setup"] = res

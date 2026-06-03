@@ -15,7 +15,27 @@ Confluence detector reads pick._pocket_pivot.fires.
 from datetime import datetime, timedelta
 
 
-def _get_bars(ticker, days=30):
+def _get_bars(ticker, days=30, pick=None):
+    if pick is not None:
+        enriched = pick.get("_enriched_data") or {}
+        df = enriched.get("df")
+        if df is not None and len(df) >= 11:
+            tail = df.tail(min(days, len(df)))
+            bars = []
+            for idx, row in tail.iterrows():
+                try:
+                    bars.append({
+                        "date": str(idx)[:10],
+                        "high": float(row["high"]),
+                        "low": float(row["low"]),
+                        "close": float(row["close"]),
+                        "open": float(row.get("open", row["close"])),
+                        "volume": float(row.get("volume") or 0),
+                    })
+                except Exception:
+                    continue
+            if bars:
+                return bars
     try:
         from src.alpaca_ohlcv import get_daily_bars
         from datetime import date
@@ -40,9 +60,9 @@ def _get_bars(ticker, days=30):
         return []
 
 
-def detect_pocket_pivot(ticker, bars=None, lookback=10, verbose=False):
+def detect_pocket_pivot(ticker, bars=None, lookback=10, verbose=False, pick=None):
     """Returns dict with fires (bool), volume_ratio, label."""
-    bars = bars or _get_bars(ticker, days=lookback + 5)
+    bars = bars or _get_bars(ticker, days=lookback + 5, pick=pick)
     if len(bars) < lookback + 1:
         return {"fires": False, "label": None, "reason": f"insufficient bars ({len(bars)})"}
 
@@ -105,7 +125,7 @@ def enrich_picks_with_pocket_pivot(picks, max_picks=30, verbose=False):
         if not ticker or "." in ticker:
             continue
         try:
-            res = detect_pocket_pivot(ticker, verbose=False)
+            res = detect_pocket_pivot(ticker, verbose=False, pick=p)
         except Exception:
             continue
         p["_pocket_pivot"] = res

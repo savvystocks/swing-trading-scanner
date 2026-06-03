@@ -192,9 +192,90 @@ def _bull_positioning_score(pick, macro_regime):
 
 
 def _bear_positioning_score(pick, macro_regime):
-    """Score how much positioning supports a PUT trade. Out of 100."""
+    """Score how much positioning supports a PUT trade. Out of 100.
+
+    Path 3 Fix 2: macro-overlay points (cot crowded long, macro risk-off, margin
+    euphoria, stacked greed, etc.) only count if at least ONE per-ticker bear
+    signal fires. Otherwise every Tech name gets 40+ pts from macro alone,
+    burying fresh extension PUTs (AMD/AMAT/INTC) under already-broken names
+    (CAG/CMG that have already cratered).
+    """
     score = 0
     signals = []
+
+    # === PER-TICKER BEAR SIGNALS (must have at least 1 for macro overlay to count) ===
+
+    per_ticker_pts = 0
+    pct_above_200 = pick.get("pct_above_200dma")
+    try:
+        if pct_above_200 is not None:
+            v = float(pct_above_200)
+            if v > 40:
+                per_ticker_pts += 15
+                signals.append({"key": "extension_above_200_extreme", "label": f"extended {v:.0f}% above 200dma = climax risk", "pts": 15})
+            elif v > 25:
+                per_ticker_pts += 10
+                signals.append({"key": "extension_above_200", "label": f"extended {v:.0f}% above 200dma", "pts": 10})
+            elif v > 15:
+                per_ticker_pts += 5
+                signals.append({"key": "extension_mild", "label": f"+{v:.0f}% above 200dma = elevated", "pts": 5})
+    except (TypeError, ValueError):
+        pass
+
+    ret_30d = pick.get("ret_30d")
+    try:
+        if ret_30d is not None:
+            r = float(ret_30d)
+            if r > 25:
+                per_ticker_pts += 10
+                signals.append({"key": "vertical_30d", "label": f"+{r:.0f}% in 30d = vertical move", "pts": 10})
+            elif r > 15:
+                per_ticker_pts += 6
+                signals.append({"key": "strong_30d_uptrend", "label": f"+{r:.0f}% in 30d = strong uptrend", "pts": 6})
+    except (TypeError, ValueError):
+        pass
+
+    ret_5d = pick.get("ret_5d")
+    try:
+        if ret_5d is not None and float(ret_5d) > 7:
+            per_ticker_pts += 8
+            signals.append({"key": "vertical_5d", "label": f"+{float(ret_5d):.1f}% in 5d = blow-off top risk", "pts": 8})
+    except (TypeError, ValueError):
+        pass
+
+    ar = pick.get("_analyst_revisions") or {}
+    if ar.get("verdict") == "NEGATIVE_REVISIONS":
+        per_ticker_pts += 5
+        signals.append({"key": "analyst_revisions_down", "label": ar.get("label") or "negative EPS revisions", "pts": 5})
+
+    pb = pick.get("_pb_flow") or {}
+    if pb.get("aligned") and (pb.get("side") or "").upper() == "SHORT":
+        per_ticker_pts += 10
+        signals.append({"key": "pb_short_flow", "label": pb.get("label") or "PB flow aligned short", "pts": 10})
+
+    gex = pick.get("_dealer_gex") or pick.get("_if_gex") or {}
+    if gex.get("regime") == "POSITIVE_PIN":
+        try:
+            if pct_above_200 is not None and float(pct_above_200) > 15:
+                per_ticker_pts += 8
+                signals.append({"key": "gex_pin_extended", "label": "GEX pinning + extended = downside vol risk", "pts": 8})
+        except (TypeError, ValueError):
+            pass
+
+    # Live gap-up suggests intraday chase setup → PUT
+    la = pick.get("_live_action") or {}
+    if la.get("flag") == "DO_NOT_CHASE":
+        per_ticker_pts += 12
+        signals.append({"key": "intraday_chase_risk", "label": la.get("label") or "intraday chase risk - PUT entry", "pts": 12})
+
+    score += per_ticker_pts
+
+    # === MACRO OVERLAY (only counts if a per-ticker bear signal fired) ===
+
+    if per_ticker_pts == 0:
+        # No per-ticker bear edge - macro tide doesn't justify a PUT setup.
+        # Return early with whatever per-ticker signals fired (which is none here).
+        return min(score, 100), signals
 
     cot = pick.get("_cot_positioning") or {}
     regime = cot.get("regime")
@@ -230,65 +311,23 @@ def _bear_positioning_score(pick, macro_regime):
     sentiment_findings = sentiment.get("findings") or []
     for f in sentiment_findings:
         sig = f.get("signal") if isinstance(f, dict) else None
+        if sig == "STACKED_GREED_EXTREME":
+            score += 15
+            signals.append({"key": "stacked_greed", "label": f.get("label") or "stacked sentiment extremes", "pts": 15})
+            break
         if sig == "GREED_EXTREME":
             score += 15
-            signals.append({"key": "sentiment_greed", "label": "F&G in extreme greed = contrarian short edge", "pts": 15})
+            signals.append({"key": "sentiment_greed", "label": "F&G extreme greed", "pts": 15})
             break
         if sig == "PB_LEAK":
             score += 10
-            signals.append({"key": "pb_leak", "label": "prime brokerage flow leak detected", "pts": 10})
+            signals.append({"key": "pb_leak", "label": "prime brokerage flow leak", "pts": 10})
             break
 
-    pct_above_200 = pick.get("pct_above_200dma")
-    try:
-        if pct_above_200 is not None and float(pct_above_200) > 40:
-            score += 10
-            signals.append({"key": "extension_above_200", "label": f"extended {pct_above_200:.0f}% above 200dma", "pts": 10})
-    except (TypeError, ValueError):
-        pass
-
-    ret_30d = pick.get("ret_30d")
-    try:
-        if ret_30d is not None and float(ret_30d) > 25:
-            score += 10
-            signals.append({"key": "vertical_30d", "label": f"+{ret_30d:.0f}% in 30d = vertical move", "pts": 10})
-    except (TypeError, ValueError):
-        pass
-
-    ar = pick.get("_analyst_revisions") or {}
-    if ar.get("verdict") == "NEGATIVE_REVISIONS":
-        score += 5
-        signals.append({"key": "analyst_revisions_down", "label": ar.get("label") or "negative EPS revisions", "pts": 5})
-
-    pb = pick.get("_pb_flow") or {}
-    if pb.get("aligned") and (pb.get("side") or "").upper() == "SHORT":
-        score += 10
-        signals.append({"key": "pb_short_flow", "label": pb.get("label") or "PB flow aligned short", "pts": 10})
-
-    gex = pick.get("_dealer_gex") or pick.get("_if_gex") or {}
-    if gex.get("regime") == "POSITIVE_PIN":
-        try:
-            if pct_above_200 is not None and float(pct_above_200) > 30:
-                score += 5
-                signals.append({"key": "gex_pin_extended", "label": "GEX pinning + extended = downside vol risk", "pts": 5})
-        except (TypeError, ValueError):
-            pass
-
-    # FINRA margin debt EUPHORIC_LATE_CYCLE = retail leveraged peak = contrarian short edge.
     margin = pick.get("_finra_margin_regime") or {}
     if margin.get("regime") == "EUPHORIC_LATE_CYCLE":
         score += 15
         signals.append({"key": "margin_euphoria", "label": margin.get("label") or "margin debt euphoric late cycle", "pts": 15})
-
-    # Sentiment stack STACKED extremes (>=2 surveys agree) = high-conviction contrarian setup
-    sentiment = pick.get("_sentiment_stack") or {}
-    sentiment_findings = sentiment.get("findings") or []
-    for f in sentiment_findings:
-        sig = f.get("signal") if isinstance(f, dict) else None
-        if sig == "STACKED_GREED_EXTREME":
-            score += 15
-            signals.append({"key": "stacked_greed", "label": f.get("label") or "stacked sentiment extremes - high-conviction contrarian short", "pts": 15})
-            break
 
     return min(score, 100), signals
 
@@ -470,6 +509,13 @@ def apply_positioning_first(picks, macro=None, verbose=False):
 def _resolve_macro_regime(macro):
     if not isinstance(macro, dict):
         return "NEUTRAL"
+    # Path 3 Fix 1: prefer the meta_regime that aggregates the full new stack
+    # (FINRA + sentiment + COT + options positioning + macro positioning + VIX).
+    meta = macro.get("meta_regime") or {}
+    meta_regime = meta.get("regime")
+    if meta_regime in ("RISK_ON", "RISK_OFF_PRESSURE", "NEUTRAL"):
+        return meta_regime
+    # Fallback to legacy macro_positioning-only verdict.
     mp = macro.get("macro_positioning") or {}
     regime = mp.get("regime")
     if regime in ("RISK_ON", "RISK_OFF_PRESSURE", "NEUTRAL"):

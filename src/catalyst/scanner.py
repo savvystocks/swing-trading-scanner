@@ -602,10 +602,10 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         if verbose:
             print(f"  auction_levels (top 600) failed (non-fatal): {type(e).__name__}: {e}")
 
-    # Lever 3: cheap GEX direction proxy on top 300 via Alpaca chain call/put OI ratio.
+    # Lever 3 + Fix 5: cheap GEX direction proxy on top 600 (was 300) via Alpaca IV skew.
     # NOT a Black-Scholes computation (that runs later on top 15). This is a fast
     # directional flag so positioning_first has GEX context for the wider pool.
-    GEX_PROXY_TOP_K = 300
+    GEX_PROXY_TOP_K = 600
     if verbose:
         print(f"Step 3.65/6: cheap GEX proxy on top {min(GEX_PROXY_TOP_K, len(tech_pool))} via Alpaca chain OI")
     try:
@@ -1023,7 +1023,7 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         enrich_allocator_tier(final_scored, verbose=verbose)
         enrich_composite_quality(final_scored, verbose=verbose)
         enrich_news_quality(final_scored, verbose=verbose)
-        apply_peer_benchmarking(final_scored, verbose=verbose)
+        # peer_benchmarker MOVED below to run AFTER route_candidates assigns bracket
         apply_sector_rotation_gate(final_scored, macro, verbose=verbose)
 
         # Path 3 deep rebuild: wide_pool_positioning + positioning_first already ran in
@@ -1052,6 +1052,14 @@ def run_catalyst_scan(target_date=None, top_pct_strong=5, top_pct_watch=15,
         bracketed = route_candidates(final_scored)
         if verbose:
             print(f"  bracket routing: micro={len(bracketed['micro'])} small={len(bracketed['small'])} mid={len(bracketed['mid'])} filtered={len(bracketed['filtered_out'])}")
+
+        # Fix 3: peer_benchmarker needs bracket which is just assigned above.
+        # Run it now on the bracketed pool so industry+bracket peer groups form.
+        try:
+            apply_peer_benchmarking(final_scored, verbose=verbose)
+        except Exception as e:
+            if verbose:
+                print(f"  peer_benchmarker (post-routing) failed: {type(e).__name__}: {e}")
 
         bracketed_filtered = {}
         for bracket in ("micro", "small", "mid"):

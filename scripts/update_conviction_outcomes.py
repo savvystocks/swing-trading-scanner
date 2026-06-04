@@ -21,6 +21,7 @@ from datetime import datetime, timezone, timedelta
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.catalyst.conviction_log import load_log, save_log
+from src.catalyst import exit_policy
 from src.unusual_whales_api import get_client
 
 
@@ -44,75 +45,110 @@ def _parse_iso(ts):
         return None
 
 
+def _parse_date(s):
+    if not s:
+        return None
+    try:
+        return datetime.strptime(s[:10], "%Y-%m-%d").date()
+    except Exception:
+        return None
+
+
+def _f(v):
+    try:
+        x = float(v)
+        return x if x > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _fetch_history(uw, occ, scan_date, window):
+    data = uw.option_contract_historic(occ)
+    rows = (data or {}).get("chains") or []
+    start = _parse_date(scan_date)
+    if not start:
+        return None, []
+    entry_mid = None
+    path = []
+    for r in rows:
+        d = _parse_date(r.get("date"))
+        if not d:
+            continue
+        bid, ask = _f(r.get("nbbo_bid")), _f(r.get("nbbo_ask"))
+        last = _f(r.get("last_price"))
+        mid = (bid + ask) / 2 if (bid and ask) else last
+        if d == start:
+            entry_mid = mid
+            continue
+        if d < start or (d - start).days > window:
+            continue
+        cands_hi = [v for v in (mid, ask, last) if v]
+        cands_lo = [v for v in (mid, bid, last) if v]
+        high = _f(r.get("high_price")) or (max(cands_hi) if cands_hi else None)
+        low = _f(r.get("low_price")) or (min(cands_lo) if cands_lo else None)
+        close = mid or last
+        op = _f(r.get("open_price")) or mid or last
+        if not (high and low and close and op):
+            continue
+        path.append({"date": r["date"][:10], "open": op, "high": high, "low": low, "close": close})
+    path.sort(key=lambda x: x["date"])
+    return entry_mid, path
+
+
 def resolve_outcome(uw, entry):
-    """Return outcome dict or None if not ready to evaluate."""
+    """Return outcome dict (final) or None if still open."""
     if entry.get("outcome"):
         return None
     logged_at = _parse_iso(entry.get("logged_at"))
     if not logged_at:
         return None
     days_since = (_now() - logged_at).days
-    window = REVIEW_WINDOW_DAYS.get(entry["tier"], 7)
-    if days_since < window:
-        return None
 
     ticker = entry.get("ticker")
     tt = entry.get("trade_ticket") or {}
     occ = tt.get("occ_symbol")
     entry_mid = tt.get("mid")
-    expiry = tt.get("expiry")
-    if not (ticker and occ and entry_mid):
+    if not (ticker and occ):
         return {"checked_at": _now().isoformat(), "result": "MISSING_DATA",
                 "days_held": days_since}
 
-    # Has the contract expired?
-    expiry_date = _parse_iso(expiry + "T00:00:00Z") if expiry else None
-    if expiry_date and _now() > expiry_date:
-        return {"checked_at": _now().isoformat(), "result": "EXPIRED",
-                "days_held": days_since,
-                "note": "Contract expired before review - cannot fetch current premium"}
+    window = REVIEW_WINDOW_DAYS.get(entry["tier"], 7)
+    scan_date = entry.get("scan_date") or logged_at.date().isoformat()
+    hist_entry, days = _fetch_history(uw, occ, scan_date, window)
+    if not entry_mid:
+        entry_mid = hist_entry
+        if entry_mid:
+            tt["mid"] = round(entry_mid, 2)
+    if not (entry_mid and days):
+        return None
 
-    # Pull current option intraday + spot
-    try:
-        data = uw._request(f"/stock/{ticker}/option-contracts", None,
-                            cache_key="oi_per_strike", ttl=600)
-        if not data:
-            return {"checked_at": _now().isoformat(), "result": "FETCH_FAILED",
-                    "days_held": days_since}
-        rows = data.get("data") or []
-        cur_mid = None
-        for r in rows:
-            if isinstance(r, dict) and r.get("option_symbol") == occ:
-                bid = float(r.get("nbbo_bid") or 0)
-                ask = float(r.get("nbbo_ask") or 0)
-                if bid and ask:
-                    cur_mid = (bid + ask) / 2
-                else:
-                    cur_mid = float(r.get("last_price") or 0)
-                break
-        if not cur_mid:
-            return {"checked_at": _now().isoformat(), "result": "NO_QUOTE",
-                    "days_held": days_since}
+    sim = exit_policy.simulate(entry_mid, days)
+    if not sim:
+        return None
 
-        # Live spot
-        spot_data = uw.stock_state(ticker)
-        cur_spot = float((spot_data or {}).get("data", {}).get("close") or 0)
+    if sim["exited"]:
+        result = "WIN" if sim["exit_reason"] == "ARM_TRAIL" else "LOSS"
+        realized, exit_reason, exit_date = sim["realized_pct"], sim["exit_reason"], sim["exit_date"]
+    elif days_since >= window:
+        realized, exit_reason, exit_date = sim["end_pct"], "TIME_STOP", sim["end_date"]
+        result = "WIN" if realized > 0 else "LOSS"
+    else:
+        return None
 
-        pct_return = (cur_mid - entry_mid) / entry_mid * 100
-        result = "WIN" if pct_return >= 50 else ("LOSS" if pct_return <= -50 else "OPEN")
-        return {
-            "checked_at": _now().isoformat(),
-            "days_held": days_since,
-            "exit_premium": round(cur_mid, 2),
-            "exit_spot": round(cur_spot, 2),
-            "pct_return": round(pct_return, 1),
-            "result": result,
-        }
-    except Exception as e:
-        return {"checked_at": _now().isoformat(),
-                "result": "ERROR",
-                "error": f"{type(e).__name__}: {e}",
-                "days_held": days_since}
+    return {
+        "checked_at": _now().isoformat(),
+        "days_held": days_since,
+        "result": result,
+        "exit_reason": exit_reason,
+        "exit_date": exit_date,
+        "realized_pct": realized,
+        "pct_return": realized,
+        "peak_pct": sim["peak_pct"],
+        "peak_date": sim["peak_date"],
+        "trough_pct": sim["trough_pct"],
+        "end_pct": sim["end_pct"],
+        "armed": sim["armed"],
+    }
 
 
 def main():
@@ -135,7 +171,7 @@ def main():
         if outcome:
             entry["outcome"] = outcome
             resolved += 1
-            print(f"  {entry['ticker']:6} {entry['tier']:15} {entry['side']:4}  -> {outcome['result']}  ({outcome.get('pct_return', '?')}%)")
+            print(f"  {entry['ticker']:6} {entry['tier']:15} {entry['side']:4}  -> {outcome['result']:4} {outcome.get('pct_return', '?')}% via {outcome.get('exit_reason', '?')} (peak {outcome.get('peak_pct', '?')}%)")
 
     save_log(log)
 

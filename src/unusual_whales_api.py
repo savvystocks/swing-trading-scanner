@@ -187,6 +187,11 @@ class UnusualWhalesClient:
         return self._request(f"/stock/{ticker}/greeks", params,
                             cache_key="greeks", ttl=CACHE_TTL_SECONDS["greeks"])
 
+    def option_contract_historic(self, occ):
+        """Daily OHLC + bid/ask history for one OCC contract over its whole life."""
+        return self._request(f"/option-contract/{occ}/historic", None,
+                            cache_key="oi_per_strike", ttl=1800)
+
     def iv_rank(self, ticker):
         """IV rank percentile."""
         return self._request(f"/stock/{ticker}/iv-rank", None,

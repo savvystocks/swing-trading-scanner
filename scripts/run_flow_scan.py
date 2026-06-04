@@ -87,6 +87,16 @@ def main():
     print(f"Wrote {json_path}")
 
     try:
+        from src.unusual_whales_api import get_client
+        from src.catalyst.positions_panel import build_positions_panel
+        scan["open_positions"] = build_positions_panel(get_client())
+        if scan["open_positions"]:
+            print(f"  positions panel: {len(scan['open_positions'])} open position(s)")
+    except Exception as e:
+        print(f"  positions panel failed (non-fatal): {type(e).__name__}: {e}")
+        scan["open_positions"] = []
+
+    try:
         html = render_flow_email(scan)
     except Exception as e:
         print(f"Email render failed: {type(e).__name__}: {e}")

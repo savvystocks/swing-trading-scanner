@@ -30,6 +30,7 @@ import os
 import sys
 import json
 import pathlib
+import subprocess
 from datetime import datetime
 
 
@@ -38,6 +39,29 @@ LIVE_PATH = PROJECT_ROOT / "data" / "paper_trades" / "live_positions.json"
 ARCHIVE_PATH = PROJECT_ROOT / "data" / "paper_trades" / "closed_positions.json"
 
 GBP_USD_RATE = 1.26
+
+
+def _git_sync(action_label):
+    if os.environ.get("LOG_TRADE_NO_PUSH"):
+        return
+    files = [str(p) for p in (LIVE_PATH, ARCHIVE_PATH) if p.exists()]
+    if not files:
+        return
+    root = str(PROJECT_ROOT)
+    try:
+        subprocess.run(["git", "add"] + files, cwd=root, check=False, capture_output=True)
+        if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=root).returncode == 0:
+            return
+        subprocess.run(["git", "commit", "-m", f"positions: {action_label} [skip ci]"],
+                       cwd=root, check=False, capture_output=True)
+        push = subprocess.run(["git", "push"], cwd=root, check=False,
+                              capture_output=True, text=True)
+        if push.returncode == 0:
+            print("  synced to cloud monitor (pushed to main)")
+        else:
+            print(f"  push failed - saved locally, monitor won't see it until you push: {push.stderr.strip()[:160]}")
+    except Exception as e:
+        print(f"  git sync skipped ({type(e).__name__}: {e})")
 
 
 def _load_positions(path):
@@ -100,6 +124,7 @@ def open_position(args):
     print(f"  {contracts_i}x @ ${entry_f} = ${cost_usd:.2f} (£{cost_gbp:.2f})")
     print(f"  opened {opened_at}")
     print(f"  total live positions: {sum(1 for p in positions if p.get('status') == 'OPEN')}")
+    _git_sync(f"open {ticker.upper()} {side} ${strike_f}")
 
 
 def close_position(args):
@@ -150,6 +175,7 @@ def close_position(args):
     print(f"CLOSED {closed_count} {ticker} position(s) at ${exit_price}")
     print(f"  P&L: £{pnl_total_gbp:+.2f}")
     print(f"  Remaining live positions: {sum(1 for p in remaining if p.get('status') == 'OPEN')}")
+    _git_sync(f"close {ticker} @ ${exit_price}")
 
 
 def trim_position(args):
@@ -194,6 +220,7 @@ def trim_position(args):
         print(f"No open {ticker} position found")
         sys.exit(2)
     _save_positions(LIVE_PATH, positions)
+    _git_sync(f"trim {ticker} {trim_contracts} @ ${trim_price}")
 
 
 def list_positions(_args):

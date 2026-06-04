@@ -38,6 +38,21 @@ h1 { font-size: 22px; margin-bottom: 4px; }
 .trade-ticket .order { font-size: 16px; font-weight: 700; color: #fbbf24; margin-bottom: 4px; }
 .trade-ticket .meta { font-size: 11px; color: #9ca3af; }
 .sit-out { background: #f9fafb; border: 2px solid #6b7280; border-radius: 10px; padding: 20px; text-align: center; font-size: 14px; color: #4b5563; }
+.position { border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; }
+.position.trailing { border-left: 6px solid #15803d; }
+.position.prearm { border-left: 6px solid #6b7280; }
+.position.exit { border-left: 6px solid #b91c1c; background: #fef2f2; }
+.pos-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.pos-contract { font-size: 13px; color: #6b7280; }
+.pos-status { margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }
+.position.trailing .pos-status { color: #15803d; }
+.position.prearm .pos-status { color: #6b7280; }
+.position.exit .pos-status { color: #b91c1c; }
+.pos-body { display: flex; gap: 14px; font-size: 13px; margin-bottom: 4px; }
+.pos-body .up { color: #15803d; font-weight: 700; }
+.pos-body .down { color: #b91c1c; font-weight: 700; }
+.pos-body .muted { color: #9ca3af; }
+.pos-stop { font-size: 11px; color: #6b7280; }
 hr { border: none; border-top: 1px solid #e5e7eb; margin: 22px 0; }
 </style></head><body>
 
@@ -54,6 +69,26 @@ hr { border: none; border-top: 1px solid #e5e7eb; margin: 22px 0; }
   <strong>{{ w.level }}:</strong> {{ w.label }}
 </div>
 {% endfor %}
+{% endif %}
+
+{% if positions %}
+<div class="section">
+  <div class="section-title" style="color:#1f2937;">OPEN POSITIONS ({{ positions|length }})</div>
+  {% for p in positions %}
+  <div class="position {{ 'exit' if p.status == 'EXIT SIGNALED' else ('trailing' if p.status == 'TRAILING' else 'prearm') }}">
+    <div class="pos-head">
+      <span class="ticker">{{ p.ticker }}</span>
+      <span class="pos-contract">{{ p.side }} ${{ p.strike }} exp {{ p.expiration }}</span>
+      <span class="pos-status">{{ p.status }}</span>
+    </div>
+    <div class="pos-body">
+      <span>{{ p.contracts }}x @ ${{ "%.2f"|format(p.entry) }}{% if p.mid %} &rarr; ${{ "%.2f"|format(p.mid) }} mid{% endif %}</span>
+      {% if p.pct is not none %}<span class="{{ 'up' if p.pct >= 0 else 'down' }}">{{ "%+.0f"|format(p.pct) }}% · £{{ "%+.0f"|format(p.pnl_gbp) }}</span>{% else %}<span class="muted">no live mid (market closed / contract not found)</span>{% endif %}
+    </div>
+    <div class="pos-stop">{{ p.stop_label }}{% if p.stop_price %} = ${{ "%.2f"|format(p.stop_price) }} premium{% endif %}</div>
+  </div>
+  {% endfor %}
+</div>
 {% endif %}
 
 {% if not calls and not puts %}
@@ -185,5 +220,6 @@ def render_flow_email(scan):
         regime_label=notes or label,
         calls=calls,
         puts=puts,
+        positions=scan.get("open_positions", []),
         concentration_warnings=scan.get("concentration_warnings", []),
     )

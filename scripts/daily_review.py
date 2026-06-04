@@ -152,8 +152,10 @@ def _fmt_pick(p):
             contra.append(lbl)
         else:
             scored.append(lbl)
+    spot = p.get("live_spot") or p.get("price")
     out = (
         f"{p.get('ticker')} {pick_side} | tier {c.get('tier')} | score {c.get('score')} | "
+        f"spot {spot} | "
         f"premium ${(p.get('total_premium') or (p.get('_uw_flow') or {}).get('total_premium') or 0)/1e6:.1f}M | "
         f"sources {len(set(p.get('sources') or []))}\n"
         f"   ticket: {tt.get('occ_symbol')} | strike {tt.get('strike')} exp {tt.get('expiry')} "

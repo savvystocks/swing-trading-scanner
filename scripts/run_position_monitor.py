@@ -1,14 +1,12 @@
-"""Position monitor - polls UW REST every 10 min for active positions.
+"""Live position monitor - polls UW every 10 min during US market hours.
 
-Reads data/positions.json, checks each position's underlying for:
-  - Dealer regime flip (POSITIVE_PIN <-> NEGATIVE_AMP)
-  - Spot crossing the zero-gamma flip strike
+Reads data/paper_trades/live_positions.json (the file log_trade.py writes),
+marks each OPEN option to its live mid, and fires a Telegram alert when:
+  - the trailing-stop exit rules trip (hard stop / arm / trail) -> SELL or armed
+  - dealer regime flips or spot crosses the gamma flip strike -> reassess
 
-Fires Telegram alert on change. Saves state to data/position_monitor_state.json
-so we only alert on transitions, not every poll.
-
-REST-polled fallback for the WebSocket worker (which required UW Advanced
-plan $375/mo).
+State in data/position_monitor_state.json so we only alert on transitions,
+not on every poll.
 """
 
 import os
@@ -20,12 +18,26 @@ from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.positions import load_positions
 from src.unusual_whales_api import get_client
 from src.catalyst.uw_enrichment import _summarize_gex
+from src.catalyst.trade_ticket import _occ_symbol, _fetch_contract_data
+from src.catalyst import live_exit
 
 
+LIVE_POSITIONS_PATH = pathlib.Path(__file__).parent.parent / "data" / "paper_trades" / "live_positions.json"
 STATE_PATH = pathlib.Path(__file__).parent.parent / "data" / "position_monitor_state.json"
+
+
+def load_open_positions():
+    if not LIVE_POSITIONS_PATH.exists():
+        return []
+    try:
+        data = json.loads(LIVE_POSITIONS_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    if not isinstance(data, list):
+        return []
+    return [p for p in data if p.get("status") == "OPEN"]
 
 
 def send_telegram(text):
@@ -66,7 +78,30 @@ def save_state(state):
     STATE_PATH.write_text(json.dumps(state, indent=2, default=str), encoding="utf-8")
 
 
-def check_position(uw, pos, state):
+def live_mid(uw, pos):
+    ticker = pos.get("ticker")
+    strike = pos.get("strike")
+    side = pos.get("side")
+    expiry_s = pos.get("expiration") or pos.get("expiry")
+    if not (ticker and strike and side and expiry_s):
+        return None, None
+    try:
+        exp = datetime.strptime(str(expiry_s)[:10], "%Y-%m-%d").date()
+    except Exception:
+        return None, None
+    occ = _occ_symbol(ticker, exp, side, float(strike))
+    quote = _fetch_contract_data(uw, ticker, occ)
+    if not quote:
+        return occ, None
+    bid, ask, last = quote.get("bid"), quote.get("ask"), quote.get("last")
+    if bid and ask:
+        return occ, (bid + ask) / 2
+    if last:
+        return occ, last
+    return occ, None
+
+
+def check_regime(uw, pos, prev):
     ticker = pos["ticker"]
     side = pos.get("side", "?")
     strike = pos.get("strike")
@@ -91,7 +126,6 @@ def check_position(uw, pos, state):
     regime = gex_summary.get("dealer_regime")
     flip = gex_summary.get("gamma_flip_strike")
 
-    prev = state.get(ticker) or {}
     prev_regime = prev.get("dealer_regime")
     prev_spot = prev.get("spot")
     prev_flip = prev.get("flip_strike")
@@ -102,7 +136,7 @@ def check_position(uw, pos, state):
         warn = (side == "CALL" and bad_for_calls) or (side == "PUT" and bad_for_puts)
         severity = "WARN" if warn else "INFO"
         alerts.append(
-            f"<b>POSITION ALERT [{severity}]: {ticker} {side} ${strike}</b>\n"
+            f"<b>REGIME [{severity}]: {ticker} {side} ${strike}</b>\n"
             f"Dealer regime: {prev_regime} -> {regime}\n"
             f"{'Watch for accelerated move against you' if warn else 'Move may decelerate'}"
         )
@@ -110,24 +144,23 @@ def check_position(uw, pos, state):
     if (spot and prev_spot and flip is not None and prev_flip is not None
             and (prev_spot >= prev_flip) != (spot >= flip)):
         alerts.append(
-            f"<b>POSITION ALERT: {ticker} {side} ${strike}</b>\n"
+            f"<b>REGIME: {ticker} {side} ${strike}</b>\n"
             f"Spot ${spot:.2f} crossed gamma flip strike ${flip:.2f}\n"
             f"Hedging regime change - reassess"
         )
 
-    new_state = {
+    return alerts, {
         "dealer_regime": regime,
         "flip_strike": flip,
         "spot": spot,
         "last_checked": datetime.now(timezone.utc).isoformat(),
     }
-    return alerts, new_state
 
 
 def main():
-    positions = load_positions()
+    positions = load_open_positions()
     if not positions:
-        print("No active positions")
+        print("No open positions in live_positions.json")
         return
 
     print(f"Monitoring {len(positions)} positions: {', '.join(p['ticker'] for p in positions)}")
@@ -138,22 +171,45 @@ def main():
         sys.exit(1)
 
     state = load_state()
-    new_state = {}
+    exits_state = state.get("exits") or {}
+    regimes_state = state.get("regimes") or {}
+    new_exits = {}
+    new_regimes = {}
     total_alerts = 0
 
     for pos in positions:
+        ticker = pos.get("ticker", "?")
         try:
-            alerts, ns = check_position(uw, pos, state)
-            if ns:
-                new_state[pos["ticker"]] = ns
-            for alert in alerts:
-                send_telegram(alert)
-                total_alerts += 1
-                print(f"  alerted: {alert.splitlines()[0]}")
-        except Exception as e:
-            print(f"  {pos['ticker']} failed: {type(e).__name__}: {e}")
+            occ, mid = live_mid(uw, pos)
+            if occ and mid:
+                alert, ns = live_exit.evaluate(pos, mid, exits_state.get(occ))
+                new_exits[occ] = ns
+                pct = ns.get("last_pct")
+                print(f"  {ticker} {pos.get('side')} ${pos.get('strike')}: mid ${mid:.2f} ({pct:+.0f}%) "
+                      f"armed {ns.get('armed')}")
+                if alert:
+                    send_telegram(alert)
+                    total_alerts += 1
+                    print(f"    -> EXIT ALERT: {alert.splitlines()[0]}")
+            elif occ:
+                new_exits[occ] = exits_state.get(occ) or {}
+                print(f"  {ticker}: no live mid (market closed or contract not found)")
 
-    save_state(new_state)
+            r_alerts, r_state = check_regime(uw, pos, regimes_state.get(ticker) or {})
+            if r_state:
+                new_regimes[ticker] = r_state
+            for a in r_alerts:
+                send_telegram(a)
+                total_alerts += 1
+                print(f"    -> REGIME ALERT: {a.splitlines()[0]}")
+        except Exception as e:
+            print(f"  {ticker} failed: {type(e).__name__}: {e}")
+
+    save_state({
+        "exits": new_exits,
+        "regimes": new_regimes,
+        "last_run": datetime.now(timezone.utc).isoformat(),
+    })
     print(f"Done. {total_alerts} alerts. UW calls: {uw.calls_made}")
 
 

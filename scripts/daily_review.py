@@ -260,11 +260,22 @@ def send_email(html, scan_date):
         return False
 
 
+def _already_reviewed(scan_date):
+    path = REVIEW_DIR / f"review_{scan_date}.md"
+    if not path.exists():
+        return False
+    txt = path.read_text(encoding="utf-8")
+    return "(LLM unavailable)" not in txt and "## Raw digest" in txt
+
+
 def main():
     target = os.environ.get("CATALYST_DATE", "").strip() or _now().isoformat()[:10]
     scan, scan_date = _load_scan(target)
     if not scan:
         print("No scan file found - nothing to review")
+        return
+    if os.environ.get("FORCE_REVIEW") != "1" and _already_reviewed(scan_date):
+        print(f"Review for {scan_date} already done - skipping (FORCE_REVIEW=1 to regenerate)")
         return
 
     uw = get_client()

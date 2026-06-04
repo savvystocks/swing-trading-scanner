@@ -477,6 +477,18 @@ def run_convergence_scan(min_premium=50_000, min_dp_size=500_000,
     else:
         print("--skip-email set, no email sent")
 
+    # Log + monitor
+    try:
+        tracker_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "convergence_tracker.py")
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("convergence_tracker", tracker_path)
+        tracker = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(tracker)
+        tracker.log_scan(results, scan_time)
+        tracker.run_monitor()
+    except Exception as e:
+        print(f"Tracker: {type(e).__name__}: {e}")
+
     print(f"{'='*80}")
     return results
 

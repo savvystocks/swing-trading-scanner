@@ -410,35 +410,36 @@
     "outcome": null
   },
   {
-    "logged_at": "2026-06-04T16:01:29.609740+00:00",
+    "logged_at": "2026-06-04T16:47:14.160088+00:00",
     "scan_date": "2026-06-04",
     "ticker": "GOOGL",
     "tier": "ELITE",
     "side": "CALL",
-    "score": 85,
+    "score": 91,
     "size_pct": 30,
     "trade_ticket": {
       "occ_symbol": "GOOGL260702C00380000",
       "strike": 380.0,
       "expiry": "2026-07-02",
       "dte": 28,
-      "mid": 8.77,
-      "delta": 0.412,
-      "iv": 0.3255092184189545
+      "mid": 9.43,
+      "delta": 0.431,
+      "iv": 0.3235785491745439
     },
     "patterns_fired": [
       "nope",
       "volume_oi",
       "above_ask",
       "institutional",
-      "source_count"
+      "source_count",
+      "velocity"
     ],
     "sources": [
       "premium_top30",
       "congress"
     ],
-    "thesis": "GOOGL CALL (ELITE): NOPE +0.45 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $360.00 CALL: vol 31908 vs OI 22 (ratio 1450.4x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $18.0M / $39.0M (46%) executed at ask or above = pro urgency",
-    "entry_spot": 369.5649,
+    "thesis": "GOOGL CALL (ELITE): NOPE +0.51 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $360.00 CALL: vol 31908 vs OI 22 (ratio 1450.4x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $27.8M / $49.0M (56%) executed at ask or above = pro urgency",
+    "entry_spot": 371.1919,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   },
@@ -584,6 +585,39 @@
     ],
     "thesis": "GOOGL CALL (ELITE): NOPE +0.54 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $360.00 CALL: vol 31908 vs OI 22 (ratio 1450.4x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $27.8M / $49.0M (56%) executed at ask or above = pro urgency",
     "entry_spot": 371.44,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
+  },
+  {
+    "logged_at": "2026-06-04T16:47:14.160088+00:00",
+    "scan_date": "2026-06-04",
+    "ticker": "AVGO",
+    "tier": "ELITE",
+    "side": "CALL",
+    "score": 81,
+    "size_pct": 30,
+    "trade_ticket": {
+      "occ_symbol": "AVGO260702C00425000",
+      "strike": 425.0,
+      "expiry": "2026-07-02",
+      "dte": 28,
+      "mid": 15.27,
+      "delta": 0.449,
+      "iv": 0.483929003342732
+    },
+    "patterns_fired": [
+      "volume_oi",
+      "above_ask",
+      "institutional",
+      "source_count",
+      "velocity"
+    ],
+    "sources": [
+      "premium_top30",
+      "darkpool_top"
+    ],
+    "thesis": "AVGO CALL (ELITE): VOL > OI fired on $402.50 CALL: vol 780 vs OI 1 (ratio 780.0x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $11.2M / $27.2M (41%) executed at ask or above = pro urgency; INSTITUTIONAL: $34.1M premium, 69C/31P (69% CALL concentration)",
+    "entry_spot": 412.5078,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   }

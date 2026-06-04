@@ -56,10 +56,12 @@ You receive:
 - OPEN POSITIONS (the conviction log, marked to market): entry premium vs current premium, percent move, days held, the tier's hold window.
 - RESOLVED TODAY: any trade that hit its review window, with realized percent and WIN/LOSS.
 
+The system's exit rules, applied to every pick's real premium path: a hard stop at -50% from entry; a trailing stop that ARMS once the pick is up +25%; after arming it exits when the premium gives back 40% of its peak gain, so it always banks at least 60% of the best level reached; no profit target or cap, so a runner rides until the trail catches it; and a time-stop that closes at the last price when the tier's hold window expires (GAMMA_BOMB 3 days, ELITE and MAX_CONVICTION 7 days). Below +25% only the hard stop is active, giving a fresh position room to work. A trailing-stop exit is a WIN, a hard stop is a LOSS, a time-stop is a WIN if positive else a LOSS.
+
 For EACH pick today, deliver three crisp lines:
 1. REAL or ARTIFACT - is the thesis genuine institutional conviction, or a data quirk (zero/near-zero open-interest ratios, a single large print, a stale or mean-reverting NOPE, thin premium dressed up as size)? Name the specific tell.
 2. WORKING or FADING - for anything also held open, is it moving the predicted way? Is the flow following through?
-3. EXIT - given days held, premium decay and the tier's hold window, what do the SYSTEM'S rules imply now: take profit, cut, or hold, and the specific trigger.
+3. EXIT - using the system's exit rules above, the days held, the current percent move and the peak reached: is the trail armed yet, what is the live trigger level (the -50% stop, or 60% of the peak once armed), and does the rule say HOLD or has it already tripped. Be specific about the number.
 
 Then system-level:
 - PATTERN AUDIT: across today, which signals look predictive and which look like noise. Be specific and name them.

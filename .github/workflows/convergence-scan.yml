@@ -4,15 +4,6 @@ on:
   workflow_dispatch:
   repository_dispatch:
     types: [run-convergence-scan]
-  schedule:
-    # Hourly during US market hours (summer BST, Mar-Oct)
-    - cron: "30 13 * 3-10 1-5"
-    - cron: "30 14-19 * 3-10 1-5"
-    - cron: "0 20 * 3-10 1-5"
-    # Hourly during US market hours (winter GMT, Nov-Feb)
-    - cron: "30 14 * 1-2,11-12 1-5"
-    - cron: "30 15-20 * 1-2,11-12 1-5"
-    - cron: "0 21 * 1-2,11-12 1-5"
 
 jobs:
   scan:

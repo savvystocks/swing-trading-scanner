@@ -1,10 +1,10 @@
 """4-Signal Convergence Scanner (standalone).
 
 Finds mid-cap stocks ($2B-$50B) where 3 or 4 of these signals fire:
-  1. FLOW     - Bullish OTM call sweeps, $100K+ premium, vol > OI
+  1. FLOW     - Bullish OTM call sweeps, $50K+ premium
   2. DARKPOOL - Large block prints at or above the ask
   3. IV_LOW   - IV rank below 30 (cheap options)
-  4. HIGH_SI  - Short interest above 15% (squeeze fuel)
+  4. NEG_GEX  - Negative gamma exposure (dealer hedging amplifies moves)
 
 Sends a separate email with results. Runs hourly during market hours via GH Actions.
 
@@ -127,7 +127,7 @@ def scan_flow(min_premium=100_000):
 
     qualified = {}
     for ticker, data in by_ticker.items():
-        if data["hits"] >= 2 and data["bullish"] >= 1:
+        if data["hits"] >= 1 and data["bullish"] >= 1:
             qualified[ticker] = data
     return qualified
 
@@ -194,12 +194,12 @@ def check_iv_rank(ticker):
         data = data[-1]
     if not isinstance(data, dict):
         return None
-    rank = data.get("iv_rank") or data.get("iv_percentile") or data.get("rank")
+    rank = data.get("iv_rank_1y") or data.get("iv_rank") or data.get("iv_percentile")
     return _f(rank) if rank is not None else None
 
 
-def check_short_interest(ticker):
-    raw = _get(f"/shorts/{ticker}/interest-float")
+def check_gex(ticker):
+    raw = _get(f"/stock/{ticker}/greek-exposure")
     if not raw:
         return None
     data = raw.get("data") if isinstance(raw, dict) else raw
@@ -207,27 +207,21 @@ def check_short_interest(ticker):
         data = data[-1]
     if not isinstance(data, dict):
         return None
-    si = data.get("short_interest") or data.get("short_percent_of_float") or data.get("si_percent_float")
-    return _f(si) if si is not None else None
+    call_g = _f(data.get("call_gamma"))
+    put_g = _f(data.get("put_gamma"))
+    if call_g == 0 and put_g == 0:
+        return None
+    return call_g + put_g
 
 
 # ── email ──
 
-def render_email_html(results, scan_time, flow_count, dp_count, mcap_skipped, config):
-    if not results:
-        return f"""<html><body style="font-family:monospace;background:#1a1a2e;color:#e0e0e0;padding:20px;">
-<h2 style="color:#ff6b6b;">CONVERGENCE SCANNER - NO HITS</h2>
-<p>{scan_time}</p>
-<p>Flow tickers: {flow_count} | Dark pool tickers: {dp_count} | Mcap filtered: {mcap_skipped}</p>
-<p style="color:#888;">Filters: mcap ${config['mcap_min']/1e9:.0f}B-${config['mcap_max']/1e9:.0f}B | flow >=${config['min_premium']/1000:.0f}K | DP >=${config['min_dp_size']/1e6:.1f}M | IV <{config['iv_threshold']} | SI >{config['si_threshold']}%</p>
-<p>No mid-cap tickers with 3+ signal convergence this hour.</p>
-</body></html>"""
-
-    rows_html = ""
-    for r in results:
+def _render_table_rows(rows, config):
+    html = ""
+    for r in rows:
         conv = r["convergence"]
-        label = "QUAD" if conv == 4 else "TRIPLE"
-        label_color = "#00ff88" if conv == 4 else "#ffaa00"
+        labels = {4: ("QUAD", "#00ff88"), 3: ("TRIPLE", "#ffaa00"), 2: ("WATCH", "#888")}
+        label, label_color = labels.get(conv, ("?", "#888"))
 
         flow_cell = ""
         if "flow" in r["signals"]:
@@ -244,52 +238,78 @@ def render_email_html(results, scan_time, flow_count, dp_count, mcap_skipped, co
             color = "#00ff88" if r["iv_rank"] < config["iv_threshold"] else "#888"
             iv_cell = f'<span style="color:{color}">{r["iv_rank"]:.0f}</span>'
 
-        si_cell = ""
-        if r["short_interest"] is not None:
-            color = "#ff6b6b" if r["short_interest"] > config["si_threshold"] else "#888"
-            si_cell = f'<span style="color:{color}">{r["short_interest"]:.1f}%</span>'
+        gex_cell = ""
+        if r.get("net_gex") is not None:
+            color = "#ff6b6b" if r["net_gex"] < 0 else "#888"
+            gex_cell = f'<span style="color:{color}">{r["net_gex"]:+,.0f}</span>'
 
         mcap_cell = f"${r.get('market_cap', 0)/1e9:.1f}B"
 
-        rows_html += f"""<tr style="border-bottom:1px solid #333;">
+        html += f"""<tr style="border-bottom:1px solid #333;">
 <td style="padding:8px;font-weight:bold;font-size:16px;">{r['ticker']}</td>
 <td style="padding:8px;color:{label_color};font-weight:bold;">{label}</td>
 <td style="padding:8px;">{mcap_cell}</td>
 <td style="padding:8px;">{flow_cell}</td>
 <td style="padding:8px;">{dp_cell}</td>
 <td style="padding:8px;text-align:center;">{iv_cell}</td>
-<td style="padding:8px;text-align:center;">{si_cell}</td>
+<td style="padding:8px;text-align:center;">{gex_cell}</td>
 </tr>"""
+    return html
 
-    quads = sum(1 for r in results if r["convergence"] == 4)
-    triples = sum(1 for r in results if r["convergence"] == 3)
-    summary = []
-    if quads:
-        summary.append(f'<span style="color:#00ff88;font-weight:bold;">{quads} QUAD</span>')
-    if triples:
-        summary.append(f'<span style="color:#ffaa00;font-weight:bold;">{triples} TRIPLE</span>')
 
-    return f"""<html><body style="font-family:monospace;background:#1a1a2e;color:#e0e0e0;padding:20px;">
-<h2 style="color:#00ff88;margin-bottom:5px;">CONVERGENCE SCANNER</h2>
-<p style="color:#888;margin-top:0;">{scan_time} | {' + '.join(summary)} convergence</p>
-<p style="color:#666;font-size:12px;">Filters: mcap ${config['mcap_min']/1e9:.0f}B-${config['mcap_max']/1e9:.0f}B | flow >=${config['min_premium']/1000:.0f}K | DP >=${config['min_dp_size']/1e6:.1f}M | IV <{config['iv_threshold']} | SI >{config['si_threshold']}%</p>
-
-<table style="border-collapse:collapse;width:100%;margin-top:15px;">
-<tr style="background:#2a2a4a;color:#aaa;font-size:12px;">
+def _render_section(title, rows, config):
+    if not rows:
+        return ""
+    table_header = """<tr style="background:#2a2a4a;color:#aaa;font-size:12px;">
 <th style="padding:8px;text-align:left;">TICKER</th>
 <th style="padding:8px;text-align:left;">LEVEL</th>
 <th style="padding:8px;text-align:left;">MCAP</th>
 <th style="padding:8px;text-align:left;">FLOW</th>
 <th style="padding:8px;text-align:left;">DARK POOL</th>
 <th style="padding:8px;text-align:center;">IV RANK</th>
-<th style="padding:8px;text-align:center;">SI %</th>
-</tr>
-{rows_html}
-</table>
+<th style="padding:8px;text-align:center;">GEX</th>
+</tr>"""
+    return f"""<h3 style="color:#aaa;margin-top:25px;margin-bottom:5px;">{title}</h3>
+<table style="border-collapse:collapse;width:100%;">
+{table_header}
+{_render_table_rows(rows, config)}
+</table>"""
 
+
+def render_email_html(actionable, watchlist, scan_time, flow_count, dp_count, mcap_skipped, config):
+    filter_line = f"mcap ${config['mcap_min']/1e9:.0f}B-${config['mcap_max']/1e9:.0f}B | flow >=${config['min_premium']/1000:.0f}K | DP >=${config['min_dp_size']/1e6:.1f}M | IV <{config['iv_threshold']} | GEX <0"
+
+    if not actionable and not watchlist:
+        return f"""<html><body style="font-family:monospace;background:#1a1a2e;color:#e0e0e0;padding:20px;">
+<h2 style="color:#ff6b6b;">CONVERGENCE SCANNER - NO HITS</h2>
+<p>{scan_time}</p>
+<p>Flow tickers: {flow_count} | Dark pool tickers: {dp_count} | Mcap filtered: {mcap_skipped}</p>
+<p style="color:#888;">Filters: {filter_line}</p>
+<p>No mid-cap tickers with signal convergence this hour.</p>
+</body></html>"""
+
+    summary = []
+    quads = sum(1 for r in actionable if r["convergence"] == 4)
+    triples = sum(1 for r in actionable if r["convergence"] == 3)
+    if quads:
+        summary.append(f'<span style="color:#00ff88;font-weight:bold;">{quads} QUAD</span>')
+    if triples:
+        summary.append(f'<span style="color:#ffaa00;font-weight:bold;">{triples} TRIPLE</span>')
+    if watchlist:
+        summary.append(f'<span style="color:#888;">{len(watchlist)} watchlist</span>')
+
+    actionable_html = _render_section("ACTIONABLE (3+ signals)", actionable, config)
+    watchlist_html = _render_section("WATCHLIST (2 signals - building)", watchlist, config)
+
+    return f"""<html><body style="font-family:monospace;background:#1a1a2e;color:#e0e0e0;padding:20px;">
+<h2 style="color:#00ff88;margin-bottom:5px;">CONVERGENCE SCANNER</h2>
+<p style="color:#888;margin-top:0;">{scan_time} | {' + '.join(summary)}</p>
+<p style="color:#666;font-size:12px;">Filters: {filter_line}</p>
+{actionable_html}
+{watchlist_html}
 <p style="color:#666;font-size:11px;margin-top:20px;">
 Flow: {flow_count} tickers | Dark Pool: {dp_count} tickers | Mcap filtered: {mcap_skipped}<br>
-Signals marked green = active convergence signal
+Green = active signal | Red = negative GEX (dealer amplification)
 </p>
 </body></html>"""
 
@@ -320,8 +340,8 @@ def send_convergence_email(html, scan_time, result_count):
 
 # ── main scan ──
 
-def run_convergence_scan(min_premium=100_000, min_dp_size=1_000_000,
-                         iv_threshold=30, si_threshold=15,
+def run_convergence_scan(min_premium=50_000, min_dp_size=500_000,
+                         iv_threshold=30,
                          mcap_min=2e9, mcap_max=50e9, skip_email=False):
     if not _headers():
         print("UNUSUAL_WHALES_TOKEN not set. Cannot run convergence scanner.")
@@ -330,7 +350,7 @@ def run_convergence_scan(min_premium=100_000, min_dp_size=1_000_000,
     now = datetime.now(timezone.utc)
     scan_time = now.strftime("%Y-%m-%d %H:%M UTC")
     print(f"=== CONVERGENCE SCANNER ({scan_time}) ===")
-    print(f"Filters: mcap ${mcap_min/1e9:.0f}B-${mcap_max/1e9:.0f}B | flow >=${min_premium/1000:.0f}K | dark pool >=${min_dp_size/1e6:.1f}M | IV rank <{iv_threshold} | SI >{si_threshold}%")
+    print(f"Filters: mcap ${mcap_min/1e9:.0f}B-${mcap_max/1e9:.0f}B | flow >=${min_premium/1000:.0f}K | dark pool >=${min_dp_size/1e6:.1f}M | IV rank <{iv_threshold} | GEX <0")
     print()
 
     print("Signal 1/4: scanning options flow...")
@@ -346,13 +366,13 @@ def run_convergence_scan(min_premium=100_000, min_dp_size=1_000_000,
         print("\nNo tickers found with flow or dark pool signals. Market may be closed.")
         if not skip_email:
             config = dict(mcap_min=mcap_min, mcap_max=mcap_max, min_premium=min_premium,
-                          min_dp_size=min_dp_size, iv_threshold=iv_threshold, si_threshold=si_threshold)
-            html = render_email_html([], scan_time, 0, 0, 0, config)
+                          min_dp_size=min_dp_size, iv_threshold=iv_threshold)
+            html = render_email_html([], [], scan_time, 0, 0, 0, config)
             if send_convergence_email(html, scan_time, 0):
                 print("Email sent (no hits)")
         return []
 
-    print(f"\nSignal 3-4/4: checking IV rank + short interest on {len(all_tickers)} tickers...")
+    print(f"\nSignal 3-4/4: checking IV rank + GEX on {len(all_tickers)} tickers...")
 
     results = []
     mcap_skipped = 0
@@ -378,18 +398,18 @@ def run_convergence_scan(min_premium=100_000, min_dp_size=1_000_000,
             signals["iv_rank"] = iv
             signal_count += 1
 
-        si = check_short_interest(ticker)
-        if si is not None and si > si_threshold:
-            signals["short_interest"] = si
+        net_gex = check_gex(ticker)
+        if net_gex is not None and net_gex < 0:
+            signals["neg_gex"] = net_gex
             signal_count += 1
 
-        if signal_count >= 3:
+        if signal_count >= 2:
             results.append({
                 "ticker": ticker,
                 "convergence": signal_count,
                 "signals": signals,
                 "iv_rank": iv,
-                "short_interest": si,
+                "net_gex": net_gex,
                 "market_cap": mcap,
             })
 
@@ -400,41 +420,33 @@ def run_convergence_scan(min_premium=100_000, min_dp_size=1_000_000,
         print(f"  {mcap_skipped} tickers outside ${mcap_min/1e9:.0f}B-${mcap_max/1e9:.0f}B mcap range")
 
     results.sort(key=lambda x: (-x["convergence"], -x["signals"].get("flow", {}).get("total_premium", 0)))
+    actionable = [r for r in results if r["convergence"] >= 3]
+    watchlist = [r for r in results if r["convergence"] == 2]
 
     print(f"\n{'='*80}")
 
-    if not results:
-        print("No tickers with 3+ signal convergence right now.")
-        print(f"Flow tickers: {len(flow_hits)} | Dark pool tickers: {len(dp_hits)}")
-    else:
-        print(f"\n  {'TICKER':<8} {'CONV':>4}  {'MCAP':>6}  {'FLOW':>8}  {'DARK POOL':>12}  {'IV RANK':>8}  {'SI %':>6}  DETAILS")
-        print(f"  {'------':<8} {'----':>4}  {'----':>6}  {'----':>8}  {'---------':>12}  {'-------':>8}  {'----':>6}  -------")
-
-        for r in results:
-            ticker = r["ticker"]
-            conv = r["convergence"]
+    def _print_table(rows, header_label):
+        print(f"\n  --- {header_label} ---")
+        print(f"  {'TICKER':<8} {'CONV':>5}  {'MCAP':>6}  {'FLOW':>8}  {'DARK POOL':>12}  {'IV RANK':>8}  {'GEX':>10}  DETAILS")
+        print(f"  {'------':<8} {'-----':>5}  {'----':>6}  {'----':>8}  {'---------':>12}  {'-------':>8}  {'---':>10}  -------")
+        for r in rows:
             mcap_str = f"${r.get('market_cap', 0)/1e9:.1f}B"
-
             flow_str = ""
             if "flow" in r["signals"]:
                 fl = r["signals"]["flow"]
                 flow_str = f"${fl['total_premium']/1000:.0f}K"
-
             dp_str = ""
             if "darkpool" in r["signals"]:
                 d = r["signals"]["darkpool"]
                 dp_str = f"${d['total_value']/1e6:.1f}M"
-
             iv_str = ""
             if r["iv_rank"] is not None:
                 marker = " *" if r["iv_rank"] < iv_threshold else ""
                 iv_str = f"{r['iv_rank']:.0f}{marker}"
-
-            si_str = ""
-            if r["short_interest"] is not None:
-                marker = " *" if r["short_interest"] > si_threshold else ""
-                si_str = f"{r['short_interest']:.1f}{marker}"
-
+            gex_str = ""
+            if r["net_gex"] is not None:
+                marker = " *" if r["net_gex"] < 0 else ""
+                gex_str = f"{r['net_gex']:+.0f}{marker}"
             details = []
             if "flow" in r["signals"]:
                 fl = r["signals"]["flow"]
@@ -442,17 +454,26 @@ def run_convergence_scan(min_premium=100_000, min_dp_size=1_000_000,
             if "darkpool" in r["signals"]:
                 d = r["signals"]["darkpool"]
                 details.append(f"{d['at_ask_prints']} ask-side prints")
+            labels = {4: "QUAD", 3: "TRIPLE", 2: "WATCH"}
+            conv_label = labels.get(r["convergence"], "?")
+            print(f"  {r['ticker']:<8} {conv_label:>5}  {mcap_str:>6}  {flow_str:>8}  {dp_str:>12}  {iv_str:>8}  {gex_str:>10}  {' | '.join(details)}")
 
-            conv_label = "QUAD" if conv == 4 else "TRIPLE"
-            print(f"  {ticker:<8} {conv_label:>4}  {mcap_str:>6}  {flow_str:>8}  {dp_str:>12}  {iv_str:>8}  {si_str:>6}  {' | '.join(details)}")
+    if actionable:
+        _print_table(actionable, "ACTIONABLE (3+ signals)")
+    else:
+        print("No tickers with 3+ signal convergence right now.")
+        print(f"Flow tickers: {len(flow_hits)} | Dark pool tickers: {len(dp_hits)}")
+
+    if watchlist:
+        _print_table(watchlist, "WATCHLIST (2 signals — building)")
 
     # Email
     if not skip_email:
         config = dict(mcap_min=mcap_min, mcap_max=mcap_max, min_premium=min_premium,
-                      min_dp_size=min_dp_size, iv_threshold=iv_threshold, si_threshold=si_threshold)
-        html = render_email_html(results, scan_time, len(flow_hits), len(dp_hits), mcap_skipped, config)
-        if send_convergence_email(html, scan_time, len(results)):
-            print(f"Email sent: {len(results)} hits")
+                      min_dp_size=min_dp_size, iv_threshold=iv_threshold)
+        html = render_email_html(actionable, watchlist, scan_time, len(flow_hits), len(dp_hits), mcap_skipped, config)
+        if send_convergence_email(html, scan_time, len(actionable)):
+            print(f"Email sent: {len(actionable)} actionable, {len(watchlist)} watchlist")
     else:
         print("--skip-email set, no email sent")
 
@@ -462,10 +483,9 @@ def run_convergence_scan(min_premium=100_000, min_dp_size=1_000_000,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="4-Signal Convergence Scanner")
-    parser.add_argument("--min-premium", type=int, default=100_000)
-    parser.add_argument("--min-dp-size", type=int, default=1_000_000)
+    parser.add_argument("--min-premium", type=int, default=50_000)
+    parser.add_argument("--min-dp-size", type=int, default=500_000)
     parser.add_argument("--iv-threshold", type=int, default=30)
-    parser.add_argument("--si-threshold", type=int, default=15)
     parser.add_argument("--mcap-min", type=float, default=2e9)
     parser.add_argument("--mcap-max", type=float, default=50e9)
     parser.add_argument("--skip-email", action="store_true")
@@ -475,7 +495,6 @@ if __name__ == "__main__":
         min_premium=args.min_premium,
         min_dp_size=args.min_dp_size,
         iv_threshold=args.iv_threshold,
-        si_threshold=args.si_threshold,
         mcap_min=args.mcap_min,
         mcap_max=args.mcap_max,
         skip_email=args.skip_email,

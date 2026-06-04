@@ -516,21 +516,21 @@
     "outcome": null
   },
   {
-    "logged_at": "2026-06-04T18:31:18.794518+00:00",
+    "logged_at": "2026-06-04T19:31:20.311277+00:00",
     "scan_date": "2026-06-04",
     "ticker": "NVDA",
     "tier": "ELITE",
     "side": "CALL",
-    "score": 97,
+    "score": 98,
     "size_pct": 30,
     "trade_ticket": {
       "occ_symbol": "NVDA260702C00225000",
       "strike": 225.0,
       "expiry": "2026-07-02",
       "dte": 28,
-      "mid": 7.97,
-      "delta": 0.464,
-      "iv": 0.4093041245970808
+      "mid": 7.72,
+      "delta": 0.462,
+      "iv": 0.4061569352494714
     },
     "patterns_fired": [
       "nope",
@@ -549,8 +549,8 @@
       "high_volume",
       "darkpool_top"
     ],
-    "thesis": "NVDA CALL (ELITE): NOPE +0.65 (moderate) = dealer delta pressure -> CALL bias; WITHIN 0.5% OF FLIP STRIKE $220.00 in POSITIVE_PIN regime (0.20% away) - pinning toward flip; VOL > OI fired on $220.00 CALL: vol 801461 vs OI 80414 (ratio 10.0x) = NEW positioning",
-    "entry_spot": 220.43,
+    "thesis": "NVDA CALL (ELITE): NOPE +0.62 (moderate) = dealer delta pressure -> CALL bias; WITHIN 0.5% OF FLIP STRIKE $220.00 in POSITIVE_PIN regime (0.16% away) - pinning toward flip; VOL > OI fired on $220.00 CALL: vol 1617103 vs OI 80414 (ratio 20.1x) = NEW positioning",
+    "entry_spot": 220.36,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   },
@@ -859,6 +859,109 @@
     ],
     "thesis": "NVDA CALL (ELITE): NOPE +0.65 (moderate) = dealer delta pressure -> CALL bias; WITHIN 0.5% OF FLIP STRIKE $220.00 in POSITIVE_PIN regime (0.42% away) - pinning toward flip; VOL > OI fired on $220.00 CALL: vol 1318193 vs OI 80414 (ratio 16.4x) = NEW positioning",
     "entry_spot": 220.9199,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
+  },
+  {
+    "logged_at": "2026-06-04T19:31:20.311277+00:00",
+    "scan_date": "2026-06-04",
+    "ticker": "TSLA",
+    "tier": "MAX_CONVICTION",
+    "side": "CALL",
+    "score": 106,
+    "size_pct": 40,
+    "trade_ticket": {
+      "occ_symbol": "TSLA260702C00430000",
+      "strike": 430.0,
+      "expiry": "2026-07-02",
+      "dte": 28,
+      "mid": 17.7,
+      "delta": 0.466,
+      "iv": 0.474363944627127
+    },
+    "patterns_fired": [
+      "nope",
+      "volume_oi",
+      "above_ask",
+      "institutional",
+      "source_count",
+      "velocity"
+    ],
+    "sources": [
+      "premium_top30",
+      "pattern_calls",
+      "pattern_puts",
+      "darkpool_top"
+    ],
+    "thesis": "TSLA CALL (MAX_CONVICTION): NOPE +0.45 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $417.50 CALL: vol 88514 vs OI 980 (ratio 90.3x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $9.9M / $19.6M (50%) executed at ask or above = pro urgency",
+    "entry_spot": 419.9501,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
+  },
+  {
+    "logged_at": "2026-06-04T19:31:20.311277+00:00",
+    "scan_date": "2026-06-04",
+    "ticker": "NEE",
+    "tier": "MAX_CONVICTION",
+    "side": "CALL",
+    "score": 105,
+    "size_pct": 40,
+    "trade_ticket": {
+      "occ_symbol": "NEE260702C00087000",
+      "strike": 87.0,
+      "expiry": "2026-07-02",
+      "dte": 28,
+      "mid": 1.59,
+      "delta": 0.437,
+      "iv": 0.2313661578467179
+    },
+    "patterns_fired": [
+      "nope",
+      "volume_oi",
+      "above_ask",
+      "institutional",
+      "source_count",
+      "velocity"
+    ],
+    "sources": [
+      "pattern_calls",
+      "pattern_puts"
+    ],
+    "thesis": "NEE CALL (MAX_CONVICTION): NOPE +2.69 (extreme) = dealer delta pressure -> CALL bias; VOL > OI fired on $93.00 CALL: vol 1300 vs OI 0 (ratio 1300.0x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $5.1M / $9.4M (54%) executed at ask or above = pro urgency",
+    "entry_spot": 85.615,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
+  },
+  {
+    "logged_at": "2026-06-04T19:31:20.311277+00:00",
+    "scan_date": "2026-06-04",
+    "ticker": "MRVL",
+    "tier": "ELITE",
+    "side": "CALL",
+    "score": 78,
+    "size_pct": 30,
+    "trade_ticket": {
+      "occ_symbol": "MRVL260702C00330000",
+      "strike": 330.0,
+      "expiry": "2026-07-02",
+      "dte": 28,
+      "mid": 32.53,
+      "delta": 0.529,
+      "iv": 1.081534541483951
+    },
+    "patterns_fired": [
+      "volume_oi",
+      "above_ask",
+      "institutional",
+      "source_count",
+      "velocity"
+    ],
+    "sources": [
+      "premium_top30",
+      "darkpool_top"
+    ],
+    "thesis": "MRVL CALL (ELITE): VOL > OI fired on $330.00 CALL: vol 80707 vs OI 1893 (ratio 42.6x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $18.4M / $26.9M (68%) executed at ask or above = pro urgency; INSTITUTIONAL: $31.7M premium, 77C/23P (77% CALL concentration)",
+    "entry_spot": 321.34,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   }

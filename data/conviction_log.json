@@ -106,40 +106,38 @@
     "outcome": null
   },
   {
-    "logged_at": "2026-06-04T13:01:28.126628+00:00",
+    "logged_at": "2026-06-04T14:01:30.128091+00:00",
     "scan_date": "2026-06-04",
     "ticker": "TSLA",
     "tier": "ELITE",
     "side": "CALL",
-    "score": 92,
+    "score": 96,
     "size_pct": 30,
     "trade_ticket": {
       "occ_symbol": "TSLA260702C00435000",
       "strike": 435.0,
       "expiry": "2026-07-02",
       "dte": 28,
-      "mid": 17.75,
-      "delta": 0.445,
-      "iv": 0.477389327981468
+      "mid": null,
+      "delta": null,
+      "iv": null
     },
     "patterns_fired": [
       "nope",
       "volume_oi",
       "above_ask",
       "institutional",
-      "market_tide_info",
       "source_count",
       "velocity"
     ],
     "sources": [
       "premium_top30",
-      "sweep_volume",
       "pattern_calls",
       "pattern_puts",
-      "high_volume"
+      "darkpool_top"
     ],
-    "thesis": "TSLA CALL (ELITE): NOPE +0.53 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $425.00 CALL: vol 794605 vs OI 9869 (ratio 80.5x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $6.7M / $14.9M (44%) executed at ask or above = pro urgency",
-    "entry_spot": 421.8241,
+    "thesis": "TSLA CALL (ELITE): NOPE +0.62 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $425.00 CALL: vol 356773 vs OI 9869 (ratio 36.2x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $7.5M / $17.0M (44%) executed at ask or above = pro urgency",
+    "entry_spot": 421.1982,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   },
@@ -210,6 +208,108 @@
     ],
     "thesis": "NVDA CALL (ELITE): VOL > OI fired on $215.00 CALL: vol 136668 vs OI 33653 (ratio 4.1x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $7.0M / $16.7M (41%) executed at ask or above = pro urgency; INSTITUTIONAL: $28.4M premium, 63C/37P (63% CALL concentration)",
     "entry_spot": 213.6075,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
+  },
+  {
+    "logged_at": "2026-06-04T14:01:30.128091+00:00",
+    "scan_date": "2026-06-04",
+    "ticker": "BTDR",
+    "tier": "ELITE",
+    "side": "CALL",
+    "score": 90,
+    "size_pct": 30,
+    "trade_ticket": {
+      "occ_symbol": "BTDR260702C00020000",
+      "strike": 20.0,
+      "expiry": "2026-07-02",
+      "dte": 28,
+      "mid": null,
+      "delta": null,
+      "iv": null
+    },
+    "patterns_fired": [
+      "nope",
+      "volume_oi",
+      "above_ask",
+      "institutional",
+      "source_count",
+      "velocity"
+    ],
+    "sources": [
+      "sweep_volume",
+      "high_volume",
+      "oi_changers"
+    ],
+    "thesis": "BTDR CALL (ELITE): NOPE +2.12 (extreme) = dealer delta pressure -> CALL bias; VOL > OI fired on $18.50 PUT: vol 2353 vs OI 1 (ratio 2353.0x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $5.2M / $9.6M (54%) executed at ask or above = pro urgency",
+    "entry_spot": 19.48,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
+  },
+  {
+    "logged_at": "2026-06-04T14:01:30.128091+00:00",
+    "scan_date": "2026-06-04",
+    "ticker": "AMZN",
+    "tier": "ELITE",
+    "side": "CALL",
+    "score": 88,
+    "size_pct": 30,
+    "trade_ticket": {
+      "occ_symbol": "AMZN260702C00260000",
+      "strike": 260.0,
+      "expiry": "2026-07-02",
+      "dte": 28,
+      "mid": 7.03,
+      "delta": 0.443,
+      "iv": 0.3408732130955267
+    },
+    "patterns_fired": [
+      "nope",
+      "volume_oi",
+      "above_ask",
+      "institutional",
+      "source_count",
+      "velocity"
+    ],
+    "sources": [
+      "premium_top30",
+      "oi_changers"
+    ],
+    "thesis": "AMZN CALL (ELITE): NOPE +0.34 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $247.50 CALL: vol 8301 vs OI 7 (ratio 1185.9x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $7.0M / $15.2M (45%) executed at ask or above = pro urgency",
+    "entry_spot": 254.4,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
+  },
+  {
+    "logged_at": "2026-06-04T14:01:30.128091+00:00",
+    "scan_date": "2026-06-04",
+    "ticker": "GOOGL",
+    "tier": "ELITE",
+    "side": "CALL",
+    "score": 75,
+    "size_pct": 30,
+    "trade_ticket": {
+      "occ_symbol": "GOOGL260702C00375000",
+      "strike": 375.0,
+      "expiry": "2026-07-02",
+      "dte": 28,
+      "mid": 9.75,
+      "delta": 0.426,
+      "iv": 0.3316548901128693
+    },
+    "patterns_fired": [
+      "nope",
+      "volume_oi",
+      "institutional",
+      "source_count",
+      "velocity"
+    ],
+    "sources": [
+      "premium_top30",
+      "congress"
+    ],
+    "thesis": "GOOGL CALL (ELITE): NOPE +0.33 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $355.00 CALL: vol 126364 vs OI 1051 (ratio 120.2x) = NEW positioning; INSTITUTIONAL: $45.8M premium, 69C/31P (69% CALL concentration)",
+    "entry_spot": 365.672,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   }

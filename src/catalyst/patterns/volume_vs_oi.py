@@ -54,10 +54,13 @@ def detect(uw_client, ticker, pick=None):
         return {"fires": False, "side": None, "score": 0, "label": None, "details": None}
 
     # Find the highest volume contract where vol > OI
+    # OI_FLOOR stops a zero/near-zero-OI strike from exploding the ratio to a
+    # meaningless 1000x+ and grabbing the max score off a single illiquid print.
+    OI_FLOOR = 100
     triggers = []
     for key, c in by_contract.items():
-        if c["volume"] > c["open_interest"] and c["volume"] >= 500:
-            ratio = c["volume"] / max(c["open_interest"], 1)
+        if c["volume"] > c["open_interest"] and c["volume"] >= 1000:
+            ratio = c["volume"] / max(c["open_interest"], OI_FLOOR)
             triggers.append({**c, "vol_oi_ratio": ratio})
 
     if not triggers:

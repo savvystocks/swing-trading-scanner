@@ -70,9 +70,12 @@ def save_log(log):
     LOG_PATH.write_text(json.dumps(log, indent=2, default=str), encoding="utf-8")
 
 
-def _entry_key(scan_date, ticker, tier, side, strike):
-    """Identifies a unique pick so we don't double-log the same entry."""
-    return f"{scan_date}|{ticker}|{tier}|{side}|{strike}"
+def _entry_key(scan_date, ticker, side):
+    """One idea per name per direction per day. Strike/tier deliberately excluded:
+    intraday the strike drifts as price moves and the tier oscillates, which used
+    to log the same chased idea many times and pollute the hit-rate. The single
+    surviving row is the highest-scored scan of the day (its peak conviction)."""
+    return f"{scan_date}|{ticker}|{side}"
 
 
 def append_picks(scan, verbose=False):
@@ -83,9 +86,7 @@ def append_picks(scan, verbose=False):
     if not scan:
         return 0
     log = load_log()
-    existing_keys = {_entry_key(e.get("scan_date"), e.get("ticker"),
-                                 e.get("tier"), e.get("side"),
-                                 (e.get("trade_ticket") or {}).get("strike")): i
+    existing_keys = {_entry_key(e.get("scan_date"), e.get("ticker"), e.get("side")): i
                      for i, e in enumerate(log)}
 
     macro_regime = ((scan.get("macro") or {}).get("meta_regime") or {}).get("regime", "UNKNOWN")
@@ -127,9 +128,9 @@ def append_picks(scan, verbose=False):
                 "macro_regime": macro_regime,
                 "outcome": None,
             }
-            key = _entry_key(scan_date, ticker, tier, c.get("side"), strike)
+            key = _entry_key(scan_date, ticker, c.get("side"))
             if key in existing_keys:
-                # Same-day re-appearance: keep the HIGHER-scored version
+                # Same-day re-appearance (any strike/tier): keep the HIGHER-scored version
                 idx = existing_keys[key]
                 if (entry["score"] or 0) > (log[idx].get("score") or 0):
                     # Preserve outcome if already filled in

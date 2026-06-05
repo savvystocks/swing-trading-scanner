@@ -18,7 +18,7 @@
     },
     "sentiment_stack": {
       "fear_greed": {
-        "current": 46.1714285714286,
+        "current": 45.7714285714286,
         "rating": "neutral",
         "previous_1_week": 59.5142857142857,
         "previous_1_month": 67.25714285714287
@@ -58,7 +58,7 @@
       "extreme_contrarian_count": 1,
       "extreme_count_long": 0,
       "extreme_count_short": 1,
-      "evaluated_at": "2026-06-05T18:22:00.997735Z"
+      "evaluated_at": "2026-06-05T18:30:53.324632Z"
     },
     "options_positioning": {
       "snapshot": {
@@ -73,14 +73,14 @@
       "regime": "UNKNOWN",
       "findings": [],
       "options_positioning_score": 50,
-      "evaluated_at": "2026-06-05T18:22:01.000427Z"
+      "evaluated_at": "2026-06-05T18:30:53.327170Z"
     },
     "macro_positioning": {
       "regime": "NEUTRAL",
       "risk_score": 50,
       "findings": [],
       "snapshot": {},
-      "evaluated_at": "2026-06-05T18:22:01.001591Z"
+      "evaluated_at": "2026-06-05T18:30:53.328120Z"
     },
     "meta_regime": {
       "regime": "RISK_OFF_PRESSURE",
@@ -103,207 +103,14 @@
   "universe_size": 18,
   "calls": [
     {
-      "ticker": "AAPL",
-      "name": "APPLE",
-      "sector": "Technology",
-      "market_cap": "4571145807880",
-      "next_earnings_date": "2026-07-30",
-      "beta": "0.955",
-      "price": 312.3,
-      "live_spot": 312.3,
-      "_uw_flow_initial": {
-        "total_premium": 17139579.0,
-        "trade_count": 0,
-        "calls": 0,
-        "puts": 0
-      },
-      "sources": [
-        "sweep_volume",
-        "congress",
-        "high_volume"
-      ],
-      "_uw_flow": {
-        "total_premium": 30646397.0,
-        "trade_count": 100,
-        "calls": 71,
-        "puts": 29,
-        "sweeps": 26,
-        "blocks": 0,
-        "zero_dte_count": 0,
-        "zero_dte_share": 0.0,
-        "dominant_side": "CALL",
-        "call_put_ratio": 2.45
-      },
-      "_uw_gex": {
-        "net_gex": 2322749.1081,
-        "gamma_flip_strike": 10.0,
-        "dealer_regime": "POSITIVE_PIN",
-        "above_gamma_flip": true,
-        "label": "net GEX $2M, flip strike $10.00 (above spot $312.30)"
-      },
-      "_dealer_gex": {
-        "regime": "POSITIVE_PIN",
-        "net_gex": 2322749.1081,
-        "gamma_flip_strike": 10.0,
-        "label": "net GEX $2M, flip strike $10.00 (above spot $312.30)",
-        "_source": "uw_api"
-      },
-      "_positioning_first": {
-        "score": 18,
-        "side": "NEUTRAL",
-        "bull_score": 18,
-        "bear_score": 0,
-        "technical_half_weight_score": 0,
-        "positioning_signals": [
-          {
-            "key": "uw_call_dominant_flow",
-            "label": "UW: 71 calls / 29 puts ($30.6M premium) = institutional call buying",
-            "pts": 18
-          }
-        ],
-        "technical_signals_half_weight": [],
-        "n_positioning_signals": 1,
-        "conviction_tier": "NONE",
-        "recommended_size_pct": 0,
-        "regime_context": "RISK_OFF_PRESSURE",
-        "thesis": "AAPL: positioning signals firing but no clear directional edge.",
-        "evaluated_at": "2026-06-05T18:22:10.088986Z"
-      },
-      "_confluence": {
-        "ticker": "AAPL",
-        "score": 63,
-        "side": "CALL",
-        "tier": "STRONG",
-        "size_pct": 20,
-        "vehicle": "4% OTM call/put, 21-30d",
-        "target_pct": 130,
-        "stop_pct": -50,
-        "max_hold_days": 10,
-        "patterns_fired": [
-          {
-            "key": "volume_oi",
-            "side": "CALL",
-            "score": 18,
-            "label": "VOL > OI fired on $322.50 CALL: vol 6418 vs OI 686 (ratio 9.4x) = NEW positioning",
-            "details": {
-              "strike": 322.5,
-              "side": "CALL",
-              "volume": 6418,
-              "open_interest": 686,
-              "vol_oi_ratio": 9.355685131195335
-            }
-          },
-          {
-            "key": "above_ask",
-            "side": "PUT",
-            "score": 22,
-            "label": "ABOVE-ASK URGENCY: PUT side has $5.0M / $7.9M (63%) executed at ask or above = pro urgency",
-            "details": {
-              "side": "PUT",
-              "total": 7859853.0,
-              "above_ask": 5023884.0,
-              "ratio": 0.6391829465512905
-            }
-          },
-          {
-            "key": "institutional",
-            "side": "CALL",
-            "score": 25,
-            "label": "INSTITUTIONAL: $30.6M premium, 71C/29P (71% CALL concentration)",
-            "details": {
-              "total_premium": 30646397.0,
-              "trade_count": 100,
-              "calls": 71,
-              "puts": 29,
-              "sweeps": 26,
-              "blocks": 0,
-              "zero_dte_count": 0,
-              "zero_dte_share": 0.0,
-              "dominant_side": "CALL",
-              "call_put_ratio": 2.45
-            }
-          },
-          {
-            "key": "market_tide_info",
-            "side": "CALL",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-            "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
-            }
-          },
-          {
-            "key": "source_count",
-            "side": "CALL",
-            "score": 10,
-            "label": "MULTI-SOURCE CONVICTION: ticker surfaces in 3 universe sources (+10)",
-            "details": {
-              "source_count": 3
-            }
-          },
-          {
-            "key": "velocity",
-            "side": "CALL",
-            "score": 10,
-            "label": "FRESH FLOW: first scan appearance (+10)",
-            "details": {
-              "prior_scores": []
-            }
-          }
-        ],
-        "call_score": 43,
-        "put_score": 22,
-        "positioning_contribution": 0,
-        "tide_score": 0,
-        "thesis": "AAPL CALL (STRONG): VOL > OI fired on $322.50 CALL: vol 6418 vs OI 686 (ratio 9.4x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $5.0M / $7.9M (63%) executed at ask or above = pro urgency; INSTITUTIONAL: $30.6M premium, 71C/29P (71% CALL concentration)",
-        "trade_ticket": {
-          "ticker": "AAPL",
-          "side": "CALL",
-          "strike": 325.0,
-          "expiry": "2026-07-02",
-          "dte": 27,
-          "occ_symbol": "AAPL260702C00325000",
-          "vehicle_description": "4% OTM call/put, 21-30d",
-          "spot": 312.3,
-          "quote": {
-            "bid": 3.65,
-            "ask": 3.85,
-            "last": 3.75,
-            "iv": 0.2529893453610166,
-            "delta": null,
-            "volume": 154,
-            "open_interest": 923,
-            "prev_oi": 749,
-            "sweep_volume": 0,
-            "floor_volume": 0,
-            "ask_volume": 83,
-            "bid_volume": 55,
-            "total_premium": 60818.0
-          },
-          "mid": 3.75,
-          "delta": 0.312
-        }
-      },
-      "catalysts": [
-        {
-          "label": "AAPL CALL (STRONG): VOL > OI fired on $322.50 CALL: vol 6418 vs OI 686 (ratio 9.4x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $5.0M / $7.9M (63%) executed at ask or above = pro urgency; INSTITUTIONAL: $30.6M premium, 71C/29P (71% CALL concentration)",
-          "key": "confluence"
-        }
-      ]
-    },
-    {
       "ticker": "GOOGL",
       "name": "ALPHABET",
       "sector": "Communication Services",
       "market_cap": "2167634560000",
       "next_earnings_date": "2026-07-22",
       "beta": "1.3634",
-      "price": 368.43,
-      "live_spot": 368.43,
+      "price": 367.505,
+      "live_spot": 367.505,
       "_uw_flow_initial": {
         "total_premium": 0,
         "trade_count": 0,
@@ -327,18 +134,11 @@
         "call_put_ratio": 2.23
       },
       "_uw_gex": {
-        "net_gex": 300905.2589,
-        "gamma_flip_strike": 40.0,
-        "dealer_regime": "POSITIVE_PIN",
-        "above_gamma_flip": true,
-        "label": "net GEX $0M, flip strike $40.00 (above spot $368.43)"
-      },
-      "_dealer_gex": {
-        "regime": "POSITIVE_PIN",
-        "net_gex": 300905.2589,
-        "gamma_flip_strike": 40.0,
-        "label": "net GEX $0M, flip strike $40.00 (above spot $368.43)",
-        "_source": "uw_api"
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
       },
       "_positioning_first": {
         "score": 18,
@@ -359,18 +159,26 @@
         "recommended_size_pct": 0,
         "regime_context": "RISK_OFF_PRESSURE",
         "thesis": "GOOGL: positioning signals firing but no clear directional edge.",
-        "evaluated_at": "2026-06-05T18:22:10.089088Z"
+        "evaluated_at": "2026-06-05T18:30:59.718250Z"
       },
+      "_score_history": [
+        {
+          "ts": "2026-06-05T18:22:19.328328Z",
+          "score": 61,
+          "tier": "STRONG",
+          "side": "CALL"
+        }
+      ],
       "_confluence": {
         "ticker": "GOOGL",
-        "score": 61,
+        "score": 51,
         "side": "CALL",
-        "tier": "STRONG",
-        "size_pct": 20,
-        "vehicle": "4% OTM call/put, 21-30d",
-        "target_pct": 130,
+        "tier": "MODERATE",
+        "size_pct": 10,
+        "vehicle": "5% OTM call/put, 14-21d",
+        "target_pct": 100,
         "stop_pct": -50,
-        "max_hold_days": 10,
+        "max_hold_days": 7,
         "patterns_fired": [
           {
             "key": "above_ask",
@@ -403,19 +211,6 @@
             }
           },
           {
-            "key": "market_tide_info",
-            "side": "CALL",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-            "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
-            }
-          },
-          {
             "key": "source_count",
             "side": "CALL",
             "score": 5,
@@ -423,725 +218,30 @@
             "details": {
               "source_count": 2
             }
-          },
-          {
-            "key": "velocity",
-            "side": "CALL",
-            "score": 10,
-            "label": "FRESH FLOW: first scan appearance (+10)",
-            "details": {
-              "prior_scores": []
-            }
           }
         ],
         "call_score": 46,
         "put_score": 0,
         "positioning_contribution": 0,
         "tide_score": 0,
-        "thesis": "GOOGL CALL (STRONG): ABOVE-ASK URGENCY: CALL side has $21.1M / $30.7M (68%) executed at ask or above = pro urgency; INSTITUTIONAL: $39.3M premium, 69C/31P (69% CALL concentration); [INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
+        "thesis": "GOOGL CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $21.1M / $30.7M (68%) executed at ask or above = pro urgency; INSTITUTIONAL: $39.3M premium, 69C/31P (69% CALL concentration); MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5)",
         "trade_ticket": {
           "ticker": "GOOGL",
           "side": "CALL",
           "strike": 385,
-          "expiry": "2026-07-03",
-          "dte": 28,
-          "occ_symbol": "GOOGL260703C00385000",
-          "vehicle_description": "4% OTM call/put, 21-30d",
-          "spot": 368.43
-        }
-      },
-      "catalysts": [
-        {
-          "label": "GOOGL CALL (STRONG): ABOVE-ASK URGENCY: CALL side has $21.1M / $30.7M (68%) executed at ask or above = pro urgency; INSTITUTIONAL: $39.3M premium, 69C/31P (69% CALL concentration); [INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-          "key": "confluence"
-        }
-      ]
-    },
-    {
-      "ticker": "MRVL",
-      "name": "MARVELL TECHNOLOGY",
-      "sector": "Technology",
-      "market_cap": "276812964000",
-      "next_earnings_date": "2026-08-27",
-      "beta": "2.3547",
-      "price": 277.19,
-      "live_spot": 277.19,
-      "_uw_flow_initial": {
-        "total_premium": 13041786.0,
-        "trade_count": 15,
-        "calls": 13,
-        "puts": 2
-      },
-      "sources": [
-        "premium_top30",
-        "darkpool_top"
-      ],
-      "_uw_flow": {
-        "total_premium": 37714743.0,
-        "trade_count": 100,
-        "calls": 66,
-        "puts": 34,
-        "sweeps": 33,
-        "blocks": 0,
-        "zero_dte_count": 0,
-        "zero_dte_share": 0.0,
-        "dominant_side": "CALL",
-        "call_put_ratio": 1.94
-      },
-      "_uw_gex": {
-        "net_gex": 96397.8555,
-        "gamma_flip_strike": 37.5,
-        "dealer_regime": "POSITIVE_PIN",
-        "above_gamma_flip": true,
-        "label": "net GEX $0M, flip strike $37.50 (above spot $277.19)"
-      },
-      "_dealer_gex": {
-        "regime": "POSITIVE_PIN",
-        "net_gex": 96397.8555,
-        "gamma_flip_strike": 37.5,
-        "label": "net GEX $0M, flip strike $37.50 (above spot $277.19)",
-        "_source": "uw_api"
-      },
-      "_positioning_first": {
-        "score": 0,
-        "side": "NEUTRAL",
-        "bull_score": 0,
-        "bear_score": 0,
-        "technical_half_weight_score": 0,
-        "positioning_signals": [],
-        "technical_signals_half_weight": [],
-        "n_positioning_signals": 0,
-        "conviction_tier": "NONE",
-        "recommended_size_pct": 0,
-        "regime_context": "RISK_OFF_PRESSURE",
-        "thesis": "MRVL: no firing positioning signals - neutral.",
-        "evaluated_at": "2026-06-05T18:22:10.088996Z"
-      },
-      "_confluence": {
-        "ticker": "MRVL",
-        "score": 60,
-        "side": "CALL",
-        "tier": "STRONG",
-        "size_pct": 20,
-        "vehicle": "4% OTM call/put, 21-30d",
-        "target_pct": 130,
-        "stop_pct": -50,
-        "max_hold_days": 10,
-        "patterns_fired": [
-          {
-            "key": "volume_oi",
-            "side": "CALL",
-            "score": 22,
-            "label": "VOL > OI fired on $260.00 CALL: vol 8335 vs OI 268 (ratio 31.1x) = NEW positioning",
-            "details": {
-              "strike": 260.0,
-              "side": "CALL",
-              "volume": 8335,
-              "open_interest": 268,
-              "vol_oi_ratio": 31.100746268656717
-            }
-          },
-          {
-            "key": "above_ask",
-            "side": "PUT",
-            "score": 16,
-            "label": "ABOVE-ASK URGENCY: PUT side has $2.4M / $4.4M (54%) executed at ask or above = pro urgency",
-            "details": {
-              "side": "PUT",
-              "total": 4383027.0,
-              "above_ask": 2407656.0,
-              "ratio": 0.5493135223670764
-            }
-          },
-          {
-            "key": "institutional",
-            "side": "CALL",
-            "score": 23,
-            "label": "INSTITUTIONAL: $37.7M premium, 66C/34P (66% CALL concentration)",
-            "details": {
-              "total_premium": 37714743.0,
-              "trade_count": 100,
-              "calls": 66,
-              "puts": 34,
-              "sweeps": 33,
-              "blocks": 0,
-              "zero_dte_count": 0,
-              "zero_dte_share": 0.0,
-              "dominant_side": "CALL",
-              "call_put_ratio": 1.94
-            }
-          },
-          {
-            "key": "market_tide_info",
-            "side": "CALL",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-            "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
-            }
-          },
-          {
-            "key": "source_count",
-            "side": "CALL",
-            "score": 5,
-            "label": "MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5)",
-            "details": {
-              "source_count": 2
-            }
-          },
-          {
-            "key": "velocity",
-            "side": "CALL",
-            "score": 10,
-            "label": "FRESH FLOW: first scan appearance (+10)",
-            "details": {
-              "prior_scores": []
-            }
-          }
-        ],
-        "call_score": 45,
-        "put_score": 16,
-        "positioning_contribution": 0,
-        "tide_score": 0,
-        "thesis": "MRVL CALL (STRONG): VOL > OI fired on $260.00 CALL: vol 8335 vs OI 268 (ratio 31.1x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $2.4M / $4.4M (54%) executed at ask or above = pro urgency; INSTITUTIONAL: $37.7M premium, 66C/34P (66% CALL concentration)",
-        "trade_ticket": {
-          "ticker": "MRVL",
-          "side": "CALL",
-          "strike": 290.0,
-          "expiry": "2026-07-02",
-          "dte": 27,
-          "occ_symbol": "MRVL260702C00290000",
-          "vehicle_description": "4% OTM call/put, 21-30d",
-          "spot": 277.19,
-          "quote": {
-            "bid": 30.15,
-            "ask": 33.3,
-            "last": 31.15,
-            "iv": 1.116446189134122,
-            "delta": null,
-            "volume": 128,
-            "open_interest": 168,
-            "prev_oi": 135,
-            "sweep_volume": 0,
-            "floor_volume": 30,
-            "ask_volume": 25,
-            "bid_volume": 80,
-            "total_premium": 450115.0
-          },
-          "mid": 31.72,
-          "delta": 0.506
-        }
-      },
-      "catalysts": [
-        {
-          "label": "MRVL CALL (STRONG): VOL > OI fired on $260.00 CALL: vol 8335 vs OI 268 (ratio 31.1x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $2.4M / $4.4M (54%) executed at ask or above = pro urgency; INSTITUTIONAL: $37.7M premium, 66C/34P (66% CALL concentration)",
-          "key": "confluence"
-        }
-      ]
-    },
-    {
-      "ticker": "INTC",
-      "name": "INTEL",
-      "sector": "Technology",
-      "market_cap": "561806280000",
-      "next_earnings_date": "2026-07-23",
-      "beta": "2.3733",
-      "price": 101.62,
-      "live_spot": 101.62,
-      "_uw_flow_initial": {
-        "total_premium": 3029145.0,
-        "trade_count": 5,
-        "calls": 3,
-        "puts": 2
-      },
-      "sources": [
-        "premium_top30",
-        "darkpool_top"
-      ],
-      "_uw_flow": {
-        "total_premium": 34533077.0,
-        "trade_count": 100,
-        "calls": 68,
-        "puts": 32,
-        "sweeps": 22,
-        "blocks": 0,
-        "zero_dte_count": 0,
-        "zero_dte_share": 0.0,
-        "dominant_side": "CALL",
-        "call_put_ratio": 2.12
-      },
-      "_uw_gex": {
-        "net_gex": 133124.16489999992,
-        "gamma_flip_strike": 5.0,
-        "dealer_regime": "POSITIVE_PIN",
-        "above_gamma_flip": true,
-        "label": "net GEX $0M, flip strike $5.00 (above spot $101.62)"
-      },
-      "_dealer_gex": {
-        "regime": "POSITIVE_PIN",
-        "net_gex": 133124.16489999992,
-        "gamma_flip_strike": 5.0,
-        "label": "net GEX $0M, flip strike $5.00 (above spot $101.62)",
-        "_source": "uw_api"
-      },
-      "_positioning_first": {
-        "score": 18,
-        "side": "NEUTRAL",
-        "bull_score": 18,
-        "bear_score": 0,
-        "technical_half_weight_score": 0,
-        "positioning_signals": [
-          {
-            "key": "uw_call_dominant_flow",
-            "label": "UW: 68 calls / 32 puts ($34.5M premium) = institutional call buying",
-            "pts": 18
-          }
-        ],
-        "technical_signals_half_weight": [],
-        "n_positioning_signals": 1,
-        "conviction_tier": "NONE",
-        "recommended_size_pct": 0,
-        "regime_context": "RISK_OFF_PRESSURE",
-        "thesis": "INTC: positioning signals firing but no clear directional edge.",
-        "evaluated_at": "2026-06-05T18:22:10.089068Z"
-      },
-      "_confluence": {
-        "ticker": "INTC",
-        "score": 56,
-        "side": "CALL",
-        "tier": "STRONG",
-        "size_pct": 20,
-        "vehicle": "4% OTM call/put, 21-30d",
-        "target_pct": 130,
-        "stop_pct": -50,
-        "max_hold_days": 10,
-        "patterns_fired": [
-          {
-            "key": "volume_oi",
-            "side": "CALL",
-            "score": 18,
-            "label": "VOL > OI fired on $104.00 CALL: vol 1197 vs OI 104 (ratio 11.5x) = NEW positioning",
-            "details": {
-              "strike": 104.0,
-              "side": "CALL",
-              "volume": 1197,
-              "open_interest": 104,
-              "vol_oi_ratio": 11.509615384615385
-            }
-          },
-          {
-            "key": "institutional",
-            "side": "CALL",
-            "score": 23,
-            "label": "INSTITUTIONAL: $34.5M premium, 68C/32P (68% CALL concentration)",
-            "details": {
-              "total_premium": 34533077.0,
-              "trade_count": 100,
-              "calls": 68,
-              "puts": 32,
-              "sweeps": 22,
-              "blocks": 0,
-              "zero_dte_count": 0,
-              "zero_dte_share": 0.0,
-              "dominant_side": "CALL",
-              "call_put_ratio": 2.12
-            }
-          },
-          {
-            "key": "market_tide_info",
-            "side": "CALL",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-            "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
-            }
-          },
-          {
-            "key": "source_count",
-            "side": "CALL",
-            "score": 5,
-            "label": "MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5)",
-            "details": {
-              "source_count": 2
-            }
-          },
-          {
-            "key": "velocity",
-            "side": "CALL",
-            "score": 10,
-            "label": "FRESH FLOW: first scan appearance (+10)",
-            "details": {
-              "prior_scores": []
-            }
-          }
-        ],
-        "call_score": 41,
-        "put_score": 0,
-        "positioning_contribution": 0,
-        "tide_score": 0,
-        "thesis": "INTC CALL (STRONG): VOL > OI fired on $104.00 CALL: vol 1197 vs OI 104 (ratio 11.5x) = NEW positioning; INSTITUTIONAL: $34.5M premium, 68C/32P (68% CALL concentration); [INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-        "trade_ticket": {
-          "ticker": "INTC",
-          "side": "CALL",
-          "strike": 106,
-          "expiry": "2026-07-03",
-          "dte": 28,
-          "occ_symbol": "INTC260703C00106000",
-          "vehicle_description": "4% OTM call/put, 21-30d",
-          "spot": 101.62
-        }
-      },
-      "catalysts": [
-        {
-          "label": "INTC CALL (STRONG): VOL > OI fired on $104.00 CALL: vol 1197 vs OI 104 (ratio 11.5x) = NEW positioning; INSTITUTIONAL: $34.5M premium, 68C/32P (68% CALL concentration); [INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-          "key": "confluence"
-        }
-      ]
-    },
-    {
-      "ticker": "ON",
-      "name": "ON SEMICONDUCTOR",
-      "sector": "Technology",
-      "market_cap": "51660678638",
-      "next_earnings_date": "2026-08-03",
-      "beta": "1.9566",
-      "price": 120.13,
-      "live_spot": 120.13,
-      "_uw_flow_initial": {
-        "total_premium": 4062890.0,
-        "trade_count": 12,
-        "calls": 0,
-        "puts": 12
-      },
-      "sources": [
-        "premium_top30"
-      ],
-      "_uw_flow": {
-        "total_premium": 13941852.0,
-        "trade_count": 100,
-        "calls": 62,
-        "puts": 38,
-        "sweeps": 33,
-        "blocks": 1,
-        "zero_dte_count": 0,
-        "zero_dte_share": 0.0,
-        "dominant_side": "CALL",
-        "call_put_ratio": 1.63
-      },
-      "_uw_gex": {
-        "net_gex": 61378.2173,
-        "gamma_flip_strike": 30.0,
-        "dealer_regime": "POSITIVE_PIN",
-        "above_gamma_flip": true,
-        "label": "net GEX $0M, flip strike $30.00 (above spot $120.13)"
-      },
-      "_dealer_gex": {
-        "regime": "POSITIVE_PIN",
-        "net_gex": 61378.2173,
-        "gamma_flip_strike": 30.0,
-        "label": "net GEX $0M, flip strike $30.00 (above spot $120.13)",
-        "_source": "uw_api"
-      },
-      "_positioning_first": {
-        "score": 0,
-        "side": "NEUTRAL",
-        "bull_score": 0,
-        "bear_score": 0,
-        "technical_half_weight_score": 0,
-        "positioning_signals": [],
-        "technical_signals_half_weight": [],
-        "n_positioning_signals": 0,
-        "conviction_tier": "NONE",
-        "recommended_size_pct": 0,
-        "regime_context": "RISK_OFF_PRESSURE",
-        "thesis": "ON: no firing positioning signals - neutral.",
-        "evaluated_at": "2026-06-05T18:22:10.089145Z"
-      },
-      "_confluence": {
-        "ticker": "ON",
-        "score": 56,
-        "side": "CALL",
-        "tier": "STRONG",
-        "size_pct": 20,
-        "vehicle": "4% OTM call/put, 21-30d",
-        "target_pct": 130,
-        "stop_pct": -50,
-        "max_hold_days": 10,
-        "patterns_fired": [
-          {
-            "key": "above_ask",
-            "side": "CALL",
-            "score": 26,
-            "label": "ABOVE-ASK URGENCY: CALL side has $5.5M / $7.4M (74%) executed at ask or above = pro urgency",
-            "details": {
-              "side": "CALL",
-              "total": 7365715.0,
-              "above_ask": 5488101.0,
-              "ratio": 0.7450873404686442
-            }
-          },
-          {
-            "key": "institutional",
-            "side": "CALL",
-            "score": 20,
-            "label": "INSTITUTIONAL: $13.9M premium, 62C/38P (62% CALL concentration)",
-            "details": {
-              "total_premium": 13941852.0,
-              "trade_count": 100,
-              "calls": 62,
-              "puts": 38,
-              "sweeps": 33,
-              "blocks": 1,
-              "zero_dte_count": 0,
-              "zero_dte_share": 0.0,
-              "dominant_side": "CALL",
-              "call_put_ratio": 1.63
-            }
-          },
-          {
-            "key": "market_tide_info",
-            "side": "CALL",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-            "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
-            }
-          },
-          {
-            "key": "velocity",
-            "side": "CALL",
-            "score": 10,
-            "label": "FRESH FLOW: first scan appearance (+10)",
-            "details": {
-              "prior_scores": []
-            }
-          }
-        ],
-        "call_score": 46,
-        "put_score": 0,
-        "positioning_contribution": 0,
-        "tide_score": 0,
-        "thesis": "ON CALL (STRONG): ABOVE-ASK URGENCY: CALL side has $5.5M / $7.4M (74%) executed at ask or above = pro urgency; INSTITUTIONAL: $13.9M premium, 62C/38P (62% CALL concentration); [INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-        "trade_ticket": {
-          "ticker": "ON",
-          "side": "CALL",
-          "strike": 125,
-          "expiry": "2026-07-03",
-          "dte": 28,
-          "occ_symbol": "ON260703C00125000",
-          "vehicle_description": "4% OTM call/put, 21-30d",
-          "spot": 120.13
-        }
-      },
-      "catalysts": [
-        {
-          "label": "ON CALL (STRONG): ABOVE-ASK URGENCY: CALL side has $5.5M / $7.4M (74%) executed at ask or above = pro urgency; INSTITUTIONAL: $13.9M premium, 62C/38P (62% CALL concentration); [INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-          "key": "confluence"
-        }
-      ]
-    },
-    {
-      "ticker": "BE",
-      "name": "BLOOM ENERGY",
-      "sector": "Industrials",
-      "market_cap": "82878409819",
-      "next_earnings_date": "2026-07-30",
-      "beta": "3.9565",
-      "price": 258.46,
-      "live_spot": 258.46,
-      "_uw_flow_initial": {
-        "total_premium": 12253470.0,
-        "trade_count": 3,
-        "calls": 3,
-        "puts": 0
-      },
-      "sources": [
-        "premium_top30",
-        "darkpool_top"
-      ],
-      "_uw_flow": {
-        "total_premium": 46471839.0,
-        "trade_count": 100,
-        "calls": 55,
-        "puts": 45,
-        "sweeps": 39,
-        "blocks": 0,
-        "zero_dte_count": 0,
-        "zero_dte_share": 0.0,
-        "dominant_side": "CALL",
-        "call_put_ratio": 1.22
-      },
-      "_uw_gex": {
-        "net_gex": -10621.781799999979,
-        "gamma_flip_strike": 5.0,
-        "dealer_regime": "NEGATIVE_AMP",
-        "above_gamma_flip": true,
-        "label": "net GEX $-0M, flip strike $5.00 (above spot $258.46)"
-      },
-      "_dealer_gex": {
-        "regime": "NEGATIVE_AMP",
-        "net_gex": -10621.781799999979,
-        "gamma_flip_strike": 5.0,
-        "label": "net GEX $-0M, flip strike $5.00 (above spot $258.46)",
-        "_source": "uw_api"
-      },
-      "_positioning_first": {
-        "score": 35,
-        "side": "CALL",
-        "bull_score": 35,
-        "bear_score": 0,
-        "technical_half_weight_score": 0,
-        "positioning_signals": [
-          {
-            "key": "gex_amplification",
-            "label": "negative GEX (amplification regime - gamma squeeze tailwind)",
-            "pts": 20
-          },
-          {
-            "key": "uw_negative_gex",
-            "label": "net GEX $-0M, flip strike $5.00 (above spot $258.46)",
-            "pts": 15
-          }
-        ],
-        "technical_signals_half_weight": [],
-        "n_positioning_signals": 2,
-        "conviction_tier": "WEAK",
-        "recommended_size_pct": 0,
-        "regime_context": "RISK_OFF_PRESSURE",
-        "thesis": "BE CALL thesis: gex amplification, uw negative gex in RISK_OFF_PRESSURE regime. Bullish positioning + tailwind.",
-        "evaluated_at": "2026-06-05T18:22:10.089016Z"
-      },
-      "_confluence": {
-        "ticker": "BE",
-        "score": 51,
-        "side": "CALL",
-        "tier": "MODERATE",
-        "size_pct": 10,
-        "vehicle": "5% OTM call/put, 14-21d",
-        "target_pct": 100,
-        "stop_pct": -50,
-        "max_hold_days": 7,
-        "patterns_fired": [
-          {
-            "key": "volume_oi",
-            "side": "CALL",
-            "score": 12,
-            "label": "VOL > OI fired on $380.00 CALL: vol 4543 vs OI 2460 (ratio 1.8x) = NEW positioning",
-            "details": {
-              "strike": 380.0,
-              "side": "CALL",
-              "volume": 4543,
-              "open_interest": 2460,
-              "vol_oi_ratio": 1.8467479674796747
-            }
-          },
-          {
-            "key": "above_ask",
-            "side": "PUT",
-            "score": 26,
-            "label": "ABOVE-ASK URGENCY: PUT side has $10.6M / $14.2M (74%) executed at ask or above = pro urgency",
-            "details": {
-              "side": "PUT",
-              "total": 14152426.0,
-              "above_ask": 10574719.0,
-              "ratio": 0.7472018578298872
-            }
-          },
-          {
-            "key": "institutional",
-            "side": "CALL",
-            "score": 24,
-            "label": "INSTITUTIONAL: $46.5M premium, 55C/45P (55% CALL concentration)",
-            "details": {
-              "total_premium": 46471839.0,
-              "trade_count": 100,
-              "calls": 55,
-              "puts": 45,
-              "sweeps": 39,
-              "blocks": 0,
-              "zero_dte_count": 0,
-              "zero_dte_share": 0.0,
-              "dominant_side": "CALL",
-              "call_put_ratio": 1.22
-            }
-          },
-          {
-            "key": "market_tide_info",
-            "side": "CALL",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-            "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
-            }
-          },
-          {
-            "key": "source_count",
-            "side": "CALL",
-            "score": 5,
-            "label": "MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5)",
-            "details": {
-              "source_count": 2
-            }
-          },
-          {
-            "key": "velocity",
-            "side": "CALL",
-            "score": 10,
-            "label": "FRESH FLOW: first scan appearance (+10)",
-            "details": {
-              "prior_scores": []
-            }
-          }
-        ],
-        "call_score": 36,
-        "put_score": 26,
-        "positioning_contribution": 0,
-        "tide_score": 0,
-        "thesis": "BE CALL (MODERATE): VOL > OI fired on $380.00 CALL: vol 4543 vs OI 2460 (ratio 1.8x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $10.6M / $14.2M (74%) executed at ask or above = pro urgency; INSTITUTIONAL: $46.5M premium, 55C/45P (55% CALL concentration)",
-        "trade_ticket": {
-          "ticker": "BE",
-          "side": "CALL",
-          "strike": 270.0,
           "expiry": "2026-06-26",
           "dte": 21,
-          "occ_symbol": "BE260626C00270000",
+          "occ_symbol": "GOOGL260626C00385000",
           "vehicle_description": "5% OTM call/put, 14-21d",
-          "spot": 258.46,
-          "quote": {
-            "bid": 26.7,
-            "ask": 29.25,
-            "last": 28.1,
-            "iv": 1.209622519583626,
-            "delta": null,
-            "volume": 44,
-            "open_interest": 89,
-            "prev_oi": 89,
-            "sweep_volume": 0,
-            "floor_volume": 0,
-            "ask_volume": 5,
-            "bid_volume": 28,
-            "total_premium": 126506.0
-          },
-          "mid": 27.98,
-          "delta": 0.502
+          "spot": 367.505
         }
-      }
+      },
+      "catalysts": [
+        {
+          "label": "GOOGL CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $21.1M / $30.7M (68%) executed at ask or above = pro urgency; INSTITUTIONAL: $39.3M premium, 69C/31P (69% CALL concentration); MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5)",
+          "key": "confluence"
+        }
+      ]
     },
     {
       "ticker": "AXTI",
@@ -1150,8 +250,8 @@
       "market_cap": "6934203272",
       "next_earnings_date": "2026-07-30",
       "beta": "3.6947",
-      "price": 89.345,
-      "live_spot": 89.345,
+      "price": 88.63,
+      "live_spot": 88.63,
       "_uw_flow_initial": {
         "total_premium": 5151171.0,
         "trade_count": 4,
@@ -1162,30 +262,23 @@
         "premium_top30"
       ],
       "_uw_flow": {
-        "total_premium": 26612866.0,
+        "total_premium": 25896931.0,
         "trade_count": 100,
-        "calls": 74,
-        "puts": 26,
+        "calls": 73,
+        "puts": 27,
         "sweeps": 20,
         "blocks": 0,
         "zero_dte_count": 0,
         "zero_dte_share": 0.0,
         "dominant_side": "CALL",
-        "call_put_ratio": 2.85
+        "call_put_ratio": 2.7
       },
       "_uw_gex": {
-        "net_gex": 7743.011400000011,
-        "gamma_flip_strike": 17.5,
-        "dealer_regime": "POSITIVE_PIN",
-        "above_gamma_flip": true,
-        "label": "net GEX $0M, flip strike $17.50 (above spot $89.34)"
-      },
-      "_dealer_gex": {
-        "regime": "POSITIVE_PIN",
-        "net_gex": 7743.011400000011,
-        "gamma_flip_strike": 17.5,
-        "label": "net GEX $0M, flip strike $17.50 (above spot $89.34)",
-        "_source": "uw_api"
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
       },
       "_positioning_first": {
         "score": 18,
@@ -1196,7 +289,7 @@
         "positioning_signals": [
           {
             "key": "uw_call_dominant_flow",
-            "label": "UW: 74 calls / 26 puts ($26.6M premium) = institutional call buying",
+            "label": "UW: 73 calls / 27 puts ($25.9M premium) = institutional call buying",
             "pts": 18
           }
         ],
@@ -1206,11 +299,19 @@
         "recommended_size_pct": 0,
         "regime_context": "RISK_OFF_PRESSURE",
         "thesis": "AXTI: positioning signals firing but no clear directional edge.",
-        "evaluated_at": "2026-06-05T18:22:10.089130Z"
+        "evaluated_at": "2026-06-05T18:30:59.718307Z"
       },
+      "_score_history": [
+        {
+          "ts": "2026-06-05T18:22:19.328328Z",
+          "score": 49,
+          "tier": "MODERATE",
+          "side": "CALL"
+        }
+      ],
       "_confluence": {
         "ticker": "AXTI",
-        "score": 49,
+        "score": 39,
         "side": "CALL",
         "tier": "MODERATE",
         "size_pct": 10,
@@ -1223,43 +324,400 @@
             "key": "above_ask",
             "side": "CALL",
             "score": 15,
-            "label": "ABOVE-ASK URGENCY: CALL side has $12.4M / $24.8M (49%) executed at ask or above = pro urgency",
+            "label": "ABOVE-ASK URGENCY: CALL side has $12.3M / $24.1M (51%) executed at ask or above = pro urgency",
             "details": {
               "side": "CALL",
-              "total": 24847517.0,
-              "above_ask": 12351270.0,
-              "ratio": 0.49708266624789915
+              "total": 24097742.0,
+              "above_ask": 12346310.0,
+              "ratio": 0.5123430236741683
             }
           },
           {
             "key": "institutional",
             "side": "CALL",
             "score": 24,
-            "label": "INSTITUTIONAL: $26.6M premium, 74C/26P (74% CALL concentration)",
+            "label": "INSTITUTIONAL: $25.9M premium, 73C/27P (73% CALL concentration)",
             "details": {
-              "total_premium": 26612866.0,
+              "total_premium": 25896931.0,
               "trade_count": 100,
-              "calls": 74,
-              "puts": 26,
+              "calls": 73,
+              "puts": 27,
               "sweeps": 20,
               "blocks": 0,
               "zero_dte_count": 0,
               "zero_dte_share": 0.0,
               "dominant_side": "CALL",
-              "call_put_ratio": 2.85
+              "call_put_ratio": 2.7
+            }
+          }
+        ],
+        "call_score": 39,
+        "put_score": 0,
+        "positioning_contribution": 0,
+        "tide_score": 0,
+        "thesis": "AXTI CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $12.3M / $24.1M (51%) executed at ask or above = pro urgency; INSTITUTIONAL: $25.9M premium, 73C/27P (73% CALL concentration)",
+        "trade_ticket": {
+          "ticker": "AXTI",
+          "side": "CALL",
+          "strike": 93,
+          "expiry": "2026-06-26",
+          "dte": 21,
+          "occ_symbol": "AXTI260626C00093000",
+          "vehicle_description": "5% OTM call/put, 14-21d",
+          "spot": 88.63
+        }
+      },
+      "catalysts": [
+        {
+          "label": "AXTI CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $12.3M / $24.1M (51%) executed at ask or above = pro urgency; INSTITUTIONAL: $25.9M premium, 73C/27P (73% CALL concentration)",
+          "key": "confluence"
+        }
+      ]
+    },
+    {
+      "ticker": "NVDA",
+      "name": "NVIDIA",
+      "sector": "Technology",
+      "market_cap": "5291572000000",
+      "next_earnings_date": "2026-08-26",
+      "beta": "1.8061",
+      "price": 206.06,
+      "live_spot": 206.06,
+      "_uw_flow_initial": {
+        "total_premium": 41495061.0,
+        "trade_count": 29,
+        "calls": 18,
+        "puts": 11
+      },
+      "sources": [
+        "premium_top30",
+        "sweep_volume",
+        "high_volume",
+        "oi_changers"
+      ],
+      "_uw_flow": {
+        "total_premium": 67975480.0,
+        "trade_count": 100,
+        "calls": 46,
+        "puts": 54,
+        "sweeps": 13,
+        "blocks": 0,
+        "zero_dte_count": 0,
+        "zero_dte_share": 0.0,
+        "dominant_side": "PUT",
+        "call_put_ratio": 0.85
+      },
+      "_uw_gex": {
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
+      },
+      "_positioning_first": {
+        "score": 0,
+        "side": "NEUTRAL",
+        "bull_score": 0,
+        "bear_score": 0,
+        "technical_half_weight_score": 0,
+        "positioning_signals": [],
+        "technical_signals_half_weight": [],
+        "n_positioning_signals": 0,
+        "conviction_tier": "NONE",
+        "recommended_size_pct": 0,
+        "regime_context": "RISK_OFF_PRESSURE",
+        "thesis": "NVDA: no firing positioning signals - neutral.",
+        "evaluated_at": "2026-06-05T18:30:59.718136Z"
+      },
+      "_score_history": [
+        {
+          "ts": "2026-06-05T18:22:19.328328Z",
+          "score": 89,
+          "tier": "ELITE",
+          "side": "PUT"
+        }
+      ],
+      "_confluence": {
+        "ticker": "NVDA",
+        "score": 38,
+        "side": "CALL",
+        "tier": "MODERATE",
+        "size_pct": 10,
+        "vehicle": "5% OTM call/put, 14-21d",
+        "target_pct": 100,
+        "stop_pct": -50,
+        "max_hold_days": 7,
+        "patterns_fired": [
+          {
+            "key": "above_ask",
+            "side": "CALL",
+            "score": 23,
+            "label": "ABOVE-ASK URGENCY: CALL side has $28.2M / $41.6M (67%) executed at ask or above = pro urgency",
+            "details": {
+              "side": "CALL",
+              "total": 41610543.0,
+              "above_ask": 28181861.0,
+              "ratio": 0.677276934357718
             }
           },
           {
-            "key": "market_tide_info",
+            "key": "source_count",
             "side": "CALL",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
+            "score": 15,
+            "label": "MULTI-SOURCE CONVICTION: ticker surfaces in 4 universe sources (+15)",
             "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
+              "source_count": 4
+            }
+          }
+        ],
+        "call_score": 23,
+        "put_score": 0,
+        "positioning_contribution": 0,
+        "tide_score": 0,
+        "thesis": "NVDA CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $28.2M / $41.6M (67%) executed at ask or above = pro urgency; MULTI-SOURCE CONVICTION: ticker surfaces in 4 universe sources (+15)",
+        "trade_ticket": {
+          "ticker": "NVDA",
+          "side": "CALL",
+          "strike": 215,
+          "expiry": "2026-06-26",
+          "dte": 21,
+          "occ_symbol": "NVDA260626C00215000",
+          "vehicle_description": "5% OTM call/put, 14-21d",
+          "spot": 206.06
+        }
+      },
+      "catalysts": [
+        {
+          "label": "NVDA CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $28.2M / $41.6M (67%) executed at ask or above = pro urgency; MULTI-SOURCE CONVICTION: ticker surfaces in 4 universe sources (+15)",
+          "key": "confluence"
+        }
+      ]
+    },
+    {
+      "ticker": "AAPL",
+      "name": "APPLE",
+      "sector": "Technology",
+      "market_cap": "4571145807880",
+      "next_earnings_date": "2026-07-30",
+      "beta": "0.955",
+      "price": 311.71,
+      "live_spot": 311.71,
+      "_uw_flow_initial": {
+        "total_premium": 17144541.0,
+        "trade_count": 0,
+        "calls": 0,
+        "puts": 0
+      },
+      "sources": [
+        "sweep_volume",
+        "congress",
+        "high_volume"
+      ],
+      "_uw_flow": {
+        "total_premium": 30654738.0,
+        "trade_count": 100,
+        "calls": 71,
+        "puts": 29,
+        "sweeps": 26,
+        "blocks": 0,
+        "zero_dte_count": 0,
+        "zero_dte_share": 0.0,
+        "dominant_side": "CALL",
+        "call_put_ratio": 2.45
+      },
+      "_uw_gex": {
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
+      },
+      "_positioning_first": {
+        "score": 18,
+        "side": "NEUTRAL",
+        "bull_score": 18,
+        "bear_score": 0,
+        "technical_half_weight_score": 0,
+        "positioning_signals": [
+          {
+            "key": "uw_call_dominant_flow",
+            "label": "UW: 71 calls / 29 puts ($30.7M premium) = institutional call buying",
+            "pts": 18
+          }
+        ],
+        "technical_signals_half_weight": [],
+        "n_positioning_signals": 1,
+        "conviction_tier": "NONE",
+        "recommended_size_pct": 0,
+        "regime_context": "RISK_OFF_PRESSURE",
+        "thesis": "AAPL: positioning signals firing but no clear directional edge.",
+        "evaluated_at": "2026-06-05T18:30:59.718173Z"
+      },
+      "_score_history": [
+        {
+          "ts": "2026-06-05T18:22:19.328328Z",
+          "score": 63,
+          "tier": "STRONG",
+          "side": "CALL"
+        }
+      ],
+      "_confluence": {
+        "ticker": "AAPL",
+        "score": 35,
+        "side": "CALL",
+        "tier": "MODERATE",
+        "size_pct": 10,
+        "vehicle": "5% OTM call/put, 14-21d",
+        "target_pct": 100,
+        "stop_pct": -50,
+        "max_hold_days": 7,
+        "patterns_fired": [
+          {
+            "key": "above_ask",
+            "side": "PUT",
+            "score": 21,
+            "label": "ABOVE-ASK URGENCY: PUT side has $4.9M / $7.9M (62%) executed at ask or above = pro urgency",
+            "details": {
+              "side": "PUT",
+              "total": 7868194.0,
+              "above_ask": 4904668.0,
+              "ratio": 0.6233537200531659
+            }
+          },
+          {
+            "key": "institutional",
+            "side": "CALL",
+            "score": 25,
+            "label": "INSTITUTIONAL: $30.7M premium, 71C/29P (71% CALL concentration)",
+            "details": {
+              "total_premium": 30654738.0,
+              "trade_count": 100,
+              "calls": 71,
+              "puts": 29,
+              "sweeps": 26,
+              "blocks": 0,
+              "zero_dte_count": 0,
+              "zero_dte_share": 0.0,
+              "dominant_side": "CALL",
+              "call_put_ratio": 2.45
+            }
+          },
+          {
+            "key": "source_count",
+            "side": "CALL",
+            "score": 10,
+            "label": "MULTI-SOURCE CONVICTION: ticker surfaces in 3 universe sources (+10)",
+            "details": {
+              "source_count": 3
+            }
+          }
+        ],
+        "call_score": 25,
+        "put_score": 21,
+        "positioning_contribution": 0,
+        "tide_score": 0,
+        "thesis": "AAPL CALL (MODERATE): ABOVE-ASK URGENCY: PUT side has $4.9M / $7.9M (62%) executed at ask or above = pro urgency; INSTITUTIONAL: $30.7M premium, 71C/29P (71% CALL concentration); MULTI-SOURCE CONVICTION: ticker surfaces in 3 universe sources (+10)",
+        "trade_ticket": {
+          "ticker": "AAPL",
+          "side": "CALL",
+          "strike": 325,
+          "expiry": "2026-06-26",
+          "dte": 21,
+          "occ_symbol": "AAPL260626C00325000",
+          "vehicle_description": "5% OTM call/put, 14-21d",
+          "spot": 311.71
+        }
+      },
+      "catalysts": [
+        {
+          "label": "AAPL CALL (MODERATE): ABOVE-ASK URGENCY: PUT side has $4.9M / $7.9M (62%) executed at ask or above = pro urgency; INSTITUTIONAL: $30.7M premium, 71C/29P (71% CALL concentration); MULTI-SOURCE CONVICTION: ticker surfaces in 3 universe sources (+10)",
+          "key": "confluence"
+        }
+      ]
+    },
+    {
+      "ticker": "TSLA",
+      "name": "TESLA",
+      "sector": "Consumer Cyclical",
+      "market_cap": "1570205163705",
+      "next_earnings_date": "2026-07-22",
+      "beta": "2.0479",
+      "price": 392.0918,
+      "live_spot": 392.0918,
+      "_uw_flow_initial": {
+        "total_premium": 14041146.0,
+        "trade_count": 22,
+        "calls": 10,
+        "puts": 12
+      },
+      "sources": [
+        "premium_top30",
+        "darkpool_top"
+      ],
+      "_uw_flow": {
+        "total_premium": 27072712.0,
+        "trade_count": 100,
+        "calls": 48,
+        "puts": 52,
+        "sweeps": 20,
+        "blocks": 0,
+        "zero_dte_count": 0,
+        "zero_dte_share": 0.0,
+        "dominant_side": "PUT",
+        "call_put_ratio": 0.92
+      },
+      "_uw_gex": {
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
+      },
+      "_positioning_first": {
+        "score": 0,
+        "side": "NEUTRAL",
+        "bull_score": 0,
+        "bear_score": 0,
+        "technical_half_weight_score": 0,
+        "positioning_signals": [],
+        "technical_signals_half_weight": [],
+        "n_positioning_signals": 0,
+        "conviction_tier": "NONE",
+        "recommended_size_pct": 0,
+        "regime_context": "RISK_OFF_PRESSURE",
+        "thesis": "TSLA: no firing positioning signals - neutral.",
+        "evaluated_at": "2026-06-05T18:30:59.718191Z"
+      },
+      "_confluence": {
+        "ticker": "TSLA",
+        "score": 34,
+        "side": "CALL",
+        "tier": "MODERATE",
+        "size_pct": 10,
+        "vehicle": "5% OTM call/put, 14-21d",
+        "target_pct": 100,
+        "stop_pct": -50,
+        "max_hold_days": 7,
+        "patterns_fired": [
+          {
+            "key": "above_ask",
+            "side": "CALL",
+            "score": 19,
+            "label": "ABOVE-ASK URGENCY: CALL side has $8.7M / $15.2M (57%) executed at ask or above = pro urgency",
+            "details": {
+              "side": "CALL",
+              "total": 15164807.0,
+              "above_ask": 8660579.0,
+              "ratio": 0.5710972121175034
+            }
+          },
+          {
+            "key": "source_count",
+            "side": "CALL",
+            "score": 5,
+            "label": "MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5)",
+            "details": {
+              "source_count": 2
             }
           },
           {
@@ -1272,22 +730,28 @@
             }
           }
         ],
-        "call_score": 39,
+        "call_score": 19,
         "put_score": 0,
         "positioning_contribution": 0,
         "tide_score": 0,
-        "thesis": "AXTI CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $12.4M / $24.8M (49%) executed at ask or above = pro urgency; INSTITUTIONAL: $26.6M premium, 74C/26P (74% CALL concentration); [INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
+        "thesis": "TSLA CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $8.7M / $15.2M (57%) executed at ask or above = pro urgency; MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5); FRESH FLOW: first scan appearance (+10)",
         "trade_ticket": {
-          "ticker": "AXTI",
+          "ticker": "TSLA",
           "side": "CALL",
-          "strike": 94,
+          "strike": 410,
           "expiry": "2026-06-26",
           "dte": 21,
-          "occ_symbol": "AXTI260626C00094000",
+          "occ_symbol": "TSLA260626C00410000",
           "vehicle_description": "5% OTM call/put, 14-21d",
-          "spot": 89.345
+          "spot": 392.0918
         }
-      }
+      },
+      "catalysts": [
+        {
+          "label": "TSLA CALL (MODERATE): ABOVE-ASK URGENCY: CALL side has $8.7M / $15.2M (57%) executed at ask or above = pro urgency; MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5); FRESH FLOW: first scan appearance (+10)",
+          "key": "confluence"
+        }
+      ]
     },
     {
       "ticker": "STM",
@@ -1296,8 +760,8 @@
       "market_cap": "69643872391",
       "next_earnings_date": "2026-07-23",
       "beta": "2.1736",
-      "price": 70.6,
-      "live_spot": 70.6,
+      "price": 70.44,
+      "live_spot": 70.44,
       "_uw_flow_initial": {
         "total_premium": 0,
         "trade_count": 0,
@@ -1321,18 +785,11 @@
         "call_put_ratio": 6.69
       },
       "_uw_gex": {
-        "net_gex": 324147.39870000014,
-        "gamma_flip_strike": 42.0,
-        "dealer_regime": "POSITIVE_PIN",
-        "above_gamma_flip": true,
-        "label": "net GEX $0M, flip strike $42.00 (above spot $70.60)"
-      },
-      "_dealer_gex": {
-        "regime": "POSITIVE_PIN",
-        "net_gex": 324147.39870000014,
-        "gamma_flip_strike": 42.0,
-        "label": "net GEX $0M, flip strike $42.00 (above spot $70.60)",
-        "_source": "uw_api"
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
       },
       "_positioning_first": {
         "score": 18,
@@ -1353,11 +810,19 @@
         "recommended_size_pct": 0,
         "regime_context": "RISK_OFF_PRESSURE",
         "thesis": "STM: positioning signals firing but no clear directional edge.",
-        "evaluated_at": "2026-06-05T18:22:10.089097Z"
+        "evaluated_at": "2026-06-05T18:30:59.718260Z"
       },
+      "_score_history": [
+        {
+          "ts": "2026-06-05T18:22:19.328328Z",
+          "score": 40,
+          "tier": "MODERATE",
+          "side": "CALL"
+        }
+      ],
       "_confluence": {
         "ticker": "STM",
-        "score": 40,
+        "score": 30,
         "side": "CALL",
         "tier": "MODERATE",
         "size_pct": 10,
@@ -1397,19 +862,6 @@
             }
           },
           {
-            "key": "market_tide_info",
-            "side": "CALL",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
-            "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
-            }
-          },
-          {
             "key": "source_count",
             "side": "CALL",
             "score": 5,
@@ -1417,22 +869,13 @@
             "details": {
               "source_count": 2
             }
-          },
-          {
-            "key": "velocity",
-            "side": "CALL",
-            "score": 10,
-            "label": "FRESH FLOW: first scan appearance (+10)",
-            "details": {
-              "prior_scores": []
-            }
           }
         ],
         "call_score": 25,
         "put_score": 23,
         "positioning_contribution": 0,
         "tide_score": 0,
-        "thesis": "STM CALL (MODERATE): ABOVE-ASK URGENCY: PUT side has $1.1M / $1.5M (71%) executed at ask or above = pro urgency; INSTITUTIONAL: $19.8M premium, 87C/13P (87% CALL concentration); [INFO] MARKET TIDE FIGHTING CALL: market tide BEARISH: net put premium $49932M today",
+        "thesis": "STM CALL (MODERATE): ABOVE-ASK URGENCY: PUT side has $1.1M / $1.5M (71%) executed at ask or above = pro urgency; INSTITUTIONAL: $19.8M premium, 87C/13P (87% CALL concentration); MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5)",
         "trade_ticket": {
           "ticker": "STM",
           "side": "CALL",
@@ -1441,607 +884,18 @@
           "dte": 21,
           "occ_symbol": "STM260626C00074000",
           "vehicle_description": "5% OTM call/put, 14-21d",
-          "spot": 70.6
+          "spot": 70.44
         }
-      }
+      },
+      "catalysts": [
+        {
+          "label": "STM CALL (MODERATE): ABOVE-ASK URGENCY: PUT side has $1.1M / $1.5M (71%) executed at ask or above = pro urgency; INSTITUTIONAL: $19.8M premium, 87C/13P (87% CALL concentration); MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5)",
+          "key": "confluence"
+        }
+      ]
     }
   ],
   "puts": [
-    {
-      "ticker": "NVDA",
-      "name": "NVIDIA",
-      "sector": "Technology",
-      "market_cap": "5291572000000",
-      "next_earnings_date": "2026-08-26",
-      "beta": "1.8061",
-      "price": 206.31,
-      "live_spot": 206.31,
-      "_uw_flow_initial": {
-        "total_premium": 41913474.0,
-        "trade_count": 30,
-        "calls": 18,
-        "puts": 12
-      },
-      "sources": [
-        "premium_top30",
-        "sweep_volume",
-        "high_volume",
-        "darkpool_top",
-        "oi_changers"
-      ],
-      "_uw_flow": {
-        "total_premium": 67804310.0,
-        "trade_count": 100,
-        "calls": 45,
-        "puts": 55,
-        "sweeps": 13,
-        "blocks": 0,
-        "zero_dte_count": 0,
-        "zero_dte_share": 0.0,
-        "dominant_side": "PUT",
-        "call_put_ratio": 0.82
-      },
-      "_uw_gex": {
-        "net_gex": 2376437.038599999,
-        "gamma_flip_strike": 220.0,
-        "dealer_regime": "POSITIVE_PIN",
-        "above_gamma_flip": false,
-        "label": "net GEX $2M, flip strike $220.00 (below spot $206.31)"
-      },
-      "_dealer_gex": {
-        "regime": "POSITIVE_PIN",
-        "net_gex": 2376437.038599999,
-        "gamma_flip_strike": 220.0,
-        "label": "net GEX $2M, flip strike $220.00 (below spot $206.31)",
-        "_source": "uw_api"
-      },
-      "_positioning_first": {
-        "score": 35,
-        "side": "PUT",
-        "bull_score": 0,
-        "bear_score": 35,
-        "technical_half_weight_score": 0,
-        "positioning_signals": [
-          {
-            "key": "uw_below_gamma_flip",
-            "label": "net GEX $2M, flip strike $220.00 (below spot $206.31)",
-            "pts": 10
-          },
-          {
-            "key": "macro_risk_off",
-            "label": "macro: RISK_OFF pressure",
-            "pts": 25
-          }
-        ],
-        "technical_signals_half_weight": [],
-        "n_positioning_signals": 2,
-        "conviction_tier": "WEAK",
-        "recommended_size_pct": 0,
-        "regime_context": "RISK_OFF_PRESSURE",
-        "thesis": "NVDA PUT thesis: uw below gamma flip, macro risk off in RISK_OFF_PRESSURE regime. Bearish positioning + headwind.",
-        "evaluated_at": "2026-06-05T18:22:10.088947Z"
-      },
-      "_confluence": {
-        "ticker": "NVDA",
-        "score": 89,
-        "side": "PUT",
-        "tier": "ELITE",
-        "size_pct": 30,
-        "vehicle": "3% OTM call/put, 21-30d",
-        "target_pct": 180,
-        "stop_pct": -50,
-        "max_hold_days": 14,
-        "patterns_fired": [
-          {
-            "key": "nope",
-            "side": "PUT",
-            "score": 6,
-            "label": "NOPE -0.32 (moderate) = dealer delta pressure -> PUT bias",
-            "details": {
-              "nope": -0.321418,
-              "call_delta": "39882193.026041",
-              "put_delta": "-81559092.570008",
-              "as_of": "2026-06-05T18:22:00Z"
-            }
-          },
-          {
-            "key": "volume_oi",
-            "side": "PUT",
-            "score": 28,
-            "label": "VOL > OI fired on $185.00 PUT: vol 217829 vs OI 2579 (ratio 84.5x) = NEW positioning",
-            "details": {
-              "strike": 185.0,
-              "side": "PUT",
-              "volume": 217829,
-              "open_interest": 2579,
-              "vol_oi_ratio": 84.46258239627763
-            }
-          },
-          {
-            "key": "above_ask",
-            "side": "CALL",
-            "score": 23,
-            "label": "ABOVE-ASK URGENCY: CALL side has $28.3M / $41.3M (68%) executed at ask or above = pro urgency",
-            "details": {
-              "side": "CALL",
-              "total": 41319103.0,
-              "above_ask": 28326261.0,
-              "ratio": 0.6855487884139208
-            }
-          },
-          {
-            "key": "institutional",
-            "side": "PUT",
-            "score": 25,
-            "label": "INSTITUTIONAL: $67.8M premium, 45C/55P (55% PUT concentration)",
-            "details": {
-              "total_premium": 67804310.0,
-              "trade_count": 100,
-              "calls": 45,
-              "puts": 55,
-              "sweeps": 13,
-              "blocks": 0,
-              "zero_dte_count": 0,
-              "zero_dte_share": 0.0,
-              "dominant_side": "PUT",
-              "call_put_ratio": 0.82
-            }
-          },
-          {
-            "key": "market_tide_info",
-            "side": "PUT",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE ALIGNED with PUT: market tide BEARISH: net put premium $49932M today",
-            "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
-            }
-          },
-          {
-            "key": "source_count",
-            "side": "PUT",
-            "score": 20,
-            "label": "MULTI-SOURCE CONVICTION: ticker surfaces in 5 universe sources (+20)",
-            "details": {
-              "source_count": 5
-            }
-          },
-          {
-            "key": "velocity",
-            "side": "PUT",
-            "score": 10,
-            "label": "FRESH FLOW: first scan appearance (+10)",
-            "details": {
-              "prior_scores": []
-            }
-          }
-        ],
-        "call_score": 23,
-        "put_score": 59,
-        "positioning_contribution": 0,
-        "tide_score": 0,
-        "thesis": "NVDA PUT (ELITE): NOPE -0.32 (moderate) = dealer delta pressure -> PUT bias; VOL > OI fired on $185.00 PUT: vol 217829 vs OI 2579 (ratio 84.5x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $28.3M / $41.3M (68%) executed at ask or above = pro urgency",
-        "trade_ticket": {
-          "ticker": "NVDA",
-          "side": "PUT",
-          "strike": 200.0,
-          "expiry": "2026-07-02",
-          "dte": 27,
-          "occ_symbol": "NVDA260702P00200000",
-          "vehicle_description": "3% OTM call/put, 21-30d",
-          "spot": 206.31,
-          "quote": {
-            "bid": 6.1,
-            "ask": 6.2,
-            "last": 6.17,
-            "iv": 0.405876832609358,
-            "delta": null,
-            "volume": 1724,
-            "open_interest": 9871,
-            "prev_oi": 9467,
-            "sweep_volume": 23,
-            "floor_volume": 0,
-            "ask_volume": 1052,
-            "bid_volume": 333,
-            "total_premium": 895394.0
-          },
-          "mid": 6.15,
-          "delta": -0.356
-        }
-      },
-      "catalysts": [
-        {
-          "label": "NVDA PUT (ELITE): NOPE -0.32 (moderate) = dealer delta pressure -> PUT bias; VOL > OI fired on $185.00 PUT: vol 217829 vs OI 2579 (ratio 84.5x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $28.3M / $41.3M (68%) executed at ask or above = pro urgency",
-          "key": "confluence"
-        }
-      ]
-    },
-    {
-      "ticker": "SNDK",
-      "name": "Sandisk Corporation ",
-      "sector": "Technology",
-      "market_cap": "260590585357",
-      "next_earnings_date": "2026-08-13",
-      "beta": "3.5658",
-      "price": 1557.4375,
-      "live_spot": 1557.4375,
-      "_uw_flow_initial": {
-        "total_premium": 8759007.0,
-        "trade_count": 12,
-        "calls": 1,
-        "puts": 11
-      },
-      "sources": [
-        "premium_top30",
-        "darkpool_top"
-      ],
-      "_uw_flow": {
-        "total_premium": 29938004.0,
-        "trade_count": 100,
-        "calls": 34,
-        "puts": 66,
-        "sweeps": 26,
-        "blocks": 0,
-        "zero_dte_count": 0,
-        "zero_dte_share": 0.0,
-        "dominant_side": "PUT",
-        "call_put_ratio": 0.52
-      },
-      "_uw_gex": {
-        "net_gex": -7488.802200000007,
-        "gamma_flip_strike": 80.0,
-        "dealer_regime": "NEGATIVE_AMP",
-        "above_gamma_flip": true,
-        "label": "net GEX $-0M, flip strike $80.00 (above spot $1557.44)"
-      },
-      "_dealer_gex": {
-        "regime": "NEGATIVE_AMP",
-        "net_gex": -7488.802200000007,
-        "gamma_flip_strike": 80.0,
-        "label": "net GEX $-0M, flip strike $80.00 (above spot $1557.44)",
-        "_source": "uw_api"
-      },
-      "_positioning_first": {
-        "score": 35,
-        "side": "CALL",
-        "bull_score": 35,
-        "bear_score": 0,
-        "technical_half_weight_score": 0,
-        "positioning_signals": [
-          {
-            "key": "gex_amplification",
-            "label": "negative GEX (amplification regime - gamma squeeze tailwind)",
-            "pts": 20
-          },
-          {
-            "key": "uw_negative_gex",
-            "label": "net GEX $-0M, flip strike $80.00 (above spot $1557.44)",
-            "pts": 15
-          }
-        ],
-        "technical_signals_half_weight": [],
-        "n_positioning_signals": 2,
-        "conviction_tier": "WEAK",
-        "recommended_size_pct": 0,
-        "regime_context": "RISK_OFF_PRESSURE",
-        "thesis": "SNDK CALL thesis: gex amplification, uw negative gex in RISK_OFF_PRESSURE regime. Bullish positioning + tailwind.",
-        "evaluated_at": "2026-06-05T18:22:10.089026Z"
-      },
-      "_confluence": {
-        "ticker": "SNDK",
-        "score": 82,
-        "side": "PUT",
-        "tier": "ELITE",
-        "size_pct": 30,
-        "vehicle": "3% OTM call/put, 21-30d",
-        "target_pct": 180,
-        "stop_pct": -50,
-        "max_hold_days": 14,
-        "patterns_fired": [
-          {
-            "key": "nope",
-            "side": "PUT",
-            "score": 7,
-            "label": "NOPE -0.36 (moderate) = dealer delta pressure -> PUT bias",
-            "details": {
-              "nope": -0.364483,
-              "call_delta": "1348471.705094",
-              "put_delta": "-4671303.199817",
-              "as_of": "2026-06-05T18:22:00Z"
-            }
-          },
-          {
-            "key": "volume_oi",
-            "side": "PUT",
-            "score": 24,
-            "label": "VOL > OI fired on $1580.00 PUT: vol 14059 vs OI 423 (ratio 33.2x) = NEW positioning",
-            "details": {
-              "strike": 1580.0,
-              "side": "PUT",
-              "volume": 14059,
-              "open_interest": 423,
-              "vol_oi_ratio": 33.23640661938534
-            }
-          },
-          {
-            "key": "above_ask",
-            "side": "PUT",
-            "score": 13,
-            "label": "ABOVE-ASK URGENCY: PUT side has $8.6M / $19.4M (44%) executed at ask or above = pro urgency",
-            "details": {
-              "side": "PUT",
-              "total": 19404564.0,
-              "above_ask": 8574858.0,
-              "ratio": 0.4418990295272803
-            }
-          },
-          {
-            "key": "institutional",
-            "side": "PUT",
-            "score": 23,
-            "label": "INSTITUTIONAL: $29.9M premium, 34C/66P (65% PUT concentration)",
-            "details": {
-              "total_premium": 29938004.0,
-              "trade_count": 100,
-              "calls": 34,
-              "puts": 66,
-              "sweeps": 26,
-              "blocks": 0,
-              "zero_dte_count": 0,
-              "zero_dte_share": 0.0,
-              "dominant_side": "PUT",
-              "call_put_ratio": 0.52
-            }
-          },
-          {
-            "key": "market_tide_info",
-            "side": "PUT",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE ALIGNED with PUT: market tide BEARISH: net put premium $49932M today",
-            "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
-            }
-          },
-          {
-            "key": "source_count",
-            "side": "PUT",
-            "score": 5,
-            "label": "MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5)",
-            "details": {
-              "source_count": 2
-            }
-          },
-          {
-            "key": "velocity",
-            "side": "PUT",
-            "score": 10,
-            "label": "FRESH FLOW: first scan appearance (+10)",
-            "details": {
-              "prior_scores": []
-            }
-          }
-        ],
-        "call_score": 0,
-        "put_score": 67,
-        "positioning_contribution": 0,
-        "tide_score": 0,
-        "thesis": "SNDK PUT (ELITE): NOPE -0.36 (moderate) = dealer delta pressure -> PUT bias; VOL > OI fired on $1580.00 PUT: vol 14059 vs OI 423 (ratio 33.2x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $8.6M / $19.4M (44%) executed at ask or above = pro urgency",
-        "trade_ticket": {
-          "ticker": "SNDK",
-          "side": "PUT",
-          "strike": 1510.0,
-          "expiry": "2026-07-02",
-          "dte": 27,
-          "occ_symbol": "SNDK260702P01510000",
-          "vehicle_description": "3% OTM call/put, 21-30d",
-          "spot": 1557.4375
-        }
-      },
-      "catalysts": [
-        {
-          "label": "SNDK PUT (ELITE): NOPE -0.36 (moderate) = dealer delta pressure -> PUT bias; VOL > OI fired on $1580.00 PUT: vol 14059 vs OI 423 (ratio 33.2x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $8.6M / $19.4M (44%) executed at ask or above = pro urgency",
-          "key": "confluence"
-        }
-      ]
-    },
-    {
-      "ticker": "MSTR",
-      "name": "MICROSTRATEGY",
-      "sector": "Technology",
-      "market_cap": "42796582058",
-      "next_earnings_date": "2026-07-30",
-      "beta": "2.9269",
-      "price": 115.0018,
-      "live_spot": 115.0018,
-      "_uw_flow_initial": {
-        "total_premium": 3222528.0,
-        "trade_count": 7,
-        "calls": 4,
-        "puts": 3
-      },
-      "sources": [
-        "premium_top30",
-        "oi_changers"
-      ],
-      "_uw_flow": {
-        "total_premium": 6781924.0,
-        "trade_count": 100,
-        "calls": 48,
-        "puts": 52,
-        "sweeps": 29,
-        "blocks": 0,
-        "zero_dte_count": 0,
-        "zero_dte_share": 0.0,
-        "dominant_side": "PUT",
-        "call_put_ratio": 0.92
-      },
-      "_uw_gex": {
-        "net_gex": -260493.4974999997,
-        "gamma_flip_strike": null,
-        "dealer_regime": "NEGATIVE_AMP",
-        "above_gamma_flip": null,
-        "label": "net GEX $-0M"
-      },
-      "_dealer_gex": {
-        "regime": "NEGATIVE_AMP",
-        "net_gex": -260493.4974999997,
-        "gamma_flip_strike": null,
-        "label": "net GEX $-0M",
-        "_source": "uw_api"
-      },
-      "_positioning_first": {
-        "score": 35,
-        "side": "CALL",
-        "bull_score": 35,
-        "bear_score": 0,
-        "technical_half_weight_score": 0,
-        "positioning_signals": [
-          {
-            "key": "gex_amplification",
-            "label": "negative GEX (amplification regime - gamma squeeze tailwind)",
-            "pts": 20
-          },
-          {
-            "key": "uw_negative_gex",
-            "label": "net GEX $-0M",
-            "pts": 15
-          }
-        ],
-        "technical_signals_half_weight": [],
-        "n_positioning_signals": 2,
-        "conviction_tier": "WEAK",
-        "recommended_size_pct": 0,
-        "regime_context": "RISK_OFF_PRESSURE",
-        "thesis": "MSTR CALL thesis: gex amplification, uw negative gex in RISK_OFF_PRESSURE regime. Bullish positioning + tailwind.",
-        "evaluated_at": "2026-06-05T18:22:10.089055Z"
-      },
-      "_confluence": {
-        "ticker": "MSTR",
-        "score": 68,
-        "side": "PUT",
-        "tier": "STRONG",
-        "size_pct": 20,
-        "vehicle": "4% OTM call/put, 21-30d",
-        "target_pct": 130,
-        "stop_pct": -50,
-        "max_hold_days": 10,
-        "patterns_fired": [
-          {
-            "key": "nope",
-            "side": "PUT",
-            "score": 11,
-            "label": "NOPE -0.72 (moderate) = dealer delta pressure -> PUT bias",
-            "details": {
-              "nope": -0.724734,
-              "call_delta": "4966937.797743",
-              "put_delta": "-24265998.048268",
-              "as_of": "2026-06-05T18:22:00Z"
-            }
-          },
-          {
-            "key": "volume_oi",
-            "side": "PUT",
-            "score": 30,
-            "label": "VOL > OI fired on $116.00 PUT: vol 86220 vs OI 722 (ratio 119.4x) = NEW positioning",
-            "details": {
-              "strike": 116.0,
-              "side": "PUT",
-              "volume": 86220,
-              "open_interest": 722,
-              "vol_oi_ratio": 119.41828254847645
-            }
-          },
-          {
-            "key": "above_ask",
-            "side": "PUT",
-            "score": 12,
-            "label": "ABOVE-ASK URGENCY: PUT side has $1.1M / $2.6M (44%) executed at ask or above = pro urgency",
-            "details": {
-              "side": "PUT",
-              "total": 2589576.0,
-              "above_ask": 1144329.0,
-              "ratio": 0.4418982103633954
-            }
-          },
-          {
-            "key": "market_tide_info",
-            "side": "PUT",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE ALIGNED with PUT: market tide BEARISH: net put premium $49932M today",
-            "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
-            }
-          },
-          {
-            "key": "source_count",
-            "side": "PUT",
-            "score": 5,
-            "label": "MULTI-SOURCE CONVICTION: ticker surfaces in 2 universe sources (+5)",
-            "details": {
-              "source_count": 2
-            }
-          },
-          {
-            "key": "velocity",
-            "side": "PUT",
-            "score": 10,
-            "label": "FRESH FLOW: first scan appearance (+10)",
-            "details": {
-              "prior_scores": []
-            }
-          }
-        ],
-        "call_score": 0,
-        "put_score": 53,
-        "positioning_contribution": 0,
-        "tide_score": 0,
-        "thesis": "MSTR PUT (STRONG): NOPE -0.72 (moderate) = dealer delta pressure -> PUT bias; VOL > OI fired on $116.00 PUT: vol 86220 vs OI 722 (ratio 119.4x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $1.1M / $2.6M (44%) executed at ask or above = pro urgency",
-        "trade_ticket": {
-          "ticker": "MSTR",
-          "side": "PUT",
-          "strike": 110.0,
-          "expiry": "2026-07-02",
-          "dte": 27,
-          "occ_symbol": "MSTR260702P00110000",
-          "vehicle_description": "4% OTM call/put, 21-30d",
-          "spot": 115.0018,
-          "quote": {
-            "bid": 8.5,
-            "ask": 8.85,
-            "last": 8.68,
-            "iv": 0.891549000716621,
-            "delta": null,
-            "volume": 769,
-            "open_interest": 644,
-            "prev_oi": 348,
-            "sweep_volume": 11,
-            "floor_volume": 268,
-            "ask_volume": 399,
-            "bid_volume": 364,
-            "total_premium": 543904.0
-          },
-          "mid": 8.68,
-          "delta": -0.375
-        }
-      },
-      "catalysts": [
-        {
-          "label": "MSTR PUT (STRONG): NOPE -0.72 (moderate) = dealer delta pressure -> PUT bias; VOL > OI fired on $116.00 PUT: vol 86220 vs OI 722 (ratio 119.4x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $1.1M / $2.6M (44%) executed at ask or above = pro urgency",
-          "key": "confluence"
-        }
-      ]
-    },
     {
       "ticker": "CRWV",
       "name": "CoreWeave",
@@ -2049,8 +903,8 @@
       "market_cap": "48351412630",
       "next_earnings_date": "2026-08-11",
       "beta": "2.9928",
-      "price": 96.96,
-      "live_spot": 96.96,
+      "price": 96.68,
+      "live_spot": 96.68,
       "_uw_flow_initial": {
         "total_premium": 5504232.0,
         "trade_count": 7,
@@ -2061,11 +915,11 @@
         "premium_top30"
       ],
       "_uw_flow": {
-        "total_premium": 10394845.0,
+        "total_premium": 10456205.0,
         "trade_count": 100,
         "calls": 43,
         "puts": 57,
-        "sweeps": 37,
+        "sweeps": 36,
         "blocks": 0,
         "zero_dte_count": 0,
         "zero_dte_share": 0.0,
@@ -2073,55 +927,45 @@
         "call_put_ratio": 0.75
       },
       "_uw_gex": {
-        "net_gex": 92154.25940000016,
-        "gamma_flip_strike": 165.0,
-        "dealer_regime": "POSITIVE_PIN",
-        "above_gamma_flip": false,
-        "label": "net GEX $0M, flip strike $165.00 (below spot $96.96)"
-      },
-      "_dealer_gex": {
-        "regime": "POSITIVE_PIN",
-        "net_gex": 92154.25940000016,
-        "gamma_flip_strike": 165.0,
-        "label": "net GEX $0M, flip strike $165.00 (below spot $96.96)",
-        "_source": "uw_api"
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
       },
       "_positioning_first": {
-        "score": 35,
-        "side": "PUT",
+        "score": 0,
+        "side": "NEUTRAL",
         "bull_score": 0,
-        "bear_score": 35,
+        "bear_score": 0,
         "technical_half_weight_score": 0,
-        "positioning_signals": [
-          {
-            "key": "uw_below_gamma_flip",
-            "label": "net GEX $0M, flip strike $165.00 (below spot $96.96)",
-            "pts": 10
-          },
-          {
-            "key": "macro_risk_off",
-            "label": "macro: RISK_OFF pressure",
-            "pts": 25
-          }
-        ],
+        "positioning_signals": [],
         "technical_signals_half_weight": [],
-        "n_positioning_signals": 2,
-        "conviction_tier": "WEAK",
+        "n_positioning_signals": 0,
+        "conviction_tier": "NONE",
         "recommended_size_pct": 0,
         "regime_context": "RISK_OFF_PRESSURE",
-        "thesis": "CRWV PUT thesis: uw below gamma flip, macro risk off in RISK_OFF_PRESSURE regime. Bearish positioning + headwind.",
-        "evaluated_at": "2026-06-05T18:22:10.089121Z"
+        "thesis": "CRWV: no firing positioning signals - neutral.",
+        "evaluated_at": "2026-06-05T18:30:59.718299Z"
       },
+      "_score_history": [
+        {
+          "ts": "2026-06-05T18:22:19.328328Z",
+          "score": 56,
+          "tier": "STRONG",
+          "side": "PUT"
+        }
+      ],
       "_confluence": {
         "ticker": "CRWV",
-        "score": 56,
+        "score": 46,
         "side": "PUT",
-        "tier": "STRONG",
-        "size_pct": 20,
-        "vehicle": "4% OTM call/put, 21-30d",
-        "target_pct": 130,
+        "tier": "MODERATE",
+        "size_pct": 10,
+        "vehicle": "5% OTM call/put, 14-21d",
+        "target_pct": 100,
         "stop_pct": -50,
-        "max_hold_days": 10,
+        "max_hold_days": 7,
         "patterns_fired": [
           {
             "key": "above_ask",
@@ -2139,31 +983,117 @@
             "key": "institutional",
             "side": "PUT",
             "score": 19,
-            "label": "INSTITUTIONAL: $10.4M premium, 43C/57P (57% PUT concentration)",
+            "label": "INSTITUTIONAL: $10.5M premium, 43C/57P (57% PUT concentration)",
             "details": {
-              "total_premium": 10394845.0,
+              "total_premium": 10456205.0,
               "trade_count": 100,
               "calls": 43,
               "puts": 57,
-              "sweeps": 37,
+              "sweeps": 36,
               "blocks": 0,
               "zero_dte_count": 0,
               "zero_dte_share": 0.0,
               "dominant_side": "PUT",
               "call_put_ratio": 0.75
             }
-          },
+          }
+        ],
+        "call_score": 0,
+        "put_score": 46,
+        "positioning_contribution": 0,
+        "tide_score": 0,
+        "thesis": "CRWV PUT (MODERATE): ABOVE-ASK URGENCY: PUT side has $3.4M / $4.1M (81%) executed at ask or above = pro urgency; INSTITUTIONAL: $10.5M premium, 43C/57P (57% PUT concentration)",
+        "trade_ticket": {
+          "ticker": "CRWV",
+          "side": "PUT",
+          "strike": 92,
+          "expiry": "2026-06-26",
+          "dte": 21,
+          "occ_symbol": "CRWV260626P00092000",
+          "vehicle_description": "5% OTM call/put, 14-21d",
+          "spot": 96.68
+        }
+      },
+      "catalysts": [
+        {
+          "label": "CRWV PUT (MODERATE): ABOVE-ASK URGENCY: PUT side has $3.4M / $4.1M (81%) executed at ask or above = pro urgency; INSTITUTIONAL: $10.5M premium, 43C/57P (57% PUT concentration)",
+          "key": "confluence"
+        }
+      ]
+    },
+    {
+      "ticker": "COHR",
+      "name": "COHERENT",
+      "sector": "Technology",
+      "market_cap": "82540229530",
+      "next_earnings_date": "2026-08-12",
+      "beta": "2.9059",
+      "price": 383.95,
+      "live_spot": 383.95,
+      "_uw_flow_initial": {
+        "total_premium": 4069528.0,
+        "trade_count": 3,
+        "calls": 0,
+        "puts": 3
+      },
+      "sources": [
+        "premium_top30"
+      ],
+      "_uw_flow": {
+        "total_premium": 30244387.0,
+        "trade_count": 100,
+        "calls": 53,
+        "puts": 47,
+        "sweeps": 24,
+        "blocks": 0,
+        "zero_dte_count": 0,
+        "zero_dte_share": 0.0,
+        "dominant_side": "CALL",
+        "call_put_ratio": 1.13
+      },
+      "_uw_gex": {
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
+      },
+      "_positioning_first": {
+        "score": 0,
+        "side": "NEUTRAL",
+        "bull_score": 0,
+        "bear_score": 0,
+        "technical_half_weight_score": 0,
+        "positioning_signals": [],
+        "technical_signals_half_weight": [],
+        "n_positioning_signals": 0,
+        "conviction_tier": "NONE",
+        "recommended_size_pct": 0,
+        "regime_context": "RISK_OFF_PRESSURE",
+        "thesis": "COHR: no firing positioning signals - neutral.",
+        "evaluated_at": "2026-06-05T18:30:59.718313Z"
+      },
+      "_confluence": {
+        "ticker": "COHR",
+        "score": 37,
+        "side": "PUT",
+        "tier": "MODERATE",
+        "size_pct": 10,
+        "vehicle": "5% OTM call/put, 14-21d",
+        "target_pct": 100,
+        "stop_pct": -50,
+        "max_hold_days": 7,
+        "patterns_fired": [
           {
-            "key": "market_tide_info",
+            "key": "above_ask",
             "side": "PUT",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE ALIGNED with PUT: market tide BEARISH: net put premium $49932M today",
+            "score": 27,
+            "label": "ABOVE-ASK URGENCY: PUT side has $12.9M / $15.5M (83%) executed at ask or above = pro urgency",
             "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
+              "side": "PUT",
+              "total": 15493442.0,
+              "above_ask": 12894530.0,
+              "ratio": 0.832257286663609
             }
           },
           {
@@ -2177,24 +1107,24 @@
           }
         ],
         "call_score": 0,
-        "put_score": 46,
+        "put_score": 27,
         "positioning_contribution": 0,
         "tide_score": 0,
-        "thesis": "CRWV PUT (STRONG): ABOVE-ASK URGENCY: PUT side has $3.4M / $4.1M (81%) executed at ask or above = pro urgency; INSTITUTIONAL: $10.4M premium, 43C/57P (57% PUT concentration); [INFO] MARKET TIDE ALIGNED with PUT: market tide BEARISH: net put premium $49932M today",
+        "thesis": "COHR PUT (MODERATE): ABOVE-ASK URGENCY: PUT side has $12.9M / $15.5M (83%) executed at ask or above = pro urgency; FRESH FLOW: first scan appearance (+10)",
         "trade_ticket": {
-          "ticker": "CRWV",
+          "ticker": "COHR",
           "side": "PUT",
-          "strike": 93,
-          "expiry": "2026-07-03",
-          "dte": 28,
-          "occ_symbol": "CRWV260703P00093000",
-          "vehicle_description": "4% OTM call/put, 21-30d",
-          "spot": 96.96
+          "strike": 365,
+          "expiry": "2026-06-26",
+          "dte": 21,
+          "occ_symbol": "COHR260626P00365000",
+          "vehicle_description": "5% OTM call/put, 14-21d",
+          "spot": 383.95
         }
       },
       "catalysts": [
         {
-          "label": "CRWV PUT (STRONG): ABOVE-ASK URGENCY: PUT side has $3.4M / $4.1M (81%) executed at ask or above = pro urgency; INSTITUTIONAL: $10.4M premium, 43C/57P (57% PUT concentration); [INFO] MARKET TIDE ALIGNED with PUT: market tide BEARISH: net put premium $49932M today",
+          "label": "COHR PUT (MODERATE): ABOVE-ASK URGENCY: PUT side has $12.9M / $15.5M (83%) executed at ask or above = pro urgency; FRESH FLOW: first scan appearance (+10)",
           "key": "confluence"
         }
       ]
@@ -2206,13 +1136,13 @@
       "market_cap": "1123223114796",
       "next_earnings_date": "2026-06-24",
       "beta": "2.7045",
-      "price": 889.08,
-      "live_spot": 889.08,
+      "price": 887.77,
+      "live_spot": 887.77,
       "_uw_flow_initial": {
-        "total_premium": 27884726.0,
-        "trade_count": 39,
+        "total_premium": 24561967.0,
+        "trade_count": 37,
         "calls": 12,
-        "puts": 27
+        "puts": 25
       },
       "sources": [
         "premium_top30",
@@ -2220,122 +1150,74 @@
         "darkpool_top"
       ],
       "_uw_flow": {
-        "total_premium": 42177631.0,
+        "total_premium": 37744739.0,
         "trade_count": 100,
-        "calls": 32,
-        "puts": 68,
-        "sweeps": 52,
+        "calls": 35,
+        "puts": 65,
+        "sweeps": 49,
         "blocks": 0,
         "zero_dte_count": 0,
         "zero_dte_share": 0.0,
         "dominant_side": "PUT",
-        "call_put_ratio": 0.47
+        "call_put_ratio": 0.54
       },
       "_uw_gex": {
-        "net_gex": -7811.34199999999,
-        "gamma_flip_strike": 40.0,
-        "dealer_regime": "NEGATIVE_AMP",
-        "above_gamma_flip": true,
-        "label": "net GEX $-0M, flip strike $40.00 (above spot $889.08)"
-      },
-      "_dealer_gex": {
-        "regime": "NEGATIVE_AMP",
-        "net_gex": -7811.34199999999,
-        "gamma_flip_strike": 40.0,
-        "label": "net GEX $-0M, flip strike $40.00 (above spot $889.08)",
-        "_source": "uw_api"
+        "net_gex": null,
+        "gamma_flip_strike": null,
+        "dealer_regime": null,
+        "above_gamma_flip": null,
+        "label": "GEX data missing"
       },
       "_positioning_first": {
-        "score": 40,
-        "side": "PUT",
-        "bull_score": 35,
-        "bear_score": 40,
+        "score": 0,
+        "side": "NEUTRAL",
+        "bull_score": 0,
+        "bear_score": 0,
         "technical_half_weight_score": 0,
-        "positioning_signals": [
-          {
-            "key": "uw_put_dominant_flow",
-            "label": "UW: 68 puts / 32 calls ($42.2M premium) = institutional put buying",
-            "pts": 15
-          },
-          {
-            "key": "macro_risk_off",
-            "label": "macro: RISK_OFF pressure",
-            "pts": 25
-          }
-        ],
+        "positioning_signals": [],
         "technical_signals_half_weight": [],
-        "n_positioning_signals": 2,
-        "conviction_tier": "MODERATE",
-        "recommended_size_pct": 20,
+        "n_positioning_signals": 0,
+        "conviction_tier": "NONE",
+        "recommended_size_pct": 0,
         "regime_context": "RISK_OFF_PRESSURE",
-        "thesis": "MU PUT thesis: uw put dominant flow, macro risk off in RISK_OFF_PRESSURE regime. Bearish positioning + headwind.",
-        "evaluated_at": "2026-06-05T18:22:10.088970Z"
+        "thesis": "MU: no firing positioning signals - neutral.",
+        "evaluated_at": "2026-06-05T18:30:59.718152Z"
       },
+      "_score_history": [
+        {
+          "ts": "2026-06-05T18:22:19.328328Z",
+          "score": 55,
+          "tier": "STRONG",
+          "side": "PUT"
+        }
+      ],
       "_confluence": {
         "ticker": "MU",
-        "score": 55,
+        "score": 33,
         "side": "PUT",
-        "tier": "STRONG",
-        "size_pct": 20,
-        "vehicle": "4% OTM call/put, 21-30d",
-        "target_pct": 130,
+        "tier": "MODERATE",
+        "size_pct": 10,
+        "vehicle": "5% OTM call/put, 14-21d",
+        "target_pct": 100,
         "stop_pct": -50,
-        "max_hold_days": 10,
+        "max_hold_days": 7,
         "patterns_fired": [
-          {
-            "key": "volume_oi",
-            "side": "CALL",
-            "score": 22,
-            "label": "VOL > OI fired on $905.00 CALL: vol 5350 vs OI 195 (ratio 27.4x) = NEW positioning",
-            "details": {
-              "strike": 905.0,
-              "side": "CALL",
-              "volume": 5350,
-              "open_interest": 195,
-              "vol_oi_ratio": 27.435897435897434
-            }
-          },
-          {
-            "key": "above_ask",
-            "side": "PUT",
-            "score": 11,
-            "label": "ABOVE-ASK URGENCY: PUT side has $13.1M / $32.4M (40%) executed at ask or above = pro urgency",
-            "details": {
-              "side": "PUT",
-              "total": 32425864.0,
-              "above_ask": 13136075.0,
-              "ratio": 0.40511102495218015
-            }
-          },
           {
             "key": "institutional",
             "side": "PUT",
-            "score": 24,
-            "label": "INSTITUTIONAL: $42.2M premium, 32C/68P (68% PUT concentration)",
+            "score": 23,
+            "label": "INSTITUTIONAL: $37.7M premium, 35C/65P (65% PUT concentration)",
             "details": {
-              "total_premium": 42177631.0,
+              "total_premium": 37744739.0,
               "trade_count": 100,
-              "calls": 32,
-              "puts": 68,
-              "sweeps": 52,
+              "calls": 35,
+              "puts": 65,
+              "sweeps": 49,
               "blocks": 0,
               "zero_dte_count": 0,
               "zero_dte_share": 0.0,
               "dominant_side": "PUT",
-              "call_put_ratio": 0.47
-            }
-          },
-          {
-            "key": "market_tide_info",
-            "side": "PUT",
-            "score": 0,
-            "label": "[INFO] MARKET TIDE ALIGNED with PUT: market tide BEARISH: net put premium $49932M today",
-            "details": {
-              "regime": "PUT_BIAS",
-              "net_call_premium": -35844301375.0,
-              "net_put_premium": 14087832615.5,
-              "net_volume": -118715896.0,
-              "label": "market tide BEARISH: net put premium $49932M today"
+              "call_put_ratio": 0.54
             }
           },
           {
@@ -2346,46 +1228,35 @@
             "details": {
               "source_count": 3
             }
-          },
-          {
-            "key": "velocity",
-            "side": "PUT",
-            "score": 10,
-            "label": "FRESH FLOW: first scan appearance (+10)",
-            "details": {
-              "prior_scores": []
-            }
           }
         ],
-        "call_score": 22,
-        "put_score": 35,
+        "call_score": 0,
+        "put_score": 23,
         "positioning_contribution": 0,
         "tide_score": 0,
-        "thesis": "MU PUT (STRONG): VOL > OI fired on $905.00 CALL: vol 5350 vs OI 195 (ratio 27.4x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $13.1M / $32.4M (40%) executed at ask or above = pro urgency; INSTITUTIONAL: $42.2M premium, 32C/68P (68% PUT concentration)",
+        "thesis": "MU PUT (MODERATE): INSTITUTIONAL: $37.7M premium, 35C/65P (65% PUT concentration); MULTI-SOURCE CONVICTION: ticker surfaces in 3 universe sources (+10)",
         "trade_ticket": {
           "ticker": "MU",
           "side": "PUT",
-          "strike": 850.0,
-          "expiry": "2026-07-02",
-          "dte": 27,
-          "occ_symbol": "MU260702P00850000",
-          "vehicle_description": "4% OTM call/put, 21-30d",
-          "spot": 889.08
+          "strike": 840,
+          "expiry": "2026-06-26",
+          "dte": 21,
+          "occ_symbol": "MU260626P00840000",
+          "vehicle_description": "5% OTM call/put, 14-21d",
+          "spot": 887.77
         }
       },
       "catalysts": [
         {
-          "label": "MU PUT (STRONG): VOL > OI fired on $905.00 CALL: vol 5350 vs OI 195 (ratio 27.4x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $13.1M / $32.4M (40%) executed at ask or above = pro urgency; INSTITUTIONAL: $42.2M premium, 32C/68P (68% PUT concentration)",
+          "label": "MU PUT (MODERATE): INSTITUTIONAL: $37.7M premium, 35C/65P (65% PUT concentration); MULTI-SOURCE CONVICTION: ticker surfaces in 3 universe sources (+10)",
           "key": "confluence"
         }
       ]
     }
   ],
   "by_tier": {
-    "ELITE": 2,
-    "STRONG": 8,
-    "MODERATE": 5
+    "MODERATE": 9
   },
-  "uw_calls_made": 169,
+  "uw_calls_made": 191,
   "concentration_warnings": []
 }

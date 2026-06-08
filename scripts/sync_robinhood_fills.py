@@ -123,8 +123,10 @@ def fetch_fills(verbose=True):
 
 def main():
     dry = "--dry" in sys.argv[1:] or os.environ.get("DRY_RUN") == "1"
+    seed = "--seed" in sys.argv[1:] or os.environ.get("SEED") == "1"
     tag = "[DRY RUN] " if dry else ""
-    print(f"{tag}Robinhood fill sync (lookback {LOOKBACK_DAYS}d)")
+    mode = "seed (mark existing as done)" if seed else "sync"
+    print(f"{tag}Robinhood fill {mode} (lookback {LOOKBACK_DAYS}d)")
 
     try:
         fills = fetch_fills(verbose=True)
@@ -139,6 +141,23 @@ def main():
     state = _load(PROCESSED_PATH, {})
     processed = set(state.get("processed") or [])
     unmatched = list(state.get("unmatched") or [])
+
+    if seed:
+        new_ids = [f["message_id"] for f in fills if f["message_id"] not in processed]
+        for f in fills:
+            processed.add(f["message_id"])
+        print(f"  seeding {len(new_ids)} existing fills as already-processed (no backfill)")
+        if dry:
+            print("\n[DRY RUN] nothing written.")
+            return
+        _save(PROCESSED_PATH, {
+            "processed": sorted(processed),
+            "unmatched": unmatched,
+            "last_run": datetime.now(timezone.utc).isoformat(),
+            "seeded_at": datetime.now(timezone.utc).isoformat(),
+        })
+        print(f"\n  wrote {PROCESSED_PATH.name} - only new fills from here will be logged")
+        return
 
     applied = 0
     for f in fills:

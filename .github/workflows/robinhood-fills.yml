@@ -7,6 +7,14 @@ on:
         description: "Dry run (parse + report, write nothing). Set to 0 to commit."
         required: false
         default: "1"
+      seed:
+        description: "Seed mode: mark all current fills as already-done, no backfill. 1 for first-time setup."
+        required: false
+        default: "0"
+  schedule:
+    # Every 30 min during US market hours - catches new fills so the monitor can watch them
+    - cron: "*/30 13-20 * * 1-5"   # summer Mar-Oct
+    - cron: "*/30 14-21 * * 1-5"   # winter Nov-Feb (overlap harmless)
 
 jobs:
   sync:
@@ -26,10 +34,12 @@ jobs:
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          DRY_RUN: ${{ github.event.inputs.dry }}
+          DRY_RUN: ${{ github.event.inputs.dry || '0' }}
+          SEED: ${{ github.event.inputs.seed || '0' }}
+          RH_FILL_LOOKBACK_DAYS: ${{ github.event_name == 'schedule' && '5' || '90' }}
         run: python scripts/sync_robinhood_fills.py
       - name: Commit truth files
-        if: github.event.inputs.dry == '0'
+        if: github.event.inputs.dry != '1'
         run: |
           git config user.name "fills-bot"
           git config user.email "noreply@github.com"

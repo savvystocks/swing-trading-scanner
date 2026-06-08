@@ -258,12 +258,23 @@ def run_flow_scan(target_date=None, verbose=True):
     calls.sort(key=lambda p: (p.get("_confluence") or {}).get("score", 0), reverse=True)
     puts.sort(key=lambda p: (p.get("_confluence") or {}).get("score", 0), reverse=True)
 
+    regime = (macro.get("meta_regime") or {}).get("regime")
+    direction_gate = None
+    if regime == "RISK_OFF_PRESSURE" and calls:
+        direction_gate = f"RISK_OFF_PRESSURE - suppressed {len(calls)} call pick(s), trading puts only"
+        calls = []
+    elif regime == "RISK_ON" and puts:
+        direction_gate = f"RISK_ON - suppressed {len(puts)} put pick(s), trading calls only"
+        puts = []
+    if verbose and direction_gate:
+        print(f"  direction gate: {direction_gate}")
+
     by_tier = {}
     for p in ranked:
         t = (p.get("_confluence") or {}).get("tier", "PASS")
         by_tier[t] = by_tier.get(t, 0) + 1
 
-    tide_label = ((macro.get("meta_regime") or {}).get("label") or "unknown regime")
+    tide_label = ((macro.get("meta_regime") or {}).get("regime") or "unknown regime")
 
     if verbose:
         print(f"=== FLOW SCAN COMPLETE ===")
@@ -310,4 +321,5 @@ def run_flow_scan(target_date=None, verbose=True):
         "by_tier": by_tier,
         "uw_calls_made": uw_client.calls_made,
         "concentration_warnings": concentration_warnings,
+        "direction_gate": direction_gate,
     }

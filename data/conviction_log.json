@@ -1067,21 +1067,21 @@
     "outcome": null
   },
   {
-    "logged_at": "2026-06-08T15:01:41.108523+00:00",
+    "logged_at": "2026-06-08T16:56:58.325956+00:00",
     "scan_date": "2026-06-08",
     "ticker": "TSLA",
     "tier": "MAX_CONVICTION",
     "side": "CALL",
-    "score": 101,
+    "score": 120,
     "size_pct": 40,
     "trade_ticket": {
-      "occ_symbol": "TSLA260702C00410000",
-      "strike": 410.0,
+      "occ_symbol": "TSLA260702C00415000",
+      "strike": 415.0,
       "expiry": "2026-07-02",
       "dte": 24,
-      "mid": null,
-      "delta": null,
-      "iv": null
+      "mid": 17.38,
+      "delta": 0.478,
+      "iv": 0.503725319127614
     },
     "patterns_fired": [
       "nope",
@@ -1099,8 +1099,8 @@
       "darkpool_top",
       "oi_changers"
     ],
-    "thesis": "TSLA CALL (MAX_CONVICTION): NOPE +1.39 (strong) = dealer delta pressure -> CALL bias; VOL > OI fired on $402.50 CALL: vol 100388 vs OI 1225 (ratio 81.9x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $2.8M / $6.4M (44%) executed at ask or above = pro urgency",
-    "entry_spot": 403.97,
+    "thesis": "TSLA CALL (MAX_CONVICTION): NOPE +1.82 (extreme) = dealer delta pressure -> CALL bias; VOL > OI fired on $402.50 CALL: vol 112414 vs OI 1225 (ratio 91.8x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $8.6M / $18.1M (47%) executed at ask or above = pro urgency",
+    "entry_spot": 407.25,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   },
@@ -1214,23 +1214,24 @@
     "outcome": null
   },
   {
-    "logged_at": "2026-06-08T16:01:35.086028+00:00",
+    "logged_at": "2026-06-08T16:56:58.325956+00:00",
     "scan_date": "2026-06-08",
     "ticker": "NVDA",
     "tier": "ELITE",
     "side": "CALL",
-    "score": 75,
+    "score": 98,
     "size_pct": 30,
     "trade_ticket": {
       "occ_symbol": "NVDA260702C00215000",
       "strike": 215.0,
       "expiry": "2026-07-02",
       "dte": 24,
-      "mid": 6.1,
-      "delta": 0.417,
-      "iv": 0.4194878606783146
+      "mid": 6.25,
+      "delta": 0.423,
+      "iv": 0.4168701710162921
     },
     "patterns_fired": [
+      "nope",
       "volume_oi",
       "above_ask",
       "institutional",
@@ -1242,11 +1243,46 @@
       "premium_top30",
       "sweep_volume",
       "high_volume",
-      "darkpool_top",
       "oi_changers"
     ],
-    "thesis": "NVDA CALL (ELITE): VOL > OI fired on $207.50 PUT: vol 59180 vs OI 4296 (ratio 13.8x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $22.3M / $35.7M (62%) executed at ask or above = pro urgency; INSTITUTIONAL: $44.4M premium, 60C/40P (60% CALL concentration)",
-    "entry_spot": 208.29,
+    "thesis": "NVDA CALL (ELITE): NOPE +0.31 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $205.00 CALL: vol 27915 vs OI 2308 (ratio 12.1x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $24.0M / $37.5M (64%) executed at ask or above = pro urgency",
+    "entry_spot": 208.7028,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
+  },
+  {
+    "logged_at": "2026-06-08T16:56:58.325956+00:00",
+    "scan_date": "2026-06-08",
+    "ticker": "MSTR",
+    "tier": "ELITE",
+    "side": "CALL",
+    "score": 78,
+    "size_pct": 30,
+    "trade_ticket": {
+      "occ_symbol": "MSTR260702C00131000",
+      "strike": 131.0,
+      "expiry": "2026-07-02",
+      "dte": 24,
+      "mid": null,
+      "delta": null,
+      "iv": null
+    },
+    "patterns_fired": [
+      "nope",
+      "volume_oi",
+      "above_ask",
+      "institutional",
+      "market_tide_info",
+      "source_count",
+      "velocity"
+    ],
+    "sources": [
+      "pattern_calls",
+      "pattern_puts",
+      "darkpool_top"
+    ],
+    "thesis": "MSTR CALL (ELITE): NOPE +0.33 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $127.00 CALL: vol 3180 vs OI 202 (ratio 15.7x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $1.3M / $2.5M (51%) executed at ask or above = pro urgency",
+    "entry_spot": 127.0,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   }

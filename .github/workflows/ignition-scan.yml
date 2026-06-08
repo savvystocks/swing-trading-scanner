@@ -1,0 +1,40 @@
+name: ignition-scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "premarket or open"
+        default: "auto"
+  repository_dispatch:
+    types: [run-ignition-premarket, run-ignition-open]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install requests
+      - name: Detect mode from dispatch
+        id: mode
+        run: |
+          if [ "${{ github.event.action }}" = "run-ignition-premarket" ]; then
+            echo "MODE=premarket" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.action }}" = "run-ignition-open" ]; then
+            echo "MODE=open" >> $GITHUB_OUTPUT
+          elif [ -n "${{ github.event.inputs.mode }}" ]; then
+            echo "MODE=${{ github.event.inputs.mode }}" >> $GITHUB_OUTPUT
+          else
+            echo "MODE=auto" >> $GITHUB_OUTPUT
+          fi
+      - name: Run ignition scanner
+        env:
+          UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: python scripts/ignition_scanner.py --mode ${{ steps.mode.outputs.MODE }}

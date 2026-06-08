@@ -1,0 +1,38 @@
+name: robinhood-fills
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: "Dry run (parse + report, write nothing). Set to 0 to commit."
+        required: false
+        default: "1"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    concurrency:
+      group: robinhood-fills
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Sync fills
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          DRY_RUN: ${{ github.event.inputs.dry }}
+        run: python scripts/sync_robinhood_fills.py
+      - name: Commit truth files
+        if: github.event.inputs.dry == '0'
+        run: |
+          git config user.name "fills-bot"
+          git config user.email "noreply@github.com"
+          git add -f data/paper_trades/live_positions.json data/paper_trades/closed_positions.json data/paper_trades/processed_fills.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "fills: robinhood sync $(date -u +%H:%M) [skip ci]"
+          git push || true

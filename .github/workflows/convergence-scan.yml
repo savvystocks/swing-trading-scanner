@@ -1,12 +1,11 @@
-name: convergence-scan
+name: convergence-scan (DISABLED — replaced by ignition-scan)
 
 on:
   workflow_dispatch:
-  repository_dispatch:
-    types: [run-convergence-scan]
 
 jobs:
   scan:
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

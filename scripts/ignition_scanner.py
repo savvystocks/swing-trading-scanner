@@ -379,9 +379,10 @@ def rank_and_filter(tickers_data, max_names=5):
     return scored[:max_names]
 
 
-def _render_ticker_block(ticker, data):
+def _render_ticker_block(ticker, data, rank=0):
     signals = data.get("signals_hit", [])
     score = data.get("total_score", 0)
+    is_top = rank == 1
 
     badge_colors = {
         "FLOW": "#ff6b6b", "GAP": "#ffd93d", "VOL_SPIKE": "#6bff6b",
@@ -422,19 +423,40 @@ def _render_ticker_block(ticker, data):
     if dp:
         dp_line = f"Dark Pool: ${dp['total_value']/1e6:.1f}M, {dp['at_ask_prints']} ask-side prints"
 
+    why_lines = []
+    if data.get("sweeps", 0) >= 3:
+        why_lines.append(f"{data['sweeps']} sweep orders = aggressive multi-exchange fills")
+    if data.get("ask_side", 0) >= 3:
+        why_lines.append(f"{data['ask_side']} ask-side fills = buyers paying up")
+    if data.get("vol_gt_oi", 0) >= 1:
+        why_lines.append(f"{data['vol_gt_oi']} contracts with vol > OI = new positions opening")
+    if gap is not None and gap >= 2:
+        why_lines.append(f"{gap:+.1f}% gap = momentum catalyst")
+    if vol_z is not None and vol_z >= 2:
+        why_lines.append(f"Volume {vol_z:.1f} sigma above avg = institutional participation")
+    if gex is not None and gex < 0:
+        why_lines.append("Negative GEX = dealer hedging amplifies moves")
+    if dp and dp.get("at_ask_prints", 0) > 0:
+        why_lines.append(f"Dark pool accumulation at ask = hidden buying")
+
     strikes_html = ""
     strikes = data.get("0dte_strikes", [])
     if strikes:
-        strikes_html = '<div style="margin-top:8px;padding:8px;background:#2a2a4a;border-radius:4px;">'
-        strikes_html += '<span style="color:#aaa;font-size:11px;">0DTE STRIKES TO WATCH:</span><br>'
-        for s in strikes:
+        border_color = "#00ff88" if is_top else "#2a2a4a"
+        strikes_html = f'<div style="margin-top:8px;padding:10px;background:#2a2a4a;border:1px solid {border_color};border-radius:4px;">'
+        strikes_html += '<span style="color:#aaa;font-size:11px;">0DTE STRIKES:</span><br>'
+        for i, s in enumerate(strikes):
             label = "ATM" if abs(s["pct_otm"]) < 0.5 else f"{s['pct_otm']:+.1f}% OTM"
+            cost_per = s["ask"] * 100
+            contracts_500 = int(500 / cost_per) if cost_per > 0 else 0
+            sizing = f" — {contracts_500} contracts for $500" if is_top and i == 0 and contracts_500 > 0 else ""
+            highlight = "color:#00ff88;font-weight:bold;" if is_top and i == 0 else "color:#fff;"
             strikes_html += (
-                f'<span style="color:#fff;font-size:13px;">'
+                f'<span style="{highlight}font-size:13px;">'
                 f'${s["strike"]:.0f} ({label}) — '
-                f'bid ${s["bid"]:.2f} / ask ${s["ask"]:.2f} — '
+                f'ask ${s["ask"]:.2f} (${cost_per:.0f}/contract) — '
                 f'delta {s["delta"]:.2f} — '
-                f'vol {s["volume"]:.0f} / OI {s["oi"]:.0f}'
+                f'vol {s["volume"]:.0f}{sizing}'
                 f'</span><br>'
             )
         strikes_html += '</div>'
@@ -444,13 +466,26 @@ def _render_ticker_block(ticker, data):
 
     detail_lines = [l for l in [flow_line, gap_line, gex_line, dp_line] if l]
 
-    return f"""<div style="border:1px solid #444;border-radius:8px;padding:15px;margin-bottom:15px;background:#1e1e3a;">
+    border = "2px solid #00ff88" if is_top else "1px solid #444"
+    bg = "#1a2a1a" if is_top else "#1e1e3a"
+    top_badge = '<span style="background:#00ff88;color:#000;padding:4px 12px;border-radius:3px;font-size:13px;font-weight:bold;margin-right:10px;">TOP PICK</span>' if is_top else ""
+
+    why_html = ""
+    if is_top and why_lines:
+        why_html = '<div style="margin-top:8px;padding:8px;background:#0a1a0a;border-radius:4px;border-left:3px solid #00ff88;">'
+        why_html += '<span style="color:#00ff88;font-size:11px;font-weight:bold;">WHY THIS NAME:</span><br>'
+        for w in why_lines:
+            why_html += f'<span style="color:#ccc;font-size:12px;">- {w}</span><br>'
+        why_html += '</div>'
+
+    return f"""<div style="border:{border};border-radius:8px;padding:15px;margin-bottom:15px;background:{bg};">
 <div style="display:flex;justify-content:space-between;align-items:center;">
-<span style="font-size:22px;font-weight:bold;color:#fff;">{ticker} <span style="color:#888;font-size:14px;">{price_str}</span></span>
+<span>{top_badge}<span style="font-size:22px;font-weight:bold;color:#fff;">{ticker}</span> <span style="color:#888;font-size:14px;">{price_str}</span></span>
 <span style="color:#00ff88;font-size:16px;font-weight:bold;">SCORE {score:.0f}</span>
 </div>
 <div style="margin:8px 0;">{badges}</div>
 <div style="color:#ccc;font-size:13px;line-height:1.8;">{'<br>'.join(detail_lines)}</div>
+{why_html}
 {strikes_html}
 </div>"""
 
@@ -467,20 +502,45 @@ def render_email_html(ranked, scan_time, mode, flow_count):
 </body></html>"""
 
     blocks = ""
-    for ticker, data in ranked:
-        blocks += _render_ticker_block(ticker, data)
+    for i, (ticker, data) in enumerate(ranked):
+        blocks += _render_ticker_block(ticker, data, rank=i + 1)
 
     count = len(ranked)
-    top_names = ", ".join(t for t, _ in ranked[:3])
+    top_ticker = ranked[0][0]
+    top_score = ranked[0][1]["total_score"]
+
+    top_line = f'<span style="color:#00ff88;font-weight:bold;font-size:18px;">TOP PICK: {top_ticker} (score {top_score:.0f})</span>'
+    if count > 1:
+        others = ", ".join(t for t, _ in ranked[1:3])
+        top_line += f' <span style="color:#888;font-size:14px;">| also watching: {others}</span>'
+
+    open_note = ""
+    if mode == "open":
+        top_strikes = ranked[0][1].get("0dte_strikes", [])
+        if top_strikes:
+            best = top_strikes[0]
+            cost = best["ask"] * 100
+            qty = int(500 / cost) if cost > 0 else 0
+            open_note = f"""<div style="background:#0a2a0a;border:1px solid #00ff88;border-radius:8px;padding:12px;margin:15px 0;">
+<span style="color:#00ff88;font-size:14px;font-weight:bold;">OPENING RANGE ENTRY:</span><br>
+<span style="color:#fff;font-size:13px;">
+Wait for {top_ticker} to break above the premarket high on volume.<br>
+Contract: ${best['strike']:.0f} call, 0DTE, ask ${best['ask']:.2f} (${cost:.0f} per contract)<br>
+{"Size: " + str(qty) + " contracts = $" + str(int(qty * cost)) + " risk" if qty > 0 else ""}
+<br>Cut if no follow-through in first 5 minutes.
+</span>
+</div>"""
 
     return f"""<html><body style="font-family:monospace;background:#1a1a2e;color:#e0e0e0;padding:20px;">
-<h2 style="color:#00ff88;margin-bottom:5px;">IGNITION {mode_label} — {count} NAMES</h2>
-<p style="color:#aaa;margin-top:0;">{scan_time} | {top_names}</p>
-<p style="color:#666;font-size:12px;">0DTE call sweeps + gaps + volume spikes + GEX + dark pool</p>
+<h2 style="color:#00ff88;margin-bottom:5px;">IGNITION {mode_label}</h2>
+<p style="margin-top:0;">{top_line}</p>
+<p style="color:#666;font-size:12px;">{scan_time} | 0DTE call sweeps + gaps + volume spikes + GEX + dark pool</p>
+{open_note}
 {blocks}
 <p style="color:#555;font-size:11px;margin-top:20px;">
 0DTE flow tickers: {flow_count} | Ranked by flow aggression + gap + volume spike + GEX + dark pool<br>
-Strategy: buy 0DTE ATM/1-OTM calls on opening range breakout above premarket high. Cut fast if no follow-through.
+Strategy: buy 0DTE ATM/1-OTM calls on opening range breakout above premarket high. Cut fast if no follow-through.<br>
+This is data, not advice. You decide whether to trade.
 </p>
 </body></html>"""
 

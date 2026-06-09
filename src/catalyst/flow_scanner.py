@@ -116,9 +116,25 @@ def run_flow_scan(target_date=None, verbose=True):
         reverse=True,
     )
     deep_n = 20
-    flow_universe = flow_universe[:deep_n]
+
+    def _is_put_leaning(u):
+        return (u.get("puts", 0) > u.get("calls", 0)) or ("pattern_puts" in (u.get("sources") or []))
+
+    deep = flow_universe[:deep_n]
+    cut_put_leaning = [u for u in flow_universe[deep_n:] if _is_put_leaning(u)]
+    swapped = 0
+    for pu in cut_put_leaning:
+        if swapped >= 4:
+            break
+        for i in range(len(deep) - 1, -1, -1):
+            if not _is_put_leaning(deep[i]):
+                deep[i] = pu
+                swapped += 1
+                break
+    flow_universe = deep
     if verbose:
-        print(f"  funnel: top {len(flow_universe)} by conviction selected for deep dive")
+        n_put = sum(1 for u in flow_universe if _is_put_leaning(u))
+        print(f"  funnel: top {len(flow_universe)} by conviction ({n_put} put-leaning, {swapped} swapped in for balance)")
         for u in flow_universe[:10]:
             srcs = "+".join(u.get("sources") or [])
             print(f"    {u['ticker']:6} {len(u.get('sources') or []):1}src  ${u.get('total_premium',0)/1e6:5.1f}M  ({srcs[:50]})")

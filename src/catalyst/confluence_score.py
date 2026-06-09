@@ -208,6 +208,27 @@ def compute_confluence(pick, uw_client, macro=None, verbose=False):
     total_score = base_pattern_score + source_bonus + velocity_bonus
     total_score = max(0, total_score)
 
+    # Regime-aware tilt: keep whale-driven side SELECTION, but scale conviction by
+    # whether the chosen side agrees with the meta-regime. Risk-off gives puts a
+    # tailwind and haircuts counter-trend calls; risk-on is the mirror. Neutral = 1.0.
+    regime = ((macro or {}).get("meta_regime") or {}).get("regime")
+    regime_mult = 1.0
+    if regime == "RISK_OFF_PRESSURE":
+        regime_mult = 1.15 if side == "PUT" else (0.80 if side == "CALL" else 1.0)
+    elif regime == "RISK_ON":
+        regime_mult = 1.15 if side == "CALL" else (0.80 if side == "PUT" else 1.0)
+    if side and regime_mult != 1.0:
+        before = total_score
+        total_score = max(0, round(total_score * regime_mult))
+        tail = "tailwind" if regime_mult > 1 else "haircut"
+        patterns_fired.append({
+            "key": "regime_tilt",
+            "side": side,
+            "score": total_score - before,
+            "label": f"REGIME {tail}: {side} in {regime} x{regime_mult:.2f} ({before}->{total_score})",
+            "details": {"regime": regime, "mult": regime_mult},
+        })
+
     tier, size_pct = _tier_from_score(total_score)
     rr = _rr_for_tier(tier)
     vehicle = _vehicle_for_tier(tier)
@@ -246,6 +267,7 @@ def compute_confluence(pick, uw_client, macro=None, verbose=False):
         "put_score": put_score,
         "positioning_contribution": positioning_contribution,
         "tide_score": tide_score,
+        "regime_mult": regime_mult,
         "thesis": thesis,
         "trade_ticket": trade_ticket,
     }

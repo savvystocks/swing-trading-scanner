@@ -1358,40 +1358,40 @@
     "outcome": null
   },
   {
-    "logged_at": "2026-06-09T13:31:23.400596+00:00",
+    "logged_at": "2026-06-09T14:31:31.011760+00:00",
     "scan_date": "2026-06-09",
     "ticker": "AAPL",
     "tier": "ELITE",
     "side": "PUT",
-    "score": 84,
+    "score": 97,
     "size_pct": 30,
     "trade_ticket": {
-      "occ_symbol": "AAPL260710P00290000",
-      "strike": 290.0,
+      "occ_symbol": "AAPL260710P00285000",
+      "strike": 285.0,
       "expiry": "2026-07-10",
       "dte": 31,
-      "mid": 4.4,
-      "delta": -0.276,
-      "iv": 0.2445871132018727
+      "mid": 5.12,
+      "delta": -0.327,
+      "iv": 0.2490125059854567
     },
     "patterns_fired": [
+      "nope",
+      "gamma_flip",
       "volume_oi",
       "above_ask",
       "institutional",
+      "market_tide_info",
       "source_count",
       "velocity",
       "regime_tilt"
     ],
     "sources": [
       "premium_top30",
-      "sweep_volume",
-      "pattern_calls",
-      "pattern_puts",
-      "high_volume",
+      "darkpool_top",
       "oi_changers"
     ],
-    "thesis": "AAPL PUT (ELITE): VOL > OI fired on $305.00 PUT: vol 38842 vs OI 6208 (ratio 6.3x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $6.1M / $8.6M (71%) executed at ask or above = pro urgency; INSTITUTIONAL: $23.5M premium, 61C/39P (61% CALL concentration)",
-    "entry_spot": 300.5,
+    "thesis": "AAPL PUT (ELITE): NOPE -0.51 (moderate) = dealer delta pressure -> PUT bias; WITHIN 0.5% OF FLIP STRIKE $295.00 in POSITIVE_PIN regime (0.89% away) - pinning toward flip; VOL > OI fired on $292.50 PUT: vol 61903 vs OI 2150 (ratio 28.8x) = NEW positioning",
+    "entry_spot": 292.4,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   },
@@ -1429,6 +1429,43 @@
     ],
     "thesis": "TSLA PUT (ELITE): NOPE +0.33 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $400.00 PUT: vol 44231 vs OI 1300 (ratio 34.0x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $8.0M / $10.8M (73%) executed at ask or above = pro urgency",
     "entry_spot": 411.875,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
+  },
+  {
+    "logged_at": "2026-06-09T14:31:31.011760+00:00",
+    "scan_date": "2026-06-09",
+    "ticker": "SNDK",
+    "tier": "ELITE",
+    "side": "PUT",
+    "score": 78,
+    "size_pct": 30,
+    "trade_ticket": {
+      "occ_symbol": "SNDK260710P01680000",
+      "strike": 1680.0,
+      "expiry": "2026-07-10",
+      "dte": 31,
+      "mid": null,
+      "delta": null,
+      "iv": null
+    },
+    "patterns_fired": [
+      "volume_oi",
+      "above_ask",
+      "institutional",
+      "market_tide_info",
+      "source_count",
+      "velocity",
+      "regime_tilt"
+    ],
+    "sources": [
+      "premium_top30",
+      "pattern_calls",
+      "pattern_puts",
+      "darkpool_top"
+    ],
+    "thesis": "SNDK PUT (ELITE): VOL > OI fired on $1760.00 PUT: vol 1614 vs OI 133 (ratio 12.1x) = NEW positioning; ABOVE-ASK URGENCY: CALL side has $13.5M / $16.5M (81%) executed at ask or above = pro urgency; INSTITUTIONAL: $40.9M premium, 38C/62P (62% PUT concentration)",
+    "entry_spot": 1727.61,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   }

@@ -1721,37 +1721,71 @@
     "outcome": null
   },
   {
-    "logged_at": "2026-06-10T16:01:39.626318+00:00",
+    "logged_at": "2026-06-10T16:31:21.701465+00:00",
     "scan_date": "2026-06-10",
     "ticker": "BAC",
-    "tier": "ELITE",
+    "tier": "MAX_CONVICTION",
     "side": "PUT",
-    "score": 89,
-    "size_pct": 30,
+    "score": 106,
+    "size_pct": 40,
     "trade_ticket": {
-      "occ_symbol": "BAC260710P00053000",
-      "strike": 53.0,
+      "occ_symbol": "BAC260710P00054000",
+      "strike": 54.0,
       "expiry": "2026-07-10",
       "dte": 30,
-      "mid": 0.88,
-      "delta": -0.296,
-      "iv": 0.2620101898144325
+      "mid": 1.19,
+      "delta": -0.364,
+      "iv": 0.2547113452162073
     },
     "patterns_fired": [
       "gamma_flip",
       "volume_oi",
       "above_ask",
       "institutional",
+      "market_tide_info",
       "source_count",
-      "velocity",
       "regime_tilt"
     ],
     "sources": [
       "premium_top30",
       "oi_changers"
     ],
-    "thesis": "BAC PUT (ELITE): WITHIN 0.5% OF FLIP STRIKE $55.00 in POSITIVE_PIN regime (0.36% away) - pinning toward flip; VOL > OI fired on $50.00 PUT: vol 425654 vs OI 20879 (ratio 20.4x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $4.9M / $8.5M (57%) executed at ask or above = pro urgency",
-    "entry_spot": 54.8,
+    "thesis": "BAC PUT (MAX_CONVICTION): WITHIN 0.5% OF FLIP STRIKE $55.00 in POSITIVE_PIN regime (0.04% away) - pinning toward flip; VOL > OI fired on $50.00 PUT: vol 425654 vs OI 20879 (ratio 20.4x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $4.9M / $8.5M (57%) executed at ask or above = pro urgency",
+    "entry_spot": 55.02,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
+  },
+  {
+    "logged_at": "2026-06-10T16:31:21.701465+00:00",
+    "scan_date": "2026-06-10",
+    "ticker": "MRVL",
+    "tier": "ELITE",
+    "side": "PUT",
+    "score": 79,
+    "size_pct": 30,
+    "trade_ticket": {
+      "occ_symbol": "MRVL260710P00250000",
+      "strike": 250.0,
+      "expiry": "2026-07-10",
+      "dte": 30,
+      "mid": null,
+      "delta": null,
+      "iv": null
+    },
+    "patterns_fired": [
+      "gamma_flip",
+      "volume_oi",
+      "above_ask",
+      "institutional",
+      "market_tide_info",
+      "velocity",
+      "regime_tilt"
+    ],
+    "sources": [
+      "premium_top30"
+    ],
+    "thesis": "MRVL PUT (ELITE): WITHIN 0.5% OF FLIP STRIKE $255.00 in POSITIVE_PIN regime (0.42% away) - pinning toward flip; VOL > OI fired on $230.00 PUT: vol 4714 vs OI 448 (ratio 10.5x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $5.3M / $10.2M (51%) executed at ask or above = pro urgency",
+    "entry_spot": 256.065,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   }

@@ -2540,23 +2540,24 @@
     "outcome": null
   },
   {
-    "logged_at": "2026-06-15T16:01:40.327002+00:00",
+    "logged_at": "2026-06-15T18:08:31.475993+00:00",
     "scan_date": "2026-06-15",
     "ticker": "TSLA",
     "tier": "ELITE",
     "side": "PUT",
-    "score": 75,
+    "score": 90,
     "size_pct": 30,
     "trade_ticket": {
-      "occ_symbol": "TSLA260710P00395000",
-      "strike": 395.0,
+      "occ_symbol": "TSLA260710P00400000",
+      "strike": 400.0,
       "expiry": "2026-07-10",
       "dte": 25,
-      "mid": null,
-      "delta": null,
-      "iv": null
+      "mid": 13.27,
+      "delta": -0.378,
+      "iv": 0.4452044218869939
     },
     "patterns_fired": [
+      "nope",
       "volume_oi",
       "above_ask",
       "institutional",
@@ -2567,11 +2568,12 @@
     ],
     "sources": [
       "premium_top30",
+      "sweep_volume",
       "congress",
-      "darkpool_top"
+      "high_volume"
     ],
-    "thesis": "TSLA PUT (ELITE): VOL > OI fired on $407.50 PUT: vol 42772 vs OI 250 (ratio 171.1x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $2.4M / $4.7M (50%) executed at ask or above = pro urgency; INSTITUTIONAL: $28.4M premium, 78C/22P (78% CALL concentration)",
-    "entry_spot": 408.455,
+    "thesis": "TSLA PUT (ELITE): NOPE +0.36 (moderate) = dealer delta pressure -> CALL bias; VOL > OI fired on $412.50 PUT: vol 29774 vs OI 145 (ratio 205.3x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $3.2M / $5.0M (64%) executed at ask or above = pro urgency",
+    "entry_spot": 410.505,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
   },

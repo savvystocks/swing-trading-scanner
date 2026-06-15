@@ -1,0 +1,29 @@
+name: ambush
+
+on:
+  workflow_dispatch:
+  schedule:
+    # US cash open re-check. The market_open gate confirms the session is live,
+    # so a premarket misfire during a DST-transition week just stays cold.
+    - cron: "30 13 * 3-10 1-5"        # 13:30 UTC = 9:30 ET (summer / BST)
+    - cron: "30 14 * 1-2,11-12 1-5"   # 14:30 UTC = 9:30 ET (winter / GMT)
+
+jobs:
+  ambush:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run ambush gate
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/run_ambush.py --alert

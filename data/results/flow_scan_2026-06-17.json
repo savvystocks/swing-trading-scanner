@@ -18,7 +18,7 @@
     },
     "sentiment_stack": {
       "fear_greed": {
-        "current": 39.7428571428571,
+        "current": 38.5142857142857,
         "rating": "fear",
         "previous_1_week": 26.8857142857143,
         "previous_1_month": 62.9714285714286
@@ -46,7 +46,7 @@
       "findings": [
         {
           "signal": "FEAR",
-          "label": "CNN F&G 40 (Fear)",
+          "label": "CNN F&G 39 (Fear)",
           "contrarian": "LEAN_LONG"
         },
         {
@@ -63,7 +63,7 @@
       "extreme_contrarian_count": 1,
       "extreme_count_long": 0,
       "extreme_count_short": 1,
-      "evaluated_at": "2026-06-17T18:01:24.380465Z"
+      "evaluated_at": "2026-06-17T18:31:15.603112Z"
     },
     "options_positioning": {
       "snapshot": {
@@ -78,14 +78,14 @@
       "regime": "UNKNOWN",
       "findings": [],
       "options_positioning_score": 50,
-      "evaluated_at": "2026-06-17T18:01:24.383400Z"
+      "evaluated_at": "2026-06-17T18:31:15.605858Z"
     },
     "macro_positioning": {
       "regime": "NEUTRAL",
       "risk_score": 50,
       "findings": [],
       "snapshot": {},
-      "evaluated_at": "2026-06-17T18:01:24.384528Z"
+      "evaluated_at": "2026-06-17T18:31:15.606933Z"
     },
     "meta_regime": {
       "regime": "RISK_OFF_PRESSURE",
@@ -105,20 +105,20 @@
       "n_signals": 2
     }
   },
-  "universe_size": 20,
+  "universe_size": 19,
   "calls": [],
   "puts": [
     {
-      "ticker": "KRYS",
-      "name": "KRYSTAL BIOTECH",
+      "ticker": "ABVX",
+      "name": "ABIVAX SA",
       "sector": "Healthcare",
-      "market_cap": "9532868698",
-      "next_earnings_date": "2026-08-03",
-      "beta": "0.9356",
-      "price": 344.47,
-      "live_spot": 344.47,
+      "market_cap": "7657300170",
+      "next_earnings_date": "2026-09-14",
+      "beta": "3.94",
+      "price": 102.44,
+      "live_spot": 102.44,
       "_uw_flow_initial": {
-        "total_premium": 2252500.0,
+        "total_premium": 2174700.0,
         "trade_count": 1,
         "calls": 0,
         "puts": 1
@@ -127,49 +127,60 @@
         "premium_top30"
       ],
       "_uw_flow": {
-        "total_premium": 5793141.0,
+        "total_premium": 4708553.0,
         "trade_count": 100,
-        "calls": 36,
-        "puts": 64,
-        "sweeps": 6,
-        "blocks": 3,
+        "calls": 72,
+        "puts": 28,
+        "sweeps": 28,
+        "blocks": 2,
         "zero_dte_count": 0,
         "zero_dte_share": 0.0,
-        "dominant_side": "PUT",
-        "call_put_ratio": 0.56
+        "dominant_side": "CALL",
+        "call_put_ratio": 2.57
       },
       "_uw_gex": {
-        "net_gex": 2960.2941000000014,
-        "gamma_flip_strike": 165.0,
+        "net_gex": 42558.84279999999,
+        "gamma_flip_strike": 110.0,
         "dealer_regime": "POSITIVE_PIN",
-        "above_gamma_flip": true,
-        "label": "net GEX $0M, flip strike $165.00 (above spot $344.47)"
+        "above_gamma_flip": false,
+        "label": "net GEX $0M, flip strike $110.00 (below spot $102.44)"
       },
       "_dealer_gex": {
         "regime": "POSITIVE_PIN",
-        "net_gex": 2960.2941000000014,
-        "gamma_flip_strike": 165.0,
-        "label": "net GEX $0M, flip strike $165.00 (above spot $344.47)",
+        "net_gex": 42558.84279999999,
+        "gamma_flip_strike": 110.0,
+        "label": "net GEX $0M, flip strike $110.00 (below spot $102.44)",
         "_source": "uw_api"
       },
       "_positioning_first": {
-        "score": 0,
-        "side": "NEUTRAL",
-        "bull_score": 0,
-        "bear_score": 0,
+        "score": 35,
+        "side": "PUT",
+        "bull_score": 18,
+        "bear_score": 35,
         "technical_half_weight_score": 0,
-        "positioning_signals": [],
+        "positioning_signals": [
+          {
+            "key": "uw_below_gamma_flip",
+            "label": "net GEX $0M, flip strike $110.00 (below spot $102.44)",
+            "pts": 10
+          },
+          {
+            "key": "macro_risk_off",
+            "label": "macro: RISK_OFF pressure",
+            "pts": 25
+          }
+        ],
         "technical_signals_half_weight": [],
-        "n_positioning_signals": 0,
-        "conviction_tier": "NONE",
+        "n_positioning_signals": 2,
+        "conviction_tier": "WEAK",
         "recommended_size_pct": 0,
         "regime_context": "RISK_OFF_PRESSURE",
-        "thesis": "KRYS: no firing positioning signals - neutral.",
-        "evaluated_at": "2026-06-17T18:01:32.212733Z"
+        "thesis": "ABVX PUT thesis: uw below gamma flip, macro risk off in RISK_OFF_PRESSURE regime. Bearish positioning + headwind.",
+        "evaluated_at": "2026-06-17T18:31:25.502126Z"
       },
       "_confluence": {
-        "ticker": "KRYS",
-        "score": 51,
+        "ticker": "ABVX",
+        "score": 39,
         "side": "PUT",
         "tier": "MODERATE",
         "size_pct": 10,
@@ -181,44 +192,44 @@
           {
             "key": "above_ask",
             "side": "PUT",
-            "score": 17,
-            "label": "ABOVE-ASK URGENCY: PUT side has $1.9M / $3.3M (57%) executed at ask or above = pro urgency",
+            "score": 24,
+            "label": "ABOVE-ASK URGENCY: PUT side has $1.7M / $2.3M (75%) executed at ask or above = pro urgency",
             "details": {
               "side": "PUT",
-              "total": 3346676.0,
-              "above_ask": 1923000.0,
-              "ratio": 0.5745999911554032
+              "total": 2260130.0,
+              "above_ask": 1704360.0,
+              "ratio": 0.7540982155893687
             }
           },
           {
             "key": "institutional",
-            "side": "PUT",
-            "score": 17,
-            "label": "INSTITUTIONAL: $5.8M premium, 36C/64P (64% PUT concentration)",
+            "side": "CALL",
+            "score": 18,
+            "label": "INSTITUTIONAL: $4.7M premium, 72C/28P (72% CALL concentration)",
             "details": {
-              "total_premium": 5793141.0,
+              "total_premium": 4708553.0,
               "trade_count": 100,
-              "calls": 36,
-              "puts": 64,
-              "sweeps": 6,
-              "blocks": 3,
+              "calls": 72,
+              "puts": 28,
+              "sweeps": 28,
+              "blocks": 2,
               "zero_dte_count": 0,
               "zero_dte_share": 0.0,
-              "dominant_side": "PUT",
-              "call_put_ratio": 0.56
+              "dominant_side": "CALL",
+              "call_put_ratio": 2.57
             }
           },
           {
             "key": "market_tide_info",
             "side": "PUT",
             "score": 0,
-            "label": "[INFO] MARKET TIDE FIGHTING PUT: market tide BULLISH: net call premium +$4886M today",
+            "label": "[INFO] MARKET TIDE FIGHTING PUT: market tide BULLISH: net call premium +$5124M today",
             "details": {
               "regime": "CALL_BIAS",
-              "net_call_premium": 6230214756.0,
-              "net_put_premium": 1344487903.0,
-              "net_volume": 7909418.0,
-              "label": "market tide BULLISH: net call premium +$4886M today"
+              "net_call_premium": 6990298643.0,
+              "net_put_premium": 1866727770.0,
+              "net_volume": 8653961.0,
+              "label": "market tide BULLISH: net call premium +$5124M today"
             }
           },
           {
@@ -233,45 +244,39 @@
           {
             "key": "regime_tilt",
             "side": "PUT",
-            "score": 7,
-            "label": "REGIME tailwind: PUT in RISK_OFF_PRESSURE x1.15 (44->51)",
+            "score": 5,
+            "label": "REGIME tailwind: PUT in RISK_OFF_PRESSURE x1.15 (34->39)",
             "details": {
               "regime": "RISK_OFF_PRESSURE",
               "mult": 1.15
             }
           }
         ],
-        "call_score": 0,
-        "put_score": 34,
+        "call_score": 18,
+        "put_score": 24,
         "positioning_contribution": 0,
         "tide_score": 0,
         "regime_mult": 1.15,
-        "thesis": "KRYS PUT (MODERATE): ABOVE-ASK URGENCY: PUT side has $1.9M / $3.3M (57%) executed at ask or above = pro urgency; INSTITUTIONAL: $5.8M premium, 36C/64P (64% PUT concentration); [INFO] MARKET TIDE FIGHTING PUT: market tide BULLISH: net call premium +$4886M today",
+        "thesis": "ABVX PUT (MODERATE): ABOVE-ASK URGENCY: PUT side has $1.7M / $2.3M (75%) executed at ask or above = pro urgency; INSTITUTIONAL: $4.7M premium, 72C/28P (72% CALL concentration); [INFO] MARKET TIDE FIGHTING PUT: market tide BULLISH: net call premium +$5124M today",
         "trade_ticket": {
-          "ticker": "KRYS",
+          "ticker": "ABVX",
           "side": "PUT",
-          "strike": 325,
+          "strike": 97,
           "expiry": "2026-07-10",
           "dte": 23,
-          "occ_symbol": "KRYS260710P00325000",
+          "occ_symbol": "ABVX260710P00097000",
           "vehicle_description": "5% OTM call/put, 14-21d",
-          "spot": 344.47
+          "spot": 102.44
         }
-      },
-      "catalysts": [
-        {
-          "label": "KRYS PUT (MODERATE): ABOVE-ASK URGENCY: PUT side has $1.9M / $3.3M (57%) executed at ask or above = pro urgency; INSTITUTIONAL: $5.8M premium, 36C/64P (64% PUT concentration); [INFO] MARKET TIDE FIGHTING PUT: market tide BULLISH: net call premium +$4886M today",
-          "key": "confluence"
-        }
-      ]
+      }
     }
   ],
   "by_tier": {
-    "ELITE": 2,
-    "STRONG": 3,
+    "ELITE": 1,
+    "STRONG": 4,
     "MODERATE": 10
   },
-  "uw_calls_made": 178,
+  "uw_calls_made": 173,
   "concentration_warnings": [],
-  "direction_gate": "RISK_OFF_PRESSURE - suppressed 14 call pick(s), trading puts only"
+  "direction_gate": "RISK_OFF_PRESSURE - suppressed 13 call pick(s), trading puts only"
 }

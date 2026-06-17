@@ -3211,5 +3211,81 @@
     "entry_spot": 280.18,
     "macro_regime": "RISK_OFF_PRESSURE",
     "outcome": null
+  },
+  {
+    "logged_at": "2026-06-17T13:31:37.667769+00:00",
+    "scan_date": "2026-06-17",
+    "ticker": "AAPL",
+    "tier": "ELITE",
+    "side": "PUT",
+    "score": 98,
+    "size_pct": 30,
+    "trade_ticket": {
+      "occ_symbol": "AAPL260717P00295000",
+      "strike": 295.0,
+      "expiry": "2026-07-17",
+      "dte": 30,
+      "mid": 4.85,
+      "delta": -0.325,
+      "iv": 0.2191693577036465
+    },
+    "patterns_fired": [
+      "nope",
+      "gamma_flip",
+      "volume_oi",
+      "above_ask",
+      "institutional",
+      "source_count",
+      "velocity",
+      "regime_tilt"
+    ],
+    "sources": [
+      "sweep_volume",
+      "congress",
+      "pattern_calls",
+      "pattern_puts",
+      "high_volume",
+      "oi_changers"
+    ],
+    "thesis": "AAPL PUT (ELITE): NOPE +0.42 (moderate) = dealer delta pressure -> CALL bias; WITHIN 0.5% OF FLIP STRIKE $300.00 in POSITIVE_PIN regime (0.56% away) - pinning toward flip; VOL > OI fired on $302.50 PUT: vol 12591 vs OI 278 (ratio 45.3x) = NEW positioning",
+    "entry_spot": 301.68,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
+  },
+  {
+    "logged_at": "2026-06-17T13:31:37.667769+00:00",
+    "scan_date": "2026-06-17",
+    "ticker": "SPCX",
+    "tier": "ELITE",
+    "side": "PUT",
+    "score": 97,
+    "size_pct": 30,
+    "trade_ticket": {
+      "occ_symbol": "SPCX260717P00205000",
+      "strike": 205.0,
+      "expiry": "2026-07-17",
+      "dte": 30,
+      "mid": 21.9,
+      "delta": -0.405,
+      "iv": 1.075356771032396
+    },
+    "patterns_fired": [
+      "volume_oi",
+      "above_ask",
+      "institutional",
+      "source_count",
+      "velocity",
+      "regime_tilt"
+    ],
+    "sources": [
+      "premium_top30",
+      "pattern_calls",
+      "pattern_puts",
+      "oi_changers"
+    ],
+    "thesis": "SPCX PUT (ELITE): VOL > OI fired on $200.00 PUT: vol 114988 vs OI 0 (ratio 1149.9x) = NEW positioning; ABOVE-ASK URGENCY: PUT side has $5.6M / $7.3M (77%) executed at ask or above = pro urgency; INSTITUTIONAL: $35.2M premium, 72C/28P (72% CALL concentration)",
+    "entry_spot": 209.74,
+    "macro_regime": "RISK_OFF_PRESSURE",
+    "outcome": null
   }
 ]

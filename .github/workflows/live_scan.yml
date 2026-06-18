@@ -1,0 +1,43 @@
+name: live-scan
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 5 min during US cash session, Mon-Fri. The 13-21 UTC band covers both
+    # DST halves (RTH is 13:30-20:00 UTC summer / 14:30-21:00 UTC winter); the script's
+    # _market_is_open() guard trims premarket/after-hours fires to actual session time.
+    - cron: "*/10 13-21 * * 1-5"
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    permissions:
+      contents: write
+    concurrency:
+      group: live-scan
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: UW flow -> adapter -> alert_engine -> Telegram
+        env:
+          UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/run_live_scan.py
+      - name: Commit scan state
+        if: always()
+        run: |
+          git config user.name "scan-bot"
+          git config user.email "noreply@github.com"
+          git add -f data/paper_trades/closed.json data/paper_trades/paper_probe_positions.json data/ambush_logs 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "live scan state [skip ci]"
+          git push || true

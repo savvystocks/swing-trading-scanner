@@ -322,6 +322,15 @@ def position_size_for_pick(state, contract_mid_usd, confluence=None):
         size_pct = config["position_size_pct"]
         tier = "DEFAULT"
 
+    try:
+        from src.catalyst import probe_ladder as _ladder
+        _lad = _ladder.evaluate()
+        if _lad["size_pct"] < size_pct:
+            tier = f"{tier}/{_lad['rung']}"
+            size_pct = _lad["size_pct"]
+    except Exception:
+        pass
+
     if size_pct <= 0:
         return 0, 0.0, f"confluence tier {tier} = below take threshold (need 3+ signals)"
 

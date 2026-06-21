@@ -56,9 +56,13 @@ def route(state, config=None):
               and ts_pct is not None and ts_pct >= config["calendar_ts_floor"]
               and ivrv is not None and ivrv <= config["calendar_ivrv_ceiling"])
 
+    backwardation = bool(state.get("backwardation"))
     if gate in ("LONG", "SHORT"):
-        if fracture and ivr > config["high_ivr_floor"] and skew is not None and skew >= config["backspread_skew_floor"]:
-            return _result("RATIO_BACKSPREAD", "directional + macro fracture + rich IVR + financeable skew", state)
+        if skew is not None and skew >= config["backspread_skew_floor"] and (
+                (fracture and ivr > config["high_ivr_floor"]) or backwardation):
+            why = "directional + VIX backwardation + financeable skew" if backwardation \
+                else "directional + macro fracture + rich IVR + financeable skew"
+            return _result("RATIO_BACKSPREAD", why, state)
         if cal_ok:
             return _result("CALENDAR", "directional but IV crushed + flat term -> own cheap vol", state)
         if config["calendar_ivr_ceiling"] < ivr <= config["directional_ivr_ceiling"]:

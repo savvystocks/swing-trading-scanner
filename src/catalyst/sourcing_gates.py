@@ -30,6 +30,7 @@ def get_config():
         "nope_extreme": _env_float("GATE_NOPE_EXTREME", 1.0),
         "min_positioning_signals": _env_float("GATE_MIN_POSITIONING_SIGNALS", 2),
         "correlation_block": _env_float("GATE_CORRELATION_BLOCK", 0.50),
+        "max_per_sector": _env_float("GATE_MAX_PER_SECTOR", 3),
     }
 
 
@@ -150,31 +151,41 @@ def _same_theme(ticker, other):
 def sector_correlation_guard(candidate, open_positions, returns_lookup=None, sector_map=None, config=None):
     if config is None:
         config = get_config()
-    ticker = (candidate.get("ticker") or "").upper()
-    cand_sector = (sector_map or {}).get(ticker) or candidate.get("sector")
-    blocked_by = []
+    base = (candidate.get("ticker") or "").upper().split(".")[0]
+    cand_sector = (sector_map or {}).get(base) or candidate.get("sector")
+    overlaps = []
     reasons = []
 
     for pos in open_positions or []:
-        pt = (pos.get("ticker") or "").upper()
-        if not pt or pt == ticker:
+        pt = (pos.get("ticker") or "").upper().split(".")[0]
+        if not pt or pt == base:
             continue
-        if _same_theme(ticker, pt):
-            blocked_by.append(pt)
-            reasons.append(f"same theme cluster as open {pt}")
-            continue
-        pos_sector = (sector_map or {}).get(pt) or pos.get("sector")
-        if cand_sector and pos_sector and cand_sector == pos_sector:
-            blocked_by.append(pt)
-            reasons.append(f"same sector ({cand_sector}) as open {pt}")
-            continue
-        if returns_lookup and ticker in returns_lookup and pt in returns_lookup:
-            corr = _pearson(returns_lookup[ticker], returns_lookup[pt])
-            if corr is not None and corr > config["correlation_block"]:
-                blocked_by.append(pt)
-                reasons.append(f"correlation {corr:.2f} with open {pt} > {config['correlation_block']}")
+        overlap = None
+        if _same_theme(base, pt):
+            overlap = f"theme cluster ({pt})"
+        else:
+            pos_sector = (sector_map or {}).get(pt) or pos.get("sector")
+            if cand_sector and pos_sector and cand_sector == pos_sector:
+                overlap = f"sector {cand_sector} ({pt})"
+            elif returns_lookup and base in returns_lookup and pt in returns_lookup:
+                corr = _pearson(returns_lookup[base], returns_lookup[pt])
+                if corr is not None and corr > config["correlation_block"]:
+                    overlap = f"corr {corr:.2f} ({pt})"
+        if overlap:
+            overlaps.append(pt)
+            reasons.append(overlap)
 
-    return {"passed": len(blocked_by) == 0, "blocked_by": blocked_by, "reasons": reasons, "sector": cand_sector}
+    n = len(overlaps)
+    max_per_sector = int(config["max_per_sector"])
+    passed = n < max_per_sector
+    size_multiplier = round(0.5 ** n, 3) if passed else 0.0
+    if not passed:
+        reasons.append(f"sector risk cap: {n} correlated open >= {max_per_sector}")
+    elif n:
+        reasons.append(f"beta-weight: {n} correlated open -> size x{size_multiplier}")
+
+    return {"passed": passed, "size_multiplier": size_multiplier, "overlaps": overlaps,
+            "reasons": reasons, "sector": cand_sector}
 
 
 def _pearson(xs, ys):

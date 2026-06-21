@@ -138,7 +138,7 @@ def normalize_flow_alert(alert, ticker_flow=None, contract_stats=None, positioni
 
 
 def candidates_from_flow(payload, positioning_by_ticker=None, contract_stats_by_occ=None,
-                         quotes_by_occ=None, universe=None):
+                         quotes_by_occ=None, universe=None, watchlist=None, watchlist_min_premium=2000000):
     rows = payload.get("data") if isinstance(payload, dict) else payload
     if not isinstance(rows, list):
         return []
@@ -148,8 +148,11 @@ def candidates_from_flow(payload, positioning_by_ticker=None, contract_stats_by_
         if not isinstance(a, dict):
             continue
         ticker = _s(a, "ticker", "underlying_symbol", "underlying", "symbol")
-        if universe is not None and (ticker or "").upper().split(".")[0] not in universe:
-            continue
+        base = (ticker or "").upper().split(".")[0]
+        if universe is not None and base not in universe:
+            prem = _f(a, "total_premium", "premium", "premium_value") or 0
+            if not (watchlist and base in watchlist and prem >= watchlist_min_premium):
+                continue
         occ = _s(a, "option_chain", "option_symbol", "occ_symbol")
         out.append(normalize_flow_alert(
             a,

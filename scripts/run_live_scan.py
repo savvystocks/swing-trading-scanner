@@ -1,9 +1,10 @@
 import sys
 import os
+import json
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.catalyst import uw_adapter, alert_engine, scan_safeguards, alpaca_executor
+from src.catalyst import uw_adapter, alert_engine, scan_safeguards, alpaca_executor, earnings_routing
 
 
 def _live_flow():
@@ -57,6 +58,95 @@ def _build_vertical(candidate, bias):
             return dr.bull_call_debit_spread(ticker, mk(longc, expiry), mk(shortc, expiry))
         return dr.bear_put_debit_spread(ticker, mk(longc, expiry), mk(shortc, expiry))
     return None
+
+
+def _build_backspread(candidate, bias):
+    ticker = (candidate.get("ticker") or "").split(".")[0]
+    spot = candidate.get("spot")
+    if not ticker or not spot or bias not in ("LONG", "SHORT"):
+        return None
+    try:
+        from src.options_suggest_bear_spread import _pull_chain, _closest
+        from src.catalyst import defined_risk as dr
+    except Exception:
+        return None
+    right = "call" if bias == "LONG" else "put"
+    chain = _pull_chain(ticker, right, spot, 30, 60)
+    if not chain or not chain.get("by_exp"):
+        return None
+
+    def mk(x, expiry):
+        return {"strike": x["strike"], "mid": x["mid"], "delta": x["delta"],
+                "expiration": expiry, "dte": x["dte"], "occ_symbol": x["symbol"]}
+
+    for expiry, contracts in chain["by_exp"].items():
+        nearc = _closest(contracts, 0.50, 0.40, 0.60)
+        if not nearc:
+            continue
+        pool = [x for x in contracts if (x["strike"] > nearc["strike"]) == (right == "call")]
+        farc = _closest(pool, 0.30, 0.18, 0.42)
+        if not farc:
+            continue
+        if right == "call":
+            return dr.call_ratio_backspread(ticker, mk(nearc, expiry), mk(farc, expiry), ratio=2)
+        return dr.put_ratio_backspread(ticker, mk(nearc, expiry), mk(farc, expiry), ratio=2)
+    return None
+
+
+def _build_calendar(candidate):
+    ticker = (candidate.get("ticker") or "").split(".")[0]
+    spot = candidate.get("spot")
+    if not ticker or not spot:
+        return None
+    try:
+        from src.options_suggest_bear_spread import _pull_chain, _closest
+        from src.catalyst import defined_risk as dr
+    except Exception:
+        return None
+    front = _pull_chain(ticker, "call", spot, 21, 35)
+    back = _pull_chain(ticker, "call", spot, 50, 80)
+    if not front or not back or not front.get("by_exp") or not back.get("by_exp"):
+        return None
+    fexp, fcons = next(iter(front["by_exp"].items()))
+    bexp, bcons = next(iter(back["by_exp"].items()))
+    fatm = _closest(fcons, 0.50, 0.40, 0.60)
+    if not fatm:
+        return None
+    batm = next((x for x in bcons if abs(x["strike"] - fatm["strike"]) < 1e-6), None)
+    if not batm:
+        return None
+
+    def mk(x, expiry):
+        return {"strike": x["strike"], "mid": x["mid"], "delta": x["delta"],
+                "expiration": expiry, "dte": x["dte"], "occ_symbol": x["symbol"]}
+
+    return dr.calendar_spread(ticker, "call", mk(fatm, fexp), mk(batm, bexp))
+
+
+def _open_positions():
+    try:
+        from src.catalyst import paper_pipeline as pp
+        if not pp.OPEN_PATH.exists():
+            return []
+        with open(pp.OPEN_PATH, "r", encoding="utf-8") as f:
+            rows = json.load(f)
+        return [{"ticker": r.get("ticker"), "sector": scan_safeguards.sector_of(r.get("ticker"))}
+                for r in rows if isinstance(r, dict)]
+    except Exception:
+        return []
+
+
+def _select_combo(candidate, bias, backwardation, combo_fn=None):
+    if combo_fn:
+        return combo_fn(candidate, bias)
+    setup = (candidate.get("earnings_setup") or {}).get("setup")
+    if setup == "PRE_EARNINGS_HARVEST":
+        return _build_calendar(candidate)
+    if setup == "PEMD":
+        return _build_vertical(candidate, "LONG")
+    if backwardation and candidate.get("skew_inversion") and bias in ("LONG", "SHORT"):
+        return _build_backspread(candidate, bias) or _build_vertical(candidate, bias)
+    return _build_vertical(candidate, bias)
 
 
 def _to_f(v):
@@ -187,6 +277,27 @@ def _enrich(candidate):
         except Exception:
             pass
 
+    if ticker and spot and has_alpaca:
+        try:
+            from datetime import datetime, timedelta
+            from src.alpaca_ohlcv import get_daily_bars_eodhd_format
+            from src.indicators import atr as _atr
+            import pandas as pd
+            bars = get_daily_bars_eodhd_format(ticker, from_date=(datetime.utcnow().date() - timedelta(days=40)).isoformat())
+            if bars and len(bars) >= 15:
+                bars.sort(key=lambda b: b["date"])
+                closes = [b["close"] for b in bars]
+                if len(closes) >= 4 and closes[-4]:
+                    candidate["gap_up_pct"] = round((closes[-1] - closes[-4]) / closes[-4] * 100, 1)
+                a = _atr(pd.DataFrame(bars), 14)
+                atr_val = float(a.iloc[-1]) if a is not None and len(a) else None
+                if atr_val and spot:
+                    atr_pct = atr_val / spot * 100
+                    candidate["atr_pct"] = round(atr_pct, 2)
+                    candidate["atr_trail_pct"] = round(max(15.0, min(40.0, 12.0 + atr_pct * 3.0)), 1)
+        except Exception:
+            pass
+
     return candidate
 
 
@@ -252,7 +363,10 @@ def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, e
         exec_size_pct = _env_float("EXEC_SIZE_PCT", 25)
 
     bias = regime_state.get("bias")
-    candidates = uw_adapter.candidates_from_flow(flow_payload, universe=universe)
+    backwardation = bool(regime_state.get("backspread_unlock"))
+    candidates = uw_adapter.candidates_from_flow(flow_payload, universe=universe,
+                                                 watchlist=scan_safeguards.MIDCAP_WATCHLIST)
+    open_positions = _open_positions()
 
     alerts = []
     for c in candidates:
@@ -265,24 +379,31 @@ def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, e
         ivr = (ivr_fn or _live_ivr)(c.get("ticker"))
         c["ivr"] = ivr
         c["vix"] = (regime_state.get("vix_term") or {}).get("vix")
-        combo = (combo_fn or _build_vertical)(c, bias)
+        if not c.get("sector"):
+            c["sector"] = scan_safeguards.sector_of(c.get("ticker"))
+        c["earnings_setup"] = earnings_routing.classify(c)
+
+        combo = _select_combo(c, bias, backwardation, combo_fn)
+        vault_state = {"ivr": ivr, "backwardation": backwardation,
+                       "skew": 0.06 if c.get("skew_inversion") else None}
         decision = alert_engine.process(
-            c, combo=combo, regime_state=regime_state, vault_state={"ivr": ivr},
-            ladder_state=ladder_state, apply_cooldown=apply_cooldown)
+            c, combo=combo, regime_state=regime_state, vault_state=vault_state,
+            open_positions=open_positions, ladder_state=ladder_state, apply_cooldown=apply_cooldown)
         decision["ivr"] = ivr
         if not decision.get("alerted"):
             continue
 
+        eff_size_pct = round(exec_size_pct * decision.get("size_multiplier", 1.0), 2)
         alpaca_rec = None
         if execute and combo is not None:
-            contracts = alpaca_executor.size_spread(combo, account_gbp=account_gbp, size_pct=exec_size_pct)
+            contracts = alpaca_executor.size_spread(combo, account_gbp=account_gbp, size_pct=eff_size_pct)
             resp, err = (executor_fn or alpaca_executor.submit_spread)(combo, contracts)
             alpaca_rec = {"contracts": contracts, "order_id": (resp or {}).get("id"),
                           "status": (resp or {}).get("status"), "error": err}
 
-        (telegram_fn or _send)(_format_alert(c, decision, exec_size_pct, account_gbp, alpaca_rec))
+        (telegram_fn or _send)(_format_alert(c, decision, eff_size_pct, account_gbp, alpaca_rec))
         alerts.append({"ticker": c.get("ticker"), "decision": decision["decision"],
-                       "structure": decision["structure"], "alpaca": alpaca_rec})
+                       "structure": decision["structure"], "size_pct": eff_size_pct, "alpaca": alpaca_rec})
         if len(alerts) >= max_alerts:
             break
 

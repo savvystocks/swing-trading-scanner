@@ -52,10 +52,10 @@ def size_spread(combo, account_gbp=4000.0, size_pct=25.0, fx=1.26):
     if hasattr(combo, "as_dict"):
         combo = combo.as_dict()
     net_debit = combo.get("net_debit") or 0
+    max_loss = combo.get("max_loss_per_spread") or 0
     if net_debit > 0:
-        per_spread_gbp = net_debit * 100 / fx
+        per_spread_gbp = max(net_debit * 100, max_loss) / fx
     else:
-        max_loss = combo.get("max_loss_per_spread") or 0
         per_spread_gbp = max_loss / fx
     if per_spread_gbp <= 0:
         return 0

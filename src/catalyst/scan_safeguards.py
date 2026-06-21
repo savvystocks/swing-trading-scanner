@@ -13,6 +13,13 @@ CRYPTO_PROXIES = {
     "MSTR", "COIN", "MARA", "RIOT", "CLSK", "BTDR", "BITF", "HUT", "WULF", "CIFR", "IREN", "HOOD",
 }
 
+MIDCAP_WATCHLIST = {
+    "PLTR", "ROKU", "HOOD", "TSLA", "SOFI", "AFRM", "RIVN", "DKNG", "RBLX", "U",
+    "NET", "SNAP", "CVNA", "DASH", "ABNB", "SHOP", "CRWD", "DDOG", "SMCI", "ARM",
+}
+
+_SECTOR_MAP = {"map": None}
+
 _UNIVERSE_CACHE = {"set": None}
 
 
@@ -47,6 +54,25 @@ def in_universe(ticker, universe=None):
     if universe is None:
         universe = load_universe()
     return _base(ticker) in universe
+
+
+def in_midcap_watchlist(ticker):
+    return _base(ticker) in MIDCAP_WATCHLIST
+
+
+def sector_of(ticker):
+    if _SECTOR_MAP["map"] is None:
+        m = {}
+        try:
+            with open(UNIVERSE_PATH, "r", encoding="utf-8") as f:
+                for r in json.load(f):
+                    base = _base(r.get("ticker"))
+                    if base and r.get("sector"):
+                        m[base] = r.get("sector")
+        except Exception:
+            pass
+        _SECTOR_MAP["map"] = m
+    return _SECTOR_MAP["map"].get(_base(ticker))
 
 
 def event_blackout(candidate, max_days=7):

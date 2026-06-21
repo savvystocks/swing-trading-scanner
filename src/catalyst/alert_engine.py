@@ -28,8 +28,14 @@ def screen(candidate, regime_state=None, vault_state=None, open_positions=None,
         ladder_state = probe_ladder.evaluate()
 
     sourcing_ok = screen_res["five_gates"]["passed"] and screen_res["sector_guard"]["passed"]
+    earnings_setup = candidate.get("earnings_setup") or {}
+    es = earnings_setup.get("setup")
+    structure = route["structure"]
     if not sourcing_ok:
         decision, reasons = "REJECT", screen_res["reject_reasons"]
+    elif es:
+        decision, reasons = "TRADE", [earnings_setup.get("reason", es)]
+        structure = earnings_setup.get("structure", structure)
     elif screen_res["positioning"]["passed"]:
         if route["tradeable"]:
             decision, reasons = "TRADE", [route["rationale"]]
@@ -59,13 +65,19 @@ def screen(candidate, regime_state=None, vault_state=None, open_positions=None,
             decision = "REJECT"
             reasons = list(reasons) + ["event blackout: " + ", ".join(blackout["reasons"])]
 
+    if decision in ("TRADE", "REROUTE") and combo is None:
+        decision = "REJECT"
+        reasons = list(reasons) + ["no structurable combo (chain unavailable) - cannot verify defined risk"]
+
     return {
         "ticker": candidate.get("ticker"),
         "side": candidate.get("side"),
         "decision": decision,
-        "structure": route["structure"],
+        "structure": structure,
         "structure_family": route["family"],
         "route_alert": route["alert"],
+        "earnings_setup": es,
+        "size_multiplier": screen_res["sector_guard"].get("size_multiplier", 1.0),
         "regime": regime_state.get("regime"),
         "bias": bias,
         "size_pct": ladder_state["size_pct"],
@@ -79,8 +91,15 @@ def screen(candidate, regime_state=None, vault_state=None, open_positions=None,
 
 
 def _alert_from(candidate, combo_dict, decision):
-    family = combo_dict.get("net_credit", 0) > 0 and "credit" or "debit"
-    entry = combo_dict.get("net_credit") if family == "credit" else combo_dict.get("net_debit")
+    structure = combo_dict.get("structure") or ""
+    if structure.endswith("backspread") or structure == "calendar_spread":
+        family = "debit"
+    else:
+        family = "credit" if (combo_dict.get("net_credit") or 0) > 0 else "debit"
+    if family == "credit":
+        entry = combo_dict.get("net_credit")
+    else:
+        entry = combo_dict.get("net_debit") or combo_dict.get("net_credit") or combo_dict.get("max_loss_per_spread")
     return {
         "ticker": candidate.get("ticker"),
         "side": candidate.get("side"),
@@ -100,6 +119,7 @@ def _alert_from(candidate, combo_dict, decision):
         "size_pct": decision["size_pct"],
         "gates": {"rung": decision["ladder_rung"], "structure": decision["structure"],
                   "confirmations": decision["screen"]["positioning"]["confirmations"]},
+        "atr_trail_pct": candidate.get("atr_trail_pct"),
         "metadata": {
             "entry_hour_utc": datetime.utcnow().hour,
             "iv_rank": candidate.get("ivr"),

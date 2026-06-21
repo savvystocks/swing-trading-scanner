@@ -108,6 +108,7 @@ def log_alert(alert):
         "last_pnl_pct": 0.0,
         "last_marked_at": None,
         "metadata": alert.get("metadata"),
+        "atr_trail_pct": alert.get("atr_trail_pct"),
         "trims": [],
     }
     positions = _load(OPEN_PATH)
@@ -157,10 +158,11 @@ def decide_exit(pos, now_iso=None, config=None):
     if trims_done < 2 and pnl >= config["tier2_pct"]:
         return {"action": "TRIM", "tier": 2, "reason": "TIER2_+200%_bank_growth", "fraction": 1.0 / 3.0}
     if trims_done >= 2:
-        trail_floor = peak * (1.0 - config["runner_trail_pct"] / 100.0)
+        trail_pct = pos.get("atr_trail_pct") or config["runner_trail_pct"]
+        trail_floor = peak * (1.0 - trail_pct / 100.0)
         if pnl <= trail_floor and peak > 0:
             return {"action": "CLOSE", "result": "WIN" if pnl > 0 else "LOSS",
-                    "reason": f"RUNNER_TRAIL_20%_from_peak_{peak:.0f}%", "fraction": 1.0}
+                    "reason": f"RUNNER_TRAIL_{trail_pct:.0f}%_from_peak_{peak:.0f}%", "fraction": 1.0}
     if dte <= config["min_dte"]:
         return {"action": "CLOSE", "result": "WIN" if pnl > 0 else "LOSS", "reason": "MIN_DTE_PIN_SAFETY", "fraction": 1.0}
     if trims_done < 2 and days_held >= config["max_hold_days"]:

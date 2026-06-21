@@ -332,6 +332,57 @@ def _send(text):
     return send_alert(text)
 
 
+def session_heartbeat(now_utc=None, send_fn=None, state_path=None):
+    from datetime import datetime, timezone
+    import pathlib
+    if now_utc is None:
+        now_utc = datetime.now(timezone.utc)
+    elif now_utc.tzinfo is None:
+        now_utc = now_utc.replace(tzinfo=timezone.utc)
+    now_et = now_utc
+    try:
+        from zoneinfo import ZoneInfo
+        now_et = now_utc.astimezone(ZoneInfo("America/New_York"))
+    except Exception:
+        pass
+    if now_et.weekday() >= 5:
+        return None
+
+    path = state_path or (pathlib.Path(__file__).parent.parent / "data" / "ambush_logs" / "heartbeat_state.json")
+    today = now_et.date().isoformat()
+    state = {"date": today, "online_sent": False, "offline_sent": False}
+    try:
+        if path.exists():
+            s = json.load(open(path, "r", encoding="utf-8"))
+            if s.get("date") == today:
+                state = s
+    except Exception:
+        pass
+
+    mins = now_et.hour * 60 + now_et.minute
+    msg = None
+    sent = None
+    if not state["online_sent"] and 9 * 60 + 30 <= mins < 16 * 60:
+        msg, sent = "\U0001F7E2 V9 Scanner Online - Awaiting Institutional Flow", "online"
+        state["online_sent"] = True
+    elif not state["offline_sent"] and mins >= 15 * 60 + 58:
+        msg, sent = "\U0001F534 V9 Scanner Offline - Session Concluded", "offline"
+        state["offline_sent"] = True
+
+    if msg:
+        try:
+            (send_fn or _send)(msg)
+        except Exception:
+            pass
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(state, f, ensure_ascii=False)
+        except Exception:
+            pass
+    return sent
+
+
 def _env_float(key, default):
     raw = (os.environ.get(key, "") or "").strip()
     try:
@@ -411,6 +462,12 @@ def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, e
 
 
 if __name__ == "__main__":
+    try:
+        hb = session_heartbeat()
+        if hb:
+            print(f"heartbeat: {hb}")
+    except Exception:
+        pass
     force = "--force" in sys.argv
     if not force:
         try:

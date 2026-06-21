@@ -1,11 +1,11 @@
 name: live-scan
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:        # external exact-time trigger (cron-job.org) via the GitHub API
   schedule:
-    # Every 5 min during US cash session, Mon-Fri. The 13-21 UTC band covers both
-    # DST halves (RTH is 13:30-20:00 UTC summer / 14:30-21:00 UTC winter); the script's
-    # _market_is_open() guard trims premarket/after-hours fires to actual session time.
+    # Failsafe backup only - GitHub's cron queue is delayed, so cron-job.org drives the
+    # exact */10 cadence. The 13-21 UTC band covers both DST halves (RTH is 13:30-20:00 UTC
+    # summer / 14:30-21:00 UTC winter); the script's _market_is_open() guard trims to session.
     - cron: "*/10 13-21 * * 1-5"
 
 jobs:

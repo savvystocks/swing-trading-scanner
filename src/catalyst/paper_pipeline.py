@@ -107,6 +107,7 @@ def log_alert(alert):
         "trough_pnl_pct": 0.0,
         "last_pnl_pct": 0.0,
         "last_marked_at": None,
+        "metadata": alert.get("metadata"),
         "trims": [],
     }
     positions = _load(OPEN_PATH)

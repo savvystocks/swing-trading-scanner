@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from src.catalyst import regime_compass
 from src.catalyst import sourcing_gates
 from src.catalyst import strategy_vault
@@ -98,6 +100,18 @@ def _alert_from(candidate, combo_dict, decision):
         "size_pct": decision["size_pct"],
         "gates": {"rung": decision["ladder_rung"], "structure": decision["structure"],
                   "confirmations": decision["screen"]["positioning"]["confirmations"]},
+        "metadata": {
+            "entry_hour_utc": datetime.utcnow().hour,
+            "iv_rank": candidate.get("ivr"),
+            "iv_pct": candidate.get("iv_pct"),
+            "vix": candidate.get("vix"),
+            "dte": (combo_dict.get("legs") or [{}])[0].get("dte"),
+            "regime": decision.get("regime"),
+            "structure": decision.get("structure"),
+            "side": candidate.get("side"),
+            "negative_gamma": candidate.get("negative_gamma"),
+            "near_darkpool_node": candidate.get("near_darkpool_node"),
+        },
     }
 
 

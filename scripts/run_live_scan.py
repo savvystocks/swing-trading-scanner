@@ -66,6 +66,49 @@ def _to_f(v):
         return None
 
 
+def _max_gamma_strike(gex_by_strike):
+    rows = (gex_by_strike or {}).get("data") if isinstance(gex_by_strike, dict) else gex_by_strike
+    if not isinstance(rows, list):
+        return None
+    best, best_mag = None, -1.0
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        strike = _to_f(r.get("strike") or r.get("price"))
+        if strike is None:
+            continue
+        gamma = _to_f(r.get("gamma"))
+        if gamma is None:
+            gamma = (_to_f(r.get("call_gamma_exposure")) or 0.0) + (_to_f(r.get("put_gamma_exposure")) or 0.0)
+        mag = abs(gamma)
+        if mag > best_mag:
+            best_mag, best = mag, strike
+    return best
+
+
+def _darkpool_node(uw, ticker, spot):
+    if not ticker or not spot:
+        return None
+    try:
+        rows = (uw.darkpool_ticker(ticker) or {}).get("data") or []
+    except Exception:
+        return None
+    buckets = {}
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        price = _to_f(r.get("price") or r.get("executed_price"))
+        size = _to_f(r.get("size") or r.get("volume") or r.get("premium")) or 0.0
+        if price is None:
+            continue
+        key = round(price, 0)
+        buckets[key] = buckets.get(key, 0.0) + size
+    if not buckets:
+        return None
+    node = max(buckets, key=buckets.get)
+    return {"price": node, "size": round(buckets[node], 0), "near": bool(abs(spot - node) / spot <= 0.01)}
+
+
 def _cheap_pass(c):
     oi = c.get("oi")
     spot = c.get("spot")
@@ -112,10 +155,24 @@ def _enrich(candidate):
                     candidate["avg_vol_30d"] = sum(vols) / len(vols)
             if ticker and spot:
                 from src.catalyst.uw_enrichment import _summarize_gex
-                g = _summarize_gex(None, uw.greek_exposure_by_strike(ticker), ticker, spot)
-                flip = _to_f((g or {}).get("gamma_flip_strike"))
-                if flip and abs(spot - flip) / spot <= 0.015:
-                    candidate["gamma_flip_pin"] = True
+                gex_by_strike = uw.greek_exposure_by_strike(ticker)
+                g = _summarize_gex(None, gex_by_strike, ticker, spot) or {}
+                flip = _to_f(g.get("gamma_flip_strike"))
+                if flip:
+                    candidate["zero_gamma"] = round(flip, 2)
+                    if abs(spot - flip) / spot <= 0.015:
+                        candidate["gamma_flip_pin"] = True
+                net_gex = _to_f(g.get("net_gex"))
+                if net_gex is not None:
+                    candidate["gex_net"] = net_gex
+                    candidate["negative_gamma"] = net_gex < 0
+                mg = _max_gamma_strike(gex_by_strike)
+                if mg is not None:
+                    candidate["max_gamma_strike"] = round(mg, 2)
+                dp = _darkpool_node(uw, ticker, spot)
+                if dp:
+                    candidate["darkpool_node"] = dp.get("price")
+                    candidate["near_darkpool_node"] = dp.get("near")
     except Exception:
         pass
 
@@ -143,6 +200,15 @@ def _format_alert(candidate, decision, exec_size_pct, account_gbp, alpaca_rec=No
         f"IVR {decision.get('ivr')} | confirmations {decision['screen']['positioning']['confirmations']}",
         decision["route_alert"],
     ]
+    ctx = []
+    if candidate.get("negative_gamma"):
+        ctx.append("NEG-GAMMA squeeze risk")
+    if candidate.get("near_darkpool_node"):
+        ctx.append(f"at dark-pool node {candidate.get('darkpool_node')}")
+    if candidate.get("vix"):
+        ctx.append(f"VIX {candidate.get('vix')}")
+    if ctx:
+        lines.append(" | ".join(ctx))
     if alpaca_rec:
         status = alpaca_rec.get("status") or alpaca_rec.get("error")
         lines.append(f"Alpaca PAPER: {alpaca_rec.get('contracts')}x -> {status}")
@@ -197,6 +263,8 @@ def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, e
         c["earnings_in_days"] = ev.get("earnings_in_days")
         c["exdiv_in_days"] = ev.get("exdiv_in_days")
         ivr = (ivr_fn or _live_ivr)(c.get("ticker"))
+        c["ivr"] = ivr
+        c["vix"] = (regime_state.get("vix_term") or {}).get("vix")
         combo = (combo_fn or _build_vertical)(c, bias)
         decision = alert_engine.process(
             c, combo=combo, regime_state=regime_state, vault_state={"ivr": ivr},

@@ -102,6 +102,66 @@ def _yen_state(config):
     }
 
 
+def _vix_term():
+    def _close(sym):
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=10d"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            d = json.loads(r.read().decode())
+        cl = [c for c in d["chart"]["result"][0]["indicators"]["quote"][0]["close"] if c is not None]
+        return cl[-1] if cl else None
+    try:
+        vix = _close("%5EVIX")
+        vix3m = _close("%5EVIX3M")
+    except Exception as e:
+        return {"available": False, "reason": f"vix fetch failed: {type(e).__name__}"}
+    try:
+        vix9d = _close("%5EVIX9D")
+    except Exception:
+        vix9d = None
+    if vix is None or vix3m is None:
+        return {"available": False, "reason": "insufficient vix data"}
+    backwardation = vix > vix3m
+    return {
+        "available": True,
+        "vix": round(vix, 2),
+        "vix3m": round(vix3m, 2),
+        "vix9d": round(vix9d, 2) if vix9d is not None else None,
+        "structure": "BACKWARDATION" if backwardation else "CONTANGO",
+        "backwardation": bool(backwardation),
+    }
+
+
+def _third_friday(year, month):
+    from datetime import date
+    first = date(year, month, 1)
+    offset = (4 - first.weekday()) % 7
+    return date(year, month, 1 + offset + 14)
+
+
+def _opex_state(today=None):
+    if today is None:
+        today = datetime.utcnow().date()
+    this_opex = _third_friday(today.year, today.month)
+    next_opex = this_opex
+    if today > this_opex:
+        ny = today.year + (1 if today.month == 12 else 0)
+        nm = 1 if today.month == 12 else today.month + 1
+        next_opex = _third_friday(ny, nm)
+    days_to = (next_opex - today).days
+    last_opex = this_opex
+    if today < this_opex:
+        py = today.year - (1 if today.month == 1 else 0)
+        pm = 12 if today.month == 1 else today.month - 1
+        last_opex = _third_friday(py, pm)
+    return {
+        "next_opex": next_opex.isoformat(),
+        "days_to_opex": days_to,
+        "pre_opex_week": bool(0 <= days_to <= 6 and today.weekday() < 5),
+        "post_opex_monday": bool(today.weekday() == 0 and 0 <= (today - last_opex).days <= 3),
+    }
+
+
 def evaluate(config=None, verbose=False):
     if config is None:
         config = get_config()
@@ -129,20 +189,48 @@ def evaluate(config=None, verbose=False):
             regime, bias, directions = "C", "NEUTRAL", []
             reason = f"SPX zone {zone} and yen {yen_dir} disagree -> no clean regime, suppress directional"
 
+    vix_term = _vix_term()
+    opex = _opex_state()
+    try:
+        from src.catalyst import breadth_alpaca
+        breadth = breadth_alpaca.compute_breadth()
+    except Exception as e:
+        breadth = {"available": False, "reason": f"breadth error: {type(e).__name__}"}
+
+    breadth_warning = False
+    if regime == "B" and breadth.get("available") and breadth.get("breadth_state") == "narrow":
+        regime, bias, directions = "C", "NEUTRAL", []
+        pct = breadth.get("pct_above_50d") or 0
+        reason = f"narrow breadth ({pct*100:.0f}% of SP500 > 50d SMA) -> SPX up-move is a narrow fake-out, suppress"
+        breadth_warning = True
+
+    opex_suppress = bool(opex.get("pre_opex_week") and regime in ("A", "B"))
+    if opex_suppress:
+        reason = f"{reason} | pre-OpEx week (heavy-gamma chop) -> directional suppressed"
+
     state = {
         "regime": regime,
         "bias": bias,
         "allowed_directions": directions,
-        "directional_locked": regime == "C",
+        "directional_locked": regime == "C" or opex_suppress,
         "spx": spx,
         "yen": yen,
+        "vix_term": vix_term,
+        "breadth": breadth,
+        "opex": opex,
+        "breadth_warning": breadth_warning,
+        "backspread_unlock": bool(vix_term.get("backwardation")),
+        "post_opex_unlock": bool(opex.get("post_opex_monday")),
+        "opex_suppress": opex_suppress,
         "reason": reason,
         "evaluated_at": datetime.utcnow().isoformat() + "Z",
     }
 
     if verbose:
         z = spx["zone"] if spx else "n/a"
-        print(f"  regime_compass: REGIME {regime} ({bias}) | SPX {z} | yen {yen.get('slope_dir')}")
+        print(f"  regime_compass: REGIME {regime} ({bias}) | SPX {z} | yen {yen.get('slope_dir')} "
+              f"| VIX {vix_term.get('structure')} | breadth {breadth.get('breadth_state')} "
+              f"| OpEx in {opex.get('days_to_opex')}d")
         print(f"  regime_compass: {reason}")
 
     return state
@@ -152,7 +240,7 @@ def direction_allowed(side, state=None):
     if state is None:
         state = evaluate()
     side = (side or "").upper()
-    if state["regime"] == "C":
+    if state.get("directional_locked"):
         return False
     if state["bias"] == "SHORT":
         return side in ("PUT", "SHORT", "BEARISH")

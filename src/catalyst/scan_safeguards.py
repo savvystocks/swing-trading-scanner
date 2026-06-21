@@ -94,29 +94,36 @@ def earnings_exdiv_days(ticker, fundamentals=None):
 
     earnings_in = None
     exdiv_in = None
+    ok = False
     try:
-        from src.catalyst.forward_calendar import get_next_earnings_date
-        if fundamentals is None:
-            from src.eodhd import EODHDClient
-            fundamentals = EODHDClient().fundamentals(f"{key}.US")
-        ed = get_next_earnings_date(key, fundamentals)
-        if ed:
-            earnings_in = (ed - datetime.utcnow().date()).days
-        sd = (fundamentals or {}).get("SplitsDividends") or {}
-        raw_ex = sd.get("ExDividendDate")
-        if raw_ex:
-            xd = datetime.strptime(str(raw_ex)[:10], "%Y-%m-%d").date()
-            d = (xd - datetime.utcnow().date()).days
-            if d >= 0:
-                exdiv_in = d
+        import yfinance as yf
+        cal = yf.Ticker(key).calendar or {}
+        if cal:
+            today = datetime.utcnow().date()
+            ed = cal.get("Earnings Date")
+            if isinstance(ed, (list, tuple)):
+                ed = ed[0] if ed else None
+            if ed is not None:
+                ed = ed if hasattr(ed, "year") else datetime.strptime(str(ed)[:10], "%Y-%m-%d").date()
+                d = (ed - today).days
+                if d >= 0:
+                    earnings_in = d
+            xd = cal.get("Ex-Dividend Date")
+            if xd is not None:
+                xd = xd if hasattr(xd, "year") else datetime.strptime(str(xd)[:10], "%Y-%m-%d").date()
+                d = (xd - today).days
+                if d >= 0:
+                    exdiv_in = d
+            ok = True
     except Exception:
         pass
 
     result = {"earnings_in_days": earnings_in, "exdiv_in_days": exdiv_in}
-    if cache.get("day") != day:
-        cache = {"day": day, "tickers": {}}
-    cache.setdefault("tickers", {})[key] = result
-    _save_json(EARNINGS_CACHE_PATH, cache)
+    if ok:
+        if cache.get("day") != day:
+            cache = {"day": day, "tickers": {}}
+        cache.setdefault("tickers", {})[key] = result
+        _save_json(EARNINGS_CACHE_PATH, cache)
     return result
 
 

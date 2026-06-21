@@ -3,7 +3,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.catalyst import uw_adapter, alert_engine, scan_safeguards
+from src.catalyst import uw_adapter, alert_engine, scan_safeguards, alpaca_executor
 
 
 def _live_flow():
@@ -133,19 +133,20 @@ def _enrich(candidate):
     return candidate
 
 
-def _format_alert(candidate, decision, ladder_state):
-    from src.catalyst import defined_risk as dr
+def _format_alert(candidate, decision, exec_size_pct, account_gbp, alpaca_rec=None):
     t = candidate.get("ticker")
     head = f"<b>V8.5 {decision['decision']} {t} {decision['structure']}</b>"
     lines = [
         head,
-        f"regime {decision['regime']} ({decision['bias']}) | size {ladder_state['size_pct']}% "
-        f"(rung {ladder_state['rung']}, active £{ladder_state['ratchet']['active_tranche_gbp']})",
+        f"regime {decision['regime']} ({decision['bias']}) | paper size {exec_size_pct}% of £{account_gbp:.0f}",
         f"spot {candidate.get('spot')} | flow dominance {candidate.get('flow_dominance_pct')}% | "
         f"IVR {decision.get('ivr')} | confirmations {decision['screen']['positioning']['confirmations']}",
         decision["route_alert"],
-        "DEFINED RISK only - this is a system signal for MANUAL execution, not advice.",
     ]
+    if alpaca_rec:
+        status = alpaca_rec.get("status") or alpaca_rec.get("error")
+        lines.append(f"Alpaca PAPER: {alpaca_rec.get('contracts')}x -> {status}")
+    lines.append("Auto-executed on Alpaca PAPER (simulated). Real money is your call, manual.")
     return "\n".join(str(x) for x in lines)
 
 
@@ -154,9 +155,18 @@ def _send(text):
     return send_alert(text)
 
 
+def _env_float(key, default):
+    raw = (os.environ.get(key, "") or "").strip()
+    try:
+        return float(raw) if raw else float(default)
+    except ValueError:
+        return float(default)
+
+
 def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, events_fn=None,
              regime_state=None, ladder_state=None, ivr_fn=None, universe=None, enrich_fn=None,
-             apply_cooldown=True, max_alerts=10):
+             apply_cooldown=True, max_alerts=10, execute=True, executor_fn=None,
+             account_gbp=None, exec_size_pct=None):
     if flow_payload is None:
         flow_payload = (flow_fn or _live_flow)()
     if universe is None:
@@ -170,6 +180,10 @@ def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, e
     if ladder_state is None:
         from src.catalyst import probe_ladder
         ladder_state = probe_ladder.evaluate()
+    if account_gbp is None:
+        account_gbp = _env_float("ACCOUNT_SIZE_GBP", 4000)
+    if exec_size_pct is None:
+        exec_size_pct = _env_float("EXEC_SIZE_PCT", 25)
 
     bias = regime_state.get("bias")
     candidates = uw_adapter.candidates_from_flow(flow_payload, universe=universe)
@@ -183,17 +197,26 @@ def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, e
         c["earnings_in_days"] = ev.get("earnings_in_days")
         c["exdiv_in_days"] = ev.get("exdiv_in_days")
         ivr = (ivr_fn or _live_ivr)(c.get("ticker"))
+        combo = (combo_fn or _build_vertical)(c, bias)
         decision = alert_engine.process(
-            c, combo=(combo_fn or _build_vertical)(c, bias),
-            regime_state=regime_state, vault_state={"ivr": ivr},
+            c, combo=combo, regime_state=regime_state, vault_state={"ivr": ivr},
             ladder_state=ladder_state, apply_cooldown=apply_cooldown)
         decision["ivr"] = ivr
-        if decision.get("alerted"):
-            (telegram_fn or _send)(_format_alert(c, decision, ladder_state))
-            alerts.append({"ticker": c.get("ticker"), "decision": decision["decision"],
-                           "structure": decision["structure"]})
-            if len(alerts) >= max_alerts:
-                break
+        if not decision.get("alerted"):
+            continue
+
+        alpaca_rec = None
+        if execute and combo is not None:
+            contracts = alpaca_executor.size_spread(combo, account_gbp=account_gbp, size_pct=exec_size_pct)
+            resp, err = (executor_fn or alpaca_executor.submit_spread)(combo, contracts)
+            alpaca_rec = {"contracts": contracts, "order_id": (resp or {}).get("id"),
+                          "status": (resp or {}).get("status"), "error": err}
+
+        (telegram_fn or _send)(_format_alert(c, decision, exec_size_pct, account_gbp, alpaca_rec))
+        alerts.append({"ticker": c.get("ticker"), "decision": decision["decision"],
+                       "structure": decision["structure"], "alpaca": alpaca_rec})
+        if len(alerts) >= max_alerts:
+            break
 
     return {"candidates": len(candidates), "alerts": alerts, "regime": regime_state.get("regime")}
 

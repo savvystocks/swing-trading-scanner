@@ -29,9 +29,14 @@ jobs:
           UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          ALPACA_PAPER_API_KEY: ${{ secrets.ALPACA_PAPER_API_KEY }}
+          ALPACA_PAPER_SECRET_KEY: ${{ secrets.ALPACA_PAPER_SECRET_KEY }}
           EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ACCOUNT_SIZE_GBP: "4000"
+          EXEC_SIZE_PCT: "25"
+          GATE_MIN_POSITIONING_SIGNALS: "1"
         run: python scripts/run_live_scan.py
       - name: Commit scan state
         if: always()

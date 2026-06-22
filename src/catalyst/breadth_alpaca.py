@@ -3,6 +3,8 @@ import json
 import pathlib
 from datetime import datetime, timedelta
 
+from src.alpaca_creds import working_creds
+
 
 PROJECT_ROOT = pathlib.Path(__file__).parent.parent.parent
 UNIVERSE_PATH = PROJECT_ROOT / "data" / "universe" / "universe.json"
@@ -58,8 +60,9 @@ def compute_breadth(force=False):
     if not force and cache.get("date") == _today() and cache.get("data"):
         return cache["data"]
 
-    if not (os.environ.get("ALPACA_API_KEY") and os.environ.get("ALPACA_SECRET_KEY")):
-        return {"available": False, "reason": "no alpaca credentials"}
+    creds = working_creds()
+    if not creds:
+        return {"available": False, "reason": "no working alpaca credentials"}
     try:
         from alpaca.data.historical import StockHistoricalDataClient
         from alpaca.data.requests import StockBarsRequest
@@ -72,7 +75,7 @@ def compute_breadth(force=False):
     if not tickers:
         return {"available": False, "reason": "no SP500 universe"}
 
-    client = StockHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+    client = StockHistoricalDataClient(creds[0], creds[1])
     start = (datetime.utcnow().date() - timedelta(days=110)).isoformat()
     above_50 = 0
     counted = 0

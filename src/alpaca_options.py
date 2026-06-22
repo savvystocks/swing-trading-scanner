@@ -5,12 +5,12 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
-ALPACA_API_KEY = os.environ.get("ALPACA_API_KEY", "")
-ALPACA_SECRET_KEY = os.environ.get("ALPACA_SECRET_KEY", "")
+from src.alpaca_creds import working_creds
 
 
 def get_iv_skew_and_uoa(symbol, current_price):
-    if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
+    creds = working_creds()
+    if not creds:
         return None
     try:
         from alpaca.data.historical.option import OptionHistoricalDataClient
@@ -18,7 +18,7 @@ def get_iv_skew_and_uoa(symbol, current_price):
     except ImportError:
         return None
     try:
-        client = OptionHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY)
+        client = OptionHistoricalDataClient(creds[0], creds[1])
         today = datetime.now()
         min_exp = (today + timedelta(days=20)).strftime("%Y-%m-%d")
         max_exp = (today + timedelta(days=45)).strftime("%Y-%m-%d")
@@ -82,12 +82,13 @@ def get_iv_skew_and_uoa(symbol, current_price):
 
 
 def get_live_price(symbol):
-    if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
+    creds = working_creds()
+    if not creds:
         return None
     try:
         from alpaca.data.historical import StockHistoricalDataClient
         from alpaca.data.requests import StockLatestTradeRequest
-        client = StockHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY)
+        client = StockHistoricalDataClient(creds[0], creds[1])
         req = StockLatestTradeRequest(symbol_or_symbols=symbol)
         result = client.get_stock_latest_trade(req)
         trade = result.get(symbol) if isinstance(result, dict) else result
@@ -99,8 +100,9 @@ def get_live_price(symbol):
 
 
 def get_options_chain(symbol, direction, current_price):
-    if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
-        print(f"  [options {symbol}] SKIP: ALPACA_API_KEY or ALPACA_SECRET_KEY not set in env")
+    creds = working_creds()
+    if not creds:
+        print(f"  [options {symbol}] SKIP: no working Alpaca credentials")
         return None
 
     try:
@@ -111,7 +113,7 @@ def get_options_chain(symbol, direction, current_price):
         return None
 
     try:
-        client = OptionHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY)
+        client = OptionHistoricalDataClient(creds[0], creds[1])
 
         today = datetime.now()
         min_exp = (today + timedelta(days=14)).strftime("%Y-%m-%d")

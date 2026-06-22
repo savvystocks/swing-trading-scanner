@@ -34,7 +34,9 @@ def compute_realized_vol_30d(eodhd_ticker, eodhd_client):
 
 
 def pull_skew_data(symbol, spot):
-    if not os.environ.get("ALPACA_API_KEY") or not os.environ.get("ALPACA_SECRET_KEY"):
+    from src.alpaca_creds import working_creds
+    creds = working_creds()
+    if not creds:
         return None
     try:
         from alpaca.data.historical.option import OptionHistoricalDataClient
@@ -47,7 +49,7 @@ def pull_skew_data(symbol, spot):
     max_exp = (today + timedelta(days=45)).strftime("%Y-%m-%d")
 
     try:
-        client = OptionHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+        client = OptionHistoricalDataClient(creds[0], creds[1])
         call_req = OptionChainRequest(
             underlying_symbol=symbol,
             expiration_date_gte=min_exp,

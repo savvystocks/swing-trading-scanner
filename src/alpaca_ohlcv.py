@@ -6,6 +6,8 @@ import time
 import logging
 from datetime import datetime, timedelta
 
+from src.alpaca_creds import working_creds, is_auth_error
+
 logger = logging.getLogger(__name__)
 
 CACHE_DIR = pathlib.Path(__file__).parent.parent / "data" / "cache"
@@ -31,8 +33,10 @@ def _normalize_alpaca_symbol(symbol):
 
 
 def get_daily_bars_eodhd_format(symbol, from_date=None, to_date=None):
-    if not os.environ.get("ALPACA_API_KEY") or not os.environ.get("ALPACA_SECRET_KEY"):
+    creds = working_creds()
+    if not creds:
         return None
+    api_key, api_secret = creds
 
     symbol = _normalize_alpaca_symbol(symbol)
     cache = _cache_path(symbol, from_date, to_date)
@@ -57,7 +61,7 @@ def get_daily_bars_eodhd_format(symbol, from_date=None, to_date=None):
     result = None
     for attempt in range(3):
         try:
-            client = StockHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+            client = StockHistoricalDataClient(api_key, api_secret)
             if from_date:
                 start = datetime.strptime(from_date, "%Y-%m-%d")
             else:
@@ -77,7 +81,10 @@ def get_daily_bars_eodhd_format(symbol, from_date=None, to_date=None):
             break
         except Exception as e:
             es = str(e).lower()
-            rate_limited = "html" in es or "429" in es or "too many" in es or "rate limit" in es
+            if is_auth_error(e):
+                logger.warning(f"Alpaca auth rejected for {symbol} (check ALPACA_API_KEY / paper keys)")
+                return None
+            rate_limited = "429" in es or "too many" in es or "rate limit" in es or "html" in es
             if rate_limited and attempt < 2:
                 logger.warning(f"Alpaca rate-limit on {symbol} (attempt {attempt + 1}/3), backing off")
                 time.sleep(0.8 * (2 ** attempt))

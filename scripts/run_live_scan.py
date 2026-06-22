@@ -184,7 +184,7 @@ def _max_gamma_strike(gex_by_strike):
             continue
         gamma = _to_f(r.get("gamma"))
         if gamma is None:
-            gamma = (_to_f(r.get("call_gamma_exposure")) or 0.0) + (_to_f(r.get("put_gamma_exposure")) or 0.0)
+            gamma = (_to_f(r.get("call_gex")) or 0.0) + (_to_f(r.get("put_gex")) or 0.0)
         mag = abs(gamma)
         if mag > best_mag:
             best_mag, best = mag, strike
@@ -232,13 +232,14 @@ def _enrich(candidate):
     occ = candidate.get("occ_symbol")
     ticker = (candidate.get("ticker") or "").split(".")[0]
     spot = candidate.get("spot")
-    has_alpaca = bool(os.environ.get("ALPACA_API_KEY") and os.environ.get("ALPACA_SECRET_KEY"))
+    from src.alpaca_creds import working_creds
+    _creds = working_creds()
 
-    if occ and has_alpaca:
+    if occ and _creds:
         try:
             from alpaca.data.historical.option import OptionHistoricalDataClient
             from alpaca.data.requests import OptionLatestQuoteRequest
-            client = OptionHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+            client = OptionHistoricalDataClient(_creds[0], _creds[1])
             q = _retry(lambda: client.get_option_latest_quote(OptionLatestQuoteRequest(symbol_or_symbols=occ)).get(occ))
             if q and q.bid_price and q.ask_price:
                 bid, ask = float(q.bid_price), float(q.ask_price)

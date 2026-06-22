@@ -35,5 +35,11 @@ jobs:
           git config user.name "macro-bot"
           git config user.email "noreply@github.com"
           git add -f data/ambush_logs 2>/dev/null || true
-          git diff --cached --quiet || git commit -m "weekly macro review [skip ci]"
-          git push || true
+          if git diff --cached --quiet; then echo "no review log to commit"; exit 0; fi
+          git commit -m "weekly macro review [skip ci]"
+          for i in 1 2 3 4 5; do
+            git push origin HEAD:main && break
+            echo "push failed (concurrent commit) - rebasing onto latest main, attempt $i"
+            git pull --rebase --autostash origin main || true
+            sleep 2
+          done

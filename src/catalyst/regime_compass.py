@@ -1,5 +1,6 @@
 import os
 import json
+import pathlib
 import urllib.request
 from datetime import datetime, timedelta
 
@@ -8,6 +9,23 @@ from src.alpaca_options import get_live_price
 
 
 SPX_PROXY = "SPY"
+_SPX_CACHE = pathlib.Path(__file__).parent.parent.parent / "data" / "ambush_logs" / "regime_cache.json"
+
+
+def _load_spx_cache():
+    try:
+        return json.load(open(_SPX_CACHE, encoding="utf-8")) if _SPX_CACHE.exists() else {}
+    except Exception:
+        return {}
+
+
+def _save_spx_cache(d):
+    try:
+        _SPX_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        with open(_SPX_CACHE, "w", encoding="utf-8") as f:
+            json.dump(d, f, ensure_ascii=False)
+    except Exception:
+        pass
 
 
 def _env_float(key, default):
@@ -36,21 +54,34 @@ def _sma(values, n):
 
 
 def _spx_state(config):
-    bars = get_daily_bars_eodhd_format(
-        SPX_PROXY, from_date=(datetime.utcnow().date() - timedelta(days=400)).isoformat())
-    if not bars:
-        return None
-    bars.sort(key=lambda b: b["date"], reverse=True)
-    closes = [b["close"] for b in bars]
-    sma20 = _sma(closes, 20)
-    if sma20 is None:
+    today = datetime.utcnow().date().isoformat()
+    cache = _load_spx_cache()
+    fresh = cache.get("date") == today
+    sma20 = cache.get("sma20") if fresh else None
+    window_high = cache.get("window_high") if fresh else None
+    last_close = cache.get("last_close") if fresh else None
+
+    if sma20 is None or window_high is None:
+        bars = get_daily_bars_eodhd_format(
+            SPX_PROXY, from_date=(datetime.utcnow().date() - timedelta(days=400)).isoformat())
+        if bars:
+            bars.sort(key=lambda b: b["date"], reverse=True)
+            closes = [b["close"] for b in bars]
+            sma20 = _sma(closes, 20)
+            window_high = max(closes) if closes else None
+            last_close = closes[0] if closes else None
+            if sma20 is not None and window_high is not None:
+                _save_spx_cache({"date": today, "sma20": sma20, "window_high": window_high, "last_close": last_close})
+
+    if sma20 is None or window_high is None:
         return None
     live = get_live_price(SPX_PROXY)
-    spot = live if live else closes[0]
+    spot = live if live else last_close
+    if spot is None:
+        return None
     buffer = config["sma_buffer_pct"] / 100.0
     upper = sma20 * (1.0 + buffer)
     lower = sma20 * (1.0 - buffer)
-    window_high = max(closes) if closes else spot
     new_ath = spot >= window_high
     if spot > upper:
         zone = "ABOVE"
@@ -66,7 +97,7 @@ def _spx_state(config):
         "lower_band": round(lower, 2),
         "zone": zone,
         "new_ath": bool(new_ath),
-        "source": "live" if live else f"close {bars[0]['date']}",
+        "source": "live" if live else "cached close",
     }
 
 

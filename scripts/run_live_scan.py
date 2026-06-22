@@ -156,6 +156,21 @@ def _to_f(v):
         return None
 
 
+def _retry(fn, attempts=2, base=0.6):
+    import time
+    for i in range(attempts):
+        try:
+            return fn()
+        except Exception as e:
+            es = str(e).lower()
+            if ("html" in es or "429" in es or "too many" in es or "rate limit" in es) and i < attempts - 1:
+                print(f"  alpaca rate-limit, backoff {base * (2 ** i):.1f}s")
+                time.sleep(base * (2 ** i))
+                continue
+            return None
+    return None
+
+
 def _max_gamma_strike(gex_by_strike):
     rows = (gex_by_strike or {}).get("data") if isinstance(gex_by_strike, dict) else gex_by_strike
     if not isinstance(rows, list):
@@ -224,7 +239,7 @@ def _enrich(candidate):
             from alpaca.data.historical.option import OptionHistoricalDataClient
             from alpaca.data.requests import OptionLatestQuoteRequest
             client = OptionHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
-            q = client.get_option_latest_quote(OptionLatestQuoteRequest(symbol_or_symbols=occ)).get(occ)
+            q = _retry(lambda: client.get_option_latest_quote(OptionLatestQuoteRequest(symbol_or_symbols=occ)).get(occ))
             if q and q.bid_price and q.ask_price:
                 bid, ask = float(q.bid_price), float(q.ask_price)
                 mid = (bid + ask) / 2
@@ -419,10 +434,12 @@ def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, e
                                                  watchlist=scan_safeguards.MIDCAP_WATCHLIST)
     open_positions = _open_positions()
 
+    survivors = [c for c in candidates if _cheap_pass(c)]
+    survivors.sort(key=lambda x: ((x.get("flow_dominance_pct") or 0.0), (x.get("premium") or 0.0)), reverse=True)
+    top_n = int(_env_float("ENRICH_TOP_N", 5))
+
     alerts = []
-    for c in candidates:
-        if not _cheap_pass(c):
-            continue
+    for c in survivors[:top_n]:
         c = (enrich_fn or _enrich)(c)
         ev = (events_fn or scan_safeguards.earnings_exdiv_days)(c.get("ticker"))
         c["earnings_in_days"] = ev.get("earnings_in_days")

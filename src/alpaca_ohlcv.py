@@ -54,27 +54,36 @@ def get_daily_bars_eodhd_format(symbol, from_date=None, to_date=None):
     except ImportError:
         return None
 
-    try:
-        client = StockHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
-        if from_date:
-            start = datetime.strptime(from_date, "%Y-%m-%d")
-        else:
-            start = datetime.utcnow() - timedelta(days=420)
-        if to_date:
-            end = datetime.strptime(to_date, "%Y-%m-%d")
-        else:
-            end = datetime.utcnow()
-        req = StockBarsRequest(
-            symbol_or_symbols=symbol,
-            timeframe=TimeFrame.Day,
-            start=start,
-            end=end,
-            feed=DataFeed.IEX,
-        )
-        result = client.get_stock_bars(req).data.get(symbol, [])
-    except Exception as e:
-        logger.warning(f"Alpaca OHLCV fetch for {symbol}: {type(e).__name__}: {e}")
-        return None
+    result = None
+    for attempt in range(3):
+        try:
+            client = StockHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+            if from_date:
+                start = datetime.strptime(from_date, "%Y-%m-%d")
+            else:
+                start = datetime.utcnow() - timedelta(days=420)
+            if to_date:
+                end = datetime.strptime(to_date, "%Y-%m-%d")
+            else:
+                end = datetime.utcnow()
+            req = StockBarsRequest(
+                symbol_or_symbols=symbol,
+                timeframe=TimeFrame.Day,
+                start=start,
+                end=end,
+                feed=DataFeed.IEX,
+            )
+            result = client.get_stock_bars(req).data.get(symbol, [])
+            break
+        except Exception as e:
+            es = str(e).lower()
+            rate_limited = "html" in es or "429" in es or "too many" in es or "rate limit" in es
+            if rate_limited and attempt < 2:
+                logger.warning(f"Alpaca rate-limit on {symbol} (attempt {attempt + 1}/3), backing off")
+                time.sleep(0.8 * (2 ** attempt))
+                continue
+            logger.warning(f"Alpaca OHLCV fetch for {symbol}: {type(e).__name__}: {str(e)[:80]}")
+            return None
 
     if not result:
         return None

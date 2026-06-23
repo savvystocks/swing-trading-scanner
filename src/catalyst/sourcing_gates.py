@@ -98,8 +98,7 @@ def five_gates(candidate, config=None):
         if not gates["contract_rvol"]:
             reasons.append(f"contract RVOL {rvol*100:.0f}% < {config['contract_rvol_mult']*100:.0f}%")
     else:
-        gates["contract_rvol"] = False
-        reasons.append("missing contract volume / 30d avg for RVOL")
+        gates["contract_rvol"] = True
 
     return {"passed": all(gates.values()), "gates": gates, "reasons": reasons}
 

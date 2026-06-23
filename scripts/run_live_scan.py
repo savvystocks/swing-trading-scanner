@@ -214,18 +214,35 @@ def _darkpool_node(uw, ticker, spot):
     return {"price": node, "size": round(buckets[node], 0), "near": bool(abs(spot - node) / spot <= 0.01)}
 
 
-def _cheap_pass(c):
+def _cheap_reason(c):
     oi = c.get("oi")
     spot = c.get("spot")
     strike = c.get("strike")
     dom = c.get("flow_dominance_pct")
     if not (oi and oi >= 500):
-        return False
+        return "OI < 500"
     if not (spot and strike and abs(strike - spot) / spot * 100 <= 5):
-        return False
+        return "strike > 5% off spot"
     if dom is None or dom <= 55:
-        return False
-    return True
+        return "flow_dominance <= 55%"
+    return None
+
+
+def _cheap_pass(c):
+    return _cheap_reason(c) is None
+
+
+def _log_funnel(record):
+    import pathlib
+    from datetime import datetime
+    try:
+        d = datetime.utcnow().date().isoformat()
+        path = pathlib.Path(__file__).parent.parent / "data" / "ambush_logs" / f"funnel_{d}.jsonl"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
 
 
 def _enrich(candidate):
@@ -255,8 +272,8 @@ def _enrich(candidate):
         uw = UnusualWhalesClient()
         if uw.enabled:
             if occ:
-                rows = (uw.option_contract_historic(occ) or {}).get("data") or []
-                vols = [v for v in (_to_f(r.get("volume")) for r in rows[-30:]) if v is not None]
+                rows = (uw.option_contract_historic(occ) or {}).get("chains") or []
+                vols = [v for v in (_to_f(r.get("volume")) for r in rows[1:31]) if v is not None]
                 if vols:
                     candidate["avg_vol_30d"] = sum(vols) / len(vols)
             if ticker and spot:
@@ -435,11 +452,19 @@ def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, e
                                                  watchlist=scan_safeguards.MIDCAP_WATCHLIST)
     open_positions = _open_positions()
 
-    survivors = [c for c in candidates if _cheap_pass(c)]
+    cheap_rejects = {}
+    survivors = []
+    for c in candidates:
+        r = _cheap_reason(c)
+        if r:
+            cheap_rejects[r] = cheap_rejects.get(r, 0) + 1
+        else:
+            survivors.append(c)
     survivors.sort(key=lambda x: ((x.get("flow_dominance_pct") or 0.0), (x.get("premium") or 0.0)), reverse=True)
     top_n = int(_env_float("ENRICH_TOP_N", 5))
 
     alerts = []
+    enriched_log = []
     for c in survivors[:top_n]:
         c = (enrich_fn or _enrich)(c)
         ev = (events_fn or scan_safeguards.earnings_exdiv_days)(c.get("ticker"))
@@ -459,6 +484,15 @@ def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, e
             c, combo=combo, regime_state=regime_state, vault_state=vault_state,
             open_positions=open_positions, ladder_state=ladder_state, apply_cooldown=apply_cooldown)
         decision["ivr"] = ivr
+        _av, _v = c.get("avg_vol_30d"), c.get("vol")
+        enriched_log.append({
+            "ticker": c.get("ticker"), "side": c.get("side"),
+            "decision": decision.get("decision"), "alerted": bool(decision.get("alerted")),
+            "spread_pct": c.get("spread_pct"),
+            "rvol": round(_v / _av, 2) if (_v and _av) else None,
+            "avg_vol_30d": round(_av, 1) if _av else None,
+            "reasons": decision.get("reasons"),
+        })
         if not decision.get("alerted"):
             continue
 
@@ -476,6 +510,15 @@ def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, e
         if len(alerts) >= max_alerts:
             break
 
+    from datetime import datetime as _dt
+    _log_funnel({
+        "ts": _dt.utcnow().isoformat() + "Z",
+        "regime": regime_state.get("regime"), "bias": bias,
+        "candidates": len(candidates), "survivors": len(survivors),
+        "cheap_rejects": cheap_rejects,
+        "enriched": enriched_log,
+        "alerts": len(alerts),
+    })
     return {"candidates": len(candidates), "alerts": alerts, "regime": regime_state.get("regime")}
 
 

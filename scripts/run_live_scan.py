@@ -293,7 +293,7 @@ def _enrich(candidate):
         except Exception:
             pass
 
-    if ticker and spot and has_alpaca:
+    if ticker and spot and _creds:
         try:
             from datetime import datetime, timedelta
             from src.alpaca_ohlcv import get_daily_bars_eodhd_format

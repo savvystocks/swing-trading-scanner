@@ -274,16 +274,148 @@ def route_to_alpaca_paper(ticker, legs, dry_run=True):
     return out
 
 
-def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True, illiquid=None):
+# ---- real OCC resolution + portfolio guards (read-only Alpaca paper API) ----
+COOLOFF_PATH = "sandbox_ticker_cooloff.json"
+
+
+def _paper_creds():
+    return (os.environ.get("ALPACA_PAPER_API_KEY"), os.environ.get("ALPACA_PAPER_SECRET_KEY"))
+
+
+def _paper_get(path, creds):
+    key, sec = creds
+    req = urllib.request.Request(PAPER_BASE + path, headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return json.loads(r.read().decode())
+
+
+def resolve_occ(ticker, right, target_strike, target_dte, creds=None):
+    """Resolve a REAL active OCC contract near target strike/expiry via Alpaca
+    /v2/options/contracts. CRITICAL: that endpoint defaults to ~this-week expiries, so we MUST
+    bound expiration_date_gte/lte around our 35/45-day targets or we get the wrong contracts.
+    Fail-open -> None (caller skips the leg)."""
+    import urllib.parse
+    creds = creds or _paper_creds()
+    if not all(creds):
+        return None
+    exp = date.today() + timedelta(days=target_dte)
+    q = urllib.parse.urlencode({
+        "underlying_symbols": ticker.split(".")[0], "type": right, "status": "active",
+        "expiration_date_gte": (exp - timedelta(days=7)).isoformat(),
+        "expiration_date_lte": (exp + timedelta(days=10)).isoformat(),
+        "strike_price_gte": round(target_strike * 0.85, 2), "strike_price_lte": round(target_strike * 1.15, 2),
+        "limit": 1000})
+    try:
+        rows = _paper_get(f"/v2/options/contracts?{q}", creds).get("option_contracts") or []
+    except Exception:
+        return None
+    if not rows:
+        return None
+    best = min(rows, key=lambda c: abs(float(c.get("strike_price", 0)) - target_strike))
+    return {"occ_symbol": best.get("symbol"), "strike": float(best.get("strike_price")),
+            "expiration": best.get("expiration_date"), "open_interest": best.get("open_interest")}
+
+
+def get_open_positions(creds=None):
+    creds = creds or _paper_creds()
+    if not all(creds):
+        return []
+    try:
+        return _paper_get("/v2/positions", creds)
+    except Exception:
+        return []
+
+
+def ticker_blocked(ticker, positions, params, now=None):
+    base = ticker.upper().split(".")[0]
+    held = 0
+    for p in positions or []:
+        sym = (p.get("symbol") or "").upper()
+        if sym == base or sym.startswith(base):
+            held += abs(int(float(p.get("qty", 0) or 0)))
+    if held >= params.get("max_contracts_per_ticker", 3):
+        return True, f"ticker cap: {held} contracts on {base} >= {params.get('max_contracts_per_ticker', 3)}"
+    cool = {}
+    if os.path.exists(COOLOFF_PATH):
+        try:
+            cool = json.load(open(COOLOFF_PATH, encoding="utf-8"))
+        except Exception:
+            cool = {}
+    ts = cool.get(base)
+    if ts:
+        closed = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        hrs = ((now or datetime.now(timezone.utc)) - closed).total_seconds() / 3600.0
+        if hrs < params.get("ticker_cooloff_hours", 24):
+            return True, f"cool-off: {base} closed {hrs:.1f}h ago (< {params.get('ticker_cooloff_hours', 24)}h)"
+    return False, "clear"
+
+
+def record_close(ticker):
+    base = ticker.upper().split(".")[0]
+    cool = json.load(open(COOLOFF_PATH, encoding="utf-8")) if os.path.exists(COOLOFF_PATH) else {}
+    cool[base] = _now_iso_ms()
+    json.dump(cool, open(COOLOFF_PATH, "w", encoding="utf-8"), indent=2)
+
+
+def manage_exit(entry_ts_iso, entry_premium, current_premium, params, now=None):
+    """24h minimum-hold swing guard + 30-50% squeeze. Blocks ANY close before min_hold_hours;
+    once eligible, exits 100% of the leg at >= take_profit_pct."""
+    now = now or datetime.now(timezone.utc)
+    entry = datetime.fromisoformat(entry_ts_iso.replace("Z", "+00:00"))
+    held_h = (now - entry).total_seconds() / 3600.0
+    ret = round((current_premium / entry_premium - 1) * 100, 1) if entry_premium else 0.0
+    min_hold = params.get("min_hold_hours", 24)
+    if held_h < min_hold:
+        return {"action": "HOLD", "reason": f"24h-hold guard: {held_h:.1f}h < {min_hold}h -> close BLOCKED",
+                "return_pct": ret, "held_hours": round(held_h, 1)}
+    tp = params.get("take_profit_pct", 30)
+    if ret >= tp:
+        return {"action": "CLOSE_TAKE_PROFIT", "reason": f"+{ret}% >= {tp}% squeeze after {held_h:.1f}h",
+                "return_pct": ret, "held_hours": round(held_h, 1)}
+    return {"action": "HOLD", "reason": f"eligible ({held_h:.1f}h) but +{ret}% < {tp}% target",
+            "return_pct": ret, "held_hours": round(held_h, 1)}
+
+
+def _resolve_legs_occ(ticker, legs, creds):
+    for name, right in (("bullish_call", "call"), ("bearish_put", "put")):
+        leg = legs[name]
+        r = resolve_occ(ticker, right, leg["strike"], leg["dte"], creds)
+        if r and r.get("occ_symbol"):
+            leg.update({"occ_symbol": r["occ_symbol"], "strike": r["strike"], "expiry": r["expiration"],
+                        "open_interest": r.get("open_interest"), "occ_source": "alpaca_resolved"})
+        else:
+            leg.update({"illiquid": True, "occ_source": "unresolved -> FAIL-OPEN skip"})
+    cal = legs["flat_calendar"]
+    f = resolve_occ(ticker, "call", cal["strike"], cal["front_dte"], creds)
+    b = resolve_occ(ticker, "call", cal["strike"], cal["back_dte"], creds)
+    if f and b and f.get("occ_symbol") and b.get("occ_symbol"):
+        cal.update({"front_occ": f["occ_symbol"], "back_occ": b["occ_symbol"], "occ_source": "alpaca_resolved"})
+    else:
+        cal.update({"illiquid": True, "occ_source": "unresolved -> FAIL-OPEN skip"})
+
+
+def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True, illiquid=None, resolve_real=None):
     params = load_params()
+    creds = _paper_creds()
+    positions = get_open_positions(creds) if all(creds) else []
+    blocked, why = ticker_blocked(ticker, positions, params)
+    if blocked:
+        return {"trade_set_id": None, "ticker": ticker, "skipped": True, "reason": why, "status": "SKIPPED"}
+
     ok, trigger = should_enter_proactive(regime, params, candidate)
     md = collect_metadata(ticker, mock=mock)
     active = 3 - len(illiquid or set())
     legs = build_legs(ticker, md, n_legs=max(active, 1), illiquid=illiquid)
+    if resolve_real is None:
+        resolve_real = all(creds)
+    if resolve_real:
+        _resolve_legs_occ(ticker, legs, creds)                 # real OCCs; unresolved -> fail-open skip
     orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run)
     record = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
               "entry_ts_utc": md["entry_ts_utc"], "cluster_budget_usd": CLUSTER_BUDGET,
               "execution_mode": "DRY_RUN" if dry_run else "LIVE_PAPER",
+              "occ_resolution": "alpaca_real" if resolve_real else "synthesized",
+              "ticker_guard": why, "open_positions_checked": len(positions),
               "params_snapshot": params, "metadata": md, "legs": legs, "orders": orders,
               "exit": None, "status": "OPEN"}
     _append_log(record)
@@ -388,12 +520,14 @@ def run_trade_autopsy(record, leg_returns_pct, exit_reason="5d_time_exit",
 # Demo
 # ----------------------------------------------------------------------------
 def main():
-    live_paper = "--live-paper" in sys.argv
+    gha = os.environ.get("GITHUB_ACTIONS") == "true"
+    live_paper = "--live-paper" in sys.argv or (gha and all(_paper_creds()))   # auto under GHA
+    dry_run = not live_paper
     mock = os.environ.get("PROACTIVE_MOCK", "1") == "1"
     print("=" * 78)
     print("V10 PROACTIVE LAB + ACTIVE ALPACA PAPER EXECUTION")
-    print(f"(metadata: {'MOCK' if mock else 'LIVE feeds'} | execution: "
-          f"{'LIVE_PAPER (submitting!)' if live_paper else 'DRY_RUN (simulate, no orders fired)'})")
+    print(f"(env: {'GITHUB_ACTIONS -> auto live-paper' if gha else 'local'} | metadata: {'MOCK' if mock else 'LIVE'} | "
+          f"execution: {'LIVE_PAPER (auto-submit)' if live_paper else 'DRY_RUN (no orders fired)'})")
     print("=" * 78)
 
     params = load_params()
@@ -401,8 +535,12 @@ def main():
     print("  " + json.dumps(params))
 
     ticker = "HOOD"
-    rec = enter_proactive_set(ticker, "C", mock=mock, candidate={"consolidating": True}, dry_run=not live_paper)
+    rec = enter_proactive_set(ticker, "C", mock=mock, candidate={"consolidating": True}, dry_run=dry_run)
+    if rec.get("skipped"):
+        print(f"\nSKIPPED {ticker}: {rec['reason']} (portfolio guard)")
+        return
     print(f"\nTRIGGER: {rec['trigger']} -> 3 legs on {ticker} | cluster ${CLUSTER_BUDGET:,.0f} | mode {rec['execution_mode']}")
+    print(f"OCC resolution: {rec['occ_resolution']} | ticker guard: {rec['ticker_guard']} | positions checked: {rec['open_positions_checked']}")
 
     md = rec["metadata"]
     print("\nSTATE BLOCK (un-mocked where live):")
@@ -434,6 +572,12 @@ def main():
     print(f"\nTUNING ADVISORY ({ADVISORY_MD}):")
     for gate, msg in res["recommendations"]:
         print(f"  -> [{gate}] {msg}")
+
+    print("\nEXIT MANAGEMENT (24h-hold swing guard + 30-50% squeeze):")
+    a = manage_exit(rec["entry_ts_utc"], 8.91, 12.47, params, now=datetime.now(timezone.utc) + timedelta(hours=2))
+    print(f"  +40% at 2h  -> {a['action']}: {a['reason']}")
+    b = manage_exit(rec["entry_ts_utc"], 8.91, 12.03, params, now=datetime.now(timezone.utc) + timedelta(hours=26))
+    print(f"  +35% at 26h -> {b['action']}: {b['reason']}")
 
 
 if __name__ == "__main__":

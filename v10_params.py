@@ -20,6 +20,10 @@ DEFAULTS = {
     "alt_reddit_min_mentions": 10,
     "alt_insider_min_dollar_value": 10000,
     "portfolio_max_sector_concentration": 0.50,
+    "min_hold_hours": 24,                 # 24h minimum-hold (swing rule): no close before this
+    "take_profit_pct": 30,                # exit 100% of leg at +30% (the 30-50% squeeze band floor)
+    "max_contracts_per_ticker": 3,        # ticker concentration cap
+    "ticker_cooloff_hours": 24,           # 24h cool-off after a close before re-entry
 }
 
 

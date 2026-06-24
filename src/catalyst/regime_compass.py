@@ -1,11 +1,29 @@
 import os
 import json
+import time
 import pathlib
 import urllib.request
 from datetime import datetime, timedelta
 
 from src.alpaca_ohlcv import get_daily_bars_eodhd_format
 from src.alpaca_options import get_live_price
+
+
+def _yahoo_chart_closes(symbol, rng="1mo", attempts=3, sleep_s=2.0):
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d&range={rng}"
+    for i in range(attempts):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                d = json.loads(r.read().decode())
+            closes = [c for c in d["chart"]["result"][0]["indicators"]["quote"][0]["close"] if c is not None]
+            if closes:
+                return closes
+        except Exception:
+            pass
+        if i < attempts - 1:
+            time.sleep(sleep_s)
+    return None
 
 
 SPX_PROXY = "SPY"
@@ -102,14 +120,9 @@ def _spx_state(config):
 
 
 def _yen_state(config):
-    url = "https://query1.finance.yahoo.com/v8/finance/chart/JPY=X?interval=1d&range=1mo"
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=20) as r:
-            data = json.loads(r.read().decode())
-        closes = [c for c in data["chart"]["result"][0]["indicators"]["quote"][0]["close"] if c is not None]
-    except Exception as e:
-        return {"slope_dir": None, "reason": f"yen fetch failed: {type(e).__name__}"}
+    closes = _yahoo_chart_closes("JPY=X", "1mo")
+    if not closes:
+        return {"slope_dir": None, "reason": "yen fetch failed after 3 retries -> neutral"}
     if len(closes) < 10:
         return {"slope_dir": None, "reason": "insufficient yen data"}
     sma5_now = sum(closes[-5:]) / 5.0
@@ -135,23 +148,13 @@ def _yen_state(config):
 
 def _vix_term():
     def _close(sym):
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=10d"
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=20) as r:
-            d = json.loads(r.read().decode())
-        cl = [c for c in d["chart"]["result"][0]["indicators"]["quote"][0]["close"] if c is not None]
+        cl = _yahoo_chart_closes(sym, "10d")
         return cl[-1] if cl else None
-    try:
-        vix = _close("%5EVIX")
-        vix3m = _close("%5EVIX3M")
-    except Exception as e:
-        return {"available": False, "reason": f"vix fetch failed: {type(e).__name__}"}
-    try:
-        vix9d = _close("%5EVIX9D")
-    except Exception:
-        vix9d = None
+    vix = _close("%5EVIX")
+    vix3m = _close("%5EVIX3M")
+    vix9d = _close("%5EVIX9D")
     if vix is None or vix3m is None:
-        return {"available": False, "reason": "insufficient vix data"}
+        return {"available": False, "reason": "vix fetch failed after 3 retries -> unavailable"}
     backwardation = vix > vix3m
     return {
         "available": True,

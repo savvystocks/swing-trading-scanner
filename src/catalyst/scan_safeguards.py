@@ -78,6 +78,12 @@ def sector_of(ticker):
 def event_blackout(candidate, max_days=7):
     e = candidate.get("earnings_in_days")
     x = candidate.get("exdiv_in_days")
+    if candidate.get("earnings_data_ok") is False:
+        return {
+            "blackout": True,
+            "reasons": ["earnings data unavailable - fail closed (binary-event safety)"],
+            "checked": False,
+        }
     reasons = []
     if e is not None and 0 <= e <= max_days:
         reasons.append(f"earnings in {e}d")
@@ -144,7 +150,7 @@ def earnings_exdiv_days(ticker, fundamentals=None):
     except Exception:
         pass
 
-    result = {"earnings_in_days": earnings_in, "exdiv_in_days": exdiv_in}
+    result = {"earnings_in_days": earnings_in, "exdiv_in_days": exdiv_in, "data_ok": ok}
     if ok:
         if cache.get("day") != day:
             cache = {"day": day, "tickers": {}}

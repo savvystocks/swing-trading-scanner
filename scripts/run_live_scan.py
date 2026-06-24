@@ -470,6 +470,7 @@ def run_scan(flow_payload=None, flow_fn=None, combo_fn=None, telegram_fn=None, e
         ev = (events_fn or scan_safeguards.earnings_exdiv_days)(c.get("ticker"))
         c["earnings_in_days"] = ev.get("earnings_in_days")
         c["exdiv_in_days"] = ev.get("exdiv_in_days")
+        c["earnings_data_ok"] = ev.get("data_ok")
         ivr = (ivr_fn or _live_ivr)(c.get("ticker"))
         c["ivr"] = ivr
         c["vix"] = (regime_state.get("vix_term") or {}).get("vix")

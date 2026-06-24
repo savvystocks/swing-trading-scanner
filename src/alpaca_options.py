@@ -236,7 +236,8 @@ def get_options_chain(symbol, direction, current_price):
             continue
 
     if not contracts:
-        print(f"  [options {symbol}] FAIL: {len(snapshots)} contracts in chain, 0 passed filters. Rejects: {reject_counts}")
+        print(f"  [options {symbol}] FAIL: {len(snapshots)} contracts in chain, 0 passed filters "
+              f"(creds OK - data/greeks/liquidity issue, NOT a credential problem). Rejects: {reject_counts}")
         return None
     print(f"  [options {symbol}] OK: {len(contracts)}/{len(snapshots)} passed filters. Rejects: {reject_counts}")
     contracts.sort(key=lambda x: x["score"], reverse=True)

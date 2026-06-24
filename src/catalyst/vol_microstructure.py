@@ -104,25 +104,28 @@ def pull_skew_data(symbol, spot):
 def _find_iv_at_delta(snaps, target_delta, side="call"):
     if not snaps:
         return None
-    candidates = []
+    preferred, fallback = [], []
     for sym, s in snaps.items():
         try:
             g = s.greeks
             if not g or not g.delta:
                 continue
             delta = abs(float(g.delta))
-            if not (0.10 < delta < 0.60):
-                continue
             iv = getattr(s, "implied_volatility", None) or getattr(g, "implied_volatility", 0) or 0
             if not iv:
                 continue
-            candidates.append((delta, float(iv) * 100))
+            pair = (delta, float(iv) * 100)
+            fallback.append(pair)
+            if 0.10 < delta < 0.60:
+                preferred.append(pair)
         except Exception:
             continue
-    if not candidates:
+    # degrade to nearest available delta if no strike sits in the preferred band
+    pool = preferred or fallback
+    if not pool:
         return None
-    candidates.sort(key=lambda x: abs(x[0] - target_delta))
-    return candidates[0][1]
+    pool.sort(key=lambda x: abs(x[0] - target_delta))
+    return pool[0][1]
 
 
 def realized_vs_implied_signal(realized_vol_pct, iv_atm_pct):

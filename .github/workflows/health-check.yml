@@ -1,0 +1,29 @@
+name: health-check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * 0"          # Sunday 12:00 UTC - weekly provider schema harness
+
+jobs:
+  schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Provider schema harness
+        env:
+          UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+          ALPACA_PAPER_API_KEY: ${{ secrets.ALPACA_PAPER_API_KEY }}
+          ALPACA_PAPER_SECRET_KEY: ${{ secrets.ALPACA_PAPER_SECRET_KEY }}
+          EODHD_API_KEY: ${{ secrets.EODHD_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/schema_harness.py

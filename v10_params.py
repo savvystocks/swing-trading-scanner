@@ -24,6 +24,7 @@ DEFAULTS = {
     "take_profit_pct": 30,                # exit 100% of leg at +30% (the 30-50% squeeze band floor)
     "max_contracts_per_ticker": 3,        # ticker concentration cap
     "ticker_cooloff_hours": 24,           # 24h cool-off after a close before re-entry
+    "stale_order_max_minutes": 30,        # cancel unfilled limit orders older than this (3 cycles)
 }
 
 

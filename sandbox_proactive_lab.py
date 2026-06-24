@@ -35,6 +35,9 @@ ADVISORY_MD = "v10_tuning_advisory.md"
 CLUSTER_BUDGET = 10_000.0            # $10k per trade cluster (split across active legs)
 PAPER_BASE = "https://paper-api.alpaca.markets"
 CALL_DELTA, PUT_DELTA = 0.35, -0.35
+WATCHLIST = ["TSLA", "PLTR", "AMD", "NVDA", "SOFI", "AAPL", "MSFT", "AMZN", "COIN", "MARA"]
+CAL_FRONT_DTE = (10, 15)             # short leg expiration window (days)
+CAL_BACK_DTE = (35, 45)             # long leg expiration window (days)
 
 
 def _now_iso_ms():
@@ -289,20 +292,24 @@ def _paper_get(path, creds):
         return json.loads(r.read().decode())
 
 
-def resolve_occ(ticker, right, target_strike, target_dte, creds=None):
+def resolve_occ(ticker, right, target_strike, target_dte, creds=None, dte_min=None, dte_max=None):
     """Resolve a REAL active OCC contract near target strike/expiry via Alpaca
     /v2/options/contracts. CRITICAL: that endpoint defaults to ~this-week expiries, so we MUST
-    bound expiration_date_gte/lte around our 35/45-day targets or we get the wrong contracts.
-    Fail-open -> None (caller skips the leg)."""
+    bound expiration_date_gte/lte or we get the wrong contracts. Pass dte_min/dte_max to set an
+    explicit window (e.g. 10-15d front / 35-45d back for the calendar). Fail-open -> None."""
     import urllib.parse
     creds = creds or _paper_creds()
     if not all(creds):
         return None
-    exp = date.today() + timedelta(days=target_dte)
+    if dte_min is not None and dte_max is not None:
+        gte = date.today() + timedelta(days=dte_min)
+        lte = date.today() + timedelta(days=dte_max)
+    else:
+        exp = date.today() + timedelta(days=target_dte)
+        gte, lte = exp - timedelta(days=7), exp + timedelta(days=10)
     q = urllib.parse.urlencode({
         "underlying_symbols": ticker.split(".")[0], "type": right, "status": "active",
-        "expiration_date_gte": (exp - timedelta(days=7)).isoformat(),
-        "expiration_date_lte": (exp + timedelta(days=10)).isoformat(),
+        "expiration_date_gte": gte.isoformat(), "expiration_date_lte": lte.isoformat(),
         "strike_price_gte": round(target_strike * 0.85, 2), "strike_price_lte": round(target_strike * 1.15, 2),
         "limit": 1000})
     try:
@@ -326,15 +333,72 @@ def get_open_positions(creds=None):
         return []
 
 
-def ticker_blocked(ticker, positions, params, now=None):
+def get_open_orders(creds=None):
+    creds = creds or _paper_creds()
+    if not all(creds):
+        return []
+    try:
+        return _paper_get("/v2/orders?status=open&limit=500", creds)
+    except Exception:
+        return []
+
+
+def _cancel_order(order_id, creds):
+    key, sec = creds
+    req = urllib.request.Request(PAPER_BASE + f"/v2/orders/{order_id}", method="DELETE",
+                                 headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return r.status in (200, 204)
+    except Exception:
+        return False
+
+
+def audit_stale_orders(creds=None, max_minutes=None, orders=None):
+    """Cancel limit orders sitting unfilled longer than max_minutes (default 30 = 3 cycles) so
+    stale limits don't block buying power. Logs the cancels so the autopsy knows the leg was
+    cancelled, not filled. Returns the cancelled list."""
+    creds = creds or _paper_creds()
+    if not all(creds):
+        return []
+    if max_minutes is None:
+        max_minutes = load_params().get("stale_order_max_minutes", 30)
+    orders = orders if orders is not None else get_open_orders(creds)
+    now = datetime.now(timezone.utc)
+    cancelled = []
+    for o in orders:
+        sub = o.get("submitted_at") or o.get("created_at")
+        if not sub or o.get("type") != "limit":
+            continue
+        try:
+            age = (now - datetime.fromisoformat(sub.replace("Z", "+00:00"))).total_seconds() / 60.0
+        except Exception:
+            continue
+        if age > max_minutes and _cancel_order(o.get("id"), creds):
+            cancelled.append({"order_id": o.get("id"), "symbol": o.get("symbol"),
+                              "age_min": round(age, 1), "limit_price": o.get("limit_price")})
+    if cancelled:
+        _append_log({"trade_set_id": "AUDIT-" + uuid.uuid4().hex[:8], "type": "stale_order_cleanup",
+                     "ts_utc": _now_iso_ms(), "max_minutes": max_minutes, "cancelled": cancelled,
+                     "status": "CANCELLED"})
+    return cancelled
+
+
+def ticker_blocked(ticker, positions, params, open_orders=None, now=None):
     base = ticker.upper().split(".")[0]
     held = 0
     for p in positions or []:
         sym = (p.get("symbol") or "").upper()
         if sym == base or sym.startswith(base):
             held += abs(int(float(p.get("qty", 0) or 0)))
-    if held >= params.get("max_contracts_per_ticker", 3):
-        return True, f"ticker cap: {held} contracts on {base} >= {params.get('max_contracts_per_ticker', 3)}"
+    pending = 0
+    for o in open_orders or []:
+        syms = [o.get("symbol")] + [l.get("symbol") for l in (o.get("legs") or [])]
+        if any((s or "").upper().startswith(base) for s in syms):
+            pending += abs(int(float(o.get("qty", 0) or 0)))
+    cap = params.get("max_contracts_per_ticker", 3)
+    if held + pending >= cap:
+        return True, f"ticker cap: {held} held + {pending} pending on {base} >= {cap}"
     cool = {}
     if os.path.exists(COOLOFF_PATH):
         try:
@@ -386,19 +450,24 @@ def _resolve_legs_occ(ticker, legs, creds):
         else:
             leg.update({"illiquid": True, "occ_source": "unresolved -> FAIL-OPEN skip"})
     cal = legs["flat_calendar"]
-    f = resolve_occ(ticker, "call", cal["strike"], cal["front_dte"], creds)
-    b = resolve_occ(ticker, "call", cal["strike"], cal["back_dte"], creds)
+    f = resolve_occ(ticker, "call", cal["strike"], cal["front_dte"], creds,
+                    dte_min=CAL_FRONT_DTE[0], dte_max=CAL_FRONT_DTE[1])   # 10-15d short leg
+    b = resolve_occ(ticker, "call", cal["strike"], cal["back_dte"], creds,
+                    dte_min=CAL_BACK_DTE[0], dte_max=CAL_BACK_DTE[1])     # 35-45d long leg
     if f and b and f.get("occ_symbol") and b.get("occ_symbol"):
-        cal.update({"front_occ": f["occ_symbol"], "back_occ": b["occ_symbol"], "occ_source": "alpaca_resolved"})
+        cal.update({"front_occ": f["occ_symbol"], "back_occ": b["occ_symbol"],
+                    "front_expiry": f["expiration"], "back_expiry": b["expiration"], "occ_source": "alpaca_resolved"})
     else:
         cal.update({"illiquid": True, "occ_source": "unresolved -> FAIL-OPEN skip"})
 
 
-def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True, illiquid=None, resolve_real=None):
+def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True, illiquid=None,
+                        resolve_real=None, positions=None, open_orders=None):
     params = load_params()
     creds = _paper_creds()
-    positions = get_open_positions(creds) if all(creds) else []
-    blocked, why = ticker_blocked(ticker, positions, params)
+    if positions is None:
+        positions = get_open_positions(creds) if all(creds) else []
+    blocked, why = ticker_blocked(ticker, positions, params, open_orders=open_orders)
     if blocked:
         return {"trade_set_id": None, "ticker": ticker, "skipped": True, "reason": why, "status": "SKIPPED"}
 
@@ -517,9 +586,60 @@ def run_trade_autopsy(record, leg_returns_pct, exit_reason="5d_time_exit",
 
 
 # ----------------------------------------------------------------------------
-# Demo
+# Scheduled cycle (GHA): stale-order audit -> watchlist sourcing -> first eligible
+# ----------------------------------------------------------------------------
+def run_scheduled_cycle(mock=False):
+    creds = _paper_creds()
+    live = all(creds)
+    params = load_params()
+    print("=" * 78)
+    print(f"V10 PROACTIVE LAB - scheduled cycle ({'LIVE_PAPER' if live else 'DRY_RUN (no creds)'})")
+    print("=" * 78)
+
+    # 1. stale limit-order cleanup (free buying power)
+    open_orders = get_open_orders(creds)
+    cancels = audit_stale_orders(creds, orders=open_orders)
+    print(f"stale-order audit: {len(cancels)} unfilled limit(s) cancelled "
+          f"(> {params.get('stale_order_max_minutes', 30)}m)")
+    for c in cancels:
+        print(f"  cancelled {c['symbol']} age {c['age_min']}m")
+    if cancels:
+        open_orders = get_open_orders(creds)
+    positions = get_open_positions(creds)
+    print(f"portfolio: {len(positions)} positions, {len(open_orders)} open orders")
+
+    # 2. watchlist sourcing - enter the FIRST candidate not capped/cooled
+    print(f"watchlist: {WATCHLIST}")
+    for t in WATCHLIST:
+        rec = enter_proactive_set(t, "C", mock=mock, dry_run=not live,
+                                  positions=positions, open_orders=open_orders)
+        if rec.get("skipped"):
+            print(f"  skip {t}: {rec['reason']}")
+            continue
+        md, legs, orders = rec["metadata"], rec["legs"], rec["orders"]
+        print(f"\nENTERED {t} | {rec['execution_mode']} | OCC {rec['occ_resolution']}")
+        print(f"  state: 20dSMA {md['macro']['distance_to_sma20_pct']:+.2f}% | IV {md['iv_term']['iv_ratio']} | "
+              f"GEX {md['gex']['net_gex']} zg {md['gex']['zero_gamma_strike']} | "
+              f"reddit {md['alt_catalyst']['reddit_mention_delta_pct']}% | insider ${md['alt_catalyst']['insider_10d_buy_usd']} "
+              f"| ATR {md['technical']['atr_pct']}%")
+        for name, leg in legs.items():
+            o = orders[name]
+            occ = leg.get("occ_symbol") or f"{leg.get('front_occ')}|{leg.get('back_occ')}"
+            print(f"  {name:<14} {leg['structure']:<15} {occ:<24} x{leg['contracts']:<3} "
+                  f"@lim ${leg['limit_price']:<6} -> {o['status']} {o['order_id']}")
+        print("\nGHA scheduled cycle complete: 1 cluster entered + logged.")
+        return rec
+    print("\nno eligible watchlist candidate this cycle (all capped/cooled).")
+    return None
+
+
+# ----------------------------------------------------------------------------
+# Local demo (single ticker)
 # ----------------------------------------------------------------------------
 def main():
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        return run_scheduled_cycle(mock=os.environ.get("PROACTIVE_MOCK", "1") == "1")
+
     gha = os.environ.get("GITHUB_ACTIONS") == "true"
     live_paper = "--live-paper" in sys.argv or (gha and all(_paper_creds()))   # auto under GHA
     dry_run = not live_paper
@@ -556,13 +676,6 @@ def main():
         occ = leg.get("occ_symbol") or f"{leg.get('front_occ')}|{leg.get('back_occ')}"
         print(f"  {name:<14} {leg['structure']:<15} {occ:<22} x{leg['contracts']:<3} @lim ${leg['limit_price']:<6} "
               f"-> {o['status']} order_id={o['order_id']}")
-
-    if gha:
-        # SCHEDULED run: real entry + forensic log only. The demo autopsy / 2nd entry / exit
-        # sims below are LOCAL-ONLY (they'd fire extra orders + write fake autopsy data).
-        # Exit automation on real open positions is the next piece (manage_exit is built).
-        print("\nGHA scheduled run complete: entered + logged. (demo autopsy/exit sims skipped)")
-        return
 
     # demonstrate FAIL-OPEN routing (force the put illiquid)
     rec2 = enter_proactive_set(ticker, "C", mock=mock, dry_run=True, illiquid={"bearish_put"})

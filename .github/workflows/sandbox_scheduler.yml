@@ -1,0 +1,52 @@
+name: sandbox-scheduler
+
+# Isolated V10 R&D scheduler. Lives on main only because GHA crons fire from the default
+# branch, but it checks out and runs the v10-research-sandbox branch. It does NOT touch the
+# V9 engine (run_live_scan.py, live_scan.yml, leak_lambda.py, strategy_vault.py). Paper-only.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  proactive-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+    concurrency:
+      group: sandbox-scheduler
+      cancel-in-progress: false
+    steps:
+      - name: Checkout Sandbox Branch
+        uses: actions/checkout@v4
+        with:
+          ref: v10-research-sandbox
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-sandbox.txt
+      - name: Execute Autonomous Proactive Lab
+        env:
+          ALPACA_PAPER_API_KEY: ${{ secrets.ALPACA_PAPER_API_KEY }}
+          ALPACA_PAPER_SECRET_KEY: ${{ secrets.ALPACA_PAPER_SECRET_KEY }}
+          UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+        run: python sandbox_proactive_lab.py
+      - name: Persist forensic logs to sandbox branch
+        if: always()
+        run: |
+          git config user.name "sandbox-bot"
+          git config user.email "noreply@github.com"
+          git add -f proactive_sandbox_logs.json 2>/dev/null || true
+          git add -f sandbox_ticker_cooloff.json 2>/dev/null || true
+          git add -f v10_tuning_advisory.md proactive_autopsy_log.md v10_tunable_parameters.json 2>/dev/null || true
+          if git diff --cached --quiet; then echo "no new sandbox data"; exit 0; fi
+          git commit -m "sandbox lab data [skip ci]"
+          for i in 1 2 3 4 5; do
+            git push origin HEAD:v10-research-sandbox && break
+            echo "push rejected - rebasing onto sandbox, attempt $i"
+            git pull --rebase --autostash origin v10-research-sandbox || true
+            sleep 2
+          done

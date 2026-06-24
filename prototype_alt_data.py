@@ -1,39 +1,45 @@
 """V10 Research Sandbox - Alternative Data Prototype (STANDALONE, wired to nothing).
 
-Two genuinely-free, ZERO-API-KEY edges for the 3-5 day options momentum strategy,
-chosen because they are orthogonal to our existing UW (institutional flow) + Alpaca
-(price/volume) stack:
+Two genuinely-free, ZERO-API-KEY edges orthogonal to our UW (institutional flow) +
+Alpaca (price/volume) stack, for the 3-5 day options momentum strategy:
 
   EDGE 1 - Retail attention spikes  (ApeWisdom / Reddit)  -> the crowd catalyst
-  EDGE 2 - Insider Form 4 buys       (SEC EDGAR)            -> the smart-money catalyst
+  EDGE 2 - Insider Form 4 buys       (SEC EDGAR/edgartools)-> the smart-money catalyst
 
-No paid keys, no signup, urllib only (no new dependencies). This file does not import
-or touch any V9 engine module. Run it directly: python prototype_alt_data.py
+EDGE 2 now uses the edgartools library (production-grade Form 4 parsing) and extracts
+the exact Share Count + Dollar Value of open-market purchases (code 'P'), filtering out
+nominal/DRIP noise and routine RSU/option activity (codes F/M/S).
+
+No paid keys, no signup. Does not import or touch any V9 engine module.
+Run directly: python prototype_alt_data.py     (needs: pip install edgartools)
 """
 
-import re
 import json
 import time
+import math
 import urllib.request
 from datetime import datetime, timedelta
 
 UA = {"User-Agent": "v10-research-sandbox swing research (savvastgeorgiou@gmail.com)"}
-
-
-def _get(url, timeout=20):
-    req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read().decode("utf-8", "replace")
+SEC_IDENTITY = "Savvas Georgiou savvastgeorgiou@gmail.com"
 
 
 def _get_json(url, timeout=20):
-    return json.loads(_get(url, timeout))
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8", "replace"))
+
+
+def _num(x):
+    try:
+        v = float(x)
+        return None if math.isnan(v) else v
+    except (TypeError, ValueError):
+        return None
 
 
 # ----------------------------------------------------------------------------
 # EDGE 1 - Reddit retail attention (ApeWisdom, free / no key)
-#   apewisdom.io aggregates WSB + investing subreddits. The 24h mention + rank
-#   deltas are the signal: a ticker lighting up is a fast retail momentum catalyst.
 # ----------------------------------------------------------------------------
 APEWISDOM = "https://apewisdom.io/api/v1.0/filter/all-stocks/page/{p}"
 
@@ -51,130 +57,106 @@ def reddit_attention(max_pages=3):
             spike = ((m - m24) / m24 * 100.0) if m24 else (100.0 if m else 0.0)
             rank, rank24 = r.get("rank"), r.get("rank_24h_ago")
             rows.append({
-                "ticker": r.get("ticker"),
-                "mentions": m,
-                "mentions_24h_ago": m24,
-                "mention_spike_pct": round(spike, 1),
-                "rank": rank,
-                "rank_24h_ago": rank24,
+                "ticker": r.get("ticker"), "mentions": m, "mentions_24h_ago": m24,
+                "mention_spike_pct": round(spike, 1), "rank": rank, "rank_24h_ago": rank24,
                 "rank_jump": (rank24 - rank) if (rank and rank24) else None,
                 "upvotes": r.get("upvotes"),
             })
     return rows
 
 
+def reddit_attention_map(max_pages=11):
+    """One market-wide fetch -> {TICKER: attention dict}. Efficient for batch enrichment."""
+    return {r["ticker"]: r for r in reddit_attention(max_pages=max_pages)}
+
+
 def reddit_spikes(min_mentions=40, min_spike_pct=80):
-    """The fast retail catalyst: meaningful mention count AND a sharp 24h jump."""
     spikes = [r for r in reddit_attention()
               if r["mentions"] >= min_mentions and r["mention_spike_pct"] >= min_spike_pct]
     spikes.sort(key=lambda x: x["mention_spike_pct"], reverse=True)
     return spikes
 
 
-def reddit_for(ticker):
-    """Cross-reference a single scanner candidate against Reddit attention."""
-    t = (ticker or "").upper().split(".")[0]
-    for r in reddit_attention(max_pages=11):
-        if r["ticker"] == t:
-            return r
-    return None
-
-
 # ----------------------------------------------------------------------------
-# EDGE 2 - SEC EDGAR insider Form 4 buys (free / no key)
-#   SEC publishes Form 4 within ~1s of acceptance, so a poller always catches
-#   fresh insider transactions same-day. Code 'P' = open-market purchase = the
-#   bullish 3-5 day catalyst (a cluster of execs buying their own stock).
+# EDGE 2 - SEC EDGAR insider Form 4 buys (edgartools, free / no key)
+#   Code 'P' = open-market purchase = the bullish 3-5d catalyst. Filters nominal
+#   (<min_value, e.g. $0.02 DRIP entries) and routine RSU/option codes (F/M/S).
 # ----------------------------------------------------------------------------
-_CIK = {"map": None}
+_EDGAR = {"ready": False}
 
 
-def _ticker_to_cik(ticker):
-    if _CIK["map"] is None:
-        try:
-            m = _get_json("https://www.sec.gov/files/company_tickers.json")
-            _CIK["map"] = {v["ticker"].upper(): str(v["cik_str"]).zfill(10) for v in m.values()}
-        except Exception:
-            _CIK["map"] = {}
-    return _CIK["map"].get((ticker or "").upper().split(".")[0])
+def _ensure_edgar():
+    if not _EDGAR["ready"]:
+        from edgar import set_identity
+        set_identity(SEC_IDENTITY)
+        _EDGAR["ready"] = True
 
 
-def recent_insider_form4(ticker, lookback_days=21, max_filings=8, polite=0.12):
-    cik = _ticker_to_cik(ticker)
-    if not cik:
-        return {"ticker": ticker, "error": "CIK not found"}
-    sub = _get_json(f"https://data.sec.gov/submissions/CIK{cik}.json")
-    rec = sub.get("filings", {}).get("recent", {})
+def insider_open_market_buys(ticker, lookback_days=90, min_value=25000):
+    from edgar import Company
+    _ensure_edgar()
     cutoff = (datetime.utcnow().date() - timedelta(days=lookback_days)).isoformat()
-    events, n = [], 0
-    for i in range(len(rec.get("form", []))):
-        if rec["form"][i] != "4" or rec["filingDate"][i] < cutoff:
-            continue
-        if n >= max_filings:
-            break
-        n += 1
-        acc = rec["accessionNumber"][i].replace("-", "")
-        fname = rec["primaryDocument"][i].split("/")[-1]  # strip xsl viewer prefix -> raw XML
+    t = (ticker or "").upper().split(".")[0]
+    try:
+        fs = Company(t).get_filings(form="4", filing_date=f"{cutoff}:")
+    except Exception as e:
+        return {"ticker": ticker, "signal": "none", "error": type(e).__name__, "buys": [],
+                "n_buys": 0, "n_insiders": 0, "total_value": 0}
+    buys, insiders = [], set()
+    for f in fs:
         try:
-            xml = _get(f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc}/{fname}")
-            time.sleep(polite)
+            df = f.obj().to_dataframe()
         except Exception:
             continue
-        codes = re.findall(r"<transactionCode>\s*([A-Z])\s*</transactionCode>", xml)
-        sh = re.findall(r"<transactionShares>\s*<value>([\d.]+)</value>", xml)
-        owner = re.search(r"<rptOwnerName>\s*([^<]+?)\s*</rptOwnerName>", xml)
-        is_dir = "<isDirector>1</isDirector>" in xml
-        is_off = "<isOfficer>1</isOfficer>" in xml
-        events.append({
-            "filed": rec["filingDate"][i],
-            "owner": owner.group(1).strip() if owner else None,
-            "role": "/".join([r for r in (("director" if is_dir else None),
-                                          ("officer" if is_off else None)) if r]) or "other",
-            "codes": codes,
-            "purchases": codes.count("P"),
-            "sales": codes.count("S"),
-            "shares": [float(s) for s in sh[:6]],
-        })
-    buys = sum(e["purchases"] for e in events)
+        for _, r in df[df["Code"] == "P"].iterrows():
+            sh = _num(r.get("Shares")) or 0.0
+            price = _num(r.get("Price")) or 0.0
+            val = _num(r.get("Value"))
+            if val is None:
+                val = sh * price
+            if val < min_value:                     # drop nominal / DRIP / issuer noise
+                continue
+            name = str(r.get("Insider") or "").strip()
+            buys.append({"date": str(r.get("Date"))[:10], "insider": name,
+                         "position": r.get("Position"), "shares": int(sh),
+                         "price": round(price, 2), "value": round(val, 0)})
+            insiders.add(name)
+    buys.sort(key=lambda b: b["date"], reverse=True)
+    signal = "INSIDER_BUY_CLUSTER" if len(insiders) >= 2 else ("INSIDER_BUY" if buys else "none")
     return {
-        "ticker": ticker, "cik": cik, "form4_count": len(events),
-        "open_market_purchases": buys, "events": events,
-        "signal": "INSIDER_BUY_CLUSTER" if buys >= 2 else ("INSIDER_BUY" if buys else "none"),
+        "ticker": ticker, "n_buys": len(buys), "n_insiders": len(insiders),
+        "total_shares": sum(b["shares"] for b in buys),
+        "total_value": sum(b["value"] for b in buys),
+        "latest_buy": buys[0]["date"] if buys else None,
+        "signal": signal, "buys": buys[:5],
     }
 
 
 # ----------------------------------------------------------------------------
-# DEMO + latency probe
+# DEMO
 # ----------------------------------------------------------------------------
 def main():
     print("=" * 72)
-    print("V10 ALT-DATA PROTOTYPE  -  retail attention + insider Form 4")
-    print("standalone | zero API keys | urllib only | wired to nothing")
+    print("V10 ALT-DATA PROTOTYPE  -  retail attention + insider Form 4 (edgartools)")
+    print("standalone | zero API keys | wired to nothing")
     print("=" * 72)
 
     print("\n--- EDGE 1: Reddit attention spikes (ApeWisdom) ---")
     t = time.time()
     spikes = reddit_spikes()
-    print(f"  fetched 3 pages in {time.time() - t:.2f}s -> {len(spikes)} spike(s):")
-    for r in spikes[:8]:
-        print(f"    {r['ticker']:<6} mentions {r['mentions']:>5} (was {r['mentions_24h_ago']}, "
-              f"+{r['mention_spike_pct']:.0f}%)  rank {r['rank']} (was {r['rank_24h_ago']})")
+    print(f"  {len(spikes)} spike(s) in {time.time() - t:.2f}s:")
+    for r in spikes[:6]:
+        print(f"    {r['ticker']:<6} {r['mentions']:>5} mentions (was {r['mentions_24h_ago']}, "
+              f"+{r['mention_spike_pct']:.0f}%)  rank {r['rank']}<-{r['rank_24h_ago']}")
 
-    print("\n  cross-reference scanner candidates:")
-    for tk in ("NVDA", "MU", "AMD"):
-        r = reddit_for(tk)
-        print(f"    {tk:<5} {('mentions %s (+%.0f%%) rank %s' % (r['mentions'], r['mention_spike_pct'], r['rank'])) if r else 'not in Reddit top mentions'}")
-
-    print("\n--- EDGE 2: Insider Form 4 buys (SEC EDGAR) ---")
-    for tk in ("NVDA", "AAPL"):
+    print("\n--- EDGE 2: Insider open-market buys (SEC EDGAR / edgartools) ---")
+    for tk in ("HOOD", "SOFI", "NVDA"):
         t = time.time()
-        res = recent_insider_form4(tk)
-        print(f"    {tk:<5} {res.get('form4_count')} Form4 in 21d, "
-              f"{res.get('open_market_purchases')} open-market purchases -> {res.get('signal')} "
-              f"({time.time() - t:.2f}s)")
-        for e in res.get("events", [])[:2]:
-            print(f"        {e['filed']} {e['owner']} ({e['role']}) codes={e['codes']} "
-                  f"P={e['purchases']} S={e['sales']}")
+        res = insider_open_market_buys(tk)
+        print(f"    {tk:<5} {res['signal']:<20} {res['n_buys']} buys / {res['n_insiders']} insiders / "
+              f"${res['total_value']:,.0f}  ({time.time() - t:.1f}s)")
+        for b in res["buys"][:2]:
+            print(f"        {b['date']} {b['insider'][:30]:<30} {b['shares']:>8,} @ ${b['price']} = ${b['value']:,.0f}")
 
 
 if __name__ == "__main__":

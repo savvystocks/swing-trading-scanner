@@ -33,6 +33,7 @@ jobs:
           ALPACA_PAPER_API_KEY: ${{ secrets.ALPACA_PAPER_API_KEY }}
           ALPACA_PAPER_SECRET_KEY: ${{ secrets.ALPACA_PAPER_SECRET_KEY }}
           UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+          PROACTIVE_MOCK: "0"        # capture REAL macro/GEX/alt metadata, not mock
         run: python sandbox_proactive_lab.py
       - name: Persist forensic logs to sandbox branch
         if: always()

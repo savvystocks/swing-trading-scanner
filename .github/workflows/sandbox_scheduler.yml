@@ -6,7 +6,7 @@ name: sandbox-scheduler
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/10 13-21 * * 1-5"   # every 10m, US market hours (13:30-21:00 UTC), weekdays
   workflow_dispatch:
 
 jobs:

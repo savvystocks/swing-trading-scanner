@@ -108,6 +108,8 @@ def insider_open_market_buys(ticker, lookback_days=90, min_value=25000):
             df = f.obj().to_dataframe()
         except Exception:
             continue
+        if df is None or getattr(df, "empty", True) or "Code" not in df.columns:
+            continue
         for _, r in df[df["Code"] == "P"].iterrows():
             sh = _num(r.get("Shares")) or 0.0
             price = _num(r.get("Price")) or 0.0

@@ -557,6 +557,13 @@ def main():
         print(f"  {name:<14} {leg['structure']:<15} {occ:<22} x{leg['contracts']:<3} @lim ${leg['limit_price']:<6} "
               f"-> {o['status']} order_id={o['order_id']}")
 
+    if gha:
+        # SCHEDULED run: real entry + forensic log only. The demo autopsy / 2nd entry / exit
+        # sims below are LOCAL-ONLY (they'd fire extra orders + write fake autopsy data).
+        # Exit automation on real open positions is the next piece (manage_exit is built).
+        print("\nGHA scheduled run complete: entered + logged. (demo autopsy/exit sims skipped)")
+        return
+
     # demonstrate FAIL-OPEN routing (force the put illiquid)
     rec2 = enter_proactive_set(ticker, "C", mock=mock, dry_run=True, illiquid={"bearish_put"})
     fo = {k: rec2["orders"][k]["status"] for k in rec2["orders"]}

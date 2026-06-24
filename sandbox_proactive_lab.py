@@ -1,37 +1,39 @@
-"""V10 Research Sandbox - Proactive Paper-Trading Lab (STANDALONE).
+"""V10 Research Sandbox - Proactive Paper-Trading Lab + Active Alpaca Paper Execution.
 
-Philosophy shift: instead of suppressing trading in flat/chop regimes, we AGGRESSIVELY
-paper-trade them from three angles at once and log a hyper-detailed environment block, so
-real outcomes can later tighten the live spec. Fail-OPEN by design (no restrictive filters)
-to build a statistical database of flat-to-trend transitions.
+Phase 2: trade the chop from three angles, route to the Alpaca PAPER API, log a forensic
+state block + order ids, and have the autopsy emit a tuning advisory so we tighten the knobs
+weekly from empirical win/loss data. Gate values are NOT hardcoded - they live in
+v10_tunable_parameters.json (read every cycle) and are turned by tune_parameters.py.
 
-On a trigger (SPY regime C/NEUTRAL, or a consolidating candidate) we enter THREE simultaneous
-1%-of-equity paper legs:
-   1. Bullish  - long OTM call  (delta ~ +0.35)
-   2. Bearish  - long OTM put   (delta ~ -0.35)
-   3. Flat     - calendar spread (buy back-month / sell front-month) to harvest theta
+On a trigger (regime_compass_bypass / regime C / consolidation) we enter THREE legs sized off
+a $10,000 cluster budget:
+   1. Bullish - long OTM call  (delta ~ +0.35)
+   2. Bearish - long OTM put   (delta ~ -0.35)
+   3. Flat    - calendar spread (buy back / sell front) for theta
 
-Each trade set writes a millisecond-stamped state block to proactive_sandbox_logs.json
-(macro 20d-SMA distance, IV term ratio, net GEX + zero-gamma distance, ApeWisdom 24h mention
-delta, edgartools 10d C-suite buy volume + cluster flag, ATR + 10-min RVOL).
+EXECUTION SAFETY: routing defaults to DRY_RUN (build + log the order payload, do NOT submit).
+Real submission to paper-api.alpaca.markets only happens with --live-paper (you run it). No
+order is ever placed against a live/real-money endpoint - paper only. Touches no V9 engine.
 
-When a set closes (5-day time exit or trailing stop), run_trade_autopsy() compares the three
-legs, writes a markdown post-mortem, and derives the determining factor that broke the range.
-
-Reuses the sandbox prototypes (prototype_alt_data, sandbox_v10_upgrades). Touches no V9 engine.
-Run: ALPACA_PAPER_API_KEY=... ALPACA_PAPER_SECRET_KEY=... python sandbox_proactive_lab.py
+Run (simulate):       python sandbox_proactive_lab.py
+Run (submit to paper): ALPACA_PAPER_API_KEY=... ALPACA_PAPER_SECRET_KEY=... python sandbox_proactive_lab.py --live-paper
 """
 
 import os
+import sys
 import json
 import math
 import uuid
-from datetime import datetime, timezone, timedelta
+import urllib.request
+from datetime import datetime, timezone, timedelta, date
+
+from v10_params import load as load_params
 
 LOG_PATH = "proactive_sandbox_logs.json"
 AUTOPSY_MD = "proactive_autopsy_log.md"
-PAPER_EQUITY = 100_000.0
-SIZE_PCT = 0.01                       # 1% of paper equity per leg
+ADVISORY_MD = "v10_tuning_advisory.md"
+CLUSTER_BUDGET = 10_000.0            # $10k per trade cluster (split across active legs)
+PAPER_BASE = "https://paper-api.alpaca.markets"
 CALL_DELTA, PUT_DELTA = 0.35, -0.35
 
 
@@ -48,7 +50,7 @@ def _num(x):
 
 
 # ----------------------------------------------------------------------------
-# Metadata fetchers - all FAIL-OPEN (return a value + source tag, mock on failure)
+# Metadata fetchers - all FAIL-OPEN (real value + source tag, mock on failure)
 # ----------------------------------------------------------------------------
 def _alpaca_daily(ticker, days=60):
     k = os.environ.get("ALPACA_PAPER_API_KEY") or os.environ.get("ALPACA_API_KEY")
@@ -83,17 +85,14 @@ def macro_technical(ticker, mock):
         src = "alpaca"
     else:
         spot, sma20, atr, rvol, src = 91.30, 90.85, 2.60, 1.18, "mock"
-    return {
-        "spot": round(spot, 2), "sma20": round(sma20, 2),
-        "distance_to_sma20_pct": round((spot - sma20) / sma20 * 100, 3),
-        "atr": round(atr, 2), "atr_pct": round(atr / spot * 100, 2),
-        "rvol_10min": rvol if rvol is not None else 1.0, "source": src,
-    }
+    return {"spot": round(spot, 2), "sma20": round(sma20, 2),
+            "distance_to_sma20_pct": round((spot - sma20) / sma20 * 100, 3),
+            "atr": round(atr, 2), "atr_pct": round(atr / spot * 100, 2),
+            "rvol_10min": rvol if rvol is not None else 1.0, "source": src}
 
 
 def iv_term_structure(ticker, spot, mock):
-    # front/back ATM IV. Real wiring would pull two Alpaca option-chain expiries; mocked here.
-    iv_front, iv_back, src = (78.0, 62.0, "mock")
+    iv_front, iv_back, src = (78.0, 62.0, "mock")    # real wiring: two Alpaca chain expiries
     ratio = round(iv_front / iv_back, 3) if iv_back else None
     return {"iv_front": iv_front, "iv_back": iv_back, "iv_ratio": ratio,
             "structure": "contango" if ratio and ratio < 1 else "backwardation" if ratio and ratio > 1 else "flat",
@@ -119,7 +118,7 @@ def net_gex(ticker, spot, mock):
                 for k, g in pts:
                     prev_cum = cum
                     cum += g
-                    if (prev_cum < 0 <= cum) or (prev_cum > 0 >= cum):   # cumulative GEX flips sign
+                    if (prev_cum < 0 <= cum) or (prev_cum > 0 >= cum):
                         crossings.append(k)
                 zero_gamma = (min(crossings, key=lambda k: abs(k - spot)) if crossings
                               else min(pts, key=lambda x: abs(x[0] - spot))[0])
@@ -172,15 +171,16 @@ def collect_metadata(ticker, mock=False):
 
 
 # ----------------------------------------------------------------------------
-# Trigger + leg construction + entry
+# Trigger + legs + Alpaca paper routing
 # ----------------------------------------------------------------------------
-def should_enter_proactive(regime, candidate=None):
-    """Fail-OPEN: trade flat regimes and consolidating candidates rather than suppress."""
+def should_enter_proactive(regime, params, candidate=None):
+    if params.get("regime_compass_bypass"):
+        return True, "regime_compass_bypass (ultra-loose, fail-open)"
     if regime == "C":
         return True, "regime_C_neutral (flat/chop)"
     if candidate and candidate.get("consolidating"):
         return True, "candidate_consolidating"
-    return True, "fail-open sandbox (build statistical database)"
+    return True, "fail-open sandbox"
 
 
 def _est_premium(spot, strike, iv_pct, dte, right):
@@ -189,41 +189,103 @@ def _est_premium(spot, strike, iv_pct, dte, right):
     return round(intrinsic + tv, 2)
 
 
-def build_legs(ticker, md, equity, size_pct):
+def _occ(ticker, dte, right, strike):
+    expiry = (date.today() + timedelta(days=dte))
+    ymd = expiry.strftime("%y%m%d")
+    rc = "C" if right == "call" else "P"
+    k = str(int(round(strike * 1000))).zfill(8)
+    return f"{ticker.upper()[:6]}{ymd}{rc}{k}", expiry.isoformat()
+
+
+def build_legs(ticker, md, cluster_budget=CLUSTER_BUDGET, n_legs=3, illiquid=None):
     spot = md["macro"]["spot"]
-    iv = md["iv_term"]["iv_front"]
-    alloc = round(equity * size_pct, 2)
-    call_k = round(spot * 1.04, 1)        # ~OTM 0.35-delta target
-    put_k = round(spot * 0.96, 1)
-    cp = _est_premium(spot, call_k, iv, 35, "call")
-    pp = _est_premium(spot, put_k, iv, 35, "put")
-    front = _est_premium(spot, spot, iv, 14, "call")
-    back = _est_premium(spot, spot, md["iv_term"]["iv_back"], 45, "call")
+    iv_f, iv_b = md["iv_term"]["iv_front"], md["iv_term"]["iv_back"]
+    per_leg = round(cluster_budget / n_legs, 2)
+    illiquid = illiquid or set()
+    call_k, put_k = round(spot * 1.04, 1), round(spot * 0.96, 1)
+    cp, pp = _est_premium(spot, call_k, iv_f, 35, "call"), _est_premium(spot, put_k, iv_f, 35, "put")
+    front, back = _est_premium(spot, spot, iv_f, 14, "call"), _est_premium(spot, spot, iv_b, 45, "call")
     cal_debit = round(back - front, 2)
 
-    def qty(premium):
-        return int(alloc // (premium * 100)) if premium and premium > 0 else 0
+    def leg(name, structure, right, strike, dte, premium, **extra):
+        occ, expiry = _occ(ticker, dte, right, strike)
+        qty = int(per_leg // (premium * 100)) if premium and premium > 0 else 0
+        return {"structure": structure, "occ_symbol": occ, "expiry": expiry, "strike": strike,
+                "dte": dte, "entry_premium": premium, "limit_price": round(premium * 1.01, 2),
+                "contracts": qty, "alloc_usd": per_leg,
+                "illiquid": (name in illiquid) or qty <= 0, **extra}
 
-    return {
-        "bullish_call": {"structure": "LONG_CALL", "right": "call", "strike": call_k, "target_delta": CALL_DELTA,
-                         "dte": 35, "entry_premium": cp, "contracts": qty(cp), "alloc_usd": alloc},
-        "bearish_put": {"structure": "LONG_PUT", "right": "put", "strike": put_k, "target_delta": PUT_DELTA,
-                        "dte": 35, "entry_premium": pp, "contracts": qty(pp), "alloc_usd": alloc},
-        "flat_calendar": {"structure": "CALENDAR_SPREAD", "strike": round(spot, 1), "front_dte": 14, "back_dte": 45,
-                          "front_premium": front, "back_premium": back, "net_debit": cal_debit,
-                          "contracts": qty(cal_debit), "alloc_usd": alloc},
+    legs = {
+        "bullish_call": leg("bullish_call", "LONG_CALL", "call", call_k, 35, cp, target_delta=CALL_DELTA),
+        "bearish_put": leg("bearish_put", "LONG_PUT", "put", put_k, 35, pp, target_delta=PUT_DELTA),
     }
+    cal_occ_f, _ = _occ(ticker, 14, "call", round(spot, 1))
+    cal_occ_b, exp_b = _occ(ticker, 45, "call", round(spot, 1))
+    qty_cal = int(per_leg // (cal_debit * 100)) if cal_debit > 0 else 0
+    legs["flat_calendar"] = {"structure": "CALENDAR_SPREAD", "strike": round(spot, 1),
+                             "front_occ": cal_occ_f, "back_occ": cal_occ_b, "front_dte": 14, "back_dte": 45,
+                             "net_debit": cal_debit, "limit_price": round(cal_debit * 1.01, 2),
+                             "contracts": qty_cal, "alloc_usd": per_leg,
+                             "illiquid": ("flat_calendar" in illiquid) or qty_cal <= 0}
+    return legs
 
 
-def enter_proactive_set(ticker, regime, equity=PAPER_EQUITY, size_pct=SIZE_PCT, mock=False, candidate=None):
-    ok, trigger = should_enter_proactive(regime, candidate)
+def _order_payload(name, leg):
+    if name == "flat_calendar":
+        return {"order_class": "mleg", "qty": str(leg["contracts"]), "type": "limit",
+                "limit_price": str(leg["limit_price"]), "time_in_force": "day", "legs": [
+                    {"symbol": leg["front_occ"], "ratio_qty": "1", "side": "sell", "position_intent": "sell_to_open"},
+                    {"symbol": leg["back_occ"], "ratio_qty": "1", "side": "buy", "position_intent": "buy_to_open"}]}
+    return {"symbol": leg["occ_symbol"], "qty": str(leg["contracts"]), "side": "buy", "type": "limit",
+            "limit_price": str(leg["limit_price"]), "time_in_force": "day"}
+
+
+def _submit_paper_order(payload, creds):
+    key, sec = creds
+    data = json.dumps(payload).encode()
+    req = urllib.request.Request(PAPER_BASE + "/v2/orders", data=data, method="POST",
+                                 headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec,
+                                          "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            resp = json.loads(r.read().decode())
+        return resp.get("id"), resp.get("status"), None
+    except Exception as e:
+        return None, "ERROR", str(e)[:120]
+
+
+def route_to_alpaca_paper(ticker, legs, dry_run=True):
+    creds = (os.environ.get("ALPACA_PAPER_API_KEY"), os.environ.get("ALPACA_PAPER_SECRET_KEY"))
+    out = {}
+    for name, leg in legs.items():
+        if leg.get("illiquid"):                       # FAIL-OPEN: skip illiquid, keep the rest
+            out[name] = {"status": "SKIPPED_ILLIQUID", "order_id": None, "submitted": False}
+            continue
+        payload = _order_payload(name, leg)
+        if dry_run:
+            out[name] = {"status": "DRY_RUN", "order_id": None, "submitted": False,
+                         "limit_price": leg["limit_price"], "contracts": leg["contracts"], "payload": payload}
+        elif not all(creds):
+            out[name] = {"status": "NO_PAPER_CREDS", "order_id": None, "submitted": False, "payload": payload}
+        else:
+            oid, status, err = _submit_paper_order(payload, creds)
+            out[name] = {"status": status, "order_id": oid, "error": err, "submitted": True,
+                         "limit_price": leg["limit_price"], "contracts": leg["contracts"]}
+    return out
+
+
+def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True, illiquid=None):
+    params = load_params()
+    ok, trigger = should_enter_proactive(regime, params, candidate)
     md = collect_metadata(ticker, mock=mock)
-    legs = build_legs(ticker, md, equity, size_pct)
-    record = {
-        "trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
-        "entry_ts_utc": md["entry_ts_utc"], "paper_equity": equity, "size_pct_per_leg": size_pct,
-        "metadata": md, "legs": legs, "exit": None, "status": "OPEN",
-    }
+    active = 3 - len(illiquid or set())
+    legs = build_legs(ticker, md, n_legs=max(active, 1), illiquid=illiquid)
+    orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run)
+    record = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
+              "entry_ts_utc": md["entry_ts_utc"], "cluster_budget_usd": CLUSTER_BUDGET,
+              "execution_mode": "DRY_RUN" if dry_run else "LIVE_PAPER",
+              "params_snapshot": params, "metadata": md, "legs": legs, "orders": orders,
+              "exit": None, "status": "OPEN"}
     _append_log(record)
     return record
 
@@ -236,128 +298,7 @@ def _append_log(record):
         except Exception:
             data = []
     data.append(record)
-    with open(LOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-
-# ----------------------------------------------------------------------------
-# Post-mortem autopsy
-# ----------------------------------------------------------------------------
-def run_trade_autopsy(record, leg_returns_pct, exit_reason="5d_time_exit", underlying_move_pct=None):
-    """leg_returns_pct: {'bullish_call':%, 'bearish_put':%, 'flat_calendar':%}."""
-    md = record["metadata"]
-    ranked = sorted(leg_returns_pct.items(), key=lambda kv: kv[1], reverse=True)
-    winner, w_ret = ranked[0]
-    loser, l_ret = ranked[-1]
-
-    factor = _determining_factor(winner, md, underlying_move_pct)
-    md_block = _autopsy_markdown(record, leg_returns_pct, winner, loser, exit_reason, underlying_move_pct, factor)
-    with open(AUTOPSY_MD, "a", encoding="utf-8") as f:
-        f.write(md_block + "\n")
-
-    record["exit"] = {"reason": exit_reason, "underlying_move_pct": underlying_move_pct,
-                      "leg_returns_pct": leg_returns_pct, "winner": winner, "loser": loser,
-                      "determining_factor": factor}
-    record["status"] = "CLOSED"
-    return {"winner": winner, "winner_return": w_ret, "loser": loser, "loser_return": l_ret,
-            "determining_factor": factor, "markdown": md_block}
-
-
-def _determining_factor(winner, md, move):
-    alt, gex, ivt = md["alt_catalyst"], md["gex"], md["iv_term"]
-    rd = alt.get("reddit_mention_delta_pct")
-    if winner == "bullish_call":
-        if alt.get("insider_cluster_flag"):
-            return f"Insider cluster buy (${alt.get('insider_10d_buy_usd'):,.0f} in 10d) predicted the bullish expansion; negative GEX ({gex['regime']}) amplified the upside breakout."
-        if rd is not None and rd > 500:
-            return f"Breakout triggered by a +{rd:.0f}% Reddit mention spike while IV term was in {ivt['structure']} (front rich, decays into the move)."
-        return f"Bullish breakout above the flat range (move {move}%); dealers short gamma at {gex['zero_gamma_strike']} fed the squeeze."
-    if winner == "bearish_put":
-        return f"Bearish breakdown (move {move}%) with no positive catalyst (reddit {rd}% / insider {alt.get('insider_cluster_flag')}); spot below zero-gamma {gex['zero_gamma_strike']} -> negative-gamma slide."
-    return (f"Range held: IV term {ivt['structure']} (ratio {ivt['iv_ratio']}) let front-month theta decay outrun the wings; "
-            f"no catalyst broke the range (reddit {rd}%, insider_cluster={alt.get('insider_cluster_flag')}).")
-
-
-def _autopsy_markdown(record, returns, winner, loser, reason, move, factor):
-    md = record["metadata"]
-    lines = [
-        f"## Trade-set autopsy - {record['ticker']} ({record['trade_set_id']})",
-        f"- entered {record['entry_ts_utc']} | trigger: {record['trigger']} | exit: {reason} | underlying move: {move}%",
-        "",
-        "| leg | structure | return % | verdict |",
-        "|---|---|---|---|",
-    ]
-    label = {"bullish_call": "Bullish (call)", "bearish_put": "Bearish (put)", "flat_calendar": "Flat (calendar)"}
-    for leg, ret in sorted(returns.items(), key=lambda kv: kv[1], reverse=True):
-        v = "WINNER" if leg == winner else ("loser" if leg == loser else "")
-        lines.append(f"| {label[leg]} | {record['legs'][leg]['structure']} | {ret:+.1f}% | {v} |")
-    lines += [
-        "",
-        f"**Determining factor:** {factor}",
-        "",
-        f"_environment at entry:_ 20dSMA dist {md['macro']['distance_to_sma20_pct']:+.2f}% | "
-        f"IV ratio {md['iv_term']['iv_ratio']} ({md['iv_term']['structure']}) | "
-        f"net GEX {md['gex']['net_gex']} ({md['gex']['regime']}, zero-gamma {md['gex']['zero_gamma_strike']}) | "
-        f"reddit {md['alt_catalyst']['reddit_mention_delta_pct']}% | "
-        f"insider ${md['alt_catalyst']['insider_10d_buy_usd']} cluster={md['alt_catalyst']['insider_cluster_flag']} | "
-        f"ATR {md['technical']['atr_pct']}% | RVOL {md['technical']['rvol_10min']}",
-        "",
-    ]
-    return "\n".join(lines)
-
-
-# ----------------------------------------------------------------------------
-# Mock execution demo
-# ----------------------------------------------------------------------------
-def main():
-    mock = os.environ.get("PROACTIVE_MOCK", "1") == "1"   # default mock for a deterministic demo
-    print("=" * 76)
-    print("V10 PROACTIVE PAPER-TRADING LAB - mock execution")
-    print(f"(mode: {'MOCK metadata' if mock else 'LIVE feeds, fail-open'})")
-    print("=" * 76)
-
-    ticker, regime = "HOOD", "C"        # consolidating name, SPY in NEUTRAL
-    rec = enter_proactive_set(ticker, regime, mock=mock, candidate={"consolidating": True})
-
-    print(f"\nTRIGGER: {rec['trigger']}  ->  entering 3 simultaneous paper legs on {ticker}")
-    print(f"trade_set_id={rec['trade_set_id']}  entry={rec['entry_ts_utc']}  equity=${rec['paper_equity']:,.0f} "
-          f"@ {rec['size_pct_per_leg']*100:.0f}%/leg\n")
-
-    md = rec["metadata"]
-    print("STATE BLOCK (logged to proactive_sandbox_logs.json):")
-    print(f"  macro      : spot {md['macro']['spot']}  20dSMA {md['macro']['sma20']}  "
-          f"dist {md['macro']['distance_to_sma20_pct']:+.2f}%  [{md['macro']['source']}]")
-    print(f"  iv_term    : front {md['iv_term']['iv_front']} / back {md['iv_term']['iv_back']}  "
-          f"ratio {md['iv_term']['iv_ratio']} ({md['iv_term']['structure']})  [{md['iv_term']['source']}]")
-    print(f"  gex        : net {md['gex']['net_gex']}  zero-gamma {md['gex']['zero_gamma_strike']}  "
-          f"dist {md['gex']['distance_to_zero_gamma_pct']:+.2f}%  ({md['gex']['regime']})  [{md['gex']['source']}]")
-    print(f"  alt        : reddit {md['alt_catalyst']['reddit_mention_delta_pct']}%  "
-          f"insider ${md['alt_catalyst']['insider_10d_buy_usd']:,} cluster={md['alt_catalyst']['insider_cluster_flag']}  "
-          f"[{md['alt_catalyst']['source']}]")
-    print(f"  technical  : ATR {md['technical']['atr']} ({md['technical']['atr_pct']}%)  "
-          f"RVOL {md['technical']['rvol_10min']}  [{md['technical']['source']}]")
-
-    print("\nTHREE ENTRY LEGS:")
-    for name, leg in rec["legs"].items():
-        if name == "flat_calendar":
-            print(f"  FLAT     {leg['structure']:<16} K{leg['strike']} front{leg['front_dte']}d/back{leg['back_dte']}d "
-                  f"net_debit ${leg['net_debit']}  x{leg['contracts']}  (${leg['alloc_usd']:,.0f})")
-        else:
-            tag = "BULLISH" if name == "bullish_call" else "BEARISH"
-            print(f"  {tag:<8} {leg['structure']:<16} K{leg['strike']} {leg['dte']}d delta {leg['target_delta']:+.2f} "
-                  f"prem ${leg['entry_premium']}  x{leg['contracts']}  (${leg['alloc_usd']:,.0f})")
-
-    # simulate a close: a +6.2% bullish breakout broke the flat range
-    print("\n" + "-" * 76)
-    print("SIMULATED CLOSE (5-day exit): underlying broke +6.2% out of the range")
-    leg_returns = {"bullish_call": 138.0, "bearish_put": -72.0, "flat_calendar": -28.0}
-    res = run_trade_autopsy(rec, leg_returns, exit_reason="5d_time_exit", underlying_move_pct=6.2)
-    # persist the closed record back
-    _rewrite_last(rec)
-    print(f"  winner: {res['winner']} ({leg_returns[res['winner']]:+.0f}%) | loser: {res['loser']} ({leg_returns[res['loser']]:+.0f}%)")
-    print(f"  determining factor: {res['determining_factor']}")
-    print(f"\n  -> autopsy markdown appended to {AUTOPSY_MD}")
-    print(f"  -> trade set logged to {LOG_PATH}")
+    json.dump(data, open(LOG_PATH, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 
 
 def _rewrite_last(record):
@@ -367,6 +308,132 @@ def _rewrite_last(record):
             data[i] = record
             break
     json.dump(data, open(LOG_PATH, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+
+
+# ----------------------------------------------------------------------------
+# Autopsy + Tuning Advisory
+# ----------------------------------------------------------------------------
+def _determining_factor(winner, md, move):
+    alt, gex, ivt = md["alt_catalyst"], md["gex"], md["iv_term"]
+    rd = alt.get("reddit_mention_delta_pct")
+    if winner == "bullish_call":
+        if alt.get("insider_cluster_flag"):
+            return f"Insider cluster buy (${alt.get('insider_10d_buy_usd'):,.0f}/10d) predicted the bullish expansion; {gex['regime']} amplified the breakout."
+        if rd is not None and rd > 500:
+            return f"Breakout triggered by a +{rd:.0f}% Reddit spike while IV term was in {ivt['structure']}."
+        return f"Bullish breakout (move {move}%); dealers short gamma near {gex['zero_gamma_strike']} fed the squeeze."
+    if winner == "bearish_put":
+        return f"Bearish breakdown (move {move}%): spot below zero-gamma {gex['zero_gamma_strike']} -> negative-gamma slide, no positive catalyst."
+    return f"Range held: IV term {ivt['structure']} (ratio {ivt['iv_ratio']}) let front-month theta outrun the wings."
+
+
+def _tuning_rules(record, returns, slippage_pct):
+    md = record["metadata"]
+    spot, zg = md["macro"]["spot"], md["gex"]["zero_gamma_strike"]
+    final_spot = spot * (1 + (record.get("exit", {}) or {}).get("underlying_move_pct", 0) / 100.0)
+    iv_ratio = md["iv_term"]["iv_ratio"]
+    recs = []
+    if returns.get("bullish_call", 0) < 0 and final_spot < zg:
+        recs.append(("min_gex_distance",
+                     "Bullish Call lost AND spot crossed below the Zero-Gamma strike -> "
+                     "Tighten min_gex_distance or restrict Calls when GEX is negative."))
+    if returns.get("flat_calendar", 0) < 0 and iv_ratio is not None and iv_ratio > 1.0:
+        recs.append(("max_iv_ratio_for_calendar",
+                     f"Calendar Spread lost AND IV Ratio {iv_ratio} > 1.0 (backwardation) -> "
+                     "Enforce standard contango by setting max_iv_ratio_for_calendar to < 1.0."))
+    if slippage_pct is not None and slippage_pct > 3.0:
+        recs.append(("max_bid_ask_spread_pct",
+                     f"Entry slippage {slippage_pct}% > 3% -> "
+                     "Tighten max_bid_ask_spread_pct from 5.0% to 2.0%."))
+    return recs
+
+
+def run_trade_autopsy(record, leg_returns_pct, exit_reason="5d_time_exit",
+                      underlying_move_pct=None, entry_slippage_pct=None):
+    md = record["metadata"]
+    ranked = sorted(leg_returns_pct.items(), key=lambda kv: kv[1], reverse=True)
+    winner, w_ret = ranked[0]
+    loser, l_ret = ranked[-1]
+    record["exit"] = {"reason": exit_reason, "underlying_move_pct": underlying_move_pct,
+                      "entry_slippage_pct": entry_slippage_pct, "leg_returns_pct": leg_returns_pct,
+                      "winner": winner, "loser": loser}
+    factor = _determining_factor(winner, md, underlying_move_pct)
+    record["exit"]["determining_factor"] = factor
+    record["status"] = "CLOSED"
+
+    # post-mortem markdown
+    label = {"bullish_call": "Bullish (call)", "bearish_put": "Bearish (put)", "flat_calendar": "Flat (calendar)"}
+    pm = [f"## Autopsy - {record['ticker']} ({record['trade_set_id']})",
+          f"- entered {record['entry_ts_utc']} | trigger {record['trigger']} | exit {exit_reason} "
+          f"| move {underlying_move_pct}% | slippage {entry_slippage_pct}%", "",
+          "| leg | structure | return % | verdict |", "|---|---|---|---|"]
+    for leg, ret in ranked:
+        v = "WINNER" if leg == winner else ("loser" if leg == loser else "")
+        pm.append(f"| {label[leg]} | {record['legs'][leg]['structure']} | {ret:+.1f}% | {v} |")
+    pm += ["", f"**Determining factor:** {factor}", ""]
+    open(AUTOPSY_MD, "a", encoding="utf-8").write("\n".join(pm) + "\n")
+
+    # tuning advisory
+    recs = _tuning_rules(record, leg_returns_pct, entry_slippage_pct)
+    adv = [f"## Tuning Advisory - {record['ticker']} ({record['trade_set_id']}) - {_now_iso_ms()}",
+           f"trade: winner={winner} loser={loser} | move {underlying_move_pct}% | slippage {entry_slippage_pct}%",
+           "", "Recommendations:"]
+    adv += [f"- [{gate}] {msg}" for gate, msg in recs] or ["- none (no rule triggered)"]
+    open(ADVISORY_MD, "a", encoding="utf-8").write("\n".join(adv) + "\n---\n")
+    record["exit"]["tuning_recommendations"] = [g for g, _ in recs]
+    return {"winner": winner, "loser": loser, "determining_factor": factor, "recommendations": recs}
+
+
+# ----------------------------------------------------------------------------
+# Demo
+# ----------------------------------------------------------------------------
+def main():
+    live_paper = "--live-paper" in sys.argv
+    mock = os.environ.get("PROACTIVE_MOCK", "1") == "1"
+    print("=" * 78)
+    print("V10 PROACTIVE LAB + ACTIVE ALPACA PAPER EXECUTION")
+    print(f"(metadata: {'MOCK' if mock else 'LIVE feeds'} | execution: "
+          f"{'LIVE_PAPER (submitting!)' if live_paper else 'DRY_RUN (simulate, no orders fired)'})")
+    print("=" * 78)
+
+    params = load_params()
+    print(f"\nloaded {len(params)} tunable params from v10_tunable_parameters.json:")
+    print("  " + json.dumps(params))
+
+    ticker = "HOOD"
+    rec = enter_proactive_set(ticker, "C", mock=mock, candidate={"consolidating": True}, dry_run=not live_paper)
+    print(f"\nTRIGGER: {rec['trigger']} -> 3 legs on {ticker} | cluster ${CLUSTER_BUDGET:,.0f} | mode {rec['execution_mode']}")
+
+    md = rec["metadata"]
+    print("\nSTATE BLOCK (un-mocked where live):")
+    print(f"  macro   : spot {md['macro']['spot']} 20dSMA {md['macro']['sma20']} dist {md['macro']['distance_to_sma20_pct']:+.2f}% [{md['macro']['source']}]")
+    print(f"  iv_term : ratio {md['iv_term']['iv_ratio']} ({md['iv_term']['structure']}) [{md['iv_term']['source']}]")
+    print(f"  gex     : net {md['gex']['net_gex']} zero-gamma {md['gex']['zero_gamma_strike']} dist {md['gex']['distance_to_zero_gamma_pct']:+.2f}% [{md['gex']['source']}]")
+    print(f"  alt     : reddit {md['alt_catalyst']['reddit_mention_delta_pct']}% insider ${md['alt_catalyst']['insider_10d_buy_usd']:,} cluster={md['alt_catalyst']['insider_cluster_flag']} [{md['alt_catalyst']['source']}]")
+    print(f"  technical: ATR {md['technical']['atr_pct']}% RVOL {md['technical']['rvol_10min']} [{md['technical']['source']}]")
+
+    print("\nALPACA PAPER ORDERS (3 legs):")
+    for name, leg in rec["legs"].items():
+        o = rec["orders"][name]
+        occ = leg.get("occ_symbol") or f"{leg.get('front_occ')}|{leg.get('back_occ')}"
+        print(f"  {name:<14} {leg['structure']:<15} {occ:<22} x{leg['contracts']:<3} @lim ${leg['limit_price']:<6} "
+              f"-> {o['status']} order_id={o['order_id']}")
+
+    # demonstrate FAIL-OPEN routing (force the put illiquid)
+    rec2 = enter_proactive_set(ticker, "C", mock=mock, dry_run=True, illiquid={"bearish_put"})
+    fo = {k: rec2["orders"][k]["status"] for k in rec2["orders"]}
+    print(f"\nFAIL-OPEN demo (put illiquid): {fo}  <- set still trades the viable legs")
+
+    # simulate a 5-day close that breaks the range to the downside -> trigger all 3 tuning rules
+    print("\n" + "-" * 78)
+    print("SIMULATED CLOSE: bearish breakdown -7%, entry slippage 4%")
+    returns = {"bullish_call": -80.0, "bearish_put": 120.0, "flat_calendar": -30.0}
+    res = run_trade_autopsy(rec, returns, underlying_move_pct=-7.0, entry_slippage_pct=4.0)
+    _rewrite_last(rec)
+    print(f"  winner {res['winner']} | determining factor: {res['determining_factor']}")
+    print(f"\nTUNING ADVISORY ({ADVISORY_MD}):")
+    for gate, msg in res["recommendations"]:
+        print(f"  -> [{gate}] {msg}")
 
 
 if __name__ == "__main__":

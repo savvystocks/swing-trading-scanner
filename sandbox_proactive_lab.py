@@ -32,7 +32,7 @@ from v10_params import load as load_params
 LOG_PATH = "proactive_sandbox_logs.json"
 AUTOPSY_MD = "proactive_autopsy_log.md"
 ADVISORY_MD = "v10_tuning_advisory.md"
-CLUSTER_BUDGET = 10_000.0            # $10k per trade cluster (split across active legs)
+LEG_BUDGET = 10_000.0               # FLAT $10k budget PER LEG (no fractional cluster split)
 PAPER_BASE = "https://paper-api.alpaca.markets"
 CALL_DELTA, PUT_DELTA = 0.35, -0.35
 WATCHLIST = ["TSLA", "PLTR", "AMD", "NVDA", "SOFI", "AAPL", "MSFT", "AMZN", "COIN", "MARA"]
@@ -94,12 +94,51 @@ def macro_technical(ticker, mock):
             "rvol_10min": rvol if rvol is not None else 1.0, "source": src}
 
 
-def iv_term_structure(ticker, spot, mock):
-    iv_front, iv_back, src = (78.0, 62.0, "mock")    # real wiring: two Alpaca chain expiries
-    ratio = round(iv_front / iv_back, 3) if iv_back else None
+def _alpaca_atm_iv(ticker, spot, dte_min, dte_max, creds):
+    """ATM call implied volatility (%) for the dte_min..dte_max expiry window, from Alpaca option
+    snapshots (snapshot.implied_volatility). Returns None on failure (fail-open)."""
+    if not (all(creds) and spot):
+        return None
+    try:
+        import re
+        from alpaca.data.historical.option import OptionHistoricalDataClient
+        from alpaca.data.requests import OptionChainRequest
+        cli = OptionHistoricalDataClient(creds[0], creds[1])
+        gte = (date.today() + timedelta(days=dte_min)).isoformat()
+        lte = (date.today() + timedelta(days=dte_max)).isoformat()
+        snaps = cli.get_option_chain(OptionChainRequest(
+            underlying_symbol=ticker.split(".")[0], type="call",
+            expiration_date_gte=gte, expiration_date_lte=lte,
+            strike_price_gte=str(round(spot * 0.92, 2)), strike_price_lte=str(round(spot * 1.08, 2))))
+    except Exception:
+        return None
+    best_iv, best_d = None, 1e18
+    for sym, s in (snaps or {}).items():
+        iv = getattr(s, "implied_volatility", None)
+        if not iv:
+            continue
+        m = re.search(r"[CP](\d{8})$", sym if isinstance(sym, str) else str(sym))
+        if not m:
+            continue
+        d = abs(int(m.group(1)) / 1000.0 - spot)
+        if d < best_d:
+            best_d, best_iv = d, float(iv) * 100
+    return round(best_iv, 1) if best_iv else None
+
+
+def iv_term_structure(ticker, spot, mock, creds=None):
+    if not mock and creds and all(creds) and spot:
+        iv_f = _alpaca_atm_iv(ticker, spot, CAL_FRONT_DTE[0], CAL_FRONT_DTE[1], creds)   # 10-15d front
+        iv_b = _alpaca_atm_iv(ticker, spot, CAL_BACK_DTE[0], CAL_BACK_DTE[1], creds)     # 35-45d back
+        if iv_f and iv_b:
+            ratio = round(iv_f / iv_b, 3)
+            return {"iv_front": iv_f, "iv_back": iv_b, "iv_ratio": ratio,
+                    "structure": "contango" if ratio < 1 else "backwardation" if ratio > 1 else "flat",
+                    "source": "alpaca"}
+    iv_front, iv_back = 78.0, 62.0                                                       # fail-open mock
+    ratio = round(iv_front / iv_back, 3)
     return {"iv_front": iv_front, "iv_back": iv_back, "iv_ratio": ratio,
-            "structure": "contango" if ratio and ratio < 1 else "backwardation" if ratio and ratio > 1 else "flat",
-            "source": src}
+            "structure": "backwardation", "source": "mock"}
 
 
 def net_gex(ticker, spot, mock):
@@ -165,7 +204,7 @@ def collect_metadata(ticker, mock=False):
         "entry_ts_utc": _now_iso_ms(),
         "macro": {"spot": mt["spot"], "sma20": mt["sma20"], "distance_to_sma20_pct": mt["distance_to_sma20_pct"],
                   "source": mt["source"]},
-        "iv_term": iv_term_structure(ticker, spot, mock),
+        "iv_term": iv_term_structure(ticker, spot, mock, creds=_paper_creds()),
         "gex": net_gex(ticker, spot, mock),
         "alt_catalyst": alt_catalyst(ticker, mock),
         "technical": {"atr": mt["atr"], "atr_pct": mt["atr_pct"], "rvol_10min": mt["rvol_10min"],
@@ -200,19 +239,25 @@ def _occ(ticker, dte, right, strike):
     return f"{ticker.upper()[:6]}{ymd}{rc}{k}", expiry.isoformat()
 
 
-def build_legs(ticker, md, cluster_budget=CLUSTER_BUDGET, n_legs=3, illiquid=None):
+def build_legs(ticker, md, leg_budget=LEG_BUDGET, illiquid=None):
     spot = md["macro"]["spot"]
     iv_f, iv_b = md["iv_term"]["iv_front"], md["iv_term"]["iv_back"]
-    per_leg = round(cluster_budget / n_legs, 2)
+    per_leg = leg_budget                      # FLAT $10k per leg
     illiquid = illiquid or set()
     call_k, put_k = round(spot * 1.04, 1), round(spot * 0.96, 1)
     cp, pp = _est_premium(spot, call_k, iv_f, 35, "call"), _est_premium(spot, put_k, iv_f, 35, "put")
     front, back = _est_premium(spot, spot, iv_f, 14, "call"), _est_premium(spot, spot, iv_b, 45, "call")
     cal_debit = round(back - front, 2)
 
+    def _qty(premium):
+        if not premium or premium <= 0:
+            return 0
+        q = int(per_leg // (premium * 100))   # floor($10k / cost-per-contract), e.g. 10000/3663 -> 2
+        return q if q >= 1 else 1             # MIN 1 CONTRACT fallback for options costing > $10k
+
     def leg(name, structure, right, strike, dte, premium, **extra):
         occ, expiry = _occ(ticker, dte, right, strike)
-        qty = int(per_leg // (premium * 100)) if premium and premium > 0 else 0
+        qty = _qty(premium)
         return {"structure": structure, "occ_symbol": occ, "expiry": expiry, "strike": strike,
                 "dte": dte, "entry_premium": premium, "limit_price": round(premium * 1.01, 2),
                 "contracts": qty, "alloc_usd": per_leg,
@@ -224,7 +269,7 @@ def build_legs(ticker, md, cluster_budget=CLUSTER_BUDGET, n_legs=3, illiquid=Non
     }
     cal_occ_f, _ = _occ(ticker, 14, "call", round(spot, 1))
     cal_occ_b, exp_b = _occ(ticker, 45, "call", round(spot, 1))
-    qty_cal = int(per_leg // (cal_debit * 100)) if cal_debit > 0 else 0
+    qty_cal = _qty(cal_debit)
     legs["flat_calendar"] = {"structure": "CALENDAR_SPREAD", "strike": round(spot, 1),
                              "front_occ": cal_occ_f, "back_occ": cal_occ_b, "front_dte": 14, "back_dte": 45,
                              "net_debit": cal_debit, "limit_price": round(cal_debit * 1.01, 2),
@@ -473,15 +518,14 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
 
     ok, trigger = should_enter_proactive(regime, params, candidate)
     md = collect_metadata(ticker, mock=mock)
-    active = 3 - len(illiquid or set())
-    legs = build_legs(ticker, md, n_legs=max(active, 1), illiquid=illiquid)
+    legs = build_legs(ticker, md, illiquid=illiquid)
     if resolve_real is None:
         resolve_real = all(creds)
     if resolve_real:
         _resolve_legs_occ(ticker, legs, creds)                 # real OCCs; unresolved -> fail-open skip
     orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run)
     record = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
-              "entry_ts_utc": md["entry_ts_utc"], "cluster_budget_usd": CLUSTER_BUDGET,
+              "entry_ts_utc": md["entry_ts_utc"], "leg_budget_usd": LEG_BUDGET,
               "execution_mode": "DRY_RUN" if dry_run else "LIVE_PAPER",
               "occ_resolution": "alpaca_real" if resolve_real else "synthesized",
               "ticker_guard": why, "open_positions_checked": len(positions),
@@ -659,7 +703,7 @@ def main():
     if rec.get("skipped"):
         print(f"\nSKIPPED {ticker}: {rec['reason']} (portfolio guard)")
         return
-    print(f"\nTRIGGER: {rec['trigger']} -> 3 legs on {ticker} | cluster ${CLUSTER_BUDGET:,.0f} | mode {rec['execution_mode']}")
+    print(f"\nTRIGGER: {rec['trigger']} -> 3 legs on {ticker} | ${LEG_BUDGET:,.0f}/leg | mode {rec['execution_mode']}")
     print(f"OCC resolution: {rec['occ_resolution']} | ticker guard: {rec['ticker_guard']} | positions checked: {rec['open_positions_checked']}")
 
     md = rec["metadata"]

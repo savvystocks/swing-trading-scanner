@@ -555,6 +555,101 @@ def _rewrite_last(record):
     json.dump(data, open(LOG_PATH, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 
 
+def _load_log_list():
+    if not os.path.exists(LOG_PATH):
+        return []
+    try:
+        return json.load(open(LOG_PATH, encoding="utf-8"))
+    except Exception:
+        return []
+
+
+def _save_log_list(data):
+    json.dump(data, open(LOG_PATH, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+
+
+def _close_position(occ, creds):
+    """Close an open option leg via Alpaca close-position (submits a closing order)."""
+    import urllib.parse
+    key, sec = creds
+    req = urllib.request.Request(PAPER_BASE + "/v2/positions/" + urllib.parse.quote(occ), method="DELETE",
+                                 headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return r.status in (200, 207)
+    except Exception:
+        return False
+
+
+def _record_leg_occs(rec):
+    out = {}
+    for name, leg in (rec.get("legs") or {}).items():
+        if name == "flat_calendar":
+            if leg.get("front_occ"):
+                out["calendar_front"] = leg["front_occ"]
+            if leg.get("back_occ"):
+                out["calendar_back"] = leg["back_occ"]
+        elif leg.get("occ_symbol"):
+            out[name] = leg["occ_symbol"]
+    return out
+
+
+def manage_open_positions(creds, params, positions=None):
+    """EXIT PASS: evaluate every open option position against the 24h swing guard + 30-50%
+    velocity target (manage_exit). Close winners, trip the 24h ticker cool-off (record_close),
+    and run the live autopsy (run_trade_autopsy) once a trade-set has no open legs left."""
+    if not all(creds):
+        return [], []
+    positions = positions if positions is not None else get_open_positions(creds)
+    pos_by_occ = {(p.get("symbol") or "").upper(): p for p in positions}
+    log = _load_log_list()
+    closed_legs, autopsies, dirty = [], [], False
+    for rec in log:
+        if rec.get("status") != "OPEN" or not isinstance(rec.get("legs"), dict):
+            continue
+        leg_occs = _record_leg_occs(rec)
+        if not leg_occs:
+            continue
+        rec.setdefault("leg_exits", {})
+        # 1. evaluate + close each leg with an open position that cleared 24h and hit the target
+        for leg_name, occ in leg_occs.items():
+            if leg_name in rec["leg_exits"]:
+                continue
+            p = pos_by_occ.get((occ or "").upper())
+            if not p:
+                continue
+            entry_px = float(p.get("avg_entry_price") or 0)
+            cur_px = float(p.get("current_price") or 0) or entry_px * (1 + float(p.get("unrealized_plpc") or 0))
+            dec = manage_exit(rec["entry_ts_utc"], entry_px, cur_px, params)
+            if dec["action"] == "CLOSE_TAKE_PROFIT":
+                ok = _close_position(occ, creds)
+                rec["leg_exits"][leg_name] = {"occ": occ, "closed_at": _now_iso_ms(),
+                                              "return_pct": dec["return_pct"], "reason": dec["reason"],
+                                              "closed_ok": ok}
+                record_close(rec["ticker"])                       # 24h cool-off
+                closed_legs.append({"ticker": rec["ticker"], "leg": leg_name, "occ": occ,
+                                    "return_pct": dec["return_pct"], "closed_ok": ok})
+                dirty = True
+        # 2. autopsy once the set has no remaining OPEN legs
+        still_open = any((occ or "").upper() in pos_by_occ and ln not in rec["leg_exits"]
+                         for ln, occ in leg_occs.items())
+        if not still_open and rec["leg_exits"]:
+            returns = {"bullish_call": 0.0, "bearish_put": 0.0, "flat_calendar": 0.0}
+            for ln, ex in rec["leg_exits"].items():
+                returns["flat_calendar" if ln.startswith("calendar") else ln] = ex["return_pct"]
+            try:
+                res = run_trade_autopsy(rec, returns, exit_reason="24h_30-50pct_target", underlying_move_pct=0.0)
+                autopsies.append({"ticker": rec["ticker"], "set": rec["trade_set_id"],
+                                  "winner": res["winner"], "factor": res["determining_factor"]})
+            except Exception as e:
+                rec["status"] = "CLOSED"
+                autopsies.append({"ticker": rec["ticker"], "autopsy_error": str(e)[:80]})
+            dirty = True
+    if dirty:
+        _save_log_list(log)
+    return closed_legs, autopsies
+
+
 # ----------------------------------------------------------------------------
 # Autopsy + Tuning Advisory
 # ----------------------------------------------------------------------------
@@ -609,7 +704,7 @@ def run_trade_autopsy(record, leg_returns_pct, exit_reason="5d_time_exit",
     # post-mortem markdown
     label = {"bullish_call": "Bullish (call)", "bearish_put": "Bearish (put)", "flat_calendar": "Flat (calendar)"}
     pm = [f"## Autopsy - {record['ticker']} ({record['trade_set_id']})",
-          f"- entered {record['entry_ts_utc']} | trigger {record['trigger']} | exit {exit_reason} "
+          f"- entered {record['entry_ts_utc']} | trigger {record.get('trigger', '?')} | exit {exit_reason} "
           f"| move {underlying_move_pct}% | slippage {entry_slippage_pct}%", "",
           "| leg | structure | return % | verdict |", "|---|---|---|---|"]
     for leg, ret in ranked:
@@ -649,10 +744,21 @@ def run_scheduled_cycle(mock=False):
         print(f"  cancelled {c['symbol']} age {c['age_min']}m")
     if cancels:
         open_orders = get_open_orders(creds)
+
+    # 2. EXIT PASS: 24h swing guard + 30-50% velocity target -> close, cool-off, autopsy
+    closed, autopsies = manage_open_positions(creds, params)
+    print(f"exit pass: {len(closed)} leg(s) closed, {len(autopsies)} autopsy(ies) generated")
+    for c in closed:
+        print(f"  closed {c['ticker']} {c['leg']} +{c['return_pct']}% (ok={c['closed_ok']})")
+    for a in autopsies:
+        print(f"  autopsy {a.get('ticker')}: winner={a.get('winner')} -> {str(a.get('factor', a.get('autopsy_error', '')))[:90]}")
+
+    # 3. re-read state after cancels/exits
+    open_orders = get_open_orders(creds)
     positions = get_open_positions(creds)
     print(f"portfolio: {len(positions)} positions, {len(open_orders)} open orders")
 
-    # 2. watchlist sourcing - enter the FIRST candidate not capped/cooled
+    # 4. watchlist sourcing - enter the FIRST candidate not capped/cooled
     print(f"watchlist: {WATCHLIST}")
     for t in WATCHLIST:
         rec = enter_proactive_set(t, "C", mock=mock, dry_run=not live,

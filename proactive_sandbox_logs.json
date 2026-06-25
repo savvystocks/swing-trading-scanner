@@ -394,5 +394,158 @@
     },
     "exit": null,
     "status": "OPEN"
+  },
+  {
+    "trade_set_id": "AUDIT-3ca23cc9",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-06-25T15:39:13.949Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "c93e2664-136d-438a-abb4-b7796ba9067d",
+        "symbol": "",
+        "age_min": 129.1,
+        "limit_price": "9.85"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "d9e253520b88",
+    "ticker": "PLTR",
+    "regime": "C",
+    "trigger": "regime_compass_bypass (ultra-loose, fail-open)",
+    "entry_ts_utc": "2026-06-25T15:39:17.090Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 4,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-25T15:39:17.090Z",
+      "macro": {
+        "spot": 107.57,
+        "sma20": 133.72,
+        "distance_to_sma20_pct": -19.553,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 53.3,
+        "iv_back": 60.8,
+        "iv_ratio": 0.877,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -495296.6,
+        "zero_gamma_strike": 30.0,
+        "distance_to_zero_gamma_pct": 72.111,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 48.6,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 6.02,
+        "atr_pct": 5.6,
+        "rvol_10min": 0.66,
+        "source": "alpaca"
+      }
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "PLTR260724C00112000",
+        "expiry": "2026-07-24",
+        "strike": 112.0,
+        "dte": 35,
+        "entry_premium": 7.1,
+        "limit_price": 7.17,
+        "contracts": 14,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": null,
+        "occ_source": "alpaca_resolved"
+      },
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "PLTR260724P00103000",
+        "expiry": "2026-07-24",
+        "strike": 103.0,
+        "dte": 35,
+        "entry_premium": 7.1,
+        "limit_price": 7.17,
+        "contracts": 14,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": null,
+        "occ_source": "alpaca_resolved"
+      },
+      "flat_calendar": {
+        "structure": "CALENDAR_SPREAD",
+        "strike": 107.6,
+        "front_occ": "PLTR260710C00108000",
+        "back_occ": "PLTR260731C00108000",
+        "front_dte": 14,
+        "back_dte": 45,
+        "net_debit": 4.7,
+        "limit_price": 4.75,
+        "contracts": 21,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "front_expiry": "2026-07-10",
+        "back_expiry": "2026-07-31",
+        "occ_source": "alpaca_resolved"
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "f1246e9c-908c-44bc-8c29-c5a4d5e92e9b",
+        "error": null,
+        "submitted": true,
+        "limit_price": 7.17,
+        "contracts": 14
+      },
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "9a05734e-c56d-4e87-8ec3-8320e8e92daf",
+        "error": null,
+        "submitted": true,
+        "limit_price": 7.17,
+        "contracts": 14
+      },
+      "flat_calendar": {
+        "status": "pending_new",
+        "order_id": "f1ad9612-08d1-41ca-ba30-1ae90ebc0fdb",
+        "error": null,
+        "submitted": true,
+        "limit_price": 4.75,
+        "contracts": 21
+      }
+    },
+    "exit": null,
+    "status": "OPEN"
   }
 ]

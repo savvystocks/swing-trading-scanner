@@ -547,5 +547,143 @@
     },
     "exit": null,
     "status": "OPEN"
+  },
+  {
+    "trade_set_id": "9b6744f227f5",
+    "ticker": "TSLA",
+    "regime": "C",
+    "trigger": "regime_compass_bypass (ultra-loose, fail-open)",
+    "entry_ts_utc": "2026-06-25T17:34:41.950Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 8,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-25T17:34:41.950Z",
+      "macro": {
+        "spot": 374.39,
+        "sma20": 404.61,
+        "distance_to_sma20_pct": -7.469,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 43.4,
+        "iv_back": 47.5,
+        "iv_ratio": 0.914,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 27786.2,
+        "zero_gamma_strike": 95.0,
+        "distance_to_zero_gamma_pct": 74.625,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -8.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 18.8,
+        "atr_pct": 5.02,
+        "rvol_10min": 0.35,
+        "source": "alpaca"
+      }
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "TSLA260724C00390000",
+        "expiry": "2026-07-24",
+        "strike": 390.0,
+        "dte": 35,
+        "entry_premium": 20.13,
+        "limit_price": 20.33,
+        "contracts": 4,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "797",
+        "occ_source": "alpaca_resolved"
+      },
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "TSLA260724P00360000",
+        "expiry": "2026-07-24",
+        "strike": 360.0,
+        "dte": 35,
+        "entry_premium": 20.13,
+        "limit_price": 20.33,
+        "contracts": 4,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "2075",
+        "occ_source": "alpaca_resolved"
+      },
+      "flat_calendar": {
+        "structure": "CALENDAR_SPREAD",
+        "strike": 374.4,
+        "front_occ": "TSLA260706C00375000",
+        "back_occ": "TSLA260731C00375000",
+        "front_dte": 14,
+        "back_dte": 45,
+        "net_debit": 12.25,
+        "limit_price": 12.37,
+        "contracts": 8,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "front_expiry": "2026-07-06",
+        "back_expiry": "2026-07-31",
+        "occ_source": "alpaca_resolved"
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "86fc332d-5565-4035-9e1f-e1cafb324b91",
+        "error": null,
+        "submitted": true,
+        "limit_price": 20.33,
+        "contracts": 4
+      },
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "57e7cdf6-f393-405c-a3fe-16b89b89a291",
+        "error": null,
+        "submitted": true,
+        "limit_price": 20.33,
+        "contracts": 4
+      },
+      "flat_calendar": {
+        "status": "pending_new",
+        "order_id": "e7c7ea92-72ff-4406-b528-32498be6c299",
+        "error": null,
+        "submitted": true,
+        "limit_price": 12.37,
+        "contracts": 8
+      }
+    },
+    "exit": null,
+    "status": "OPEN"
   }
 ]

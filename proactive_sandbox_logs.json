@@ -823,5 +823,143 @@
     },
     "exit": null,
     "status": "OPEN"
+  },
+  {
+    "trade_set_id": "2d36bb80d5f6",
+    "ticker": "NVDA",
+    "regime": "C",
+    "trigger": "regime_compass_bypass (ultra-loose, fail-open)",
+    "entry_ts_utc": "2026-06-25T21:14:31.554Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 16,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-25T21:14:31.554Z",
+      "macro": {
+        "spot": 195.89,
+        "sma20": 208.85,
+        "distance_to_sma20_pct": -6.206,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 39.3,
+        "iv_back": 39.4,
+        "iv_ratio": 0.997,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 860396.8,
+        "zero_gamma_strike": 235.0,
+        "distance_to_zero_gamma_pct": -19.965,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 52.2,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 7.36,
+        "atr_pct": 3.76,
+        "rvol_10min": 0.78,
+        "source": "alpaca"
+      }
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "NVDA260724C00205000",
+        "expiry": "2026-07-24",
+        "strike": 205.0,
+        "dte": 35,
+        "entry_premium": 9.54,
+        "limit_price": 9.64,
+        "contracts": 10,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "2195",
+        "occ_source": "alpaca_resolved"
+      },
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "NVDA260724P00190000",
+        "expiry": "2026-07-24",
+        "strike": 190.0,
+        "dte": 35,
+        "entry_premium": 9.54,
+        "limit_price": 9.64,
+        "contracts": 10,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "2333",
+        "occ_source": "alpaca_resolved"
+      },
+      "flat_calendar": {
+        "structure": "CALENDAR_SPREAD",
+        "strike": 195.9,
+        "front_occ": "NVDA260706C00195000",
+        "back_occ": "NVDA260731C00195000",
+        "front_dte": 14,
+        "back_dte": 45,
+        "net_debit": 4.81,
+        "limit_price": 4.86,
+        "contracts": 20,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "front_expiry": "2026-07-06",
+        "back_expiry": "2026-07-31",
+        "occ_source": "alpaca_resolved"
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "accepted",
+        "order_id": "4e6847dc-6b85-4ee2-9233-9e2e016e712d",
+        "error": null,
+        "submitted": true,
+        "limit_price": 9.64,
+        "contracts": 10
+      },
+      "bearish_put": {
+        "status": "accepted",
+        "order_id": "14c11ef3-d63d-4676-b5cd-b1d09768bf5a",
+        "error": null,
+        "submitted": true,
+        "limit_price": 9.64,
+        "contracts": 10
+      },
+      "flat_calendar": {
+        "status": "accepted",
+        "order_id": "294c7bb5-1562-4102-8ef5-dd1119021729",
+        "error": null,
+        "submitted": true,
+        "limit_price": 4.86,
+        "contracts": 20
+      }
+    },
+    "exit": null,
+    "status": "OPEN"
   }
 ]

@@ -25,6 +25,7 @@ DEFAULTS = {
     "max_contracts_per_ticker": 3,        # ticker concentration cap
     "ticker_cooloff_hours": 24,           # 24h cool-off after a close before re-entry
     "stale_order_max_minutes": 30,        # cancel unfilled limit orders older than this (3 cycles)
+    "scanner_min_premium": 50000,         # V11: min UW flow premium ($) to surface a candidate (loose discovery)
 }
 
 

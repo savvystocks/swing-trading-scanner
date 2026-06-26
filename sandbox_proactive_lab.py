@@ -29,13 +29,17 @@ from datetime import datetime, timezone, timedelta, date
 
 from v10_params import load as load_params
 
+try:
+    import sandbox_v11_sensors as v11        # LOG-DON'T-BLOCK context sensors (fail-open)
+except Exception:
+    v11 = None
+
 LOG_PATH = "proactive_sandbox_logs.json"
 AUTOPSY_MD = "proactive_autopsy_log.md"
 ADVISORY_MD = "v10_tuning_advisory.md"
 LEG_BUDGET = 10_000.0               # FLAT $10k budget PER LEG (no fractional cluster split)
 PAPER_BASE = "https://paper-api.alpaca.markets"
 CALL_DELTA, PUT_DELTA = 0.35, -0.35
-WATCHLIST = ["TSLA", "PLTR", "AMD", "NVDA", "SOFI", "AAPL", "MSFT", "AMZN", "COIN", "MARA"]
 CAL_FRONT_DTE = (10, 15)             # short leg expiration window (days)
 CAL_BACK_DTE = (35, 45)             # long leg expiration window (days)
 
@@ -89,8 +93,8 @@ def macro_technical(ticker, mock):
     else:
         spot, sma20, atr, rvol, src = 91.30, 90.85, 2.60, 1.18, "mock"
     return {"spot": round(spot, 2), "sma20": round(sma20, 2),
-            "distance_to_sma20_pct": round((spot - sma20) / sma20 * 100, 3),
-            "atr": round(atr, 2), "atr_pct": round(atr / spot * 100, 2),
+            "distance_to_sma20_pct": round((spot - sma20) / sma20 * 100, 3) if sma20 else 0.0,
+            "atr": round(atr, 2), "atr_pct": round(atr / spot * 100, 2) if spot else 0.0,
             "rvol_10min": rvol if rvol is not None else 1.0, "source": src}
 
 
@@ -171,7 +175,7 @@ def net_gex(ticker, spot, mock):
             pass
     zg = round(spot * 1.004, 2)
     return {"net_gex": -1.85e8, "zero_gamma_strike": zg,
-            "distance_to_zero_gamma_pct": round((spot - zg) / spot * 100, 3),
+            "distance_to_zero_gamma_pct": round((spot - zg) / spot * 100, 3) if spot else 0.0,
             "regime": "negative_gamma", "source": "mock"}
 
 
@@ -200,29 +204,75 @@ def alt_catalyst(ticker, mock):
 def collect_metadata(ticker, mock=False):
     mt = macro_technical(ticker, mock)
     spot = mt["spot"]
-    return {
+    iv = iv_term_structure(ticker, spot, mock, creds=_paper_creds())
+    md = {
         "entry_ts_utc": _now_iso_ms(),
         "macro": {"spot": mt["spot"], "sma20": mt["sma20"], "distance_to_sma20_pct": mt["distance_to_sma20_pct"],
                   "source": mt["source"]},
-        "iv_term": iv_term_structure(ticker, spot, mock, creds=_paper_creds()),
+        "iv_term": iv,
         "gex": net_gex(ticker, spot, mock),
         "alt_catalyst": alt_catalyst(ticker, mock),
         "technical": {"atr": mt["atr"], "atr_pct": mt["atr_pct"], "rvol_10min": mt["rvol_10min"],
                       "source": mt["source"]},
     }
+    md.update(_v11_sensors(ticker, md, spot, iv, mock))
+    return md
+
+
+def _safe(fn, default):
+    try:
+        return fn()
+    except Exception:
+        return dict(default)
+
+
+def _v11_sensors(ticker, md, spot, iv, mock):
+    """LOG-DON'T-BLOCK: bolt the four V11 context sensors onto the metadata. Each fails open to
+    nulls and NONE is read by any entry/sizing/exit path - the Autopsy Engine consumes them."""
+    if not v11:
+        return {"v11_sensors": "module_unavailable"}
+    prof = _safe(lambda: v11.company_profile(ticker, mock), {"source": "unavailable"})
+    news = _safe(lambda: v11.news_context(ticker, mock), {"source": "unavailable"})
+    rstack = _safe(lambda: v11.regime_stack(ticker, prof.get("sector"),
+                   md["macro"]["distance_to_sma20_pct"], mock), {"source": "unavailable"})
+    skew = _safe(lambda: v11.relative_skew(ticker, spot, iv.get("iv_front"), mock), {"source": "unavailable"})
+    return {"fundamentals": prof, "news": news, "regime_stack": rstack, "skew": skew,
+            "news_sentiment_score": news.get("vader_compound")}
 
 
 # ----------------------------------------------------------------------------
 # Trigger + legs + Alpaca paper routing
 # ----------------------------------------------------------------------------
+def classify_regime(md, candidate=None):
+    """Directional read of the market's intent - loose, data-gathering. Flow direction (why the
+    scanner fired) dominates; the ticker's own trend and the broad-market regime confirm. Returns
+    BULLISH / BEARISH / NEUTRAL. This routes WHICH structure we trade, never whether we trade."""
+    score = 0.0
+    ft = (candidate or {}).get("flow_type")
+    if ft == "call":
+        score += 2.0
+    elif ft == "put":
+        score -= 2.0
+    dist = (md.get("macro") or {}).get("distance_to_sma20_pct")
+    if isinstance(dist, (int, float)):
+        score += 1.0 if dist > 1.0 else -1.0 if dist < -1.0 else 0.0
+    spy = (md.get("regime_stack") or {}).get("market_spy_dist_pct")
+    if isinstance(spy, (int, float)):
+        score += 0.5 if spy > 0 else -0.5 if spy < 0 else 0.0
+    if score >= 0.5:
+        return "BULLISH"
+    if score <= -0.5:
+        return "BEARISH"
+    return "NEUTRAL"
+
+
+_REGIME_STRUCTURE = {"BULLISH": "bullish_call", "BEARISH": "bearish_put", "NEUTRAL": "flat_calendar"}
+
+
 def should_enter_proactive(regime, params, candidate=None):
-    if params.get("regime_compass_bypass"):
-        return True, "regime_compass_bypass (ultra-loose, fail-open)"
-    if regime == "C":
-        return True, "regime_C_neutral (flat/chop)"
-    if candidate and candidate.get("consolidating"):
-        return True, "candidate_consolidating"
-    return True, "fail-open sandbox"
+    """Blind bypass killed: we still take loose, data-gathering trades, but the REGIME decides the
+    structure (call / put / calendar) - it is no longer a global on-off switch."""
+    return True, f"regime_{regime}_loose"
 
 
 def _est_premium(spot, strike, iv_pct, dte, right):
@@ -239,7 +289,7 @@ def _occ(ticker, dte, right, strike):
     return f"{ticker.upper()[:6]}{ymd}{rc}{k}", expiry.isoformat()
 
 
-def build_legs(ticker, md, leg_budget=LEG_BUDGET, illiquid=None):
+def build_legs(ticker, md, regime="NEUTRAL", leg_budget=LEG_BUDGET, illiquid=None):
     spot = md["macro"]["spot"]
     iv_f, iv_b = md["iv_term"]["iv_front"], md["iv_term"]["iv_back"]
     per_leg = leg_budget                      # FLAT $10k per leg
@@ -263,19 +313,20 @@ def build_legs(ticker, md, leg_budget=LEG_BUDGET, illiquid=None):
                 "contracts": qty, "alloc_usd": per_leg,
                 "illiquid": (name in illiquid) or qty <= 0, **extra}
 
-    legs = {
+    all_legs = {
         "bullish_call": leg("bullish_call", "LONG_CALL", "call", call_k, 35, cp, target_delta=CALL_DELTA),
         "bearish_put": leg("bearish_put", "LONG_PUT", "put", put_k, 35, pp, target_delta=PUT_DELTA),
     }
     cal_occ_f, _ = _occ(ticker, 14, "call", round(spot, 1))
     cal_occ_b, exp_b = _occ(ticker, 45, "call", round(spot, 1))
     qty_cal = _qty(cal_debit)
-    legs["flat_calendar"] = {"structure": "CALENDAR_SPREAD", "strike": round(spot, 1),
-                             "front_occ": cal_occ_f, "back_occ": cal_occ_b, "front_dte": 14, "back_dte": 45,
-                             "net_debit": cal_debit, "limit_price": round(cal_debit * 1.01, 2),
-                             "contracts": qty_cal, "alloc_usd": per_leg,
-                             "illiquid": ("flat_calendar" in illiquid) or qty_cal <= 0}
-    return legs
+    all_legs["flat_calendar"] = {"structure": "CALENDAR_SPREAD", "strike": round(spot, 1),
+                                 "front_occ": cal_occ_f, "back_occ": cal_occ_b, "front_dte": 14, "back_dte": 45,
+                                 "net_debit": cal_debit, "limit_price": round(cal_debit * 1.01, 2),
+                                 "contracts": qty_cal, "alloc_usd": per_leg,
+                                 "illiquid": ("flat_calendar" in illiquid) or qty_cal <= 0}
+    pick = _REGIME_STRUCTURE.get(regime, "flat_calendar")     # regime routes the structure (one per cluster)
+    return {pick: all_legs[pick]}
 
 
 def _order_payload(name, leg):
@@ -487,6 +538,8 @@ def manage_exit(entry_ts_iso, entry_premium, current_premium, params, now=None):
 
 def _resolve_legs_occ(ticker, legs, creds):
     for name, right in (("bullish_call", "call"), ("bearish_put", "put")):
+        if name not in legs:
+            continue
         leg = legs[name]
         r = resolve_occ(ticker, right, leg["strike"], leg["dte"], creds)
         if r and r.get("occ_symbol"):
@@ -494,16 +547,31 @@ def _resolve_legs_occ(ticker, legs, creds):
                         "open_interest": r.get("open_interest"), "occ_source": "alpaca_resolved"})
         else:
             leg.update({"illiquid": True, "occ_source": "unresolved -> FAIL-OPEN skip"})
-    cal = legs["flat_calendar"]
-    f = resolve_occ(ticker, "call", cal["strike"], cal["front_dte"], creds,
-                    dte_min=CAL_FRONT_DTE[0], dte_max=CAL_FRONT_DTE[1])   # 10-15d short leg
-    b = resolve_occ(ticker, "call", cal["strike"], cal["back_dte"], creds,
-                    dte_min=CAL_BACK_DTE[0], dte_max=CAL_BACK_DTE[1])     # 35-45d long leg
-    if f and b and f.get("occ_symbol") and b.get("occ_symbol"):
-        cal.update({"front_occ": f["occ_symbol"], "back_occ": b["occ_symbol"],
-                    "front_expiry": f["expiration"], "back_expiry": b["expiration"], "occ_source": "alpaca_resolved"})
-    else:
-        cal.update({"illiquid": True, "occ_source": "unresolved -> FAIL-OPEN skip"})
+    if "flat_calendar" in legs:
+        cal = legs["flat_calendar"]
+        f = resolve_occ(ticker, "call", cal["strike"], cal["front_dte"], creds,
+                        dte_min=CAL_FRONT_DTE[0], dte_max=CAL_FRONT_DTE[1])   # 10-15d short leg
+        b = resolve_occ(ticker, "call", cal["strike"], cal["back_dte"], creds,
+                        dte_min=CAL_BACK_DTE[0], dte_max=CAL_BACK_DTE[1])     # 35-45d long leg
+        if f and b and f.get("occ_symbol") and b.get("occ_symbol"):
+            cal.update({"front_occ": f["occ_symbol"], "back_occ": b["occ_symbol"],
+                        "front_expiry": f["expiration"], "back_expiry": b["expiration"], "occ_source": "alpaca_resolved"})
+        else:
+            cal.update({"illiquid": True, "occ_source": "unresolved -> FAIL-OPEN skip"})
+    _stamp_spreads(legs)
+
+
+def _stamp_spreads(legs):
+    """SENSOR 3: stamp the live bid/ask spread of each resolved OCC at order-generation time.
+    Pure logging - never alters sizing or whether a leg is submitted."""
+    if not v11:
+        return
+    for leg in legs.values():
+        occ = leg.get("occ_symbol") or leg.get("back_occ")     # calendar -> long (back) leg
+        try:
+            leg["execution_cost"] = v11.option_spread(occ)
+        except Exception:
+            leg["execution_cost"] = {"source": "unavailable"}
 
 
 def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True, illiquid=None,
@@ -516,9 +584,10 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
     if blocked:
         return {"trade_set_id": None, "ticker": ticker, "skipped": True, "reason": why, "status": "SKIPPED"}
 
-    ok, trigger = should_enter_proactive(regime, params, candidate)
     md = collect_metadata(ticker, mock=mock)
-    legs = build_legs(ticker, md, illiquid=illiquid)
+    regime = classify_regime(md, candidate)
+    ok, trigger = should_enter_proactive(regime, params, candidate)
+    legs = build_legs(ticker, md, regime, illiquid=illiquid)
     if resolve_real is None:
         resolve_real = all(creds)
     if resolve_real:
@@ -634,9 +703,11 @@ def manage_open_positions(creds, params, positions=None):
         still_open = any((occ or "").upper() in pos_by_occ and ln not in rec["leg_exits"]
                          for ln, occ in leg_occs.items())
         if not still_open and rec["leg_exits"]:
-            returns = {"bullish_call": 0.0, "bearish_put": 0.0, "flat_calendar": 0.0}
+            returns = {ln: 0.0 for ln in (rec.get("legs") or {})}      # only the legs actually traded
             for ln, ex in rec["leg_exits"].items():
-                returns["flat_calendar" if ln.startswith("calendar") else ln] = ex["return_pct"]
+                key = "flat_calendar" if ln.startswith("calendar") else ln
+                if key in returns:
+                    returns[key] = ex["return_pct"]
             try:
                 res = run_trade_autopsy(rec, returns, exit_reason="24h_30-50pct_target", underlying_move_pct=0.0)
                 autopsies.append({"ticker": rec["ticker"], "set": rec["trade_set_id"],
@@ -709,7 +780,8 @@ def run_trade_autopsy(record, leg_returns_pct, exit_reason="5d_time_exit",
           "| leg | structure | return % | verdict |", "|---|---|---|---|"]
     for leg, ret in ranked:
         v = "WINNER" if leg == winner else ("loser" if leg == loser else "")
-        pm.append(f"| {label[leg]} | {record['legs'][leg]['structure']} | {ret:+.1f}% | {v} |")
+        struct = (record.get("legs", {}).get(leg) or {}).get("structure", "?")
+        pm.append(f"| {label.get(leg, leg)} | {struct} | {ret:+.1f}% | {v} |")
     pm += ["", f"**Determining factor:** {factor}", ""]
     open(AUTOPSY_MD, "a", encoding="utf-8").write("\n".join(pm) + "\n")
 
@@ -725,7 +797,44 @@ def run_trade_autopsy(record, leg_returns_pct, exit_reason="5d_time_exit",
 
 
 # ----------------------------------------------------------------------------
-# Scheduled cycle (GHA): stale-order audit -> watchlist sourcing -> first eligible
+# Phase 2: dynamic market-wide sourcing from Unusual Whales flow (NO hardcoded list)
+# ----------------------------------------------------------------------------
+def scan_candidates(params, limit=100):
+    """Aggregate whole-market UW flow alerts into ranked candidates with a flow-implied
+    direction. Fail-open: returns [] if UW is unreachable, so the cycle simply makes no entry
+    (it never falls back to a predefined list - the watchlist harness is dead)."""
+    try:
+        from src.unusual_whales_api import UnusualWhalesClient
+        uw = UnusualWhalesClient()
+        if not getattr(uw, "enabled", False):
+            return []
+        min_prem = params.get("scanner_min_premium", 50000)
+        rows = (uw.flow_alerts(ticker=None, limit=limit, min_premium=min_prem) or {}).get("data") or []
+    except Exception:
+        return []
+    agg = {}
+    for r in rows:
+        t = (r.get("ticker") or "").upper()
+        if not t:
+            continue
+        a = agg.setdefault(t, {"ticker": t, "call_prem": 0.0, "put_prem": 0.0,
+                               "underlying_price": _num(r.get("underlying_price"))})
+        prem = _num(r.get("total_premium")) or 0.0
+        if (r.get("type") or "").lower() == "call":
+            a["call_prem"] += prem
+        elif (r.get("type") or "").lower() == "put":
+            a["put_prem"] += prem
+    cands = []
+    for a in agg.values():
+        a["flow_type"] = "call" if a["call_prem"] >= a["put_prem"] else "put"
+        a["total_premium"] = round(a["call_prem"] + a["put_prem"], 0)
+        cands.append(a)
+    cands.sort(key=lambda x: x["total_premium"], reverse=True)
+    return cands
+
+
+# ----------------------------------------------------------------------------
+# Scheduled cycle (GHA): stale-order audit -> exit pass -> UW flow sourcing -> first eligible
 # ----------------------------------------------------------------------------
 def run_scheduled_cycle(mock=False):
     creds = _paper_creds()
@@ -758,28 +867,39 @@ def run_scheduled_cycle(mock=False):
     positions = get_open_positions(creds)
     print(f"portfolio: {len(positions)} positions, {len(open_orders)} open orders")
 
-    # 4. watchlist sourcing - enter the FIRST candidate not capped/cooled
-    print(f"watchlist: {WATCHLIST}")
-    for t in WATCHLIST:
-        rec = enter_proactive_set(t, "C", mock=mock, dry_run=not live,
-                                  positions=positions, open_orders=open_orders)
+    # 4. dynamic UW flow sourcing - enter the FIRST candidate not capped/cooled
+    candidates = scan_candidates(params)
+    print(f"UW flow scan: {len(candidates)} market-wide candidates "
+          f"(top: {[c['ticker'] for c in candidates[:8]]})")
+    if not candidates:
+        print("\nno UW flow candidates this cycle (scanner empty / unreachable).")
+        return None
+    for c in candidates:
+        t = c["ticker"]
+        try:
+            rec = enter_proactive_set(t, None, mock=mock, candidate=c, dry_run=not live,
+                                      positions=positions, open_orders=open_orders)
+        except Exception as e:
+            print(f"  skip {t}: entry error {type(e).__name__}: {str(e)[:80]}")     # whole-market fail-open
+            continue
         if rec.get("skipped"):
             print(f"  skip {t}: {rec['reason']}")
             continue
         md, legs, orders = rec["metadata"], rec["legs"], rec["orders"]
-        print(f"\nENTERED {t} | {rec['execution_mode']} | OCC {rec['occ_resolution']}")
-        print(f"  state: 20dSMA {md['macro']['distance_to_sma20_pct']:+.2f}% | IV {md['iv_term']['iv_ratio']} | "
-              f"GEX {md['gex']['net_gex']} zg {md['gex']['zero_gamma_strike']} | "
-              f"reddit {md['alt_catalyst']['reddit_mention_delta_pct']}% | insider ${md['alt_catalyst']['insider_10d_buy_usd']} "
-              f"| ATR {md['technical']['atr_pct']}%")
+        print(f"\nENTERED {t} [{rec['regime']}] | {rec['execution_mode']} | OCC {rec['occ_resolution']}")
+        print(f"  state: 20dSMA {md['macro']['distance_to_sma20_pct']:+.2f}% | IV {md['iv_term']['iv_ratio']} "
+              f"| skew {md.get('skew', {}).get('skew_ratio')} ({md.get('skew', {}).get('skew_bias')}) "
+              f"| news {md.get('news_sentiment_score')} ({md.get('news', {}).get('news_type')}) "
+              f"| sector {md.get('regime_stack', {}).get('sector_etf')} {md.get('regime_stack', {}).get('sector_dist_pct')}%")
         for name, leg in legs.items():
             o = orders[name]
             occ = leg.get("occ_symbol") or f"{leg.get('front_occ')}|{leg.get('back_occ')}"
-            print(f"  {name:<14} {leg['structure']:<15} {occ:<24} x{leg['contracts']:<3} "
-                  f"@lim ${leg['limit_price']:<6} -> {o['status']} {o['order_id']}")
+            sp = (leg.get("execution_cost") or {}).get("bid_ask_spread_pct")
+            print(f"  {name:<14} {leg['structure']:<15} {occ:<26} x{leg['contracts']:<3} "
+                  f"@lim ${leg['limit_price']:<6} spread {sp}% -> {o['status']} {o['order_id']}")
         print("\nGHA scheduled cycle complete: 1 cluster entered + logged.")
         return rec
-    print("\nno eligible watchlist candidate this cycle (all capped/cooled).")
+    print("\nno eligible candidate this cycle (all capped/cooled).")
     return None
 
 

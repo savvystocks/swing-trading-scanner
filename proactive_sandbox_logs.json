@@ -129,7 +129,8 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {}
   },
   {
     "trade_set_id": "b774769b14d0",
@@ -261,7 +262,8 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {}
   },
   {
     "trade_set_id": "e9f9747f9a52",
@@ -393,7 +395,16 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {
+      "calendar_front": {
+        "occ": "TSLA260706C00375000",
+        "closed_at": "2026-06-26T15:22:55.101Z",
+        "return_pct": 39.6,
+        "reason": "+39.6% >= 30% squeeze after 40.8h",
+        "closed_ok": true
+      }
+    }
   },
   {
     "trade_set_id": "AUDIT-3ca23cc9",
@@ -546,7 +557,8 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {}
   },
   {
     "trade_set_id": "9b6744f227f5",
@@ -684,7 +696,8 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {}
   },
   {
     "trade_set_id": "d6b6b4d8392b",
@@ -822,7 +835,8 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {}
   },
   {
     "trade_set_id": "2d36bb80d5f6",
@@ -960,7 +974,8 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {}
   },
   {
     "trade_set_id": "AUDIT-6a968ffe",
@@ -1122,6 +1137,135 @@
         "submitted": true,
         "limit_price": 0.84,
         "contracts": 120
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "0ef816e00156",
+    "ticker": "SPXW",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-26T15:22:58.001Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 19,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-26T15:22:58.001Z",
+      "macro": {
+        "spot": 91.3,
+        "sma20": 90.85,
+        "distance_to_sma20_pct": 0.495,
+        "source": "mock"
+      },
+      "iv_term": {
+        "iv_front": 78.0,
+        "iv_back": 62.0,
+        "iv_ratio": 1.258,
+        "structure": "backwardation",
+        "source": "mock"
+      },
+      "gex": {
+        "net_gex": -92366.2,
+        "zero_gamma_strike": 200.0,
+        "distance_to_zero_gamma_pct": -119.058,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 2.6,
+        "atr_pct": 2.85,
+        "rvol_10min": 1.18,
+        "source": "mock"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 0,
+        "latest_age_hours": null,
+        "vader_compound": null,
+        "news_type": "Unknown",
+        "top_headline": null,
+        "source": "alpaca_news_empty"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 0.495,
+        "market_spy_dist_pct": -1.408,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": null,
+        "call_iv_25d": null,
+        "skew_ratio": null,
+        "skew_bias": null,
+        "delta_source": null,
+        "source": "unavailable"
+      },
+      "news_sentiment_score": null
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "SPXW260731C00095000",
+        "expiry": "2026-07-31",
+        "strike": 95.0,
+        "dte": 35,
+        "entry_premium": 8.82,
+        "limit_price": 8.91,
+        "contracts": 11,
+        "alloc_usd": 10000.0,
+        "illiquid": true,
+        "target_delta": 0.35,
+        "occ_source": "unresolved -> FAIL-OPEN skip",
+        "execution_cost": {
+          "bid": null,
+          "ask": null,
+          "mid": null,
+          "bid_ask_spread_pct": null,
+          "source": "unavailable"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "SKIPPED_ILLIQUID",
+        "order_id": null,
+        "submitted": false
       }
     },
     "exit": null,

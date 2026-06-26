@@ -403,6 +403,13 @@
         "return_pct": 39.6,
         "reason": "+39.6% >= 30% squeeze after 40.8h",
         "closed_ok": true
+      },
+      "bullish_call": {
+        "occ": "TSLA260724C00390000",
+        "closed_at": "2026-06-26T17:16:03.880Z",
+        "return_pct": 31.8,
+        "reason": "+31.8% >= 30% squeeze after 42.7h",
+        "closed_ok": true
       }
     }
   },
@@ -558,7 +565,22 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "PLTR260724C00112000",
+        "closed_at": "2026-06-26T17:16:04.166Z",
+        "return_pct": 38.9,
+        "reason": "+38.9% >= 30% squeeze after 25.6h",
+        "closed_ok": true
+      },
+      "calendar_front": {
+        "occ": "PLTR260710C00108000",
+        "closed_at": "2026-06-26T17:16:04.424Z",
+        "return_pct": 70.1,
+        "reason": "+70.1% >= 30% squeeze after 25.6h",
+        "closed_ok": true
+      }
+    }
   },
   {
     "trade_set_id": "9b6744f227f5",
@@ -1266,6 +1288,139 @@
         "status": "SKIPPED_ILLIQUID",
         "order_id": null,
         "submitted": false
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "6e007c94dfdd",
+    "ticker": "QQQ",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-06-26T17:16:08.198Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 16,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-26T17:16:08.198Z",
+      "macro": {
+        "spot": 713.31,
+        "sma20": 725.02,
+        "distance_to_sma20_pct": -1.615,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 26.1,
+        "iv_back": 28.7,
+        "iv_ratio": 0.909,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -1106328.7,
+        "zero_gamma_strike": 713.0,
+        "distance_to_zero_gamma_pct": 0.043,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -26.3,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 19.37,
+        "atr_pct": 2.72,
+        "rvol_10min": 0.46,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.9,
+        "vader_compound": 0.244,
+        "news_type": "Product",
+        "top_headline": "Chip Rout Drags Nasdaq 100, Oil Sinks Below $69: Stock Market Today",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -1.615,
+        "market_spy_dist_pct": -1.228,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 31.8,
+        "call_iv_25d": 24.4,
+        "skew_ratio": 1.304,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "news_sentiment_score": 0.244
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "QQQ260724P00685000",
+        "expiry": "2026-07-24",
+        "strike": 685.0,
+        "dte": 35,
+        "entry_premium": 23.06,
+        "limit_price": 23.29,
+        "contracts": 4,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "925",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 11.35,
+          "ask": 11.44,
+          "mid": 11.395,
+          "bid_ask_spread_pct": 0.79,
+          "source": "alpaca_quote"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "9f79ffe6-fc09-4436-b3d8-438632c2e58f",
+        "error": null,
+        "submitted": true,
+        "limit_price": 23.29,
+        "contracts": 4
       }
     },
     "exit": null,

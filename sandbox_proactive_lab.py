@@ -25,6 +25,7 @@ import json
 import math
 import uuid
 import urllib.request
+import re
 from datetime import datetime, timezone, timedelta, date
 
 from v10_params import load as load_params
@@ -517,23 +518,47 @@ def record_close(ticker):
     json.dump(cool, open(COOLOFF_PATH, "w", encoding="utf-8"), indent=2)
 
 
-def manage_exit(entry_ts_iso, entry_premium, current_premium, params, now=None):
-    """24h minimum-hold swing guard + 30-50% squeeze. Blocks ANY close before min_hold_hours;
-    once eligible, exits 100% of the leg at >= take_profit_pct."""
+def _occ_expiry(occ):
+    """Parse the YYMMDD expiry out of an OCC symbol -> ISO date string (None if unparseable)."""
+    m = re.search(r"(\d{6})[CP]\d{8}$", occ or "")
+    if not m:
+        return None
+    d = m.group(1)
+    return f"20{d[:2]}-{d[2:4]}-{d[4:6]}"
+
+
+def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None):
+    """Exit policy. HARD exits fire regardless of the 24h minimum hold (they are risk / hard
+    constraints, not discretionary): close+autopsy a leg within expiry_exit_dte days of expiry,
+    or at <= -stop_loss_pct unrealized. DISCRETIONARY take-profit stays gated by the 24h swing
+    hold. ret_pct is the broker's directional unrealized P/L % (sign-correct for long AND short)."""
     now = now or datetime.now(timezone.utc)
     entry = datetime.fromisoformat(entry_ts_iso.replace("Z", "+00:00"))
     held_h = (now - entry).total_seconds() / 3600.0
-    ret = round((current_premium / entry_premium - 1) * 100, 1) if entry_premium else 0.0
+    ret = round(ret_pct, 1)
+    base = {"return_pct": ret, "held_hours": round(held_h, 1)}
+    # --- hard-constraint exits: override the 24h minimum hold ---
+    if expiry_iso:
+        try:
+            dte = (date.fromisoformat(expiry_iso) - now.date()).days
+            exit_dte = params.get("expiry_exit_dte", 3)
+            if dte <= exit_dte:
+                return {"action": "CLOSE_EXPIRY",
+                        "reason": f"{dte}d to expiry <= {exit_dte}d -> close before decay/assignment", **base}
+        except Exception:
+            pass
+    stop = abs(params.get("stop_loss_pct", 50))
+    if ret <= -stop:
+        return {"action": "CLOSE_STOP_LOSS",
+                "reason": f"{ret}% <= -{stop}% stop-loss after {held_h:.1f}h", **base}
+    # --- discretionary take-profit: gated by the 24h swing hold ---
     min_hold = params.get("min_hold_hours", 24)
     if held_h < min_hold:
-        return {"action": "HOLD", "reason": f"24h-hold guard: {held_h:.1f}h < {min_hold}h -> close BLOCKED",
-                "return_pct": ret, "held_hours": round(held_h, 1)}
+        return {"action": "HOLD", "reason": f"24h-hold guard: {held_h:.1f}h < {min_hold}h -> TP close BLOCKED", **base}
     tp = params.get("take_profit_pct", 30)
     if ret >= tp:
-        return {"action": "CLOSE_TAKE_PROFIT", "reason": f"+{ret}% >= {tp}% squeeze after {held_h:.1f}h",
-                "return_pct": ret, "held_hours": round(held_h, 1)}
-    return {"action": "HOLD", "reason": f"eligible ({held_h:.1f}h) but +{ret}% < {tp}% target",
-            "return_pct": ret, "held_hours": round(held_h, 1)}
+        return {"action": "CLOSE_TAKE_PROFIT", "reason": f"+{ret}% >= {tp}% squeeze after {held_h:.1f}h", **base}
+    return {"action": "HOLD", "reason": f"eligible ({held_h:.1f}h), {ret}% in (-{stop}%, {tp}%) band", **base}
 
 
 def _resolve_legs_occ(ticker, legs, creds):
@@ -688,16 +713,21 @@ def manage_open_positions(creds, params, positions=None):
             if not p:
                 continue
             entry_px = float(p.get("avg_entry_price") or 0)
-            cur_px = float(p.get("current_price") or 0) or entry_px * (1 + float(p.get("unrealized_plpc") or 0))
-            dec = manage_exit(rec["entry_ts_utc"], entry_px, cur_px, params)
-            if dec["action"] == "CLOSE_TAKE_PROFIT":
+            plpc = p.get("unrealized_plpc")
+            if plpc is not None:
+                ret_pct = float(plpc) * 100.0                  # broker directional P/L %, sign-correct (long & short)
+            else:
+                cur_px = float(p.get("current_price") or 0)
+                ret_pct = (cur_px / entry_px - 1) * 100.0 if entry_px else 0.0
+            dec = manage_exit(rec["entry_ts_utc"], ret_pct, params, expiry_iso=_occ_expiry(occ))
+            if dec["action"].startswith("CLOSE"):            # take-profit, stop-loss, or expiry
                 ok = _close_position(occ, creds)
                 rec["leg_exits"][leg_name] = {"occ": occ, "closed_at": _now_iso_ms(),
                                               "return_pct": dec["return_pct"], "reason": dec["reason"],
-                                              "closed_ok": ok}
+                                              "action": dec["action"], "closed_ok": ok}
                 record_close(rec["ticker"])                       # 24h cool-off
                 closed_legs.append({"ticker": rec["ticker"], "leg": leg_name, "occ": occ,
-                                    "return_pct": dec["return_pct"], "closed_ok": ok})
+                                    "return_pct": dec["return_pct"], "action": dec["action"], "closed_ok": ok})
                 dirty = True
         # 2. autopsy once the set has no remaining OPEN legs
         still_open = any((occ or "").upper() in pos_by_occ and ln not in rec["leg_exits"]
@@ -709,7 +739,8 @@ def manage_open_positions(creds, params, positions=None):
                 if key in returns:
                     returns[key] = ex["return_pct"]
             try:
-                res = run_trade_autopsy(rec, returns, exit_reason="24h_30-50pct_target", underlying_move_pct=0.0)
+                ex_reason = "+".join(sorted({ex.get("action", "CLOSE") for ex in rec["leg_exits"].values()}))
+                res = run_trade_autopsy(rec, returns, exit_reason=ex_reason, underlying_move_pct=0.0)
                 autopsies.append({"ticker": rec["ticker"], "set": rec["trade_set_id"],
                                   "winner": res["winner"], "factor": res["determining_factor"]})
             except Exception as e:
@@ -858,7 +889,7 @@ def run_scheduled_cycle(mock=False):
     closed, autopsies = manage_open_positions(creds, params)
     print(f"exit pass: {len(closed)} leg(s) closed, {len(autopsies)} autopsy(ies) generated")
     for c in closed:
-        print(f"  closed {c['ticker']} {c['leg']} +{c['return_pct']}% (ok={c['closed_ok']})")
+        print(f"  closed {c['ticker']} {c['leg']} {c['return_pct']:+.1f}% [{c.get('action', '')}] (ok={c['closed_ok']})")
     for a in autopsies:
         print(f"  autopsy {a.get('ticker')}: winner={a.get('winner')} -> {str(a.get('factor', a.get('autopsy_error', '')))[:90]}")
 
@@ -963,11 +994,16 @@ def main():
     for gate, msg in res["recommendations"]:
         print(f"  -> [{gate}] {msg}")
 
-    print("\nEXIT MANAGEMENT (24h-hold swing guard + 30-50% squeeze):")
-    a = manage_exit(rec["entry_ts_utc"], 8.91, 12.47, params, now=datetime.now(timezone.utc) + timedelta(hours=2))
-    print(f"  +40% at 2h  -> {a['action']}: {a['reason']}")
-    b = manage_exit(rec["entry_ts_utc"], 8.91, 12.03, params, now=datetime.now(timezone.utc) + timedelta(hours=26))
-    print(f"  +35% at 26h -> {b['action']}: {b['reason']}")
+    print("\nEXIT MANAGEMENT (hard stop/expiry override 24h hold; take-profit gated by it):")
+    a = manage_exit(rec["entry_ts_utc"], 40.0, params, now=datetime.now(timezone.utc) + timedelta(hours=2))
+    print(f"  +40% at 2h     -> {a['action']}: {a['reason']}")
+    b = manage_exit(rec["entry_ts_utc"], 35.0, params, now=datetime.now(timezone.utc) + timedelta(hours=26))
+    print(f"  +35% at 26h    -> {b['action']}: {b['reason']}")
+    c = manage_exit(rec["entry_ts_utc"], -60.0, params, now=datetime.now(timezone.utc) + timedelta(hours=2))
+    print(f"  -60% at 2h     -> {c['action']}: {c['reason']}")
+    e = manage_exit(rec["entry_ts_utc"], -10.0, params, now=datetime.now(timezone.utc) + timedelta(hours=2),
+                    expiry_iso=(date.today() + timedelta(days=2)).isoformat())
+    print(f"  -10%, 2d expiry-> {e['action']}: {e['reason']}")
 
 
 if __name__ == "__main__":

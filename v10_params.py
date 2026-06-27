@@ -20,8 +20,10 @@ DEFAULTS = {
     "alt_reddit_min_mentions": 10,
     "alt_insider_min_dollar_value": 10000,
     "portfolio_max_sector_concentration": 0.50,
-    "min_hold_hours": 24,                 # 24h minimum-hold (swing rule): no close before this
+    "min_hold_hours": 24,                 # 24h minimum-hold (swing rule): gates the take-profit only
     "take_profit_pct": 30,                # exit 100% of leg at +30% (the 30-50% squeeze band floor)
+    "stop_loss_pct": 50,                  # hard stop: close + autopsy a leg at <= -50% unrealized (overrides 24h hold)
+    "expiry_exit_dte": 3,                 # hard exit: close + autopsy a leg within 3d of expiry (overrides 24h hold)
     "max_contracts_per_ticker": 3,        # ticker concentration cap
     "ticker_cooloff_hours": 24,           # 24h cool-off after a close before re-entry
     "stale_order_max_minutes": 30,        # cancel unfilled limit orders older than this (3 cycles)

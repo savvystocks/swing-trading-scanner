@@ -90,13 +90,16 @@ def macro_technical(ticker, mock):
         atr = sum(trs[-14:]) / 14.0
         vols = [b["v"] for b in bars]
         rvol = round(vols[-1] / (sum(vols[-20:]) / 20.0), 2) if sum(vols[-20:]) else None
-        src = "alpaca"
-    else:
-        spot, sma20, atr, rvol, src = 91.30, 90.85, 2.60, 1.18, "mock"
-    return {"spot": round(spot, 2), "sma20": round(sma20, 2),
-            "distance_to_sma20_pct": round((spot - sma20) / sma20 * 100, 3) if sma20 else 0.0,
-            "atr": round(atr, 2), "atr_pct": round(atr / spot * 100, 2) if spot else 0.0,
-            "rvol_10min": rvol if rvol is not None else 1.0, "source": src}
+        return {"spot": round(spot, 2), "sma20": round(sma20, 2),
+                "distance_to_sma20_pct": round((spot - sma20) / sma20 * 100, 3) if sma20 else 0.0,
+                "atr": round(atr, 2), "atr_pct": round(atr / spot * 100, 2) if spot else 0.0,
+                "rvol_10min": rvol if rvol is not None else 1.0, "source": "alpaca"}
+    if mock:                                                  # local demo only - synthetic sample
+        return {"spot": 91.30, "sma20": 90.85, "distance_to_sma20_pct": 0.495,
+                "atr": 2.60, "atr_pct": 2.85, "rvol_10min": 1.18, "source": "mock"}
+    # live mode, no usable bars (index / halted / degenerate ticker) -> NULL so the caller SKIPS
+    return {"spot": None, "sma20": None, "distance_to_sma20_pct": None,
+            "atr": None, "atr_pct": None, "rvol_10min": None, "source": "unavailable"}
 
 
 def _alpaca_atm_iv(ticker, spot, dte_min, dte_max, creds):
@@ -140,14 +143,16 @@ def iv_term_structure(ticker, spot, mock, creds=None):
             return {"iv_front": iv_f, "iv_back": iv_b, "iv_ratio": ratio,
                     "structure": "contango" if ratio < 1 else "backwardation" if ratio > 1 else "flat",
                     "source": "alpaca"}
-    iv_front, iv_back = 78.0, 62.0                                                       # fail-open mock
-    ratio = round(iv_front / iv_back, 3)
-    return {"iv_front": iv_front, "iv_back": iv_back, "iv_ratio": ratio,
-            "structure": "backwardation", "source": "mock"}
+    if mock:                                                  # local demo only - synthetic sample
+        return {"iv_front": 78.0, "iv_back": 62.0, "iv_ratio": 1.258,
+                "structure": "backwardation", "source": "mock"}
+    # live mode, IV unavailable (no / thin options) -> NULL so the caller SKIPS
+    return {"iv_front": None, "iv_back": None, "iv_ratio": None,
+            "structure": None, "source": "unavailable"}
 
 
 def net_gex(ticker, spot, mock):
-    if not mock:
+    if not mock and spot:
         try:
             from src.unusual_whales_api import UnusualWhalesClient
             uw = UnusualWhalesClient()
@@ -174,10 +179,14 @@ def net_gex(ticker, spot, mock):
                         "regime": "negative_gamma" if total < 0 else "positive_gamma", "source": "uw"}
         except Exception:
             pass
-    zg = round(spot * 1.004, 2)
-    return {"net_gex": -1.85e8, "zero_gamma_strike": zg,
-            "distance_to_zero_gamma_pct": round((spot - zg) / spot * 100, 3) if spot else 0.0,
-            "regime": "negative_gamma", "source": "mock"}
+    if mock:                                                  # local demo only - synthetic sample
+        zg = round(spot * 1.004, 2)
+        return {"net_gex": -1.85e8, "zero_gamma_strike": zg,
+                "distance_to_zero_gamma_pct": round((spot - zg) / spot * 100, 3) if spot else 0.0,
+                "regime": "negative_gamma", "source": "mock"}
+    # live mode, GEX unavailable -> NULL (optional context; the trade still proceeds, logged null)
+    return {"net_gex": None, "zero_gamma_strike": None,
+            "distance_to_zero_gamma_pct": None, "regime": None, "source": "unavailable"}
 
 
 def alt_catalyst(ticker, mock):
@@ -610,6 +619,11 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         return {"trade_set_id": None, "ticker": ticker, "skipped": True, "reason": why, "status": "SKIPPED"}
 
     md = collect_metadata(ticker, mock=mock)
+    if md["macro"]["spot"] is None or md["iv_term"]["iv_front"] is None:    # core data unavailable ->
+        return {"trade_set_id": None, "ticker": ticker, "skipped": True,    # SKIP (never fabricate a trade)
+                "reason": f"core metadata unavailable (spot={md['macro']['source']}, "
+                          f"iv={md['iv_term']['source']}) - degenerate/non-optionable ticker",
+                "status": "SKIPPED"}
     regime = classify_regime(md, candidate)
     ok, trigger = should_enter_proactive(regime, params, candidate)
     legs = build_legs(ticker, md, regime, illiquid=illiquid)
@@ -775,7 +789,7 @@ def _tuning_rules(record, returns, slippage_pct):
     final_spot = spot * (1 + (record.get("exit", {}) or {}).get("underlying_move_pct", 0) / 100.0)
     iv_ratio = md["iv_term"]["iv_ratio"]
     recs = []
-    if returns.get("bullish_call", 0) < 0 and final_spot < zg:
+    if returns.get("bullish_call", 0) < 0 and zg is not None and final_spot < zg:
         recs.append(("min_gex_distance",
                      "Bullish Call lost AND spot crossed below the Zero-Gamma strike -> "
                      "Tighten min_gex_distance or restrict Calls when GEX is negative."))
@@ -843,10 +857,12 @@ def scan_candidates(params, limit=100):
         rows = (uw.flow_alerts(ticker=None, limit=limit, min_premium=min_prem) or {}).get("data") or []
     except Exception:
         return []
+    index_roots = {"SPX", "SPXW", "SPXPM", "NDX", "NDXP", "RUT", "RUTW", "VIX", "VIXW",
+                   "XSP", "DJX", "OEX", "XEO", "MRUT", "NANOS", "VVIX"}
     agg = {}
     for r in rows:
         t = (r.get("ticker") or "").upper()
-        if not t:
+        if not t or t in index_roots:               # drop index / non-equity underlyings up front
             continue
         a = agg.setdefault(t, {"ticker": t, "call_prem": 0.0, "put_prem": 0.0,
                                "underlying_price": _num(r.get("underlying_price"))})
@@ -967,7 +983,9 @@ def main():
     print("\nSTATE BLOCK (un-mocked where live):")
     print(f"  macro   : spot {md['macro']['spot']} 20dSMA {md['macro']['sma20']} dist {md['macro']['distance_to_sma20_pct']:+.2f}% [{md['macro']['source']}]")
     print(f"  iv_term : ratio {md['iv_term']['iv_ratio']} ({md['iv_term']['structure']}) [{md['iv_term']['source']}]")
-    print(f"  gex     : net {md['gex']['net_gex']} zero-gamma {md['gex']['zero_gamma_strike']} dist {md['gex']['distance_to_zero_gamma_pct']:+.2f}% [{md['gex']['source']}]")
+    _gxd = md['gex']['distance_to_zero_gamma_pct']
+    print(f"  gex     : net {md['gex']['net_gex']} zero-gamma {md['gex']['zero_gamma_strike']} "
+          f"dist {(f'{_gxd:+.2f}%' if _gxd is not None else 'n/a')} [{md['gex']['source']}]")
     print(f"  alt     : reddit {md['alt_catalyst']['reddit_mention_delta_pct']}% insider ${md['alt_catalyst']['insider_10d_buy_usd']:,} cluster={md['alt_catalyst']['insider_cluster_flag']} [{md['alt_catalyst']['source']}]")
     print(f"  technical: ATR {md['technical']['atr_pct']}% RVOL {md['technical']['rvol_10min']} [{md['technical']['source']}]")
 

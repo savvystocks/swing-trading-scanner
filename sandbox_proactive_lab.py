@@ -769,18 +769,26 @@ def manage_open_positions(creds, params, positions=None):
 # ----------------------------------------------------------------------------
 # Autopsy + Tuning Advisory
 # ----------------------------------------------------------------------------
-def _determining_factor(winner, md, move):
+def _determining_factor(winner, md, move, ret=None):
     alt, gex, ivt = md["alt_catalyst"], md["gex"], md["iv_term"]
     rd = alt.get("reddit_mention_delta_pct")
+    zg, reg = gex.get("zero_gamma_strike"), gex.get("regime")
+    lost = ret is not None and ret < 0
     if winner == "bullish_call":
+        if lost:
+            return f"Bullish call FAILED ({ret:+.0f}%, move {move}%): the expected expansion never came; {reg} regime / spot vs zero-gamma {zg} worked against it."
         if alt.get("insider_cluster_flag"):
-            return f"Insider cluster buy (${alt.get('insider_10d_buy_usd'):,.0f}/10d) predicted the bullish expansion; {gex['regime']} amplified the breakout."
+            return f"Insider cluster buy (${alt.get('insider_10d_buy_usd'):,.0f}/10d) predicted the bullish expansion; {reg} amplified the breakout."
         if rd is not None and rd > 500:
-            return f"Breakout triggered by a +{rd:.0f}% Reddit spike while IV term was in {ivt['structure']}."
-        return f"Bullish breakout (move {move}%); dealers short gamma near {gex['zero_gamma_strike']} fed the squeeze."
+            return f"Breakout triggered by a +{rd:.0f}% Reddit spike while IV term was in {ivt.get('structure')}."
+        return f"Bullish breakout (move {move}%); dealers short gamma near {zg} fed the squeeze."
     if winner == "bearish_put":
-        return f"Bearish breakdown (move {move}%): spot below zero-gamma {gex['zero_gamma_strike']} -> negative-gamma slide, no positive catalyst."
-    return f"Range held: IV term {ivt['structure']} (ratio {ivt['iv_ratio']}) let front-month theta outrun the wings."
+        if lost:
+            return f"Bearish put FAILED ({ret:+.0f}%, move {move}%): no breakdown materialised; spot held above zero-gamma {zg}."
+        return f"Bearish breakdown (move {move}%): spot below zero-gamma {zg} -> negative-gamma slide, no positive catalyst."
+    if lost:
+        return f"Calendar FAILED ({ret:+.0f}%): the range broke; IV term {ivt.get('structure')} (ratio {ivt.get('iv_ratio')}) hurt the spread."
+    return f"Range held: IV term {ivt.get('structure')} (ratio {ivt.get('iv_ratio')}) let front-month theta outrun the wings."
 
 
 def _tuning_rules(record, returns, slippage_pct):
@@ -813,7 +821,7 @@ def run_trade_autopsy(record, leg_returns_pct, exit_reason="5d_time_exit",
     record["exit"] = {"reason": exit_reason, "underlying_move_pct": underlying_move_pct,
                       "entry_slippage_pct": entry_slippage_pct, "leg_returns_pct": leg_returns_pct,
                       "winner": winner, "loser": loser}
-    factor = _determining_factor(winner, md, underlying_move_pct)
+    factor = _determining_factor(winner, md, underlying_move_pct, w_ret)
     record["exit"]["determining_factor"] = factor
     record["status"] = "CLOSED"
 

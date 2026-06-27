@@ -1,0 +1,352 @@
+"""V11 Full MOT - offline system-wide matrix test (rigorous edition). Standalone, no live APIs,
+no live-code mutation. Every check exercises the REAL function: schema checks feed synthetic
+inputs and assert exact computed values; autopsy checks assert winner/loser discrimination,
+loser tuning-rule firing, and the full manage_open_positions close+autopsy chain. Run:
+  python v11_mot_harness.py
+"""
+
+import os
+import sys
+import tempfile
+from types import SimpleNamespace as SN
+from datetime import datetime, timezone, timedelta, date
+
+os.environ.setdefault("ALPACA_API_KEY", "MOT_DUMMY")
+os.environ.setdefault("ALPACA_SECRET_KEY", "MOT_DUMMY")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import sandbox_proactive_lab as lab
+import sandbox_v11_sensors as v11
+from v10_params import load as load_params
+
+_tmp = tempfile.gettempdir()
+lab.LOG_PATH = os.path.join(_tmp, "mot_log.json")
+lab.AUTOPSY_MD = os.path.join(_tmp, "mot_autopsy.md")
+lab.ADVISORY_MD = os.path.join(_tmp, "mot_advisory.md")
+lab.COOLOFF_PATH = os.path.join(_tmp, "mot_cooloff.json")
+
+
+def _wipe():
+    for f in (lab.LOG_PATH, lab.AUTOPSY_MD, lab.ADVISORY_MD, lab.COOLOFF_PATH):
+        if os.path.exists(f):
+            os.remove(f)
+
+
+_wipe()
+RESULTS = []
+
+
+def check(dim, label, passed, detail=""):
+    RESULTS.append((dim, label, bool(passed), detail))
+    print(f"  [{'PASS' if passed else 'FAIL'}] {label}" + (f"  -> {detail}" if detail else ""))
+
+
+def approx(a, b, tol=0.01):
+    return a is not None and abs(a - b) <= tol
+
+
+EXPECTED = {
+    "macro": ["spot", "sma20", "distance_to_sma20_pct", "source"],
+    "iv_term": ["iv_front", "iv_back", "iv_ratio", "structure", "source"],
+    "gex": ["net_gex", "zero_gamma_strike", "distance_to_zero_gamma_pct", "regime", "source"],
+    "alt_catalyst": ["reddit_mention_delta_pct", "insider_10d_buy_usd", "insider_cluster_flag", "source"],
+    "technical": ["atr", "atr_pct", "rvol_10min", "source"],
+    "fundamentals": ["sector", "industry", "market_cap", "short_pct_float", "short_ratio", "source"],
+    "news": ["headline_count", "latest_age_hours", "vader_compound", "news_type", "top_headline", "source"],
+    "regime_stack": ["ticker_dist_pct", "market_spy_dist_pct", "sector_etf", "sector_dist_pct",
+                     "sector_vs_market_spread", "source"],
+    "skew": ["put_iv_25d", "call_iv_25d", "skew_ratio", "skew_bias", "delta_source", "source"],
+}
+TOP = ["entry_ts_utc", "news_sentiment_score"]
+
+
+def missing_tags(md):
+    miss = [k for k in TOP if k not in md]
+    for b, keys in EXPECTED.items():
+        if b not in md or not isinstance(md[b], dict):
+            miss.append(b + ".*")
+            continue
+        miss += [f"{b}.{k}" for k in keys if k not in md[b]]
+    return miss
+
+
+# =====================================================================
+print("\n=== DIMENSION 1: INPUT & SCHEMA INTEGRITY (real compute + degradation) ===")
+
+# 1.1 macro_technical REAL math: closes 100..120 -> spot 120, sma20 110.5, dist 8.597, atr 2, atr% 1.67, rvol 1.0
+bars = [{"h": (100 + i) + 1, "l": (100 + i) - 1, "c": 100 + i, "v": 1000} for i in range(21)]
+_od = lab._alpaca_daily
+lab._alpaca_daily = lambda t, days=60: bars
+mt = lab.macro_technical("X", mock=False)
+lab._alpaca_daily = _od
+check(1, "macro_technical computes spot/SMA20/ATR/RVOL from bars",
+      mt["spot"] == 120.0 and mt["sma20"] == 110.5 and approx(mt["distance_to_sma20_pct"], 8.597)
+      and mt["atr"] == 2.0 and approx(mt["atr_pct"], 1.67) and mt["rvol_10min"] == 1.0 and mt["source"] == "alpaca",
+      f"spot={mt['spot']} sma={mt['sma20']} dist={mt['distance_to_sma20_pct']} atr={mt['atr']} atr%={mt['atr_pct']} rvol={mt['rvol_10min']}")
+
+# 1.2 net_gex REAL zero-gamma crossing: cum -100,-200,-50,+50,+100 -> crossing 105, net +100, positive_gamma
+rows = {"data": [{"strike": k, "call_gex": g, "put_gex": 0} for k, g in
+                 [(90, -100), (95, -100), (100, 150), (105, 100), (110, 50)]]}
+import src.unusual_whales_api as _uwmod
+_ouw = _uwmod.UnusualWhalesClient
+_uwmod.UnusualWhalesClient = type("FUW", (), {"__init__": lambda s: None,
+                                              "greek_exposure_by_strike": lambda s, t: rows})
+gx = lab.net_gex("X", 103.0, mock=False)
+_uwmod.UnusualWhalesClient = _ouw
+check(1, "net_gex finds zero-gamma crossing + net + regime",
+      gx["zero_gamma_strike"] == 105.0 and gx["net_gex"] == 100.0 and gx["regime"] == "positive_gamma"
+      and gx["source"] == "uw" and approx(gx["distance_to_zero_gamma_pct"], -1.942),
+      f"zg={gx['zero_gamma_strike']} net={gx['net_gex']} regime={gx['regime']} dist={gx['distance_to_zero_gamma_pct']}")
+
+# 1.3 iv_term_structure REAL ratio: front 80 / back 60 -> 1.333 backwardation
+_oiv = lab._alpaca_atm_iv
+lab._alpaca_atm_iv = lambda t, s, dmin, dmax, creds: 80.0 if dmin == lab.CAL_FRONT_DTE[0] else 60.0
+iv = lab.iv_term_structure("X", 100.0, mock=False, creds=("k", "s"))
+lab._alpaca_atm_iv = _oiv
+check(1, "iv_term_structure computes ratio + structure",
+      iv["iv_front"] == 80.0 and iv["iv_back"] == 60.0 and approx(iv["iv_ratio"], 1.333)
+      and iv["structure"] == "backwardation" and iv["source"] == "alpaca",
+      f"front={iv['iv_front']} back={iv['iv_back']} ratio={iv['iv_ratio']} {iv['structure']}")
+
+# 1.4 company_profile REAL: shortPercentOfFloat 0.0427 -> 4.27 (x100 scaling)
+v11._PROFILE_CACHE.clear()
+_oyf = sys.modules.get("yfinance")
+sys.modules["yfinance"] = SN(Ticker=lambda b: SN(info={"sector": "Technology", "industry": "Semis",
+                              "marketCap": 1000000, "shortPercentOfFloat": 0.0427, "shortRatio": 1.5}))
+prof = v11.company_profile("X", mock=False)
+if _oyf is not None:
+    sys.modules["yfinance"] = _oyf
+else:
+    sys.modules.pop("yfinance", None)
+v11._PROFILE_CACHE.clear()
+check(1, "company_profile parses sector/mcap + scales short% (0.0427->4.27)",
+      prof["sector"] == "Technology" and prof["market_cap"] == 1000000 and prof["short_pct_float"] == 4.27
+      and prof["short_ratio"] == 1.5 and prof["source"] == "yfinance", f"{prof}")
+
+# 1.5 news_context REAL: VADER scores + classifies an earnings headline
+import alpaca.data.historical.news as _annews
+_onc = _annews.NewsClient
+_art = SN(headline="ACME beats earnings, raises full-year guidance", summary="Strong quarter, revenue up",
+          created_at=datetime.now(timezone.utc) - timedelta(hours=2))
+_annews.NewsClient = type("FNC", (), {"__init__": lambda s, k, sec: None,
+                                      "get_news": lambda s, req: SN(data=[_art])})
+nc = v11.news_context("X", mock=False)
+_annews.NewsClient = _onc
+check(1, "news_context VADER score + catalyst-type classify (Earnings)",
+      nc["headline_count"] == 1 and nc["news_type"] == "Earnings" and isinstance(nc["vader_compound"], float)
+      and nc["source"] == "alpaca_news+vader" and nc["latest_age_hours"] is not None,
+      f"count={nc['headline_count']} type={nc['news_type']} vader={nc['vader_compound']} age={nc['latest_age_hours']}")
+
+# 1.6 relative_skew REAL: put 25d IV 30 vs call 25d IV 20 -> ratio 1.5 crash_hedging, delta_source greeks
+_ofc = v11._front_chain
+v11._front_chain = lambda t, side, dte_lo=21, dte_hi=45: (
+    {"C1": SN(implied_volatility=0.20, greeks=SN(delta=0.25))} if side == "call"
+    else {"P1": SN(implied_volatility=0.30, greeks=SN(delta=-0.25))})
+sk = v11.relative_skew("X", 100.0, 25.0, mock=False)
+v11._front_chain = _ofc
+check(1, "relative_skew picks 25d IVs -> ratio + bias + delta_source",
+      sk["put_iv_25d"] == 30.0 and sk["call_iv_25d"] == 20.0 and sk["skew_ratio"] == 1.5
+      and sk["skew_bias"] == "crash_hedging" and sk["delta_source"] == "greeks" and sk["source"] == "alpaca_snapshots",
+      f"{sk}")
+
+# 1.7 full schema present (deep, every sub-key) on a real collect_metadata
+md = lab.collect_metadata("AMD", mock=True)
+mt2 = missing_tags(md)
+check(1, "schema complete - every V11 tag present (deep, 0 missing)", not mt2, f"missing={mt2}" if mt2 else "all tags present")
+
+# 1.8 broken CORE feed -> spot null -> enter_proactive_set SKIPS (no fabricated trade)
+_ocm = lab.collect_metadata
+lab.collect_metadata = lambda t, mock=False: {"entry_ts_utc": lab._now_iso_ms(),
+    "macro": {"spot": None, "source": "unavailable"}, "iv_term": {"iv_front": None, "source": "unavailable"}}
+recskip = lab.enter_proactive_set("ZZZZ", None, mock=False, dry_run=True)
+lab.collect_metadata = _ocm
+check(1, "null core (spot=None) -> SKIPPED, no fabricated trade", recskip.get("skipped") is True and recskip["status"] == "SKIPPED")
+
+# 1.9 degradation: a sensor returning MISSING-keys {} and ZEROES must not crash; zero is a valid value
+_onews = v11.news_context
+v11.news_context = lambda t, m=False, limit=8: {}                       # missing-keys dict
+try:
+    md_mk = lab.collect_metadata("AMD", mock=True)
+    mk_ok = (md_mk.get("news_sentiment_score") is None)               # .get on {} -> None, no crash
+except Exception:
+    mk_ok = False
+v11.news_context = lambda t, m=False, limit=8: dict(headline_count=0, latest_age_hours=None, vader_compound=0.0,
+                                                    news_type="Unknown", top_headline=None, source="alpaca_news")
+md_zero = lab.collect_metadata("AMD", mock=True)
+v11.news_context = _onews
+check(1, "missing-key sensor dict does not crash collect_metadata", mk_ok)
+check(1, "zero sentiment (0.0) preserved as a value, not dropped to null", md_zero.get("news_sentiment_score") == 0.0)
+
+# 1.10 broken/raising sensors -> core trade STILL BUILDS (real OPEN record with legs)
+_wipe()
+def _raise(*a, **k):
+    raise RuntimeError("broken feed")
+_savedsensors = (v11.company_profile, v11.news_context, v11.regime_stack, v11.relative_skew)
+v11.company_profile = v11.news_context = v11.regime_stack = v11.relative_skew = _raise
+recbuilt = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
+v11.company_profile, v11.news_context, v11.regime_stack, v11.relative_skew = _savedsensors
+check(1, "broken sensors -> core trade STILL builds (OPEN + >=1 leg)",
+      recbuilt.get("status") == "OPEN" and len(recbuilt.get("legs", {})) >= 1, f"legs={list(recbuilt.get('legs', {}).keys())}")
+
+# =====================================================================
+print("\n=== DIMENSION 2: ROUTING INTEGRITY (intent -> one structure + structure field) ===")
+def mk_md(dist, spy):
+    m = lab.collect_metadata("AMD", mock=True)
+    m["macro"]["distance_to_sma20_pct"] = dist
+    m["regime_stack"]["market_spy_dist_pct"] = spy
+    return m
+cases = [
+    ("BULLISH", {"flow_type": "call"}, mk_md(5.0, 1.0), "bullish_call", "LONG_CALL"),
+    ("BEARISH", {"flow_type": "put"}, mk_md(-5.0, -1.0), "bearish_put", "LONG_PUT"),
+    ("NEUTRAL", {}, mk_md(0.0, None), "flat_calendar", "CALENDAR_SPREAD"),
+]
+for want_reg, cand, m, want_leg, want_struct in cases:
+    got = lab.classify_regime(m, cand)
+    legs = lab.build_legs("AMD", m, got)
+    check(2, f"classify_regime -> {want_reg}", got == want_reg, f"got {got}")
+    check(2, f"{want_reg}: ONLY {want_leg} (1 leg) with structure {want_struct}",
+          list(legs.keys()) == [want_leg] and legs[want_leg]["structure"] == want_struct,
+          f"legs={list(legs.keys())} struct={legs.get(want_leg, {}).get('structure')}")
+
+# =====================================================================
+print("\n=== DIMENSION 3: EXIT & AUTOPSY INTEGRITY (survivorship) ===")
+p = load_params()
+ts = lab._now_iso_ms()
+def at(h):
+    return datetime.now(timezone.utc) + timedelta(hours=h)
+dec = [
+    ("+35% @ <24h -> HOLD", lab.manage_exit(ts, 35.0, p, now=at(2)), "HOLD"),
+    ("+35% @ >24h -> CLOSE_TAKE_PROFIT", lab.manage_exit(ts, 35.0, p, now=at(26)), "CLOSE_TAKE_PROFIT"),
+    ("-55% @ <24h -> CLOSE_STOP_LOSS", lab.manage_exit(ts, -55.0, p, now=at(2)), "CLOSE_STOP_LOSS"),
+    ("2 DTE -> CLOSE_EXPIRY", lab.manage_exit(ts, -10.0, p, now=at(2), expiry_iso=(date.today() + timedelta(days=2)).isoformat()), "CLOSE_EXPIRY"),
+]
+for label, d, want in dec:
+    check(3, label, d["action"] == want, d["action"])
+
+# 3.5 FULL production chain: manage_open_positions closes a LOSER (stop) + autopsies it
+_wipe()
+_ocp = lab._close_position
+lab._close_position = lambda occ, creds: True
+recL = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
+occL = recL["legs"]["bullish_call"]["occ_symbol"]
+posL = [{"symbol": occL, "avg_entry_price": "10.0", "current_price": "4.0", "unrealized_plpc": "-0.6", "qty": "1"}]
+closed, autops = lab.manage_open_positions(("k", "s"), p, positions=posL)
+log_after = lab._load_log_list()
+recL_now = next((r for r in log_after if r["trade_set_id"] == recL["trade_set_id"]), {})
+lab._close_position = _ocp
+check(3, "manage_open_positions: LOSER closed via stop (full chain)",
+      len(closed) == 1 and closed[0]["action"] == "CLOSE_STOP_LOSS" and approx(closed[0]["return_pct"], -60.0, 0.5),
+      f"closed={closed}")
+check(3, "manage_open_positions: LOSER autopsied (not skipped, no autopsy_error)",
+      len(autops) == 1 and "autopsy_error" not in autops[0] and autops[0].get("factor"),
+      f"autopsies={autops}")
+check(3, "LOSER log record marked CLOSED with negative return recorded",
+      recL_now.get("status") == "CLOSED" and approx((recL_now.get("exit") or {}).get("leg_returns_pct", {}).get("bullish_call"), -60.0, 0.5),
+      f"status={recL_now.get('status')} exit={recL_now.get('exit', {}).get('leg_returns_pct')}")
+
+# 3.6 FULL chain: manage_open_positions closes a WINNER (take-profit past 24h)
+_wipe()
+lab._close_position = lambda occ, creds: True
+recW = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
+_lg = lab._load_log_list()
+_lg[-1]["entry_ts_utc"] = (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+lab._save_log_list(_lg)
+occW = recW["legs"]["bullish_call"]["occ_symbol"]
+posW = [{"symbol": occW, "avg_entry_price": "10.0", "current_price": "14.0", "unrealized_plpc": "0.4", "qty": "1"}]
+closedW, autopsW = lab.manage_open_positions(("k", "s"), p, positions=posW)
+lab._close_position = _ocp
+check(3, "manage_open_positions: WINNER closed via take-profit (full chain)",
+      len(closedW) == 1 and closedW[0]["action"] == "CLOSE_TAKE_PROFIT" and approx(closedW[0]["return_pct"], 40.0, 0.5),
+      f"closed={closedW}")
+
+# 3.7 winner/loser DISCRIMINATION (multi-leg): winner=highest, loser=lowest
+md3 = lab.collect_metadata("AMD", mock=True)
+rec3 = {"ticker": "TST", "trade_set_id": "mot3", "entry_ts_utc": ts, "trigger": "t", "metadata": md3,
+        "legs": {"bullish_call": {"structure": "LONG_CALL"}, "bearish_put": {"structure": "LONG_PUT"},
+                 "flat_calendar": {"structure": "CALENDAR_SPREAD"}}, "status": "OPEN"}
+res3 = lab.run_trade_autopsy(rec3, {"bullish_call": 50.0, "bearish_put": -30.0, "flat_calendar": -10.0},
+                            exit_reason="test", underlying_move_pct=2.0)
+check(3, "autopsy discriminates winner(+50)=bullish_call, loser(-30)=bearish_put",
+      res3["winner"] == "bullish_call" and res3["loser"] == "bearish_put", f"winner={res3['winner']} loser={res3['loser']}")
+
+# 3.8 loser TUNING RULES fire on the losing legs (content, not just 'ran')
+mdL = lab.collect_metadata("AMD", mock=True)
+mdL["macro"]["spot"] = 100.0
+mdL["gex"]["zero_gamma_strike"] = 110.0
+mdL["iv_term"]["iv_ratio"] = 1.3
+recT = {"ticker": "TST2", "trade_set_id": "motL", "entry_ts_utc": ts, "trigger": "t", "metadata": mdL,
+        "legs": {"bullish_call": {"structure": "LONG_CALL"}, "flat_calendar": {"structure": "CALENDAR_SPREAD"}},
+        "status": "OPEN"}
+resT = lab.run_trade_autopsy(recT, {"bullish_call": -55.0, "flat_calendar": -20.0},
+                            exit_reason="test", underlying_move_pct=-7.0, entry_slippage_pct=4.0)
+gates = {g for g, _ in resT["recommendations"]}
+check(3, "loser fires min_gex_distance + max_iv_ratio_for_calendar + max_bid_ask_spread_pct",
+      {"min_gex_distance", "max_iv_ratio_for_calendar", "max_bid_ask_spread_pct"} <= gates, f"gates={gates}")
+
+# 3.9 determining factor is WIN/LOSS-AWARE (the fix): a losing call must NOT narrate success
+mdF = lab.collect_metadata("AMD", mock=True)
+recF = {"ticker": "T", "trade_set_id": "motF", "entry_ts_utc": ts, "trigger": "t", "metadata": mdF,
+        "legs": {"bullish_call": {"structure": "LONG_CALL"}}, "status": "OPEN"}
+fac_loss = lab.run_trade_autopsy(recF, {"bullish_call": -55.0}, exit_reason="t", underlying_move_pct=-7.0)["determining_factor"]
+recF["status"] = "OPEN"
+fac_win = lab.run_trade_autopsy(recF, {"bullish_call": 120.0}, exit_reason="t", underlying_move_pct=7.0)["determining_factor"]
+check(3, "LOSER factor says FAILED, not 'predicted the bullish expansion'",
+      "FAILED" in fac_loss and "predicted the bullish expansion" not in fac_loss, f"'{fac_loss[:70]}'")
+check(3, "WINNER factor is a success narrative (no FAILED)", "FAILED" not in fac_win, f"'{fac_win[:70]}'")
+
+# 3.10 null-gex LOSER still autopsies (no KeyError)
+mdN = lab.collect_metadata("AMD", mock=True)
+mdN["gex"] = {"net_gex": None, "zero_gamma_strike": None, "distance_to_zero_gamma_pct": None, "regime": None, "source": "unavailable"}
+recN = {"ticker": "T", "trade_set_id": "motN", "entry_ts_utc": ts, "trigger": "t", "metadata": mdN,
+        "legs": {"bullish_call": {"structure": "LONG_CALL"}}, "status": "OPEN"}
+try:
+    resN = lab.run_trade_autopsy(recN, {"bullish_call": -80.0}, exit_reason="t", underlying_move_pct=-7.0)
+    nok = isinstance(resN.get("determining_factor"), str) and bool(resN["determining_factor"])
+except Exception as e:
+    nok = False
+    resN = {"determining_factor": f"CRASH: {e}"}
+check(3, "null-gex LOSER autopsies cleanly (no KeyError)", nok, str(resN.get("determining_factor"))[:60])
+
+# =====================================================================
+print("\n=== DIMENSION 4: SIZING FLOOR (per-leg bid/ask spread stamped) ===")
+import alpaca.data.historical.option as _aopt
+_oopt = _aopt.OptionHistoricalDataClient
+_aopt.OptionHistoricalDataClient = type("FOC", (), {"__init__": lambda s, k, sec: None,
+    "get_option_latest_quote": lambda s, req: {getattr(req, "symbol_or_symbols", "X"): SN(bid_price=1.00, ask_price=1.10)}})
+sp = v11.option_spread("AMD260724C00100000")            # mid 1.05 -> (0.10/1.05)*100 = 9.524%
+check(4, "option_spread computes bid_ask_spread_pct from a real quote", approx(sp.get("bid_ask_spread_pct"), 9.524),
+      f"bid={sp.get('bid')} ask={sp.get('ask')} mid={sp.get('mid')} spread%={sp.get('bid_ask_spread_pct')}")
+# directional leg
+mdq = lab.collect_metadata("AMD", mock=True)
+legs_c = lab.build_legs("AMD", mdq, "BULLISH")
+lab._stamp_spreads(legs_c)
+ecc = legs_c["bullish_call"].get("execution_cost") or {}
+check(4, "spread STAMPED on directional leg.execution_cost", ecc.get("source") == "alpaca_quote" and approx(ecc.get("bid_ask_spread_pct"), 9.524), f"{ecc}")
+# calendar leg (stamped via back_occ - no occ_symbol)
+legs_cal = lab.build_legs("AMD", mdq, "NEUTRAL")
+lab._stamp_spreads(legs_cal)
+eccal = legs_cal["flat_calendar"].get("execution_cost") or {}
+check(4, "spread STAMPED on CALENDAR leg via back_occ", eccal.get("source") == "alpaca_quote" and approx(eccal.get("bid_ask_spread_pct"), 9.524), f"{eccal}")
+_aopt.OptionHistoricalDataClient = _oopt        # restore (no latent contamination)
+
+# =====================================================================
+_wipe()
+print("\n" + "=" * 70)
+total = len(RESULTS)
+passed = sum(1 for r in RESULTS if r[2])
+by_dim = {}
+for dim, _, ok, _d in RESULTS:
+    s = by_dim.setdefault(dim, [0, 0]); s[1] += 1; s[0] += int(ok)
+names = {1: "Input & Schema", 2: "Routing", 3: "Exit & Autopsy", 4: "Sizing Floor"}
+print("V11 FULL MOT (rigorous) - RESULT BY DIMENSION")
+for d in sorted(by_dim):
+    pa, to = by_dim[d]
+    print(f"  Dimension {d} ({names[d]:<16}): {pa}/{to} {'PASS' if pa == to else 'FAIL'}")
+print("-" * 70)
+print(f"  TOTAL: {passed}/{total} checks passed")
+print("=" * 70)
+if passed == total:
+    print("MOT CERTIFICATE: ALL CHECKS PASS - V11 CLEARED")
+    sys.exit(0)
+print("MOT FAILED - fix underlying code (see [FAIL] lines)")
+sys.exit(1)

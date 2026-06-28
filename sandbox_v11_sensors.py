@@ -286,3 +286,138 @@ def option_spread(occ_symbol):
     except Exception:
         pass
     return out
+
+
+# ----------------------------------------------------------------------------
+# V11 EXPANSION - advanced microstructure edges (all LOG-DON'T-BLOCK, fail-open)
+# ----------------------------------------------------------------------------
+def _f(x):
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _uw():
+    try:
+        from src.unusual_whales_api import UnusualWhalesClient
+        c = UnusualWhalesClient()
+        return c if getattr(c, "enabled", False) else None
+    except Exception:
+        return None
+
+
+# EDGE 1 - Sweep aggression: ask-side SWEEP premium as a share of total flow
+def flow_aggression(ticker, mock=False):
+    out = {"sweep_aggression_pct": None, "ask_sweep_prem": None, "total_flow_prem": None, "source": "unavailable"}
+    if mock:
+        return out
+    uw = _uw()
+    if not uw:
+        return out
+    try:
+        rows = (uw.flow_alerts(ticker=ticker.split(".")[0], limit=100) or {}).get("data") or []
+        if not rows:
+            out["source"] = "uw_empty"
+            return out
+        total = sum(_f(r.get("total_premium")) for r in rows)
+        ask_sweep = sum(_f(r.get("total_ask_side_prem")) for r in rows if r.get("has_sweep"))
+        out = {"sweep_aggression_pct": round(ask_sweep / total * 100, 2) if total else None,
+               "ask_sweep_prem": round(ask_sweep, 0), "total_flow_prem": round(total, 0), "source": "uw_flow"}
+    except Exception:
+        pass
+    return out
+
+
+# EDGE 3 - Dark-pool heaviest volume node (recent-session window) vs spot
+def darkpool_node(ticker, spot, mock=False):
+    out = {"distance_to_heaviest_dp_node_pct": None, "heaviest_node_price": None, "node_size": None,
+           "n_prints": 0, "window_start": None, "window_end": None, "source": "unavailable"}
+    if mock or not spot:
+        return out
+    uw = _uw()
+    if not uw:
+        return out
+    try:
+        prints = (uw.darkpool_ticker(ticker.split(".")[0], limit=200) or {}).get("data") or []
+        if not prints:
+            out["source"] = "uw_empty"
+            return out
+        binsize = spot * 0.0025                               # 0.25%-of-spot price bins
+        buckets = {}
+        for p in prints:
+            px, sz = _f(p.get("price")), _f(p.get("size"))
+            if px <= 0 or binsize <= 0:
+                continue
+            b = round(round(px / binsize) * binsize, 4)
+            buckets[b] = buckets.get(b, 0.0) + sz
+        if not buckets:
+            return out
+        node = max(buckets, key=buckets.get)
+        ts = [p.get("executed_at") for p in prints if p.get("executed_at")]
+        out = {"distance_to_heaviest_dp_node_pct": round((spot - node) / spot * 100, 3) if spot else None,
+               "heaviest_node_price": round(node, 2), "node_size": round(buckets[node], 0),
+               "n_prints": len(prints), "window_start": min(ts) if ts else None,
+               "window_end": max(ts) if ts else None, "source": "uw_darkpool"}
+    except Exception:
+        pass
+    return out
+
+
+# EDGE 4 - Post-earnings momentum drift: days since report + IV-crush flag
+def post_earnings_drift(ticker, mock=False, crush_iv_rank=30.0):
+    out = {"days_since_earnings": None, "post_earnings_iv_crush_flag": None,
+           "iv_rank_1y": None, "last_earnings_date": None, "source": "unavailable"}
+    if mock:
+        return out
+    base = ticker.split(".")[0]
+    days, last_ed = None, None
+    try:
+        import yfinance as yf
+        ed = yf.Ticker(base).get_earnings_dates(limit=12)
+        idx = getattr(ed, "index", None)
+        idx = list(idx) if idx is not None else []          # never boolean-test a DatetimeIndex (ambiguous)
+        today = date.today()
+        past = [d.date() for d in idx if hasattr(d, "date") and d.date() <= today]
+        if past:
+            last_ed = max(past)
+            days = (today - last_ed).days
+    except Exception:
+        pass
+    ivr = None
+    try:
+        uw = _uw()
+        if uw:
+            rows = (uw.iv_rank(base) or {}).get("data") or []
+            if rows:
+                ivr = _f(rows[-1].get("iv_rank_1y"))
+    except Exception:
+        pass
+    flag = bool(days is not None and days <= 5 and ivr is not None and ivr < crush_iv_rank) if days is not None else None
+    src = "yfinance+uw" if (days is not None or ivr is not None) else "unavailable"
+    return {"days_since_earnings": days, "post_earnings_iv_crush_flag": flag,
+            "iv_rank_1y": round(ivr, 2) if ivr is not None else None,
+            "last_earnings_date": last_ed.isoformat() if last_ed else None, "source": src}
+
+
+# EDGE 5 - Variance Risk Premium: front IV minus 20-day annualised realized vol
+def vrp_sensor(ticker, front_iv_pct, mock=False):
+    out = {"realized_vol_20d": None, "front_iv": front_iv_pct, "vrp": None, "vrp_regime": None, "source": "unavailable"}
+    if mock or not front_iv_pct:
+        return out
+    try:
+        closes = _daily_closes(ticker, days=40)
+        if len(closes) < 21:
+            return out
+        rets = [math.log(closes[i] / closes[i - 1]) for i in range(len(closes) - 20, len(closes)) if closes[i - 1] > 0]
+        if len(rets) < 2:
+            return out
+        mean = sum(rets) / len(rets)
+        var = sum((r - mean) ** 2 for r in rets) / (len(rets) - 1)
+        rv = math.sqrt(var) * math.sqrt(252) * 100.0
+        vrp = round(front_iv_pct - rv, 2)
+        out = {"realized_vol_20d": round(rv, 2), "front_iv": round(front_iv_pct, 1), "vrp": vrp,
+               "vrp_regime": "rich" if vrp > 0 else "cheap", "source": "alpaca_bars"}
+    except Exception:
+        pass
+    return out

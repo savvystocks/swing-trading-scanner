@@ -246,8 +246,19 @@ def _v11_sensors(ticker, md, spot, iv, mock):
     rstack = _safe(lambda: v11.regime_stack(ticker, prof.get("sector"),
                    md["macro"]["distance_to_sma20_pct"], mock), {"source": "unavailable"})
     skew = _safe(lambda: v11.relative_skew(ticker, spot, iv.get("iv_front"), mock), {"source": "unavailable"})
+    aggr = _safe(lambda: v11.flow_aggression(ticker, mock), {"source": "unavailable"})
+    dpn = _safe(lambda: v11.darkpool_node(ticker, spot, mock), {"source": "unavailable"})
+    pemd = _safe(lambda: v11.post_earnings_drift(ticker, mock), {"source": "unavailable"})
+    vrp = _safe(lambda: v11.vrp_sensor(ticker, iv.get("iv_front"), mock), {"source": "unavailable"})
     return {"fundamentals": prof, "news": news, "regime_stack": rstack, "skew": skew,
-            "news_sentiment_score": news.get("vader_compound")}
+            "flow_aggression": aggr, "dark_pool": dpn, "pemd": pemd, "vrp": vrp,
+            "news_sentiment_score": news.get("vader_compound"),
+            # flat log-keys consumed by the Autopsy Engine (also nested above):
+            "sweep_aggression_pct": aggr.get("sweep_aggression_pct"),
+            "distance_to_zero_gamma_pct": (md.get("gex") or {}).get("distance_to_zero_gamma_pct"),  # edge #2 (already in gex)
+            "distance_to_heaviest_dp_node_pct": dpn.get("distance_to_heaviest_dp_node_pct"),
+            "days_since_earnings": pemd.get("days_since_earnings"),
+            "post_earnings_iv_crush_flag": pemd.get("post_earnings_iv_crush_flag")}
 
 
 # ----------------------------------------------------------------------------

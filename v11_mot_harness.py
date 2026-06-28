@@ -56,8 +56,14 @@ EXPECTED = {
     "regime_stack": ["ticker_dist_pct", "market_spy_dist_pct", "sector_etf", "sector_dist_pct",
                      "sector_vs_market_spread", "source"],
     "skew": ["put_iv_25d", "call_iv_25d", "skew_ratio", "skew_bias", "delta_source", "source"],
+    "flow_aggression": ["sweep_aggression_pct", "ask_sweep_prem", "total_flow_prem", "source"],
+    "dark_pool": ["distance_to_heaviest_dp_node_pct", "heaviest_node_price", "node_size", "n_prints",
+                  "window_start", "window_end", "source"],
+    "pemd": ["days_since_earnings", "post_earnings_iv_crush_flag", "iv_rank_1y", "last_earnings_date", "source"],
+    "vrp": ["realized_vol_20d", "front_iv", "vrp", "vrp_regime", "source"],
 }
-TOP = ["entry_ts_utc", "news_sentiment_score"]
+TOP = ["entry_ts_utc", "news_sentiment_score", "sweep_aggression_pct", "distance_to_zero_gamma_pct",
+       "distance_to_heaviest_dp_node_pct", "days_since_earnings", "post_earnings_iv_crush_flag"]
 
 
 def missing_tags(md):
@@ -187,6 +193,76 @@ recbuilt = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type
 v11.company_profile, v11.news_context, v11.regime_stack, v11.relative_skew = _savedsensors
 check(1, "broken sensors -> core trade STILL builds (OPEN + >=1 leg)",
       recbuilt.get("status") == "OPEN" and len(recbuilt.get("legs", {})) >= 1, f"legs={list(recbuilt.get('legs', {}).keys())}")
+
+# =====================================================================
+print("\n=== DIMENSION 1B: NEW EDGE SENSORS (real compute, fail-open, schema) ===")
+_ouw = v11._uw
+# Edge 1 - sweep aggression = ask-side SWEEP premium / total premium
+v11._uw = lambda: SN(flow_alerts=lambda ticker, limit=100: {"data": [
+    {"total_premium": 100000, "total_ask_side_prem": 80000, "has_sweep": True},
+    {"total_premium": 100000, "total_ask_side_prem": 50000, "has_sweep": False}]})
+fa = v11.flow_aggression("X", mock=False)
+v11._uw = _ouw
+check(1, "flow_aggression: ask-sweep(80k)/total(200k) = 40%", approx(fa["sweep_aggression_pct"], 40.0), f"{fa}")
+
+# Edge 3 - dark-pool heaviest 0.25%-bin node vs spot
+v11._uw = lambda: SN(darkpool_ticker=lambda t, limit=200: {"data": [
+    {"price": 99.5, "size": 1000, "executed_at": "2026-06-26T20:00:00Z"},
+    {"price": 99.6, "size": 800, "executed_at": "2026-06-26T20:01:00Z"},
+    {"price": 99.55, "size": 500, "executed_at": "2026-06-26T20:02:00Z"},
+    {"price": 101.0, "size": 200, "executed_at": "2026-06-26T20:03:00Z"}]})
+dpn = v11.darkpool_node("X", 100.0, mock=False)
+v11._uw = _ouw
+check(1, "darkpool_node: heaviest node 99.5, distance 0.5%",
+      dpn["heaviest_node_price"] == 99.5 and approx(dpn["distance_to_heaviest_dp_node_pct"], 0.5) and dpn["n_prints"] == 4, f"{dpn}")
+
+# Edge 4 - PEMD: earnings 3d ago + iv_rank 20 (<30) -> crush flag True
+import pandas as pd
+_today = date.today()
+_oyf = sys.modules.get("yfinance")
+_idx = pd.DatetimeIndex([pd.Timestamp(_today - timedelta(days=3)), pd.Timestamp(_today + timedelta(days=30))])
+sys.modules["yfinance"] = SN(Ticker=lambda b: SN(get_earnings_dates=lambda limit=12: SN(index=_idx)))
+v11._uw = lambda: SN(iv_rank=lambda b: {"data": [{"iv_rank_1y": "20.0"}]})
+pe = v11.post_earnings_drift("X", mock=False)
+v11._uw = _ouw
+if _oyf is not None:
+    sys.modules["yfinance"] = _oyf
+else:
+    sys.modules.pop("yfinance", None)
+check(1, "PEMD: days_since=3, iv_rank=20, crush_flag=True",
+      pe["days_since_earnings"] == 3 and pe["post_earnings_iv_crush_flag"] is True and pe["iv_rank_1y"] == 20.0, f"{pe}")
+
+# Edge 5 - VRP = front IV - 20d annualised realized vol (independent reference)
+import math as _m
+_cl = [100, 101, 102, 101, 103, 102, 104, 103, 105, 104, 106, 105, 107, 106, 108, 107, 109, 108, 110, 109, 111]
+_r = [_m.log(_cl[i] / _cl[i - 1]) for i in range(len(_cl) - 20, len(_cl))]
+_mn = sum(_r) / len(_r)
+_rv = round(_m.sqrt(sum((x - _mn) ** 2 for x in _r) / (len(_r) - 1)) * _m.sqrt(252) * 100, 2)
+_odc = v11._daily_closes
+v11._daily_closes = lambda t, days=40: _cl
+vr = v11.vrp_sensor("X", 80.0, mock=False)
+v11._daily_closes = _odc
+check(1, "vrp = front_iv(80) - realized_vol_20d (independent ref)",
+      approx(vr["realized_vol_20d"], _rv) and approx(vr["vrp"], 80.0 - _rv) and vr["vrp_regime"] in ("rich", "cheap"),
+      f"rv={vr['realized_vol_20d']} vrp={vr['vrp']} ref_rv={_rv}")
+
+# Edge 2 (already computed) + schema + fail-open + autopsy-safety with the new keys
+md_new = lab.collect_metadata("AMD", mock=True)
+check(1, "schema complete WITH 4 new edge blocks + 5 flat keys (deep)", not missing_tags(md_new), f"missing={missing_tags(md_new)}")
+check(1, "distance_to_zero_gamma_pct flat mirror == md['gex'] value",
+      md_new.get("distance_to_zero_gamma_pct") == md_new["gex"]["distance_to_zero_gamma_pct"])
+check(1, "new edge sensors fail-open full-keyed null (mock)",
+      all(k in md_new["flow_aggression"] for k in EXPECTED["flow_aggression"])
+      and all(k in md_new["dark_pool"] for k in EXPECTED["dark_pool"])
+      and all(k in md_new["pemd"] for k in EXPECTED["pemd"])
+      and all(k in md_new["vrp"] for k in EXPECTED["vrp"]))
+recX = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
+try:
+    rX = lab.run_trade_autopsy(recX, {"bullish_call": -70.0}, exit_reason="t", underlying_move_pct=-6.0)
+    _aok = isinstance(rX.get("determining_factor"), str) and bool(rX["determining_factor"])
+except Exception:
+    _aok = False
+check(1, "autopsy parses payload WITH new edge keys (loser, no KeyError)", _aok)
 
 # =====================================================================
 print("\n=== DIMENSION 2: ROUTING INTEGRITY (intent -> one structure + structure field) ===")

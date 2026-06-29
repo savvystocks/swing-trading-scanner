@@ -130,7 +130,16 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "HOOD260724C00095000",
+        "closed_at": "2026-06-29T20:30:26.841Z",
+        "return_pct": 32.3,
+        "reason": "+32.3% >= 30% squeeze after 118.4h",
+        "action": "CLOSE_TAKE_PROFIT",
+        "closed_ok": false
+      }
+    }
   },
   {
     "trade_set_id": "b774769b14d0",
@@ -2540,6 +2549,175 @@
         "submitted": true,
         "limit_price": 16.76,
         "contracts": 6
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "46893af856af",
+    "ticker": "MU",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-29T20:30:28.270Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 15,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-29T20:30:28.270Z",
+      "macro": {
+        "spot": 1145.0,
+        "sma20": 1043.85,
+        "distance_to_sma20_pct": 9.69,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 102.6,
+        "iv_back": 98.1,
+        "iv_ratio": 1.046,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 18294.9,
+        "zero_gamma_strike": 1300.0,
+        "distance_to_zero_gamma_pct": -13.537,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 623.8,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 108.47,
+        "atr_pct": 9.47,
+        "rvol_10min": 1.16,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Semiconductors",
+        "market_cap": 1293471449088,
+        "short_pct_float": 3.69,
+        "short_ratio": 0.76,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.34,
+        "vader_compound": 0.272,
+        "news_type": "Analyst",
+        "top_headline": "'AI Equals Memory': Why The AI Boom Now Runs Through Micron, SK Hynix And Samsung",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 9.69,
+        "market_spy_dist_pct": -0.258,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -0.813,
+        "sector_vs_market_spread": -0.555,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 95.2,
+        "call_iv_25d": 95.6,
+        "skew_ratio": 0.996,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.87,
+        "ask_sweep_prem": 3260553.0,
+        "total_flow_prem": 36775842.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 1145.0,
+        "node_size": 86575.0,
+        "n_prints": 200,
+        "window_start": "2026-06-29T20:07:35Z",
+        "window_end": "2026-06-29T20:30:29Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 5,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 80.61,
+        "last_earnings_date": "2026-06-24",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 130.51,
+        "front_iv": 102.6,
+        "vrp": -27.91,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "news_sentiment_score": 0.272,
+      "sweep_aggression_pct": 8.87,
+      "distance_to_zero_gamma_pct": -13.537,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 5,
+      "post_earnings_iv_crush_flag": false
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "MU260731C01190000",
+        "expiry": "2026-07-31",
+        "strike": 1190.0,
+        "dte": 35,
+        "entry_premium": 145.51,
+        "limit_price": 146.97,
+        "contracts": 1,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "96",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 107.0,
+          "ask": 114.1,
+          "mid": 110.55,
+          "bid_ask_spread_pct": 6.422,
+          "source": "alpaca_quote"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "accepted",
+        "order_id": "605feb21-9d20-4821-9c13-bb72da49bd93",
+        "error": null,
+        "submitted": true,
+        "limit_price": 146.97,
+        "contracts": 1
       }
     },
     "exit": null,

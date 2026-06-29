@@ -394,8 +394,21 @@
         "contracts": 3
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE+CLOSE_STOP_LOSS+CLOSE_TAKE_PROFIT",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 31.8,
+        "bearish_put": -60.5,
+        "flat_calendar": 78.2
+      },
+      "winner": "flat_calendar",
+      "loser": "bearish_put",
+      "determining_factor": "Range held: IV term backwardation (ratio 1.258) let front-month theta outrun the wings.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "leg_exits": {
       "calendar_front": {
         "occ": "TSLA260706C00375000",
@@ -409,6 +422,22 @@
         "closed_at": "2026-06-26T17:16:03.880Z",
         "return_pct": 31.8,
         "reason": "+31.8% >= 30% squeeze after 42.7h",
+        "closed_ok": true
+      },
+      "bearish_put": {
+        "occ": "TSLA260724P00360000",
+        "closed_at": "2026-06-29T16:38:06.871Z",
+        "return_pct": -60.5,
+        "reason": "-60.5% <= -50% stop-loss after 114.1h",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      },
+      "calendar_back": {
+        "occ": "TSLA260731C00375000",
+        "closed_at": "2026-06-29T16:38:07.100Z",
+        "return_pct": 78.2,
+        "reason": "+78.2% >= 30% squeeze after 114.1h",
+        "action": "CLOSE_TAKE_PROFIT",
         "closed_ok": true
       }
     }
@@ -563,8 +592,21 @@
         "contracts": 21
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE+CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 38.9,
+        "bearish_put": -64.8,
+        "flat_calendar": 31.5
+      },
+      "winner": "bullish_call",
+      "loser": "bearish_put",
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 30.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "leg_exits": {
       "bullish_call": {
         "occ": "PLTR260724C00112000",
@@ -585,6 +627,14 @@
         "closed_at": "2026-06-26T19:44:20.561Z",
         "return_pct": 31.5,
         "reason": "+31.5% >= 30% squeeze after 28.1h",
+        "closed_ok": true
+      },
+      "bearish_put": {
+        "occ": "PLTR260724P00103000",
+        "closed_at": "2026-06-29T16:38:07.346Z",
+        "return_pct": -64.8,
+        "reason": "-64.8% <= -50% stop-loss after 97.0h",
+        "action": "CLOSE_STOP_LOSS",
         "closed_ok": true
       }
     }
@@ -724,9 +774,39 @@
         "contracts": 8
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {}
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS+CLOSE_TAKE_PROFIT",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 0.0,
+        "bearish_put": -60.5,
+        "flat_calendar": 78.2
+      },
+      "winner": "flat_calendar",
+      "loser": "bearish_put",
+      "determining_factor": "Range held: IV term contango (ratio 0.914) let front-month theta outrun the wings.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "TSLA260724P00360000",
+        "closed_at": "2026-06-29T16:38:07.539Z",
+        "return_pct": -60.5,
+        "reason": "-60.5% <= -50% stop-loss after 95.1h",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": false
+      },
+      "calendar_back": {
+        "occ": "TSLA260731C00375000",
+        "closed_at": "2026-06-29T16:38:07.727Z",
+        "return_pct": 78.2,
+        "reason": "+78.2% >= 30% squeeze after 95.1h",
+        "action": "CLOSE_TAKE_PROFIT",
+        "closed_ok": false
+      }
+    }
   },
   {
     "trade_set_id": "d6b6b4d8392b",
@@ -1170,7 +1250,16 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "SOFI260724P00016500",
+        "closed_at": "2026-06-29T16:38:07.963Z",
+        "return_pct": -56.0,
+        "reason": "-56.0% <= -50% stop-loss after 89.8h",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    }
   },
   {
     "trade_set_id": "0ef816e00156",
@@ -1697,7 +1786,8 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {}
   },
   {
     "trade_set_id": "57330ab54a01",
@@ -1829,7 +1919,8 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {}
   },
   {
     "trade_set_id": "b5cad6d2b11b",
@@ -1957,7 +2048,8 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {}
   },
   {
     "trade_set_id": "50f4f176fec0",
@@ -2082,6 +2174,175 @@
         "status": "SKIPPED_ILLIQUID",
         "order_id": null,
         "submitted": false
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "0aff18281d74",
+    "ticker": "MU",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-06-29T16:38:10.059Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 15,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-29T16:38:10.059Z",
+      "macro": {
+        "spot": 1110.89,
+        "sma20": 1042.14,
+        "distance_to_sma20_pct": 6.597,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 95.4,
+        "iv_back": 94.5,
+        "iv_ratio": 1.01,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 18294.9,
+        "zero_gamma_strike": 1300.0,
+        "distance_to_zero_gamma_pct": -17.023,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 325.8,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 107.08,
+        "atr_pct": 9.64,
+        "rvol_10min": 0.72,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Semiconductors",
+        "market_cap": 1255297908736,
+        "short_pct_float": 3.69,
+        "short_ratio": 0.76,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.9,
+        "vader_compound": 0.327,
+        "news_type": "Analyst",
+        "top_headline": "Cantor Fitzgerald Maintains Overweight on Micron Technology, Raises Price Target to $2000",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 6.597,
+        "market_spy_dist_pct": -0.572,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -1.515,
+        "sector_vs_market_spread": -0.943,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 96.8,
+        "call_iv_25d": 94.8,
+        "skew_ratio": 1.021,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.41,
+        "ask_sweep_prem": 2916615.0,
+        "total_flow_prem": 45527664.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 1110.89,
+        "node_size": 30626.0,
+        "n_prints": 200,
+        "window_start": "2026-06-29T16:36:24Z",
+        "window_end": "2026-06-29T16:38:19Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 5,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 80.18,
+        "last_earnings_date": "2026-06-24",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 130.63,
+        "front_iv": 95.4,
+        "vrp": -35.23,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "news_sentiment_score": 0.327,
+      "sweep_aggression_pct": 6.41,
+      "distance_to_zero_gamma_pct": -17.023,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 5,
+      "post_earnings_iv_crush_flag": false
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "MU260731P01065000",
+        "expiry": "2026-07-31",
+        "strike": 1065.0,
+        "dte": 35,
+        "entry_premium": 131.27,
+        "limit_price": 132.58,
+        "contracts": 1,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "11",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 95.04,
+          "ask": 102.15,
+          "mid": 98.595,
+          "bid_ask_spread_pct": 7.211,
+          "source": "alpaca_quote"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "ef54795d-93f2-4b9f-a5f6-e82257d8d2ce",
+        "error": null,
+        "submitted": true,
+        "limit_price": 132.58,
+        "contracts": 1
       }
     },
     "exit": null,

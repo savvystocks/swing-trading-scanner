@@ -421,3 +421,32 @@ def vrp_sensor(ticker, front_iv_pct, mock=False):
     except Exception:
         pass
     return out
+
+
+# EDGE 6 - Flow persistence: how one-sided + how late-building the day's net premium is
+def flow_persistence(ticker, mock=False):
+    out = {"net_directional_prem": None, "flow_persistence_pct": None, "flow_direction": None,
+           "closing_accel": None, "n_ticks": 0, "source": "unavailable"}
+    if mock:
+        return out
+    uw = _uw()
+    if not uw:
+        return out
+    try:
+        ticks = (uw.net_prem_ticks(ticker.split(".")[0]) or {}).get("data") or []
+        if not ticks:
+            out["source"] = "uw_empty"
+            return out
+        dirs = [_f(t.get("net_call_premium")) - _f(t.get("net_put_premium")) for t in ticks]   # bullish minus bearish $
+        net = sum(dirs)
+        absum = sum(abs(x) for x in dirs)
+        n = len(dirs)
+        q = max(1, n // 4)
+        out = {"net_directional_prem": round(net, 0),
+               "flow_persistence_pct": round(abs(net) / absum * 100, 2) if absum else None,   # 100 = all one side, 0 = chop
+               "flow_direction": "bullish" if net > 0 else "bearish" if net < 0 else "neutral",
+               "closing_accel": round(sum(dirs[-q:]) - sum(dirs[:q]), 0),                       # >0 = bullish flow building into close
+               "n_ticks": n, "source": "uw_net_prem_ticks"}
+    except Exception:
+        pass
+    return out

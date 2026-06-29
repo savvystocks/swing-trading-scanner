@@ -61,9 +61,10 @@ EXPECTED = {
                   "window_start", "window_end", "source"],
     "pemd": ["days_since_earnings", "post_earnings_iv_crush_flag", "iv_rank_1y", "last_earnings_date", "source"],
     "vrp": ["realized_vol_20d", "front_iv", "vrp", "vrp_regime", "source"],
+    "flow_persistence": ["net_directional_prem", "flow_persistence_pct", "flow_direction", "closing_accel", "n_ticks", "source"],
 }
 TOP = ["entry_ts_utc", "news_sentiment_score", "sweep_aggression_pct", "distance_to_zero_gamma_pct",
-       "distance_to_heaviest_dp_node_pct", "days_since_earnings", "post_earnings_iv_crush_flag"]
+       "distance_to_heaviest_dp_node_pct", "days_since_earnings", "post_earnings_iv_crush_flag", "flow_persistence_pct"]
 
 
 def missing_tags(md):
@@ -246,6 +247,16 @@ check(1, "vrp = front_iv(80) - realized_vol_20d (independent ref)",
       approx(vr["realized_vol_20d"], _rv) and approx(vr["vrp"], 80.0 - _rv) and vr["vrp_regime"] in ("rich", "cheap"),
       f"rv={vr['realized_vol_20d']} vrp={vr['vrp']} ref_rv={_rv}")
 
+# Edge 6 - flow persistence: dirs=[100k,100k,-50k,200k] -> net 350k, |net|/sum|.|=77.78%, bullish
+v11._uw = lambda: SN(net_prem_ticks=lambda t: {"data": [
+    {"net_call_premium": 100000, "net_put_premium": 0}, {"net_call_premium": 100000, "net_put_premium": 0},
+    {"net_call_premium": 0, "net_put_premium": 50000}, {"net_call_premium": 200000, "net_put_premium": 0}]})
+fp = v11.flow_persistence("X", mock=False)
+v11._uw = _ouw
+check(1, "flow_persistence: net 350k, one-sidedness 77.78%, bullish",
+      fp["net_directional_prem"] == 350000 and approx(fp["flow_persistence_pct"], 77.78) and fp["flow_direction"] == "bullish",
+      f"persist={fp['flow_persistence_pct']} net={fp['net_directional_prem']} dir={fp['flow_direction']} accel={fp['closing_accel']}")
+
 # Edge 2 (already computed) + schema + fail-open + autopsy-safety with the new keys
 md_new = lab.collect_metadata("AMD", mock=True)
 check(1, "schema complete WITH 4 new edge blocks + 5 flat keys (deep)", not missing_tags(md_new), f"missing={missing_tags(md_new)}")
@@ -406,6 +417,39 @@ check(4, "spread STAMPED on CALENDAR leg via back_occ", eccal.get("source") == "
 _aopt.OptionHistoricalDataClient = _oopt        # restore (no latent contamination)
 
 # =====================================================================
+print("\n=== DIMENSION 5: OBSERVABILITY (Telegram alerts + EOD digest) ===")
+_wipe()                                          # clear cool-off from the D3 close tests so AMD can re-enter
+recB = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
+bm = lab._buy_msg(recB)
+check(5, "BUY message: ticker+regime+structure+VRP", "AMD" in bm and "BULLISH" in bm and "LONG_CALL" in bm and "VRP" in bm, bm.split(chr(10))[0])
+sm = lab._sell_msg({"ticker": "MU", "leg": "bearish_put", "action": "CLOSE_STOP_LOSS", "return_pct": -55.0, "closed_ok": True})
+check(5, "SELL message: ticker+leg+action+return", "MU" in sm and "CLOSE_STOP_LOSS" in sm and "-55.0%" in sm, sm)
+am = lab._autopsy_msg({"ticker": "PLTR", "winner": "bullish_call", "factor": "Bullish breakout fed the squeeze"})
+check(5, "AUTOPSY message: ticker+winner+factor", "PLTR" in am and "bullish_call" in am and "squeeze" in am, am.split(chr(10))[0])
+
+_onote = lab._notify
+cap = []
+lab._notify = lambda text: (cap.append(text), True)[1]
+lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=False)   # live -> BUY fires
+buy_fired = any(t.startswith("<b>BUY") for t in cap)
+_wipe()
+_ocp2 = lab._close_position
+lab._close_position = lambda occ, creds: True
+recS = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
+occS = recS["legs"]["bullish_call"]["occ_symbol"]
+cap.clear()
+lab.manage_open_positions(("k", "s"), load_params(),
+                          positions=[{"symbol": occS, "avg_entry_price": "10", "current_price": "4", "unrealized_plpc": "-0.6", "qty": "1"}])
+lab._close_position = _ocp2
+sell_fired = any(t.startswith("<b>SELL") for t in cap)
+autopsy_fired = any(t.startswith("<b>AUTOPSY") for t in cap)
+dg = lab.daily_digest()
+lab._notify = _onote
+check(5, "BUY alert fires on live entry", buy_fired)
+check(5, "SELL + AUTOPSY alerts fire through the close chain", sell_fired and autopsy_fired, f"sell={sell_fired} autopsy={autopsy_fired}")
+check(5, "daily_digest builds a summary block", isinstance(dg, str) and "SANDBOX DIGEST" in dg)
+
+# =====================================================================
 _wipe()
 print("\n" + "=" * 70)
 total = len(RESULTS)
@@ -413,7 +457,7 @@ passed = sum(1 for r in RESULTS if r[2])
 by_dim = {}
 for dim, _, ok, _d in RESULTS:
     s = by_dim.setdefault(dim, [0, 0]); s[1] += 1; s[0] += int(ok)
-names = {1: "Input & Schema", 2: "Routing", 3: "Exit & Autopsy", 4: "Sizing Floor"}
+names = {1: "Input & Schema", 2: "Routing", 3: "Exit & Autopsy", 4: "Sizing Floor", 5: "Observability"}
 print("V11 FULL MOT (rigorous) - RESULT BY DIMENSION")
 for d in sorted(by_dim):
     pa, to = by_dim[d]

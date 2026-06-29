@@ -35,6 +35,40 @@ try:
 except Exception:
     v11 = None
 
+
+# ----------------------------------------------------------------------------
+# Telegram notifications (re-integrated from V9 src/telegram.py) - all FAIL-OPEN
+# ----------------------------------------------------------------------------
+def _notify(text):
+    """Fire a Telegram alert via the V9 sender. Fail-open: no token / any error -> silent no-op,
+    NEVER blocks the trading loop."""
+    try:
+        from src.telegram import send_alert
+        return send_alert(text)
+    except Exception:
+        return False
+
+
+def _buy_msg(rec):
+    m = rec.get("metadata") or {}
+    vrp = m.get("vrp") or {}
+    leg = next(iter((rec.get("legs") or {}).values()), {})
+    sp = (leg.get("execution_cost") or {}).get("bid_ask_spread_pct")
+    return (f"<b>BUY {rec.get('ticker')}</b> {rec.get('regime')} {leg.get('structure', '')}\n"
+            f"VRP {vrp.get('vrp')} ({vrp.get('vrp_regime')}) | sweep {m.get('sweep_aggression_pct')}% "
+            f"| zg-dist {m.get('distance_to_zero_gamma_pct')}% | spread {sp}%\n"
+            f"x{leg.get('contracts')} @lim ${leg.get('limit_price')} | {rec.get('execution_mode')}")
+
+
+def _sell_msg(c):
+    return (f"<b>SELL {c.get('ticker')} {c.get('leg')}</b> {c.get('action')} "
+            f"{c.get('return_pct'):+.1f}% (filled_ok={c.get('closed_ok')})")
+
+
+def _autopsy_msg(a):
+    return (f"<b>AUTOPSY {a.get('ticker')}</b> winner={a.get('winner')}\n"
+            f"{str(a.get('factor', a.get('autopsy_error', '')))[:200]}")
+
 LOG_PATH = "proactive_sandbox_logs.json"
 AUTOPSY_MD = "proactive_autopsy_log.md"
 ADVISORY_MD = "v10_tuning_advisory.md"
@@ -250,15 +284,17 @@ def _v11_sensors(ticker, md, spot, iv, mock):
     dpn = _safe(lambda: v11.darkpool_node(ticker, spot, mock), {"source": "unavailable"})
     pemd = _safe(lambda: v11.post_earnings_drift(ticker, mock), {"source": "unavailable"})
     vrp = _safe(lambda: v11.vrp_sensor(ticker, iv.get("iv_front"), mock), {"source": "unavailable"})
+    fpers = _safe(lambda: v11.flow_persistence(ticker, mock), {"source": "unavailable"})
     return {"fundamentals": prof, "news": news, "regime_stack": rstack, "skew": skew,
-            "flow_aggression": aggr, "dark_pool": dpn, "pemd": pemd, "vrp": vrp,
+            "flow_aggression": aggr, "dark_pool": dpn, "pemd": pemd, "vrp": vrp, "flow_persistence": fpers,
             "news_sentiment_score": news.get("vader_compound"),
             # flat log-keys consumed by the Autopsy Engine (also nested above):
             "sweep_aggression_pct": aggr.get("sweep_aggression_pct"),
             "distance_to_zero_gamma_pct": (md.get("gex") or {}).get("distance_to_zero_gamma_pct"),  # edge #2 (already in gex)
             "distance_to_heaviest_dp_node_pct": dpn.get("distance_to_heaviest_dp_node_pct"),
             "days_since_earnings": pemd.get("days_since_earnings"),
-            "post_earnings_iv_crush_flag": pemd.get("post_earnings_iv_crush_flag")}
+            "post_earnings_iv_crush_flag": pemd.get("post_earnings_iv_crush_flag"),
+            "flow_persistence_pct": fpers.get("flow_persistence_pct")}
 
 
 # ----------------------------------------------------------------------------
@@ -651,6 +687,8 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
               "params_snapshot": params, "metadata": md, "legs": legs, "orders": orders,
               "exit": None, "status": "OPEN"}
     _append_log(record)
+    if not dry_run:
+        _notify(_buy_msg(record))                           # Telegram BUY alert (fail-open)
     return record
 
 
@@ -753,6 +791,7 @@ def manage_open_positions(creds, params, positions=None):
                 record_close(rec["ticker"])                       # 24h cool-off
                 closed_legs.append({"ticker": rec["ticker"], "leg": leg_name, "occ": occ,
                                     "return_pct": dec["return_pct"], "action": dec["action"], "closed_ok": ok})
+                _notify(_sell_msg(closed_legs[-1]))           # Telegram SELL alert (fail-open)
                 dirty = True
         # 2. autopsy once the set has no remaining OPEN legs
         still_open = any((occ or "").upper() in pos_by_occ and ln not in rec["leg_exits"]
@@ -771,6 +810,7 @@ def manage_open_positions(creds, params, positions=None):
             except Exception as e:
                 rec["status"] = "CLOSED"
                 autopsies.append({"ticker": rec["ticker"], "autopsy_error": str(e)[:80]})
+            _notify(_autopsy_msg(autopsies[-1]))             # Telegram AUTOPSY alert (fail-open)
             dirty = True
     if dirty:
         _save_log_list(log)
@@ -900,6 +940,45 @@ def scan_candidates(params, limit=100):
 
 
 # ----------------------------------------------------------------------------
+# Observability: end-of-day digest + degraded/failure alerts (Telegram, fail-open)
+# ----------------------------------------------------------------------------
+def daily_digest():
+    """Summarise today's entries, exits, P&L and data-source health -> Telegram. Returns the text."""
+    today = datetime.now(timezone.utc).date().isoformat()
+    log = _load_log_list()
+    entries = [r for r in log if str(r.get("entry_ts_utc", "")).startswith(today)]
+    closes = [(r.get("ticker"), ln, ex) for r in log for ln, ex in (r.get("leg_exits") or {}).items()
+              if str(ex.get("closed_at", "")).startswith(today)]
+    wins = [e for _, _, e in closes if (e.get("return_pct") or 0) > 0]
+    pnl = sum((e.get("return_pct") or 0) for _, _, e in closes)
+    degraded = sum(1 for r in entries for blk in ("macro", "iv_term", "gex", "flow_aggression", "dark_pool",
+                   "pemd", "vrp", "flow_persistence", "skew", "news")
+                   if ((r.get("metadata") or {}).get(blk) or {}).get("source") in ("unavailable", "mock"))
+    lines = [f"<b>SANDBOX DIGEST {today}</b>",
+             f"Entries: {len(entries)} ({', '.join(sorted(set(r.get('ticker') for r in entries))) or 'none'})",
+             f"Closes: {len(closes)} | wins {len(wins)}/{len(closes)} | sum return {pnl:+.1f}%"]
+    for tk, ln, ex in closes[:8]:
+        lines.append(f"  {tk} {ln} {ex.get('action')} {(ex.get('return_pct') or 0):+.1f}%")
+    lines.append(f"Sensor-source degradations: {degraded}")
+    text = "\n".join(lines)
+    _notify(text)
+    return text
+
+
+def _maybe_send_digest():
+    """Fire the EOD digest once/day, on the first cycle at/after 20:00 UTC. Persistence = a marker
+    record in the (committed) log, so it survives the ephemeral GHA runner."""
+    now = datetime.now(timezone.utc)
+    if now.hour < 20:
+        return
+    today = now.date().isoformat()
+    if any(r.get("type") == "daily_digest" and str(r.get("ts_utc", "")).startswith(today) for r in _load_log_list()):
+        return
+    daily_digest()
+    _append_log({"type": "daily_digest", "ts_utc": _now_iso_ms(), "status": "SENT"})
+
+
+# ----------------------------------------------------------------------------
 # Scheduled cycle (GHA): stale-order audit -> exit pass -> UW flow sourcing -> first eligible
 # ----------------------------------------------------------------------------
 def run_scheduled_cycle(mock=False):
@@ -932,13 +1011,21 @@ def run_scheduled_cycle(mock=False):
     open_orders = get_open_orders(creds)
     positions = get_open_positions(creds)
     print(f"portfolio: {len(positions)} positions, {len(open_orders)} open orders")
+    _maybe_send_digest()                                     # EOD digest (once/day at/after 20:00 UTC, fail-open)
 
     # 4. dynamic UW flow sourcing - enter the FIRST candidate not capped/cooled
     candidates = scan_candidates(params)
     print(f"UW flow scan: {len(candidates)} market-wide candidates "
           f"(top: {[c['ticker'] for c in candidates[:8]]})")
     if not candidates:
-        print("\nno UW flow candidates this cycle (scanner empty / unreachable).")
+        try:
+            from src.unusual_whales_api import UnusualWhalesClient
+            reachable = bool(getattr(UnusualWhalesClient(), "enabled", False))
+        except Exception:
+            reachable = False
+        if not reachable:
+            _notify("<b>DEGRADED</b> sandbox: UW flow scanner unreachable (no token / API down) - 0 candidates")
+        print(f"\nno UW flow candidates this cycle ({'scanner UNREACHABLE' if not reachable else 'quiet market'}).")
         return None
     for c in candidates:
         t = c["ticker"]
@@ -974,7 +1061,13 @@ def run_scheduled_cycle(mock=False):
 # ----------------------------------------------------------------------------
 def main():
     if os.environ.get("GITHUB_ACTIONS") == "true":
-        return run_scheduled_cycle(mock=os.environ.get("PROACTIVE_MOCK", "1") == "1")
+        try:
+            return run_scheduled_cycle(mock=os.environ.get("PROACTIVE_MOCK", "1") == "1")
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            _notify(f"<b>SANDBOX RUN FAILED</b>\n{type(e).__name__}: {str(e)[:300]}")    # failure alert
+            raise
 
     gha = os.environ.get("GITHUB_ACTIONS") == "true"
     live_paper = "--live-paper" in sys.argv or (gha and all(_paper_creds()))   # auto under GHA

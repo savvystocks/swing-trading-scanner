@@ -139,6 +139,12 @@
         "action": "CLOSE_TAKE_PROFIT",
         "closed_ok": false
       }
+    },
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -43.5,
+        "mae_pct": -43.5
+      }
     }
   },
   {
@@ -272,7 +278,17 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -0.7,
+        "mae_pct": -0.7
+      },
+      "bearish_put": {
+        "mfe_pct": -43.0,
+        "mae_pct": -43.0
+      }
+    }
   },
   {
     "trade_set_id": "e9f9747f9a52",
@@ -954,7 +970,25 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": 5.5,
+        "mae_pct": 5.5
+      },
+      "bearish_put": {
+        "mfe_pct": -30.9,
+        "mae_pct": -30.9
+      },
+      "calendar_front": {
+        "mfe_pct": -22.2,
+        "mae_pct": -22.2
+      },
+      "calendar_back": {
+        "mfe_pct": 5.7,
+        "mae_pct": 5.7
+      }
+    }
   },
   {
     "trade_set_id": "2d36bb80d5f6",
@@ -1276,6 +1310,16 @@
         "action": "CLOSE_STOP_LOSS",
         "closed_ok": true
       }
+    },
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": 21.0,
+        "mae_pct": 21.0
+      },
+      "calendar_back": {
+        "mfe_pct": 12.9,
+        "mae_pct": 12.9
+      }
     }
   },
   {
@@ -1538,7 +1582,13 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -35.1,
+        "mae_pct": -35.1
+      }
+    }
   },
   {
     "trade_set_id": "06b75ea0101a",
@@ -1671,7 +1721,13 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -0.9,
+        "mae_pct": -0.9
+      }
+    }
   },
   {
     "trade_set_id": "f9eebc39e151",
@@ -1957,7 +2013,13 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -10.2,
+        "mae_pct": -10.2
+      }
+    }
   },
   {
     "trade_set_id": "b5cad6d2b11b",
@@ -2384,7 +2446,13 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -19.7,
+        "mae_pct": -19.7
+      }
+    }
   },
   {
     "trade_set_id": "e271f0f9d093",
@@ -2553,7 +2621,13 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -21.5,
+        "mae_pct": -21.5
+      }
+    }
   },
   {
     "trade_set_id": "46893af856af",
@@ -2721,7 +2795,8 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {}
   },
   {
     "trade_set_id": "AUDIT-db19d52e",
@@ -2904,7 +2979,8 @@
       }
     },
     "exit": null,
-    "status": "OPEN"
+    "status": "OPEN",
+    "leg_exits": {}
   },
   {
     "type": "daily_digest",
@@ -3083,6 +3159,224 @@
         "submitted": true,
         "limit_price": 148.26,
         "contracts": 1
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "AUDIT-a7b25d2b",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-06-29T22:42:04.667Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "14e29906-ce0b-4a9a-8428-84e9452ab8df",
+        "symbol": "MRVL260731C00290000",
+        "age_min": 46.4,
+        "limit_price": "34.72"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "6fb9979585e6",
+    "ticker": "MRVL",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-29T22:42:06.358Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 15,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-29T22:42:06.358Z",
+      "macro": {
+        "spot": 277.82,
+        "sma20": 281.93,
+        "distance_to_sma20_pct": -1.455,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 101.7,
+        "iv_back": 95.9,
+        "iv_ratio": 1.06,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 43206.1,
+        "zero_gamma_strike": 310.0,
+        "distance_to_zero_gamma_pct": -11.583,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 1800.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 29.22,
+        "atr_pct": 10.52,
+        "rvol_10min": 0.45,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Semiconductors",
+        "market_cap": 242975703040,
+        "short_pct_float": 5.26,
+        "short_ratio": 0.71,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 5.11,
+        "vader_compound": 0.377,
+        "news_type": "Analyst",
+        "top_headline": "10 Information Technology Stocks With Whale Alerts In Today’s Session",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -1.455,
+        "market_spy_dist_pct": -0.258,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -0.813,
+        "sector_vs_market_spread": -0.555,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 93.7,
+        "call_iv_25d": 93.3,
+        "skew_ratio": 1.004,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.83,
+        "ask_sweep_prem": 2272907.0,
+        "total_flow_prem": 33299452.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 277.82,
+        "node_size": 2231658.0,
+        "n_prints": 200,
+        "window_start": "2026-06-29T19:55:35Z",
+        "window_end": "2026-06-29T22:34:27Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 33,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 73.49,
+        "last_earnings_date": "2026-05-27",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 157.87,
+        "front_iv": 101.7,
+        "vrp": -56.17,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 22323015.0,
+        "flow_persistence_pct": 21.04,
+        "flow_direction": "bullish",
+        "closing_accel": 1780390.0,
+        "n_ticks": 390,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 852.14,
+        "vwma_20": 286.63,
+        "rsi_5": 26.44,
+        "rsi_15": 52.88,
+        "gap_pct": 2.426,
+        "day_range": 9.945,
+        "candle_body": 0.2,
+        "dist_sma50": 28.556,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 5.8,
+        "vix_level": 17.65,
+        "execution_hour": 22,
+        "day_of_week": 0,
+        "sector_vs_spy": -3.094,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": 0.377,
+      "sweep_aggression_pct": 6.83,
+      "distance_to_zero_gamma_pct": -11.583,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 33,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 21.04
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "MRVL260731C00290000",
+        "expiry": "2026-07-31",
+        "strike": 290.0,
+        "dte": 35,
+        "entry_premium": 35.0,
+        "limit_price": 35.35,
+        "contracts": 2,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "142",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 23.67,
+          "ask": 26.38,
+          "mid": 25.025,
+          "bid_ask_spread_pct": 10.829,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 141.0,
+          "oi_prev": 142.0,
+          "oi_change": -1.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "accepted",
+        "order_id": "befb53c0-3388-48a7-b0da-323aba5abf10",
+        "error": null,
+        "submitted": true,
+        "limit_price": 35.35,
+        "contracts": 2
       }
     },
     "exit": null,

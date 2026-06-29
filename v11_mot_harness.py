@@ -62,6 +62,8 @@ EXPECTED = {
     "pemd": ["days_since_earnings", "post_earnings_iv_crush_flag", "iv_rank_1y", "last_earnings_date", "source"],
     "vrp": ["realized_vol_20d", "front_iv", "vrp", "vrp_regime", "source"],
     "flow_persistence": ["net_directional_prem", "flow_persistence_pct", "flow_direction", "closing_accel", "n_ticks", "source"],
+    "price_action": ["nvi", "vwma_20", "rsi_5", "rsi_15", "gap_pct", "day_range", "candle_body", "dist_sma50", "source"],
+    "macro_context": ["iv_term_skew", "vix_level", "execution_hour", "day_of_week", "sector_vs_spy", "source"],
 }
 TOP = ["entry_ts_utc", "news_sentiment_score", "sweep_aggression_pct", "distance_to_zero_gamma_pct",
        "distance_to_heaviest_dp_node_pct", "days_since_earnings", "post_earnings_iv_crush_flag", "flow_persistence_pct"]
@@ -257,6 +259,61 @@ check(1, "flow_persistence: net 350k, one-sidedness 77.78%, bullish",
       fp["net_directional_prem"] == 350000 and approx(fp["flow_persistence_pct"], 77.78) and fp["flow_direction"] == "bullish",
       f"persist={fp['flow_persistence_pct']} net={fp['net_directional_prem']} dir={fp['flow_direction']} accel={fp['closing_accel']}")
 
+# Sensor 7 - price action: real compute vs independent inline reference
+import math as _m7
+_seq, _val = [], 100.0
+for _i in range(51):
+    _val += 1.5 if _i % 3 else -1.0           # mostly up, every 3rd down -> RSI != 100
+    _seq.append(round(_val, 2))
+_pab = [{"o": round(c - 0.3, 2), "h": round(c + 0.8, 2), "l": round(c - 0.8, 2), "c": c,
+         "v": 1200 if i % 2 else 900} for i, c in enumerate(_seq)]
+def _ref_rsi(cl, p):
+    ds = [cl[k] - cl[k - 1] for k in range(len(cl) - p, len(cl))]
+    ag = sum(d for d in ds if d > 0) / p; al = sum(-d for d in ds if d < 0) / p
+    return 100.0 if al == 0 else round(100 - 100 / (1 + ag / al), 2)
+_nvi = 1000.0
+for _i in range(1, len(_pab)):
+    if _pab[_i]["v"] < _pab[_i - 1]["v"] and _seq[_i - 1] > 0:
+        _nvi *= (1 + (_seq[_i] - _seq[_i - 1]) / _seq[_i - 1])
+_vw = sum(_seq[k] * _pab[k]["v"] for k in range(len(_seq) - 20, len(_seq))) / sum(b["v"] for b in _pab[-20:])
+_sma50 = sum(_seq[-50:]) / 50.0
+_lb = _pab[-1]; _rng = _lb["h"] - _lb["l"]
+pa = v11.price_action("X", mock=False, bars=_pab)
+check(1, "price_action: rsi_5/rsi_15 match independent reference",
+      pa["rsi_5"] == _ref_rsi(_seq, 5) and pa["rsi_15"] == _ref_rsi(_seq, 15), f"rsi5={pa['rsi_5']} rsi15={pa['rsi_15']}")
+check(1, "price_action: vwma_20 + nvi + dist_sma50 match reference",
+      approx(pa["vwma_20"], round(_vw, 2)) and approx(pa["nvi"], round(_nvi, 2))
+      and approx(pa["dist_sma50"], round((_seq[-1] - _sma50) / _sma50 * 100, 3)),
+      f"vwma={pa['vwma_20']} nvi={pa['nvi']} dist50={pa['dist_sma50']}")
+check(1, "price_action: gap/day_range/candle_body exact",
+      approx(pa["gap_pct"], round((_lb["o"] - _seq[-2]) / _seq[-2] * 100, 3))
+      and approx(pa["day_range"], round(_rng / _seq[-1] * 100, 3))
+      and approx(pa["candle_body"], round(abs(_seq[-1] - _lb["o"]) / _rng, 3)),
+      f"gap={pa['gap_pct']} range={pa['day_range']} body={pa['candle_body']}")
+
+# Sensor 8 - macro context: iv_term_skew + vix + hour/dow + sector_vs_spy
+import pandas as _pd8
+_oyf2 = sys.modules.get("yfinance")
+sys.modules["yfinance"] = SN(Ticker=lambda b: SN(history=lambda period="5d": _pd8.DataFrame({"Close": [18.0, 19.0, 20.5]})))
+_odc2 = v11._daily_closes
+v11._daily_closes = lambda t, days=40: ([100, 100, 100, 100, 100, 105] if t == "XLK"
+                                        else [100, 100, 100, 100, 100, 102] if t == "SPY" else [])
+mc = v11.macro_context("X", 80.0, 60.0, "Technology", mock=False, now=datetime(2026, 6, 29, 14, 30, tzinfo=timezone.utc))
+v11._daily_closes = _odc2
+if _oyf2 is not None:
+    sys.modules["yfinance"] = _oyf2
+else:
+    sys.modules.pop("yfinance", None)
+check(1, "macro_context: iv_term_skew 20, vix 20.5, hour 14, dow 0(Mon), sector_vs_spy 3.0",
+      mc["iv_term_skew"] == 20.0 and mc["vix_level"] == 20.5 and mc["execution_hour"] == 14
+      and mc["day_of_week"] == 0 and approx(mc["sector_vs_spy"], 3.0), f"{mc}")
+
+# Sensor 8b - per-leg OI day-over-day from UW historic chains
+v11._uw = lambda: SN(option_contract_historic=lambda occ: {"chains": [{"open_interest": "1500"}, {"open_interest": "1200"}]})
+oc = v11.oi_change("AMD260724C00100000", mock=False)
+v11._uw = _ouw
+check(1, "oi_change: today 1500 - prev 1200 = +300", oc["oi_change"] == 300 and oc["oi_today"] == 1500 and oc["oi_prev"] == 1200, f"{oc}")
+
 # Edge 2 (already computed) + schema + fail-open + autopsy-safety with the new keys
 md_new = lab.collect_metadata("AMD", mock=True)
 check(1, "schema complete WITH 4 new edge blocks + 5 flat keys (deep)", not missing_tags(md_new), f"missing={missing_tags(md_new)}")
@@ -393,6 +450,26 @@ except Exception as e:
     nok = False
     resN = {"determining_factor": f"CRASH: {e}"}
 check(3, "null-gex LOSER autopsies cleanly (no KeyError)", nok, str(resN.get("determining_factor"))[:60])
+
+# MFE/MAE trade-path: accumulates across cycles, then captured by the autopsy
+_wipe()
+_ocp3 = lab._close_position
+lab._close_position = lambda occ, creds: True
+recP = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
+occP = recP["legs"]["bullish_call"]["occ_symbol"]
+def _cycle(plpc, px):
+    lab.manage_open_positions(("k", "s"), load_params(),
+                              positions=[{"symbol": occP, "avg_entry_price": "10", "current_price": px, "unrealized_plpc": plpc, "qty": "1"}])
+_cycle("0.2", "12")      # +20% favorable (HOLD, <24h)
+_cycle("-0.15", "8.5")   # -15% adverse (HOLD)
+lp = ((next(r for r in lab._load_log_list() if r["trade_set_id"] == recP["trade_set_id"]).get("leg_path") or {})).get("bullish_call") or {}
+check(3, "MFE/MAE path accumulates across cycles (mfe 20, mae -15)",
+      approx(lp.get("mfe_pct"), 20.0, 0.5) and approx(lp.get("mae_pct"), -15.0, 0.5), f"path={lp}")
+_cycle("-0.6", "4")      # -60% -> stop closes -> autopsy captures the path
+exP = next(r for r in lab._load_log_list() if r["trade_set_id"] == recP["trade_set_id"]).get("exit") or {}
+lab._close_position = _ocp3
+check(3, "autopsy exit records MFE/MAE (mfe 20, mae -60)",
+      approx(exP.get("mfe_pct"), 20.0, 0.5) and approx(exP.get("mae_pct"), -60.0, 0.5), f"mfe={exP.get('mfe_pct')} mae={exP.get('mae_pct')}")
 
 # =====================================================================
 print("\n=== DIMENSION 4: SIZING FLOOR (per-leg bid/ask spread stamped) ===")

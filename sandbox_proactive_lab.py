@@ -285,8 +285,12 @@ def _v11_sensors(ticker, md, spot, iv, mock):
     pemd = _safe(lambda: v11.post_earnings_drift(ticker, mock), {"source": "unavailable"})
     vrp = _safe(lambda: v11.vrp_sensor(ticker, iv.get("iv_front"), mock), {"source": "unavailable"})
     fpers = _safe(lambda: v11.flow_persistence(ticker, mock), {"source": "unavailable"})
+    pact = _safe(lambda: v11.price_action(ticker, mock), {"source": "unavailable"})
+    mctx = _safe(lambda: v11.macro_context(ticker, iv.get("iv_front"), iv.get("iv_back"),
+                 prof.get("sector"), mock), {"source": "unavailable"})
     return {"fundamentals": prof, "news": news, "regime_stack": rstack, "skew": skew,
             "flow_aggression": aggr, "dark_pool": dpn, "pemd": pemd, "vrp": vrp, "flow_persistence": fpers,
+            "price_action": pact, "macro_context": mctx,
             "news_sentiment_score": news.get("vader_compound"),
             # flat log-keys consumed by the Autopsy Engine (also nested above):
             "sweep_aggression_pct": aggr.get("sweep_aggression_pct"),
@@ -653,6 +657,10 @@ def _stamp_spreads(legs):
             leg["execution_cost"] = v11.option_spread(occ)
         except Exception:
             leg["execution_cost"] = {"source": "unavailable"}
+        try:
+            leg["oi_change"] = v11.oi_change(occ)              # SENSOR 8b: per-leg OI day-over-day
+        except Exception:
+            leg["oi_change"] = {"source": "unavailable"}
 
 
 def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True, illiquid=None,
@@ -782,6 +790,10 @@ def manage_open_positions(creds, params, positions=None):
             else:
                 cur_px = float(p.get("current_price") or 0)
                 ret_pct = (cur_px / entry_px - 1) * 100.0 if entry_px else 0.0
+            path = rec.setdefault("leg_path", {}).setdefault(leg_name, {"mfe_pct": ret_pct, "mae_pct": ret_pct})
+            path["mfe_pct"] = round(max(path["mfe_pct"], ret_pct), 1)   # Max Favorable Excursion (trade path)
+            path["mae_pct"] = round(min(path["mae_pct"], ret_pct), 1)   # Max Adverse Excursion
+            dirty = True                                                 # persist the running path every cycle
             dec = manage_exit(rec["entry_ts_utc"], ret_pct, params, expiry_iso=_occ_expiry(occ))
             if dec["action"].startswith("CLOSE"):            # take-profit, stop-loss, or expiry
                 ok = _close_position(occ, creds)
@@ -869,9 +881,12 @@ def run_trade_autopsy(record, leg_returns_pct, exit_reason="5d_time_exit",
     ranked = sorted(leg_returns_pct.items(), key=lambda kv: kv[1], reverse=True)
     winner, w_ret = ranked[0]
     loser, l_ret = ranked[-1]
+    lp = record.get("leg_path") or {}
     record["exit"] = {"reason": exit_reason, "underlying_move_pct": underlying_move_pct,
                       "entry_slippage_pct": entry_slippage_pct, "leg_returns_pct": leg_returns_pct,
-                      "winner": winner, "loser": loser}
+                      "winner": winner, "loser": loser, "leg_path": lp,
+                      "mfe_pct": max((v.get("mfe_pct", 0) for v in lp.values()), default=None),   # best path point
+                      "mae_pct": min((v.get("mae_pct", 0) for v in lp.values()), default=None)}   # worst path point
     factor = _determining_factor(winner, md, underlying_move_pct, w_ret)
     record["exit"]["determining_factor"] = factor
     record["status"] = "CLOSED"

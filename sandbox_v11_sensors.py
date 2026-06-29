@@ -450,3 +450,124 @@ def flow_persistence(ticker, mock=False):
     except Exception:
         pass
     return out
+
+
+# ----------------------------------------------------------------------------
+# ML-PREP PAYLOAD - price-action/shape/volume + macro context (LOG-DON'T-BLOCK)
+# ----------------------------------------------------------------------------
+def _daily_ohlcv(symbol, days=70):
+    k, s = _alpaca_keys()
+    if not (k and s):
+        return []
+    try:
+        from alpaca.data.historical import StockHistoricalDataClient
+        from alpaca.data.requests import StockBarsRequest
+        from alpaca.data.timeframe import TimeFrame
+        from alpaca.data.enums import DataFeed
+        cli = StockHistoricalDataClient(k, s)
+        start = datetime.utcnow() - timedelta(days=days + 25)
+        bars = cli.get_stock_bars(StockBarsRequest(symbol_or_symbols=symbol, timeframe=TimeFrame.Day,
+                                                   start=start, feed=DataFeed.IEX)).data.get(symbol, [])
+        return [{"o": float(b.open), "h": float(b.high), "l": float(b.low),
+                 "c": float(b.close), "v": float(b.volume)} for b in bars]
+    except Exception:
+        return []
+
+
+def _rsi(closes, period):
+    if len(closes) < period + 1:
+        return None
+    deltas = [closes[i] - closes[i - 1] for i in range(len(closes) - period, len(closes))]
+    ag = sum(d for d in deltas if d > 0) / period
+    al = sum(-d for d in deltas if d < 0) / period
+    if al == 0:
+        return 100.0 if ag > 0 else 50.0
+    return round(100 - 100 / (1 + ag / al), 2)
+
+
+# SENSOR 7 - price action, shape & volume
+def price_action(ticker, mock=False, bars=None):
+    out = {"nvi": None, "vwma_20": None, "rsi_5": None, "rsi_15": None, "gap_pct": None,
+           "day_range": None, "candle_body": None, "dist_sma50": None, "source": "unavailable"}
+    if mock:
+        return out
+    try:
+        bars = bars if bars is not None else _daily_ohlcv(ticker)
+        if len(bars) < 51:
+            return out
+        c = [b["c"] for b in bars]
+        v = [b["v"] for b in bars]
+        o, h, l = bars[-1]["o"], bars[-1]["h"], bars[-1]["l"]
+        spot, prev = c[-1], c[-2]
+        sma50 = sum(c[-50:]) / 50.0
+        vw_num = sum(c[i] * v[i] for i in range(len(c) - 20, len(c)))
+        vw_den = sum(v[-20:])
+        nvi = 1000.0
+        for i in range(1, len(bars)):
+            if v[i] < v[i - 1] and c[i - 1] > 0:
+                nvi *= (1 + (c[i] - c[i - 1]) / c[i - 1])
+        rng = h - l
+        out = {"nvi": round(nvi, 2),
+               "vwma_20": round(vw_num / vw_den, 2) if vw_den else None,
+               "rsi_5": _rsi(c, 5), "rsi_15": _rsi(c, 15),
+               "gap_pct": round((o - prev) / prev * 100, 3) if prev else None,
+               "day_range": round(rng / spot * 100, 3) if spot else None,
+               "candle_body": round(abs(spot - o) / rng, 3) if rng else None,
+               "dist_sma50": round((spot - sma50) / sma50 * 100, 3) if sma50 else None,
+               "source": "alpaca_bars"}
+    except Exception:
+        pass
+    return out
+
+
+# SENSOR 8 - deep microstructure & macro context
+def macro_context(ticker, iv_front, iv_back, sector, mock=False, now=None):
+    now = now or datetime.now(timezone.utc)
+    out = {"iv_term_skew": None, "vix_level": None, "execution_hour": now.hour,
+           "day_of_week": now.weekday(), "sector_vs_spy": None, "source": "partial"}
+    if iv_front is not None and iv_back is not None:
+        out["iv_term_skew"] = round(iv_front - iv_back, 2)
+    if mock:
+        return out
+    try:
+        import yfinance as yf
+        vh = yf.Ticker("^VIX").history(period="5d")
+        if vh is not None and len(vh):
+            out["vix_level"] = round(float(vh["Close"].iloc[-1]), 2)
+    except Exception:
+        pass
+    try:
+        etf = SECTOR_ETF.get(sector)
+        if etf:
+            se = _daily_closes(etf)
+            sp = _daily_closes("SPY")
+            if len(se) >= 6 and len(sp) >= 6:
+                se_r = (se[-1] / se[-6] - 1) * 100
+                sp_r = (sp[-1] / sp[-6] - 1) * 100
+                out["sector_vs_spy"] = round(se_r - sp_r, 3)
+    except Exception:
+        pass
+    out["source"] = "yfinance+alpaca"
+    return out
+
+
+# SENSOR 8b - per-leg open-interest day-over-day change (stamped at order-gen)
+def oi_change(occ_symbol, mock=False):
+    out = {"oi_today": None, "oi_prev": None, "oi_change": None, "source": "unavailable"}
+    if mock or not occ_symbol:
+        return out
+    uw = _uw()
+    if not uw:
+        return out
+    try:
+        chains = (uw.option_contract_historic(occ_symbol) or {}).get("chains") or []   # newest-first
+        if len(chains) >= 2:
+            t0 = _f(chains[0].get("open_interest"))
+            t1 = _f(chains[1].get("open_interest"))
+            out = {"oi_today": t0, "oi_prev": t1, "oi_change": round(t0 - t1, 0), "source": "uw_historic"}
+        elif chains:
+            out = {"oi_today": _f(chains[0].get("open_interest")), "oi_prev": None,
+                   "oi_change": None, "source": "uw_historic_1d"}
+    except Exception:
+        pass
+    return out

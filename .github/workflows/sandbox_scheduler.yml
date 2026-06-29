@@ -7,7 +7,9 @@ name: sandbox-scheduler
 on:
   schedule:
     - cron: "*/10 13-21 * * 1-5"   # every 10m, US market hours (13:30-21:00 UTC), weekdays
-  workflow_dispatch:
+  workflow_dispatch:               # manual / API dispatch (needs ref + PAT with actions:write)
+  repository_dispatch:
+    types: [run-sandbox]           # external cron: POST /repos/<owner>/<repo>/dispatches {"event_type":"run-sandbox"}
 
 jobs:
   proactive-lab:
@@ -33,6 +35,8 @@ jobs:
           ALPACA_PAPER_API_KEY: ${{ secrets.ALPACA_PAPER_API_KEY }}
           ALPACA_PAPER_SECRET_KEY: ${{ secrets.ALPACA_PAPER_SECRET_KEY }}
           UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           PROACTIVE_MOCK: "0"        # capture REAL macro/GEX/alt metadata, not mock
         run: python sandbox_proactive_lab.py
       - name: Persist forensic logs to sandbox branch

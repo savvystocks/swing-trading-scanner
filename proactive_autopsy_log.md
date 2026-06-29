@@ -31,3 +31,12 @@
 
 **Determining factor:** Range held: IV term contango (ratio 0.914) let front-month theta outrun the wings.
 
+## Autopsy - SPY (f9eebc39e151)
+- entered 2026-06-26T19:44:22.457Z | trigger regime_BULLISH_loose | exit CLOSE_TAKE_PROFIT | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +39.8% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 733.0 fed the squeeze.
+

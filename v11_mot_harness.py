@@ -64,6 +64,9 @@ EXPECTED = {
     "flow_persistence": ["net_directional_prem", "flow_persistence_pct", "flow_direction", "closing_accel", "n_ticks", "source"],
     "price_action": ["nvi", "vwma_20", "rsi_5", "rsi_15", "gap_pct", "day_range", "candle_body", "dist_sma50", "source"],
     "macro_context": ["iv_term_skew", "vix_level", "execution_hour", "day_of_week", "sector_vs_spy", "source"],
+    "liquidity_and_slippage": ["equity_spread_pct_of_ask", "bid", "ask", "bid_size", "ask_size", "source"],
+    "relative_momentum": ["rvol_20d", "gap_pct", "source"],
+    "float_mechanics": ["short_pct_float", "float_shares", "shares_short", "source"],
 }
 TOP = ["entry_ts_utc", "news_sentiment_score", "sweep_aggression_pct", "distance_to_zero_gamma_pct",
        "distance_to_heaviest_dp_node_pct", "days_since_earnings", "post_earnings_iv_crush_flag", "flow_persistence_pct"]
@@ -313,6 +316,32 @@ v11._uw = lambda: SN(option_contract_historic=lambda occ: {"chains": [{"open_int
 oc = v11.oi_change("AMD260724C00100000", mock=False)
 v11._uw = _ouw
 check(1, "oi_change: today 1500 - prev 1200 = +300", oc["oi_change"] == 300 and oc["oi_today"] == 1500 and oc["oi_prev"] == 1200, f"{oc}")
+
+# Mid-cap block 1 - liquidity & slippage: equity top-of-book spread % of ask + depth
+import alpaca.data.historical as _ahist
+_oqc = _ahist.StockHistoricalDataClient
+_ahist.StockHistoricalDataClient = type("FQ", (), {"__init__": lambda s, k, sec: None,
+    "get_stock_latest_quote": lambda s, req: {getattr(req, "symbol_or_symbols", "X"): SN(bid_price=10.00, ask_price=10.10, bid_size=500, ask_size=300)}})
+ls = v11.liquidity_slippage("X", mock=False)
+_ahist.StockHistoricalDataClient = _oqc
+check(1, "liquidity_slippage: spread%/ask + depth (bid 500 / ask 300)",
+      approx(ls["equity_spread_pct_of_ask"], 0.99) and ls["bid_size"] == 500 and ls["ask_size"] == 300, f"{ls}")
+
+# Mid-cap block 2 - relative momentum: RVOL vs prior-20d + opening gap
+_rmbars = [{"o": 100, "h": 101, "l": 99, "c": 100, "v": 1000} for _ in range(20)] + [{"o": 105, "h": 107, "l": 104, "c": 106, "v": 2000}]
+rm = v11.relative_momentum("X", mock=False, bars=_rmbars)   # rvol = 2000 / avg(1000*20) = 2.0 ; gap = (105-100)/100 = 5.0%
+check(1, "relative_momentum: rvol_20d 2.0, gap 5.0%", approx(rm["rvol_20d"], 2.0) and approx(rm["gap_pct"], 5.0), f"{rm}")
+
+# Mid-cap block 3 - float mechanics: short% + total float
+v11._PROFILE_CACHE.clear()
+_oyf3 = sys.modules.get("yfinance")
+sys.modules["yfinance"] = SN(Ticker=lambda b: SN(info={"shortPercentOfFloat": 0.085, "floatShares": 50000000, "sharesShort": 4250000}))
+fm = v11.float_mechanics("X", mock=False)
+if _oyf3 is not None:
+    sys.modules["yfinance"] = _oyf3
+else:
+    sys.modules.pop("yfinance", None)
+check(1, "float_mechanics: short% 8.5, float 50M", fm["short_pct_float"] == 8.5 and fm["float_shares"] == 50000000 and fm["shares_short"] == 4250000, f"{fm}")
 
 # Edge 2 (already computed) + schema + fail-open + autopsy-safety with the new keys
 md_new = lab.collect_metadata("AMD", mock=True)

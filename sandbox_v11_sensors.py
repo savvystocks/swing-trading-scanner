@@ -571,3 +571,71 @@ def oi_change(occ_symbol, mock=False):
     except Exception:
         pass
     return out
+
+
+# ----------------------------------------------------------------------------
+# MID-CAP MICROSTRUCTURE PAYLOAD (LOG-DON'T-BLOCK) - liquidity / momentum / float
+# ----------------------------------------------------------------------------
+# BLOCK 1 - liquidity & slippage: underlying equity top-of-book spread + depth
+def liquidity_slippage(ticker, mock=False):
+    out = {"equity_spread_pct_of_ask": None, "bid": None, "ask": None,
+           "bid_size": None, "ask_size": None, "source": "unavailable"}
+    if mock:
+        return out
+    k, s = _alpaca_keys()
+    if not (k and s):
+        return out
+    try:
+        from alpaca.data.historical import StockHistoricalDataClient
+        from alpaca.data.requests import StockLatestQuoteRequest
+        from alpaca.data.enums import DataFeed
+        cli = StockHistoricalDataClient(k, s)
+        sym = ticker.split(".")[0]
+        q = (cli.get_stock_latest_quote(StockLatestQuoteRequest(symbol_or_symbols=sym, feed=DataFeed.IEX)) or {}).get(sym)
+        bid = getattr(q, "bid_price", None) if q else None
+        ask = getattr(q, "ask_price", None) if q else None
+        if bid is not None and ask is not None and ask > 0:
+            out = {"equity_spread_pct_of_ask": round((ask - bid) / ask * 100, 3),
+                   "bid": round(bid, 4), "ask": round(ask, 4),
+                   "bid_size": getattr(q, "bid_size", None), "ask_size": getattr(q, "ask_size", None),
+                   "source": "alpaca_quote"}
+    except Exception:
+        pass
+    return out
+
+
+# BLOCK 2 - relative momentum: RVOL vs 20-day average + opening gap %
+def relative_momentum(ticker, mock=False, bars=None):
+    out = {"rvol_20d": None, "gap_pct": None, "source": "unavailable"}
+    if mock:
+        return out
+    try:
+        bars = bars if bars is not None else _daily_ohlcv(ticker)
+        if len(bars) < 21:
+            return out
+        vols = [b["v"] for b in bars]
+        avg20 = sum(vols[-21:-1]) / 20.0                          # prior 20 days (excl. today)
+        o, prev = bars[-1]["o"], bars[-2]["c"]
+        out = {"rvol_20d": round(vols[-1] / avg20, 2) if avg20 else None,
+               "gap_pct": round((o - prev) / prev * 100, 3) if prev else None,
+               "source": "alpaca_bars"}
+    except Exception:
+        pass
+    return out
+
+
+# BLOCK 3 - float mechanics: short interest % + total float size
+def float_mechanics(ticker, mock=False):
+    out = {"short_pct_float": None, "float_shares": None, "shares_short": None, "source": "unavailable"}
+    if mock:
+        return out
+    try:
+        import yfinance as yf
+        info = yf.Ticker(ticker.split(".")[0]).info or {}
+        spf = info.get("shortPercentOfFloat")
+        out = {"short_pct_float": round(spf * 100, 2) if isinstance(spf, (int, float)) else None,
+               "float_shares": info.get("floatShares"), "shares_short": info.get("sharesShort"),
+               "source": "yfinance"}
+    except Exception:
+        pass
+    return out

@@ -288,9 +288,13 @@ def _v11_sensors(ticker, md, spot, iv, mock):
     pact = _safe(lambda: v11.price_action(ticker, mock), {"source": "unavailable"})
     mctx = _safe(lambda: v11.macro_context(ticker, iv.get("iv_front"), iv.get("iv_back"),
                  prof.get("sector"), mock), {"source": "unavailable"})
+    liq = _safe(lambda: v11.liquidity_slippage(ticker, mock), {"source": "unavailable"})    # mid-cap microstructure
+    relm = _safe(lambda: v11.relative_momentum(ticker, mock), {"source": "unavailable"})
+    flt = _safe(lambda: v11.float_mechanics(ticker, mock), {"source": "unavailable"})
     return {"fundamentals": prof, "news": news, "regime_stack": rstack, "skew": skew,
             "flow_aggression": aggr, "dark_pool": dpn, "pemd": pemd, "vrp": vrp, "flow_persistence": fpers,
             "price_action": pact, "macro_context": mctx,
+            "liquidity_and_slippage": liq, "relative_momentum": relm, "float_mechanics": flt,
             "news_sentiment_score": news.get("vader_compound"),
             # flat log-keys consumed by the Autopsy Engine (also nested above):
             "sweep_aggression_pct": aggr.get("sweep_aggression_pct"),

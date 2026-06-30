@@ -997,8 +997,41 @@
         "contracts": 3
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS+CLOSE_TAKE_PROFIT",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 31.4,
+        "bearish_put": -52.7,
+        "flat_calendar": 31.2
+      },
+      "winner": "bullish_call",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 31.4,
+          "mae_pct": 5.5
+        },
+        "bearish_put": {
+          "mfe_pct": -30.9,
+          "mae_pct": -52.7
+        },
+        "calendar_front": {
+          "mfe_pct": -22.2,
+          "mae_pct": -55.7
+        },
+        "calendar_back": {
+          "mfe_pct": 31.2,
+          "mae_pct": 5.7
+        }
+      },
+      "mfe_pct": 31.4,
+      "mae_pct": -55.7,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 550.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "leg_exits": {
       "calendar_front": {
         "occ": "AMD260710C00522500",
@@ -1023,6 +1056,14 @@
         "reason": "+31.2% >= 30% squeeze after 114.9h",
         "action": "CLOSE_TAKE_PROFIT",
         "closed_ok": true
+      },
+      "bearish_put": {
+        "occ": "AMD260724P00505000",
+        "closed_at": "2026-06-30T15:51:01.392Z",
+        "return_pct": -52.7,
+        "reason": "-52.7% <= -50% stop-loss after 116.4h",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
       }
     },
     "leg_path": {
@@ -1032,7 +1073,7 @@
       },
       "bearish_put": {
         "mfe_pct": -30.9,
-        "mae_pct": -48.7
+        "mae_pct": -52.7
       },
       "calendar_front": {
         "mfe_pct": -22.2,
@@ -5805,7 +5846,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 8.8,
-        "mae_pct": 2.7
+        "mae_pct": 1.8
       }
     }
   },
@@ -6640,7 +6681,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -19.9,
+        "mfe_pct": -18.4,
         "mae_pct": -21.3
       }
     }
@@ -6846,7 +6887,13 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -42.7,
+        "mae_pct": -42.7
+      }
+    }
   },
   {
     "trade_set_id": "affc8867a209",
@@ -7053,7 +7100,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 1.0,
-        "mae_pct": 1.0
+        "mae_pct": -1.3
       }
     }
   },
@@ -7254,6 +7301,215 @@
         "submitted": true,
         "limit_price": 22.31,
         "contracts": 4
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -10.3,
+        "mae_pct": -10.3
+      }
+    }
+  },
+  {
+    "trade_set_id": "a38226298e89",
+    "ticker": "SNDK",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-06-30T15:51:05.644Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 26,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T15:51:05.644Z",
+      "macro": {
+        "spot": 2181.0,
+        "sma20": 1936.13,
+        "distance_to_sma20_pct": 12.647,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 109.0,
+        "iv_back": 120.0,
+        "iv_ratio": 0.908,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 750.6,
+        "zero_gamma_strike": 2700.0,
+        "distance_to_zero_gamma_pct": -23.796,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 43.3,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 212.51,
+        "atr_pct": 9.74,
+        "rvol_10min": 0.43,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Computer Hardware",
+        "market_cap": 322926018560,
+        "short_pct_float": 11.5,
+        "short_ratio": 0.97,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 2.81,
+        "vader_compound": 0.475,
+        "news_type": "Analyst",
+        "top_headline": "Bernstein Maintains Outperform on SanDisk, Raises Price Target to $3000",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 12.647,
+        "market_spy_dist_pct": 0.454,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 1.438,
+        "sector_vs_market_spread": 0.984,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 109.9,
+        "call_iv_25d": 109.2,
+        "skew_ratio": 1.007,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.57,
+        "ask_sweep_prem": 2368532.0,
+        "total_flow_prem": 36053165.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 2186.45,
+        "node_size": 15185.0,
+        "n_prints": 200,
+        "window_start": "2026-06-30T15:44:46Z",
+        "window_end": "2026-06-30T15:51:10Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 61,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 83.19,
+        "last_earnings_date": "2026-04-30",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 136.91,
+        "front_iv": 109.0,
+        "vrp": -27.91,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 32320333.0,
+        "flow_persistence_pct": 17.67,
+        "flow_direction": "bullish",
+        "closing_accel": -12693252.0,
+        "n_ticks": 142,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1477.34,
+        "vwma_20": 1954.94,
+        "rsi_5": 62.44,
+        "rsi_15": 62.62,
+        "gap_pct": 2.967,
+        "day_range": 6.447,
+        "candle_body": 0.491,
+        "dist_sma50": 38.954,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -11.0,
+        "vix_level": 16.89,
+        "execution_hour": 15,
+        "day_of_week": 1,
+        "sector_vs_spy": 1.172,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": 0.475,
+      "sweep_aggression_pct": 6.57,
+      "distance_to_zero_gamma_pct": -23.796,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": 61,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 17.67
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "SNDK260731P02090000",
+        "expiry": "2026-07-31",
+        "strike": 2090.0,
+        "dte": 35,
+        "entry_premium": 294.46,
+        "limit_price": 297.4,
+        "contracts": 1,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "25",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 214.92,
+          "ask": 232.69,
+          "mid": 223.805,
+          "bid_ask_spread_pct": 7.94,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 25.0,
+          "oi_prev": 25.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "4c34dc88-fe1c-464a-aff5-1facc5b1fb29",
+        "error": null,
+        "submitted": true,
+        "limit_price": 297.4,
+        "contracts": 1
       }
     },
     "exit": null,

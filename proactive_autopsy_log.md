@@ -60,3 +60,14 @@
 
 **Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 713.0.
 
+## Autopsy - AMD (d6b6b4d8392b)
+- entered 2026-06-25T19:29:08.442Z | trigger regime_compass_bypass (ultra-loose, fail-open) | exit CLOSE_STOP_LOSS+CLOSE_TAKE_PROFIT | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +31.4% | WINNER |
+| Flat (calendar) | CALENDAR_SPREAD | +31.2% |  |
+| Bearish (put) | LONG_PUT | -52.7% | loser |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 550.0 fed the squeeze.
+

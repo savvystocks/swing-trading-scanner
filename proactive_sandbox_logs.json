@@ -6054,7 +6054,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -5.1,
+        "mfe_pct": -3.4,
         "mae_pct": -16.9
       }
     }
@@ -6890,7 +6890,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -20.3,
+        "mfe_pct": -18.2,
         "mae_pct": -42.7
       }
     }
@@ -7727,7 +7727,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -9.8,
-        "mae_pct": -12.7
+        "mae_pct": -15.1
       }
     }
   },
@@ -8980,7 +8980,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -5.1,
+        "mfe_pct": -1.7,
         "mae_pct": -7.4
       }
     }
@@ -9189,7 +9189,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 1.1,
+        "mfe_pct": 3.3,
         "mae_pct": 0.0
       }
     }
@@ -9809,6 +9809,215 @@
         "submitted": true,
         "limit_price": 7.43,
         "contracts": 13
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -10.0,
+        "mae_pct": -10.0
+      }
+    }
+  },
+  {
+    "trade_set_id": "05c09eb45f1f",
+    "ticker": "AMZN",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-30T17:41:00.241Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 37,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T17:41:00.241Z",
+      "macro": {
+        "spot": 238.64,
+        "sma20": 241.31,
+        "distance_to_sma20_pct": -1.107,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 33.5,
+        "iv_back": 42.3,
+        "iv_ratio": 0.792,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 584025.7,
+        "zero_gamma_strike": 265.0,
+        "distance_to_zero_gamma_pct": -11.046,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 8.44,
+        "atr_pct": 3.54,
+        "rvol_10min": 0.78,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Consumer Cyclical",
+        "industry": "Internet Retail",
+        "market_cap": 2565355601920,
+        "short_pct_float": 1.01,
+        "short_ratio": 2.38,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.61,
+        "vader_compound": 0.294,
+        "news_type": "Macro",
+        "top_headline": "Two Market Positives, But Warsh's Speech and Jobs Data Could Shift Sentiment; ‘Never Sell Bitcoin’ Approach Abandoned",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -1.107,
+        "market_spy_dist_pct": 0.561,
+        "sector_etf": "XLY",
+        "sector_dist_pct": 0.98,
+        "sector_vs_market_spread": 0.419,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 41.9,
+        "call_iv_25d": 42.1,
+        "skew_ratio": 0.995,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.03,
+        "ask_sweep_prem": 2057456.0,
+        "total_flow_prem": 25637614.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 239.24,
+        "node_size": 134179.0,
+        "n_prints": 200,
+        "window_start": "2026-06-30T17:31:37Z",
+        "window_end": "2026-06-30T17:40:57Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 62,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 58.43,
+        "last_earnings_date": "2026-04-29",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 38.5,
+        "front_iv": 33.5,
+        "vrp": -5.0,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -6633001.0,
+        "flow_persistence_pct": 10.55,
+        "flow_direction": "bearish",
+        "closing_accel": -4085600.0,
+        "n_ticks": 252,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1159.89,
+        "vwma_20": 239.34,
+        "rsi_5": 59.63,
+        "rsi_15": 45.25,
+        "gap_pct": -1.087,
+        "day_range": 1.816,
+        "candle_body": 0.206,
+        "dist_sma50": -6.754,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -8.8,
+        "vix_level": 16.65,
+        "execution_hour": 17,
+        "day_of_week": 1,
+        "sector_vs_spy": 1.239,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": 0.294,
+      "sweep_aggression_pct": 8.03,
+      "distance_to_zero_gamma_pct": -11.046,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": 62,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 10.55
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "AMZN260731C00250000",
+        "expiry": "2026-07-31",
+        "strike": 250.0,
+        "dte": 35,
+        "entry_premium": 9.9,
+        "limit_price": 10.0,
+        "contracts": 10,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "2375",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 6.87,
+          "ask": 7.37,
+          "mid": 7.12,
+          "bid_ask_spread_pct": 7.022,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 2298.0,
+          "oi_prev": 2375.0,
+          "oi_change": -77.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "38a1af65-369c-4005-baad-d36697239bde",
+        "error": null,
+        "submitted": true,
+        "limit_price": 10.0,
+        "contracts": 10
       }
     },
     "exit": null,

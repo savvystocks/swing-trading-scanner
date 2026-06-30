@@ -71,3 +71,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 550.0 fed the squeeze.
 
+## Autopsy - NVDA (06b75ea0101a)
+- entered 2026-06-26T19:08:33.979Z | trigger regime_BULLISH_loose | exit CLOSE_TAKE_PROFIT | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +33.0% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 194.0 fed the squeeze.
+

@@ -311,7 +311,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -0.7,
-        "mae_pct": -7.9
+        "mae_pct": -8.6
       },
       "bearish_put": {
         "mfe_pct": -41.1,
@@ -1007,11 +1007,19 @@
         "reason": "-55.7% <= -50% stop-loss after 114.0h",
         "action": "CLOSE_STOP_LOSS",
         "closed_ok": true
+      },
+      "bullish_call": {
+        "occ": "AMD260724C00545000",
+        "closed_at": "2026-06-30T14:11:03.388Z",
+        "return_pct": 31.4,
+        "reason": "+31.4% >= 30% squeeze after 114.7h",
+        "action": "CLOSE_TAKE_PROFIT",
+        "closed_ok": true
       }
     },
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 29.8,
+        "mfe_pct": 31.4,
         "mae_pct": 5.5
       },
       "bearish_put": {
@@ -1023,7 +1031,7 @@
         "mae_pct": -55.7
       },
       "calendar_back": {
-        "mfe_pct": 23.9,
+        "mfe_pct": 25.2,
         "mae_pct": 5.7
       }
     }
@@ -1624,7 +1632,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -35.1,
-        "mae_pct": -47.1
+        "mae_pct": -47.9
       }
     }
   },
@@ -3027,7 +3035,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 8.8,
+        "mfe_pct": 18.5,
         "mae_pct": -13.8
       }
     }
@@ -3440,7 +3448,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 8.8,
+        "mfe_pct": 18.5,
         "mae_pct": -13.8
       }
     }
@@ -3670,7 +3678,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 8.8,
+        "mfe_pct": 18.5,
         "mae_pct": -13.8
       }
     }
@@ -4088,7 +4096,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 8.8,
+        "mfe_pct": 18.5,
         "mae_pct": -13.8
       }
     }
@@ -4716,7 +4724,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -13.7,
-        "mae_pct": -13.7
+        "mae_pct": -15.2
       }
     }
   },
@@ -4917,6 +4925,215 @@
         "submitted": true,
         "limit_price": 24.22,
         "contracts": 4
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -15.9,
+        "mae_pct": -15.9
+      }
+    }
+  },
+  {
+    "trade_set_id": "91cb5be3cc4d",
+    "ticker": "KWEB",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-30T14:11:05.499Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 18,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T14:11:05.499Z",
+      "macro": {
+        "spot": 24.51,
+        "sma20": 25.71,
+        "distance_to_sma20_pct": -4.683,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 32.3,
+        "iv_back": 33.0,
+        "iv_ratio": 0.979,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 1142723.3,
+        "zero_gamma_strike": 35.0,
+        "distance_to_zero_gamma_pct": -42.799,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.54,
+        "atr_pct": 2.18,
+        "rvol_10min": 0.08,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 626.26,
+        "vader_compound": 0.333,
+        "news_type": "Unknown",
+        "top_headline": "Chinese, Brazilian ETFs And More On CNBC's 'Final Trades'",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -4.683,
+        "market_spy_dist_pct": 0.185,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 37.1,
+        "call_iv_25d": 31.2,
+        "skew_ratio": 1.187,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 17.6,
+        "ask_sweep_prem": 3718670.0,
+        "total_flow_prem": 21131034.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.25,
+        "heaviest_node_price": 24.45,
+        "node_size": 150611.0,
+        "n_prints": 22,
+        "window_start": "2026-06-30T13:31:04Z",
+        "window_end": "2026-06-30T14:10:51Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "iv_rank_1y": 56.72,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 28.77,
+        "front_iv": 32.3,
+        "vrp": 3.53,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 2211117.0,
+        "flow_persistence_pct": 61.4,
+        "flow_direction": "bullish",
+        "closing_accel": 2013438.0,
+        "n_ticks": 39,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 845.92,
+        "vwma_20": 25.84,
+        "rsi_5": 50.59,
+        "rsi_15": 32.03,
+        "gap_pct": 0.206,
+        "day_range": 1.102,
+        "candle_body": 0.593,
+        "dist_sma50": -10.498,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -0.7,
+        "vix_level": 17.25,
+        "execution_hour": 14,
+        "day_of_week": 1,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": 0.333,
+      "sweep_aggression_pct": 17.6,
+      "distance_to_zero_gamma_pct": -42.799,
+      "distance_to_heaviest_dp_node_pct": 0.25,
+      "days_since_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 61.4
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "KWEB260731C00025500",
+        "expiry": "2026-07-31",
+        "strike": 25.5,
+        "dte": 35,
+        "entry_premium": 0.98,
+        "limit_price": 0.99,
+        "contracts": 102,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "25",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.34,
+          "ask": 0.82,
+          "mid": 0.58,
+          "bid_ask_spread_pct": 82.759,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 25.0,
+          "oi_prev": 25.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "282e13b8-837b-4a15-ab99-28382273da49",
+        "error": null,
+        "submitted": true,
+        "limit_price": 0.99,
+        "contracts": 102
       }
     },
     "exit": null,

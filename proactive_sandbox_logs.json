@@ -4968,7 +4968,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -12.3,
+        "mfe_pct": -6.7,
         "mae_pct": -15.9
       }
     }
@@ -5386,7 +5386,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -17.4,
+        "mfe_pct": -14.1,
         "mae_pct": -21.7
       }
     }
@@ -5797,6 +5797,215 @@
         "submitted": true,
         "limit_price": 1.83,
         "contracts": 55
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": 2.7,
+        "mae_pct": 2.7
+      }
+    }
+  },
+  {
+    "trade_set_id": "b8a720473bdc",
+    "ticker": "ABVX",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-30T14:51:07.385Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 20,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T14:51:07.385Z",
+      "macro": {
+        "spot": 130.66,
+        "sma20": 98.66,
+        "distance_to_sma20_pct": 32.432,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 83.2,
+        "iv_back": 81.1,
+        "iv_ratio": 1.026,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 94205.6,
+        "zero_gamma_strike": 107.0,
+        "distance_to_zero_gamma_pct": 18.108,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 9.23,
+        "atr_pct": 7.07,
+        "rvol_10min": 1.19,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Healthcare",
+        "industry": "Biotechnology",
+        "market_cap": 10400137216,
+        "short_pct_float": 6.21,
+        "short_ratio": 1.7,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.83,
+        "vader_compound": 0.377,
+        "news_type": "Analyst",
+        "top_headline": "AEVEX, Abivax, Watts Water Technologies And Other Big Stocks Moving Higher On Tuesday",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 32.432,
+        "market_spy_dist_pct": 0.278,
+        "sector_etf": "XLV",
+        "sector_dist_pct": 3.392,
+        "sector_vs_market_spread": 3.114,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 76.7,
+        "call_iv_25d": 82.7,
+        "skew_ratio": 0.927,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.53,
+        "ask_sweep_prem": 1107037.0,
+        "total_flow_prem": 12981270.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 130.99,
+        "node_size": 121125.0,
+        "n_prints": 174,
+        "window_start": "2026-06-30T08:01:20Z",
+        "window_end": "2026-06-30T14:50:50Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 39,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 21.2,
+        "last_earnings_date": "2026-05-22",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 261.9,
+        "front_iv": 83.2,
+        "vrp": -178.7,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -5587380.0,
+        "flow_persistence_pct": 24.51,
+        "flow_direction": "bearish",
+        "closing_accel": -889429.0,
+        "n_ticks": 82,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1144.76,
+        "vwma_20": 95.06,
+        "rsi_5": 84.37,
+        "rsi_15": 70.32,
+        "gap_pct": 36.058,
+        "day_range": 3.735,
+        "candle_body": 0.048,
+        "dist_sma50": 17.439,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 2.1,
+        "vix_level": 16.96,
+        "execution_hour": 14,
+        "day_of_week": 1,
+        "sector_vs_spy": 2.666,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": 0.377,
+      "sweep_aggression_pct": 8.53,
+      "distance_to_zero_gamma_pct": 18.108,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": 39,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 24.51
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "ABVX260731C00135000",
+        "expiry": "2026-07-31",
+        "strike": 135.0,
+        "dte": 35,
+        "entry_premium": 13.47,
+        "limit_price": 13.6,
+        "contracts": 7,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "2",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 7.94,
+          "ask": 11.93,
+          "mid": 9.935,
+          "bid_ask_spread_pct": 40.161,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 2.0,
+          "oi_prev": 2.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "90cd88cf-9fca-485b-9c07-bd836ec70bf9",
+        "error": null,
+        "submitted": true,
+        "limit_price": 13.6,
+        "contracts": 7
       }
     },
     "exit": null,

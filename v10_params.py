@@ -20,10 +20,15 @@ DEFAULTS = {
     "alt_reddit_min_mentions": 10,
     "alt_insider_min_dollar_value": 10000,
     "portfolio_max_sector_concentration": 0.50,
-    "min_hold_hours": 24,                 # 24h minimum-hold (swing rule): gates the take-profit only
-    "take_profit_pct": 30,                # exit 100% of leg at +30% (the 30-50% squeeze band floor)
-    "stop_loss_pct": 50,                  # hard stop: close + autopsy a leg at <= -50% unrealized (overrides 24h hold)
-    "expiry_exit_dte": 3,                 # hard exit: close + autopsy a leg within 3d of expiry (overrides 24h hold)
+    "min_hold_hours": 24,                 # 24h minimum-hold (swing rule): gates the +30% scale-out only
+    "take_profit_pct": 30,                # Strategy B tier 1: SCALE OUT 50% at +30% (gated by 24h hold)
+    "scale_out_pct": 50,                  # % of the position sold at the +take_profit_pct scale-out
+    "break_even_pct": 0,                  # Strategy B tier 2: break-even shield on the runner after scale-out
+    "trail_activate_pct": 50,             # Strategy B tier 3: arm the MFE trail once the runner crosses +50%
+    "trail_drawdown_pct": 20,             # 20% trail off the peak MFE (peak +100% -> stop +80%)
+    "stop_loss_pct": 50,                  # hard stop: close a leg at <= -50% unrealized (overrides 24h hold)
+    "expiry_exit_dte": 3,                 # hard exit: close a leg within 3d of expiry (overrides 24h hold)
+    "min_contracts": 2,                   # AFFORDABILITY GATE: skip the trade if <2 contracts fit the $800 budget
     "max_contracts_per_ticker": 3,        # ticker concentration cap
     "ticker_cooloff_hours": 24,           # 24h cool-off after a close before re-entry
     "stale_order_max_minutes": 30,        # cancel unfilled limit orders older than this (3 cycles)

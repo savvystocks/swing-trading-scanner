@@ -72,7 +72,7 @@ def _autopsy_msg(a):
 LOG_PATH = "proactive_sandbox_logs.json"
 AUTOPSY_MD = "proactive_autopsy_log.md"
 ADVISORY_MD = "v10_tuning_advisory.md"
-LEG_BUDGET = 10_000.0               # FLAT $10k budget PER LEG (no fractional cluster split)
+LEG_BUDGET = 800.0                  # FLAT $800/trade = 20% of a $4k real account (1:1 sim of real constraints)
 PAPER_BASE = "https://paper-api.alpaca.markets"
 CALL_DELTA, PUT_DELTA = 0.35, -0.35
 CAL_FRONT_DTE = (10, 15)             # short leg expiration window (days)
@@ -128,9 +128,9 @@ def macro_technical(ticker, mock):
                 "distance_to_sma20_pct": round((spot - sma20) / sma20 * 100, 3) if sma20 else 0.0,
                 "atr": round(atr, 2), "atr_pct": round(atr / spot * 100, 2) if spot else 0.0,
                 "rvol_10min": rvol if rvol is not None else 1.0, "source": "alpaca"}
-    if mock:                                                  # local demo only - synthetic sample
-        return {"spot": 91.30, "sma20": 90.85, "distance_to_sma20_pct": 0.495,
-                "atr": 2.60, "atr_pct": 2.85, "rvol_10min": 1.18, "source": "mock"}
+    if mock:                                                  # local demo only - synthetic sample (cheap name, $800-affordable)
+        return {"spot": 30.00, "sma20": 29.85, "distance_to_sma20_pct": 0.503,
+                "atr": 0.90, "atr_pct": 3.00, "rvol_10min": 1.18, "source": "mock"}
     # live mode, no usable bars (index / halted / degenerate ticker) -> NULL so the caller SKIPS
     return {"spot": None, "sma20": None, "distance_to_sma20_pct": None,
             "atr": None, "atr_pct": None, "rvol_10min": None, "source": "unavailable"}
@@ -178,7 +178,7 @@ def iv_term_structure(ticker, spot, mock, creds=None):
                     "structure": "contango" if ratio < 1 else "backwardation" if ratio > 1 else "flat",
                     "source": "alpaca"}
     if mock:                                                  # local demo only - synthetic sample
-        return {"iv_front": 78.0, "iv_back": 62.0, "iv_ratio": 1.258,
+        return {"iv_front": 40.0, "iv_back": 32.0, "iv_ratio": 1.25,
                 "structure": "backwardation", "source": "mock"}
     # live mode, IV unavailable (no / thin options) -> NULL so the caller SKIPS
     return {"iv_front": None, "iv_back": None, "iv_ratio": None,
@@ -353,7 +353,8 @@ def _occ(ticker, dte, right, strike):
 def build_legs(ticker, md, regime="NEUTRAL", leg_budget=LEG_BUDGET, illiquid=None):
     spot = md["macro"]["spot"]
     iv_f, iv_b = md["iv_term"]["iv_front"], md["iv_term"]["iv_back"]
-    per_leg = leg_budget                      # FLAT $10k per leg
+    per_leg = leg_budget                      # FLAT $800 per trade
+    min_ct = load_params().get("min_contracts", 2)
     illiquid = illiquid or set()
     call_k, put_k = round(spot * 1.04, 1), round(spot * 0.96, 1)
     cp, pp = _est_premium(spot, call_k, iv_f, 35, "call"), _est_premium(spot, put_k, iv_f, 35, "put")
@@ -363,8 +364,8 @@ def build_legs(ticker, md, regime="NEUTRAL", leg_budget=LEG_BUDGET, illiquid=Non
     def _qty(premium):
         if not premium or premium <= 0:
             return 0
-        q = int(per_leg // (premium * 100))   # floor($10k / cost-per-contract), e.g. 10000/3663 -> 2
-        return q if q >= 1 else 1             # MIN 1 CONTRACT fallback for options costing > $10k
+        q = int(per_leg // (premium * 100))   # floor($800 / cost-per-contract)
+        return q if q >= min_ct else 0        # AFFORDABILITY GATE: need >= 2 contracts on $800 (premium <= ~$4.00), else SKIP
 
     def leg(name, structure, right, strike, dte, premium, **extra):
         occ, expiry = _occ(ticker, dte, right, strike)
@@ -587,38 +588,56 @@ def _occ_expiry(occ):
     return f"20{d[:2]}-{d[2:4]}-{d[4:6]}"
 
 
-def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None):
-    """Exit policy. HARD exits fire regardless of the 24h minimum hold (they are risk / hard
-    constraints, not discretionary): close+autopsy a leg within expiry_exit_dte days of expiry,
-    or at <= -stop_loss_pct unrealized. DISCRETIONARY take-profit stays gated by the 24h swing
-    hold. ret_pct is the broker's directional unrealized P/L % (sign-correct for long AND short)."""
+def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage="initial", mfe_pct=None):
+    """Strategy-B tiered exit STATE MACHINE (per leg). Stages:
+      initial  -> hard stop at -stop_loss_pct (overrides 24h); SCALE_OUT_50 at +take_profit_pct
+                  (gated by the 24h hold) -> sell half, arm the break-even shield.
+      scaled   -> runner protected by a break-even stop (CLOSE_BREAKEVEN at <= break_even_pct);
+                  arms the MFE trail once it crosses +trail_activate_pct.
+      trailing -> 20% trail of the peak MFE: CLOSE_TRAIL when ret <= peak_mfe * (1 - trail_drawdown).
+    Expiry is a hard override in every stage. ret_pct is the broker directional P/L %; mfe_pct is
+    the running peak excursion (for the trail)."""
     now = now or datetime.now(timezone.utc)
     entry = datetime.fromisoformat(entry_ts_iso.replace("Z", "+00:00"))
     held_h = (now - entry).total_seconds() / 3600.0
     ret = round(ret_pct, 1)
-    base = {"return_pct": ret, "held_hours": round(held_h, 1)}
-    # --- hard-constraint exits: override the 24h minimum hold ---
-    if expiry_iso:
+    peak = round(max(mfe_pct if mfe_pct is not None else ret, ret), 1)
+    base = {"return_pct": ret, "held_hours": round(held_h, 1), "stage": stage, "peak_mfe": peak}
+    if expiry_iso:                                            # hard expiry override (any stage)
         try:
             dte = (date.fromisoformat(expiry_iso) - now.date()).days
-            exit_dte = params.get("expiry_exit_dte", 3)
-            if dte <= exit_dte:
-                return {"action": "CLOSE_EXPIRY",
-                        "reason": f"{dte}d to expiry <= {exit_dte}d -> close before decay/assignment", **base}
+            if dte <= params.get("expiry_exit_dte", 3):
+                return {**base, "action": "CLOSE_EXPIRY", "stage": "closed",
+                        "reason": f"{dte}d to expiry -> close before decay/assignment"}
         except Exception:
             pass
     stop = abs(params.get("stop_loss_pct", 50))
-    if ret <= -stop:
-        return {"action": "CLOSE_STOP_LOSS",
-                "reason": f"{ret}% <= -{stop}% stop-loss after {held_h:.1f}h", **base}
-    # --- discretionary take-profit: gated by the 24h swing hold ---
-    min_hold = params.get("min_hold_hours", 24)
-    if held_h < min_hold:
-        return {"action": "HOLD", "reason": f"24h-hold guard: {held_h:.1f}h < {min_hold}h -> TP close BLOCKED", **base}
     tp = params.get("take_profit_pct", 30)
-    if ret >= tp:
-        return {"action": "CLOSE_TAKE_PROFIT", "reason": f"+{ret}% >= {tp}% squeeze after {held_h:.1f}h", **base}
-    return {"action": "HOLD", "reason": f"eligible ({held_h:.1f}h), {ret}% in (-{stop}%, {tp}%) band", **base}
+    be = params.get("break_even_pct", 0)
+    trig = params.get("trail_activate_pct", 50)
+    trail = params.get("trail_drawdown_pct", 20) / 100.0
+    min_hold = params.get("min_hold_hours", 24)
+    if stage == "initial":
+        if ret <= -stop:
+            return {**base, "action": "CLOSE_STOP_LOSS", "stage": "closed", "reason": f"{ret}% <= -{stop}% hard stop"}
+        if held_h >= min_hold and ret >= tp:
+            return {**base, "action": "SCALE_OUT_50", "stage": "scaled",
+                    "reason": f"+{ret}% >= {tp}% -> sell 50%, stop -> break-even"}
+        return {**base, "action": "HOLD", "reason": f"initial: {ret}% (stop -{stop}% / scale +{tp}%)"}
+    if stage == "scaled":
+        if ret <= be:
+            return {**base, "action": "CLOSE_BREAKEVEN", "stage": "closed",
+                    "reason": f"runner gave back to break-even ({ret}% <= {be}%)"}
+        if ret >= trig:
+            return {**base, "action": "HOLD", "stage": "trailing", "reason": f"+{ret}% >= {trig}% -> MFE trail armed"}
+        return {**base, "action": "HOLD", "reason": f"scaled runner: {ret}% (BE stop {be}% / trail arms +{trig}%)"}
+    if stage == "trailing":
+        trail_stop = round(peak * (1 - trail), 1)
+        if ret <= trail_stop:
+            return {**base, "action": "CLOSE_TRAIL", "stage": "closed",
+                    "reason": f"{ret}% <= trail {trail_stop}% (20% off peak MFE {peak}%)"}
+        return {**base, "action": "HOLD", "reason": f"trailing: {ret}% peak {peak}% trail@{trail_stop}%"}
+    return {**base, "action": "HOLD", "reason": f"stage {stage}"}
 
 
 def _resolve_legs_occ(ticker, legs, creds):
@@ -680,8 +699,17 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
                           f"iv={md['iv_term']['source']}) - degenerate/non-optionable ticker",
                 "status": "SKIPPED"}
     regime = classify_regime(md, candidate)
+    if regime == "NEUTRAL":          # SAFETY: the calendar exit is not yet spread-aware (Strategy B is directional;
+        return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,   # managing the two calendar
+                "reason": "NEUTRAL/calendar route disabled pending a spread-aware unit exit (naked-leg risk)",  # sub-legs
+                "status": "SKIPPED"}                                                          # independently -> naked leg)
     ok, trigger = should_enter_proactive(regime, params, candidate)
     legs = build_legs(ticker, md, regime, illiquid=illiquid)
+    min_ct = params.get("min_contracts", 2)
+    if all((leg.get("contracts") or 0) < min_ct for leg in legs.values()):   # AFFORDABILITY GATE (real-money sim)
+        return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
+                "reason": f"premium too rich for {min_ct}-contract min on ${LEG_BUDGET:.0f} budget (est >~$4.00/contract)",
+                "status": "SKIPPED"}
     if resolve_real is None:
         resolve_real = all(creds)
     if resolve_real:
@@ -733,11 +761,15 @@ def _save_log_list(data):
     json.dump(data, open(LOG_PATH, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 
 
-def _close_position(occ, creds):
-    """Close an open option leg via Alpaca close-position (submits a closing order)."""
+def _close_position(occ, creds, percentage=100):
+    """Close an open option leg via Alpaca close-position (market order). percentage<100 scales
+    out a partial position (e.g. 50 for the Strategy-B half-sell)."""
     import urllib.parse
     key, sec = creds
-    req = urllib.request.Request(PAPER_BASE + "/v2/positions/" + urllib.parse.quote(occ), method="DELETE",
+    url = PAPER_BASE + "/v2/positions/" + urllib.parse.quote(occ)
+    if percentage and percentage < 100:
+        url += "?percentage=" + str(percentage)
+    req = urllib.request.Request(url, method="DELETE",
                                  headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec})
     try:
         with urllib.request.urlopen(req, timeout=20) as r:
@@ -790,13 +822,23 @@ def manage_open_positions(creds, params, positions=None):
             else:
                 cur_px = float(p.get("current_price") or 0)
                 ret_pct = (cur_px / entry_px - 1) * 100.0 if entry_px else 0.0
-            path = rec.setdefault("leg_path", {}).setdefault(leg_name, {"mfe_pct": ret_pct, "mae_pct": ret_pct})
+            path = rec.setdefault("leg_path", {}).setdefault(leg_name, {"mfe_pct": ret_pct, "mae_pct": ret_pct, "stage": "initial"})
             path["mfe_pct"] = round(max(path["mfe_pct"], ret_pct), 1)   # Max Favorable Excursion (trade path)
             path["mae_pct"] = round(min(path["mae_pct"], ret_pct), 1)   # Max Adverse Excursion
             dirty = True                                                 # persist the running path every cycle
-            dec = manage_exit(rec["entry_ts_utc"], ret_pct, params, expiry_iso=_occ_expiry(occ))
-            if dec["action"].startswith("CLOSE"):            # take-profit, stop-loss, or expiry
-                ok = _close_position(occ, creds)
+            dec = manage_exit(rec["entry_ts_utc"], ret_pct, params, expiry_iso=_occ_expiry(occ),
+                              stage=path.get("stage", "initial"), mfe_pct=path["mfe_pct"])
+            if dec["action"] == "SCALE_OUT_50":                          # tier 1: sell half, runner continues
+                ok = _close_position(occ, creds, percentage=50)
+                if ok:                                                    # only advance to 'scaled' on a SUCCESSFUL half-sell
+                    path["stage"] = "scaled"                              # (failed partial -> stay 'initial', retry next cycle)
+                    path["scaled_out"] = {"at": _now_iso_ms(), "return_pct": dec["return_pct"]}
+                    closed_legs.append({"ticker": rec["ticker"], "leg": leg_name + " (50%)", "occ": occ,
+                                        "return_pct": dec["return_pct"], "action": "SCALE_OUT_50", "closed_ok": ok})
+                    _notify(_sell_msg(closed_legs[-1]))           # Telegram SELL alert (fail-open)
+            elif dec["action"].startswith("CLOSE"):          # stop / break-even / trail / expiry -> full close
+                path["stage"] = dec["stage"]                              # 'closed'
+                ok = _close_position(occ, creds, percentage=100)
                 rec["leg_exits"][leg_name] = {"occ": occ, "closed_at": _now_iso_ms(),
                                               "return_pct": dec["return_pct"], "reason": dec["reason"],
                                               "action": dec["action"], "closed_ok": ok}
@@ -804,7 +846,8 @@ def manage_open_positions(creds, params, positions=None):
                 closed_legs.append({"ticker": rec["ticker"], "leg": leg_name, "occ": occ,
                                     "return_pct": dec["return_pct"], "action": dec["action"], "closed_ok": ok})
                 _notify(_sell_msg(closed_legs[-1]))           # Telegram SELL alert (fail-open)
-                dirty = True
+            else:                                                         # HOLD (incl. the trail-arm transition)
+                path["stage"] = dec["stage"]                              # persist 'trailing' arm / 'initial'
         # 2. autopsy once the set has no remaining OPEN legs
         still_open = any((occ or "").upper() in pos_by_occ and ln not in rec["leg_exits"]
                          for ln, occ in leg_occs.items())

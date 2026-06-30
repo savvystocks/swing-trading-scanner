@@ -360,7 +360,7 @@ def at(h):
     return datetime.now(timezone.utc) + timedelta(hours=h)
 dec = [
     ("+35% @ <24h -> HOLD", lab.manage_exit(ts, 35.0, p, now=at(2)), "HOLD"),
-    ("+35% @ >24h -> CLOSE_TAKE_PROFIT", lab.manage_exit(ts, 35.0, p, now=at(26)), "CLOSE_TAKE_PROFIT"),
+    ("+35% @ >24h -> SCALE_OUT_50 (Strategy B tier 1)", lab.manage_exit(ts, 35.0, p, now=at(26)), "SCALE_OUT_50"),
     ("-55% @ <24h -> CLOSE_STOP_LOSS", lab.manage_exit(ts, -55.0, p, now=at(2)), "CLOSE_STOP_LOSS"),
     ("2 DTE -> CLOSE_EXPIRY", lab.manage_exit(ts, -10.0, p, now=at(2), expiry_iso=(date.today() + timedelta(days=2)).isoformat()), "CLOSE_EXPIRY"),
 ]
@@ -370,7 +370,7 @@ for label, d, want in dec:
 # 3.5 FULL production chain: manage_open_positions closes a LOSER (stop) + autopsies it
 _wipe()
 _ocp = lab._close_position
-lab._close_position = lambda occ, creds: True
+lab._close_position = lambda occ, creds, percentage=100: True
 recL = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
 occL = recL["legs"]["bullish_call"]["occ_symbol"]
 posL = [{"symbol": occL, "avg_entry_price": "10.0", "current_price": "4.0", "unrealized_plpc": "-0.6", "qty": "1"}]
@@ -390,7 +390,7 @@ check(3, "LOSER log record marked CLOSED with negative return recorded",
 
 # 3.6 FULL chain: manage_open_positions closes a WINNER (take-profit past 24h)
 _wipe()
-lab._close_position = lambda occ, creds: True
+lab._close_position = lambda occ, creds, percentage=100: True
 recW = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
 _lg = lab._load_log_list()
 _lg[-1]["entry_ts_utc"] = (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat(timespec="milliseconds").replace("+00:00", "Z")
@@ -399,8 +399,8 @@ occW = recW["legs"]["bullish_call"]["occ_symbol"]
 posW = [{"symbol": occW, "avg_entry_price": "10.0", "current_price": "14.0", "unrealized_plpc": "0.4", "qty": "1"}]
 closedW, autopsW = lab.manage_open_positions(("k", "s"), p, positions=posW)
 lab._close_position = _ocp
-check(3, "manage_open_positions: WINNER closed via take-profit (full chain)",
-      len(closedW) == 1 and closedW[0]["action"] == "CLOSE_TAKE_PROFIT" and approx(closedW[0]["return_pct"], 40.0, 0.5),
+check(3, "manage_open_positions: WINNER scales out 50% at +40% (Strategy B tier 1)",
+      len(closedW) == 1 and closedW[0]["action"] == "SCALE_OUT_50" and approx(closedW[0]["return_pct"], 40.0, 0.5),
       f"closed={closedW}")
 
 # 3.7 winner/loser DISCRIMINATION (multi-leg): winner=highest, loser=lowest
@@ -454,7 +454,7 @@ check(3, "null-gex LOSER autopsies cleanly (no KeyError)", nok, str(resN.get("de
 # MFE/MAE trade-path: accumulates across cycles, then captured by the autopsy
 _wipe()
 _ocp3 = lab._close_position
-lab._close_position = lambda occ, creds: True
+lab._close_position = lambda occ, creds, percentage=100: True
 recP = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
 occP = recP["legs"]["bullish_call"]["occ_symbol"]
 def _cycle(plpc, px):
@@ -470,6 +470,65 @@ exP = next(r for r in lab._load_log_list() if r["trade_set_id"] == recP["trade_s
 lab._close_position = _ocp3
 check(3, "autopsy exit records MFE/MAE (mfe 20, mae -60)",
       approx(exP.get("mfe_pct"), 20.0, 0.5) and approx(exP.get("mae_pct"), -60.0, 0.5), f"mfe={exP.get('mfe_pct')} mae={exP.get('mae_pct')}")
+
+# =====================================================================
+print("\n=== DIMENSION 3B: STRATEGY B ($800 sizing gate + tiered exit state machine) ===")
+pe = load_params()
+# Sizing: cheap mock (spot 30, iv 40 -> ~$1.5 premium) affords >=2 contracts
+legs_aff = lab.build_legs("AMD", lab.collect_metadata("AMD", mock=True), "BULLISH")
+check(3, "$800 sizing: cheap name affords >=2 contracts", (legs_aff["bullish_call"].get("contracts") or 0) >= 2,
+      f"contracts={legs_aff['bullish_call'].get('contracts')}")
+# Expensive md (spot 300, iv 120) -> 0 contracts (unaffordable)
+mde = lab.collect_metadata("AMD", mock=True)
+mde["macro"]["spot"] = 300.0; mde["iv_term"]["iv_front"] = 120.0; mde["iv_term"]["iv_back"] = 100.0
+legs_exp = lab.build_legs("AMD", mde, "BULLISH")
+check(3, "$800 sizing: expensive name -> 0 contracts (skip)", (legs_exp["bullish_call"].get("contracts") or 0) == 0,
+      f"contracts={legs_exp['bullish_call'].get('contracts')}")
+# Affordability skip gate inside enter_proactive_set
+_ocm2 = lab.collect_metadata
+lab.collect_metadata = lambda t, mock=False: mde
+recX = lab.enter_proactive_set("PRICEY", None, mock=False, candidate={"flow_type": "call"}, dry_run=True)
+lab.collect_metadata = _ocm2
+check(3, "affordability gate: pricey premium -> SKIPPED (scanner moves on)",
+      recX.get("skipped") is True and "too rich" in recX.get("reason", ""), recX.get("reason", "")[:48])
+# SAFETY: NEUTRAL/calendar route disabled (naked-leg risk under the directional Strategy B)
+recN = lab.enter_proactive_set("ZNEUT", None, mock=True, candidate={}, dry_run=True)   # fresh ticker (no cool-off)
+check(3, "NEUTRAL/calendar route disabled -> SKIPPED (no naked-leg)",
+      recN.get("skipped") is True and recN.get("regime") == "NEUTRAL" and "calendar" in recN.get("reason", ""),
+      f"{recN.get('regime')}/{recN.get('reason', '')[:40]}")
+
+# Tiered exit state machine (manage_exit)
+for label, dec, wa, ws in [
+    ("initial +35% >24h -> SCALE_OUT_50 (stage->scaled)", lab.manage_exit(ts, 35.0, pe, now=at(26), stage="initial"), "SCALE_OUT_50", "scaled"),
+    ("scaled runner -5% -> CLOSE_BREAKEVEN", lab.manage_exit(ts, -5.0, pe, now=at(48), stage="scaled"), "CLOSE_BREAKEVEN", "closed"),
+    ("scaled runner +55% -> HOLD, trail armed", lab.manage_exit(ts, 55.0, pe, now=at(48), stage="scaled"), "HOLD", "trailing"),
+    ("trailing peak100/ret75 -> CLOSE_TRAIL (<=80)", lab.manage_exit(ts, 75.0, pe, now=at(72), stage="trailing", mfe_pct=100.0), "CLOSE_TRAIL", "closed"),
+    ("trailing peak100/ret85 -> HOLD (>80)", lab.manage_exit(ts, 85.0, pe, now=at(72), stage="trailing", mfe_pct=100.0), "HOLD", "trailing"),
+]:
+    check(3, label, dec["action"] == wa and dec["stage"] == ws, f"action={dec['action']} stage={dec['stage']}")
+
+# Full chain: scale-out (50%) -> trail-arm -> trail-close through manage_open_positions
+_wipe()
+_ocp4 = lab._close_position
+lab._close_position = lambda occ, creds, percentage=100: True
+recR = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
+_lg2 = lab._load_log_list()
+_lg2[-1]["entry_ts_utc"] = (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+lab._save_log_list(_lg2)
+occR = recR["legs"]["bullish_call"]["occ_symbol"]
+def _pos(plpc):
+    return [{"symbol": occR, "avg_entry_price": "10", "current_price": "10", "unrealized_plpc": plpc, "qty": "4"}]
+c1, _ = lab.manage_open_positions(("k", "s"), load_params(), positions=_pos("0.35"))   # +35% -> scale out 50%
+stage1 = ((next(r for r in lab._load_log_list() if r["trade_set_id"] == recR["trade_set_id"]).get("leg_path") or {}).get("bullish_call") or {}).get("stage")
+lab.manage_open_positions(("k", "s"), load_params(), positions=_pos("1.1"))            # +110% -> trail arms (peak 110)
+c3, _ = lab.manage_open_positions(("k", "s"), load_params(), positions=_pos("0.8"))    # +80% <= 110*0.8=88 -> CLOSE_TRAIL
+recR3 = next(r for r in lab._load_log_list() if r["trade_set_id"] == recR["trade_set_id"])
+lab._close_position = _ocp4
+check(3, "full chain: +35% fires SCALE_OUT_50, stage->scaled",
+      any(x["action"] == "SCALE_OUT_50" for x in c1) and stage1 == "scaled", f"stage={stage1}")
+check(3, "full chain: runner trail-closes (CLOSE_TRAIL) + autopsy",
+      any(x["action"] == "CLOSE_TRAIL" for x in c3) and recR3.get("status") == "CLOSED",
+      f"actions={[x['action'] for x in c3]} status={recR3.get('status')}")
 
 # =====================================================================
 print("\n=== DIMENSION 4: SIZING FLOOR (per-leg bid/ask spread stamped) ===")
@@ -511,7 +570,7 @@ lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"},
 buy_fired = any(t.startswith("<b>BUY") for t in cap)
 _wipe()
 _ocp2 = lab._close_position
-lab._close_position = lambda occ, creds: True
+lab._close_position = lambda occ, creds, percentage=100: True
 recS = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
 occS = recS["legs"]["bullish_call"]["occ_symbol"]
 cap.clear()

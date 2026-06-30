@@ -579,7 +579,7 @@ def oi_change(occ_symbol, mock=False):
 # BLOCK 1 - liquidity & slippage: underlying equity top-of-book spread + depth
 def liquidity_slippage(ticker, mock=False):
     out = {"equity_spread_pct_of_ask": None, "bid": None, "ask": None,
-           "bid_size": None, "ask_size": None, "source": "unavailable"}
+           "bid_size": None, "ask_size": None, "obi": None, "source": "unavailable"}
     if mock:
         return out
     k, s = _alpaca_keys()
@@ -595,9 +595,11 @@ def liquidity_slippage(ticker, mock=False):
         bid = getattr(q, "bid_price", None) if q else None
         ask = getattr(q, "ask_price", None) if q else None
         if bid is not None and ask is not None and ask > 0:
+            bs, asz = getattr(q, "bid_size", None), getattr(q, "ask_size", None)
+            depth = _f(bs) + _f(asz)
             out = {"equity_spread_pct_of_ask": round((ask - bid) / ask * 100, 3),
-                   "bid": round(bid, 4), "ask": round(ask, 4),
-                   "bid_size": getattr(q, "bid_size", None), "ask_size": getattr(q, "ask_size", None),
+                   "bid": round(bid, 4), "ask": round(ask, 4), "bid_size": bs, "ask_size": asz,
+                   "obi": round((_f(bs) - _f(asz)) / depth, 4) if depth else None,   # order-book imbalance -1..+1
                    "source": "alpaca_quote"}
     except Exception:
         pass
@@ -636,6 +638,31 @@ def float_mechanics(ticker, mock=False):
         out = {"short_pct_float": round(spf * 100, 2) if isinstance(spf, (int, float)) else None,
                "float_shares": info.get("floatShares"), "shares_short": info.get("sharesShort"),
                "source": "yfinance"}
+    except Exception:
+        pass
+    return out
+
+
+# BLOCK 4 - dealer greeks: net DEX / vanna / charm (the delta-hedging flows beyond gamma)
+def dealer_greeks(ticker, mock=False):
+    out = {"net_dex": None, "net_vanna": None, "net_charm": None, "delta_imbalance": None, "source": "unavailable"}
+    if mock:
+        return out
+    uw = _uw()
+    if not uw:
+        return out
+    try:
+        rows = (uw.greek_exposure(ticker.split(".")[0]) or {}).get("data") or []   # 1y daily, newest last
+        if not rows:
+            out["source"] = "uw_empty"
+            return out
+        r = rows[-1]
+        cd, pd = _f(r.get("call_delta")), _f(r.get("put_delta"))
+        out = {"net_dex": round(cd + pd, 0),                                       # dealer net delta exposure
+               "net_vanna": round(_f(r.get("call_vanna")) + _f(r.get("put_vanna")), 0),   # delta sens. to IV (vol-crush melt-up)
+               "net_charm": round(_f(r.get("call_charm")) + _f(r.get("put_charm")), 0),   # delta decay (OPEX pin/drift)
+               "delta_imbalance": round(cd / abs(pd), 3) if pd else None,          # call vs put dealer delta magnitude
+               "source": "uw_greek_exposure"}
     except Exception:
         pass
     return out

@@ -64,9 +64,10 @@ EXPECTED = {
     "flow_persistence": ["net_directional_prem", "flow_persistence_pct", "flow_direction", "closing_accel", "n_ticks", "source"],
     "price_action": ["nvi", "vwma_20", "rsi_5", "rsi_15", "gap_pct", "day_range", "candle_body", "dist_sma50", "source"],
     "macro_context": ["iv_term_skew", "vix_level", "execution_hour", "day_of_week", "sector_vs_spy", "source"],
-    "liquidity_and_slippage": ["equity_spread_pct_of_ask", "bid", "ask", "bid_size", "ask_size", "source"],
+    "liquidity_and_slippage": ["equity_spread_pct_of_ask", "bid", "ask", "bid_size", "ask_size", "obi", "source"],
     "relative_momentum": ["rvol_20d", "gap_pct", "source"],
     "float_mechanics": ["short_pct_float", "float_shares", "shares_short", "source"],
+    "dealer_greeks": ["net_dex", "net_vanna", "net_charm", "delta_imbalance", "source"],
 }
 TOP = ["entry_ts_utc", "news_sentiment_score", "sweep_aggression_pct", "distance_to_zero_gamma_pct",
        "distance_to_heaviest_dp_node_pct", "days_since_earnings", "post_earnings_iv_crush_flag", "flow_persistence_pct"]
@@ -324,8 +325,8 @@ _ahist.StockHistoricalDataClient = type("FQ", (), {"__init__": lambda s, k, sec:
     "get_stock_latest_quote": lambda s, req: {getattr(req, "symbol_or_symbols", "X"): SN(bid_price=10.00, ask_price=10.10, bid_size=500, ask_size=300)}})
 ls = v11.liquidity_slippage("X", mock=False)
 _ahist.StockHistoricalDataClient = _oqc
-check(1, "liquidity_slippage: spread%/ask + depth (bid 500 / ask 300)",
-      approx(ls["equity_spread_pct_of_ask"], 0.99) and ls["bid_size"] == 500 and ls["ask_size"] == 300, f"{ls}")
+check(1, "liquidity_slippage: spread%/ask + depth + OBI (bid 500/ask 300 -> obi 0.25)",
+      approx(ls["equity_spread_pct_of_ask"], 0.99) and ls["bid_size"] == 500 and ls["ask_size"] == 300 and approx(ls["obi"], 0.25), f"{ls}")
 
 # Mid-cap block 2 - relative momentum: RVOL vs prior-20d + opening gap
 _rmbars = [{"o": 100, "h": 101, "l": 99, "c": 100, "v": 1000} for _ in range(20)] + [{"o": 105, "h": 107, "l": 104, "c": 106, "v": 2000}]
@@ -342,6 +343,14 @@ if _oyf3 is not None:
 else:
     sys.modules.pop("yfinance", None)
 check(1, "float_mechanics: short% 8.5, float 50M", fm["short_pct_float"] == 8.5 and fm["float_shares"] == 50000000 and fm["shares_short"] == 4250000, f"{fm}")
+
+# Dealer greeks - net DEX / vanna / charm from UW greek_exposure (newest row last)
+v11._uw = lambda: SN(greek_exposure=lambda t: {"data": [
+    {"call_delta": 1000000, "put_delta": -400000, "call_vanna": 50000, "put_vanna": -10000, "call_charm": -30000, "put_charm": 8000}]})
+dg = v11.dealer_greeks("X", mock=False)
+v11._uw = _ouw   # net_dex 600k, net_vanna 40k, net_charm -22k, delta_imb 1000000/400000=2.5
+check(1, "dealer_greeks: net_dex/vanna/charm + delta_imbalance",
+      dg["net_dex"] == 600000 and dg["net_vanna"] == 40000 and dg["net_charm"] == -22000 and approx(dg["delta_imbalance"], 2.5), f"{dg}")
 
 # Edge 2 (already computed) + schema + fail-open + autopsy-safety with the new keys
 md_new = lab.collect_metadata("AMD", mock=True)

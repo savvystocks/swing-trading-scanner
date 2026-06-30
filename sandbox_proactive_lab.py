@@ -291,9 +291,10 @@ def _v11_sensors(ticker, md, spot, iv, mock):
     liq = _safe(lambda: v11.liquidity_slippage(ticker, mock), {"source": "unavailable"})    # mid-cap microstructure
     relm = _safe(lambda: v11.relative_momentum(ticker, mock), {"source": "unavailable"})
     flt = _safe(lambda: v11.float_mechanics(ticker, mock), {"source": "unavailable"})
+    dgk = _safe(lambda: v11.dealer_greeks(ticker, mock), {"source": "unavailable"})         # DEX / vanna / charm
     return {"fundamentals": prof, "news": news, "regime_stack": rstack, "skew": skew,
             "flow_aggression": aggr, "dark_pool": dpn, "pemd": pemd, "vrp": vrp, "flow_persistence": fpers,
-            "price_action": pact, "macro_context": mctx,
+            "price_action": pact, "macro_context": mctx, "dealer_greeks": dgk,
             "liquidity_and_slippage": liq, "relative_momentum": relm, "float_mechanics": flt,
             "news_sentiment_score": news.get("vader_compound"),
             # flat log-keys consumed by the Autopsy Engine (also nested above):

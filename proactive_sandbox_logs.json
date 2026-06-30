@@ -311,7 +311,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 3.3,
-        "mae_pct": -12.5
+        "mae_pct": -13.8
       },
       "bearish_put": {
         "mfe_pct": -35.5,
@@ -5010,7 +5010,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -2.8,
-        "mae_pct": -15.9
+        "mae_pct": -16.4
       }
     }
   },
@@ -7518,7 +7518,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -6.0,
-        "mae_pct": -13.3
+        "mae_pct": -13.8
       }
     }
   },
@@ -8562,7 +8562,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -2.0,
+        "mfe_pct": -0.8,
         "mae_pct": -3.9
       }
     }
@@ -9816,7 +9816,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -10.0,
+        "mfe_pct": -7.8,
         "mae_pct": -10.0
       }
     }
@@ -10227,6 +10227,215 @@
         "submitted": true,
         "limit_price": 41.75,
         "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -3.8,
+        "mae_pct": -3.8
+      }
+    }
+  },
+  {
+    "trade_set_id": "6277b2e7d2c4",
+    "ticker": "AAPL",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-30T18:01:34.963Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 39,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T18:01:34.963Z",
+      "macro": {
+        "spot": 288.32,
+        "sma20": 295.74,
+        "distance_to_sma20_pct": -2.509,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 25.3,
+        "iv_back": 27.8,
+        "iv_ratio": 0.91,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 522958.7,
+        "zero_gamma_strike": 300.0,
+        "distance_to_zero_gamma_pct": -4.051,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 27.3,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 8.3,
+        "atr_pct": 2.88,
+        "rvol_10min": 0.47,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Consumer Electronics",
+        "market_cap": 4235927486464,
+        "short_pct_float": 0.98,
+        "short_ratio": 2.88,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.43,
+        "vader_compound": 0.11,
+        "news_type": "Macro",
+        "top_headline": "10 Information Technology Stocks Whale Activity In Today’s Session",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -2.509,
+        "market_spy_dist_pct": 0.574,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 1.758,
+        "sector_vs_market_spread": 1.184,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 29.8,
+        "call_iv_25d": 27.5,
+        "skew_ratio": 1.083,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 9.53,
+        "ask_sweep_prem": 2439974.0,
+        "total_flow_prem": 25608350.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 288.32,
+        "node_size": 132640.0,
+        "n_prints": 200,
+        "window_start": "2026-06-30T17:47:54Z",
+        "window_end": "2026-06-30T18:01:35Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 61,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 62.8,
+        "last_earnings_date": "2026-04-30",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 34.66,
+        "front_iv": 25.3,
+        "vrp": -9.36,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 15779509.0,
+        "flow_persistence_pct": 26.17,
+        "flow_direction": "bullish",
+        "closing_accel": -6103854.0,
+        "n_ticks": 272,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1111.68,
+        "vwma_20": 292.25,
+        "rsi_5": 40.75,
+        "rsi_15": 40.49,
+        "gap_pct": -0.193,
+        "day_range": 3.106,
+        "candle_body": 0.802,
+        "dist_sma50": -1.315,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -2.5,
+        "vix_level": 16.64,
+        "execution_hour": 18,
+        "day_of_week": 1,
+        "sector_vs_spy": 1.386,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": 0.11,
+      "sweep_aggression_pct": 9.53,
+      "distance_to_zero_gamma_pct": -4.051,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 61,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 26.17
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "AAPL260731C00300000",
+        "expiry": "2026-07-31",
+        "strike": 300.0,
+        "dte": 35,
+        "entry_premium": 9.04,
+        "limit_price": 9.13,
+        "contracts": 11,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "3137",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 4.82,
+          "ask": 5.28,
+          "mid": 5.05,
+          "bid_ask_spread_pct": 9.109,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 3398.0,
+          "oi_prev": 3137.0,
+          "oi_change": 261.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "4143f83c-9154-41aa-83d7-3d58fae1445a",
+        "error": null,
+        "submitted": true,
+        "limit_price": 9.13,
+        "contracts": 11
       }
     },
     "exit": null,

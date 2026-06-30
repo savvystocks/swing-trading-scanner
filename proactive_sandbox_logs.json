@@ -5219,7 +5219,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -30.8,
-        "mae_pct": -30.8
+        "mae_pct": -34.6
       }
     }
   },
@@ -6263,7 +6263,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 29.3,
+        "mfe_pct": 35.4,
         "mae_pct": -9.4
       }
     }
@@ -6682,7 +6682,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -11.8,
-        "mae_pct": -21.3
+        "mae_pct": -22.1
       }
     }
   },
@@ -7100,7 +7100,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 1.0,
-        "mae_pct": -7.5
+        "mae_pct": -9.1
       }
     }
   },
@@ -7308,7 +7308,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -9.3,
+        "mfe_pct": -9.0,
         "mae_pct": -10.3
       }
     }
@@ -8144,7 +8144,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -13.7,
+        "mfe_pct": -11.8,
         "mae_pct": -14.7
       }
     }
@@ -8354,7 +8354,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -2.0,
-        "mae_pct": -2.0
+        "mae_pct": -2.8
       }
     }
   },
@@ -8554,6 +8554,215 @@
         "error": null,
         "submitted": true,
         "limit_price": 45.34,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -2.1,
+        "mae_pct": -2.1
+      }
+    }
+  },
+  {
+    "trade_set_id": "96830ecc1d6d",
+    "ticker": "BE",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-30T16:51:00.439Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 32,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T16:51:00.439Z",
+      "macro": {
+        "spot": 304.55,
+        "sma20": 285.32,
+        "distance_to_sma20_pct": 6.74,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 120.5,
+        "iv_back": 138.1,
+        "iv_ratio": 0.873,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 11064.2,
+        "zero_gamma_strike": 370.0,
+        "distance_to_zero_gamma_pct": -21.491,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -50.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 31.97,
+        "atr_pct": 10.5,
+        "rvol_10min": 0.54,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Industrials",
+        "industry": "Electrical Equipment & Parts",
+        "market_cap": 86691381248,
+        "short_pct_float": 11.98,
+        "short_ratio": 2.84,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.82,
+        "vader_compound": 0.453,
+        "news_type": "Unknown",
+        "top_headline": "Bloom Energy Stock Extends Rebound Following CEO Comments: What Investors Need To Know",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 6.74,
+        "market_spy_dist_pct": 0.629,
+        "sector_etf": "XLI",
+        "sector_dist_pct": 3.654,
+        "sector_vs_market_spread": 3.025,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 142.6,
+        "call_iv_25d": 120.3,
+        "skew_ratio": 1.185,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 20.26,
+        "ask_sweep_prem": 11217471.0,
+        "total_flow_prem": 55356669.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 2.75,
+        "heaviest_node_price": 296.17,
+        "node_size": 28154.0,
+        "n_prints": 200,
+        "window_start": "2026-06-30T16:02:05Z",
+        "window_end": "2026-06-30T16:50:45Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 63,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 83.74,
+        "last_earnings_date": "2026-04-28",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 132.65,
+        "front_iv": 120.5,
+        "vrp": -12.15,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 812028.0,
+        "flow_persistence_pct": 1.37,
+        "flow_direction": "bullish",
+        "closing_accel": -496803.0,
+        "n_ticks": 202,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1759.64,
+        "vwma_20": 280.58,
+        "rsi_5": 43.29,
+        "rsi_15": 58.69,
+        "gap_pct": 1.709,
+        "day_range": 8.292,
+        "candle_body": 0.991,
+        "dist_sma50": 10.025,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -17.6,
+        "vix_level": 16.73,
+        "execution_hour": 16,
+        "day_of_week": 1,
+        "sector_vs_spy": 1.784,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": 0.453,
+      "sweep_aggression_pct": 20.26,
+      "distance_to_zero_gamma_pct": -21.491,
+      "distance_to_heaviest_dp_node_pct": 2.75,
+      "days_since_earnings": 63,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 1.37
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "BE260731C00317500",
+        "expiry": "2026-07-31",
+        "strike": 317.5,
+        "dte": 35,
+        "entry_premium": 45.46,
+        "limit_price": 45.91,
+        "contracts": 2,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "2",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 40.19,
+          "ask": 45.67,
+          "mid": 42.93,
+          "bid_ask_spread_pct": 12.765,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 2.0,
+          "oi_prev": 2.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "1d34fae8-7805-4c68-a553-5ef462c7ad6c",
+        "error": null,
+        "submitted": true,
+        "limit_price": 45.91,
         "contracts": 2
       }
     },

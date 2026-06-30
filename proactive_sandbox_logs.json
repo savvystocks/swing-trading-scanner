@@ -311,10 +311,10 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -0.7,
-        "mae_pct": -8.6
+        "mae_pct": -12.5
       },
       "bearish_put": {
-        "mfe_pct": -40.2,
+        "mfe_pct": -35.5,
         "mae_pct": -49.2
       }
     }
@@ -1368,7 +1368,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 21.0,
-        "mae_pct": 3.0
+        "mae_pct": -1.0
       },
       "calendar_back": {
         "mfe_pct": 12.9,
@@ -4760,7 +4760,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -13.7,
-        "mae_pct": -20.1
+        "mae_pct": -20.2
       }
     }
   },
@@ -4968,7 +4968,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -6.7,
+        "mfe_pct": -2.8,
         "mae_pct": -15.9
       }
     }
@@ -5386,7 +5386,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -14.1,
+        "mfe_pct": -1.1,
         "mae_pct": -21.7
       }
     }
@@ -5596,7 +5596,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -22.0,
-        "mae_pct": -22.0
+        "mae_pct": -25.8
       }
     }
   },
@@ -5804,7 +5804,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 2.7,
+        "mfe_pct": 4.4,
         "mae_pct": 2.7
       }
     }
@@ -6006,6 +6006,215 @@
         "submitted": true,
         "limit_price": 13.6,
         "contracts": 7
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -15.3,
+        "mae_pct": -15.3
+      }
+    }
+  },
+  {
+    "trade_set_id": "a5c8c8c0747b",
+    "ticker": "RKLB",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-30T15:01:37.638Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 21,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T15:01:37.638Z",
+      "macro": {
+        "spot": 96.36,
+        "sma20": 104.08,
+        "distance_to_sma20_pct": -7.419,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 87.4,
+        "iv_back": 96.1,
+        "iv_ratio": 0.909,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 171281.4,
+        "zero_gamma_strike": 100.0,
+        "distance_to_zero_gamma_pct": -3.778,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 54.5,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 8.82,
+        "atr_pct": 9.15,
+        "rvol_10min": 0.19,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Industrials",
+        "industry": "Aerospace & Defense",
+        "market_cap": 60326252544,
+        "short_pct_float": 5.94,
+        "short_ratio": 1.23,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.12,
+        "vader_compound": 0.219,
+        "news_type": "Analyst",
+        "top_headline": "B of A Securities Maintains Buy on Rocket Lab, Raises Price Target to $115",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -7.419,
+        "market_spy_dist_pct": 0.214,
+        "sector_etf": "XLI",
+        "sector_dist_pct": 3.593,
+        "sector_vs_market_spread": 3.379,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 92.0,
+        "call_iv_25d": 96.3,
+        "skew_ratio": 0.955,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 3.84,
+        "ask_sweep_prem": 383834.0,
+        "total_flow_prem": 9994918.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -1.75,
+        "heaviest_node_price": 98.05,
+        "node_size": 83407.0,
+        "n_prints": 200,
+        "window_start": "2026-06-30T14:19:14Z",
+        "window_end": "2026-06-30T15:01:45Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 54,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 40.61,
+        "last_earnings_date": "2026-05-07",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 109.35,
+        "front_iv": 87.4,
+        "vrp": -21.95,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -3182531.0,
+        "flow_persistence_pct": 27.61,
+        "flow_direction": "bearish",
+        "closing_accel": 2064836.0,
+        "n_ticks": 92,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1318.57,
+        "vwma_20": 100.54,
+        "rsi_5": 51.9,
+        "rsi_15": 40.55,
+        "gap_pct": -0.704,
+        "day_range": 5.085,
+        "candle_body": 0.197,
+        "dist_sma50": -9.375,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -8.7,
+        "vix_level": 17.07,
+        "execution_hour": 15,
+        "day_of_week": 1,
+        "sector_vs_spy": 2.161,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": 0.219,
+      "sweep_aggression_pct": 3.84,
+      "distance_to_zero_gamma_pct": -3.778,
+      "distance_to_heaviest_dp_node_pct": -1.75,
+      "days_since_earnings": 54,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 27.61
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "RKLB260731C00100000",
+        "expiry": "2026-07-31",
+        "strike": 100.0,
+        "dte": 35,
+        "entry_premium": 10.43,
+        "limit_price": 10.53,
+        "contracts": 9,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "834",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 8.37,
+          "ask": 9.09,
+          "mid": 8.73,
+          "bid_ask_spread_pct": 8.247,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 913.0,
+          "oi_prev": 834.0,
+          "oi_change": 79.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "ba84b44f-ffdf-43bc-aa19-d0ad1996e582",
+        "error": null,
+        "submitted": true,
+        "limit_price": 10.53,
+        "contracts": 9
       }
     },
     "exit": null,

@@ -314,7 +314,7 @@
         "mae_pct": -8.6
       },
       "bearish_put": {
-        "mfe_pct": -41.1,
+        "mfe_pct": -40.2,
         "mae_pct": -49.2
       }
     }
@@ -4341,7 +4341,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 8.6,
+        "mfe_pct": 15.6,
         "mae_pct": 0.8
       }
     }
@@ -4760,7 +4760,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -13.7,
-        "mae_pct": -18.3
+        "mae_pct": -20.1
       }
     }
   },
@@ -4968,7 +4968,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -15.9,
+        "mfe_pct": -12.3,
         "mae_pct": -15.9
       }
     }
@@ -5386,7 +5386,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -21.7,
+        "mfe_pct": -17.4,
         "mae_pct": -21.7
       }
     }
@@ -5588,6 +5588,215 @@
         "submitted": true,
         "limit_price": 3.33,
         "contracts": 30
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -22.0,
+        "mae_pct": -22.0
+      }
+    }
+  },
+  {
+    "trade_set_id": "3d42f4b278e2",
+    "ticker": "IBIT",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-06-30T14:41:02.989Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 19,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T14:41:02.989Z",
+      "macro": {
+        "spot": 33.2,
+        "sma20": 35.53,
+        "distance_to_sma20_pct": -6.564,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 43.9,
+        "iv_back": 44.7,
+        "iv_ratio": 0.982,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -7170748.0,
+        "zero_gamma_strike": 10.0,
+        "distance_to_zero_gamma_pct": 69.88,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.28,
+        "atr_pct": 3.86,
+        "rvol_10min": 0.36,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 141.52,
+        "vader_compound": -0.169,
+        "news_type": "Unknown",
+        "top_headline": "Shares of crypto-linked stocks are trading lower amid a continued selloff as Bitcoin prices drop. Weakness in the digital token may be conne",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -6.564,
+        "market_spy_dist_pct": 0.351,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 47.3,
+        "call_iv_25d": 40.0,
+        "skew_ratio": 1.183,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 3.39,
+        "ask_sweep_prem": 606557.0,
+        "total_flow_prem": 17913937.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.5,
+        "heaviest_node_price": 33.37,
+        "node_size": 928091.0,
+        "n_prints": 200,
+        "window_start": "2026-06-30T13:44:43Z",
+        "window_end": "2026-06-30T14:40:51Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "iv_rank_1y": 19.42,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 48.25,
+        "front_iv": 43.9,
+        "vrp": -4.35,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -4366051.0,
+        "flow_persistence_pct": 41.26,
+        "flow_direction": "bearish",
+        "closing_accel": -1771720.0,
+        "n_ticks": 72,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 947.28,
+        "vwma_20": 35.35,
+        "rsi_5": 19.3,
+        "rsi_15": 37.85,
+        "gap_pct": -3.219,
+        "day_range": 1.732,
+        "candle_body": 0.226,
+        "dist_sma50": -18.252,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -0.8,
+        "vix_level": 17.1,
+        "execution_hour": 14,
+        "day_of_week": 1,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": -0.169,
+      "sweep_aggression_pct": 3.39,
+      "distance_to_zero_gamma_pct": 69.88,
+      "distance_to_heaviest_dp_node_pct": -0.5,
+      "days_since_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 41.26
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "IBIT260731P00032000",
+        "expiry": "2026-07-31",
+        "strike": 32.0,
+        "dte": 35,
+        "entry_premium": 1.81,
+        "limit_price": 1.83,
+        "contracts": 55,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "9406",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.09,
+          "ask": 1.15,
+          "mid": 1.12,
+          "bid_ask_spread_pct": 5.357,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 7602.0,
+          "oi_prev": 9406.0,
+          "oi_change": -1804.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "b9ae7149-2300-4d8c-8300-3ccbf78abf98",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.83,
+        "contracts": 55
       }
     },
     "exit": null,

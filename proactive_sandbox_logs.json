@@ -3380,6 +3380,230 @@
       }
     },
     "exit": null,
+    "status": "OPEN",
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "AUDIT-32ad6222",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-06-30T13:01:21.724Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "befb53c0-3388-48a7-b0da-323aba5abf10",
+        "symbol": "MRVL260731C00290000",
+        "age_min": 859.1,
+        "limit_price": "35.35"
+      },
+      {
+        "order_id": "e69b12fa-49f9-4ec4-b6a0-8c3fb1348d27",
+        "symbol": "MU260731C01190000",
+        "age_min": 884.5,
+        "limit_price": "148.26"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "d4408467d286",
+    "ticker": "MRVL",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-30T13:01:23.125Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 15,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T13:01:23.125Z",
+      "macro": {
+        "spot": 277.82,
+        "sma20": 281.93,
+        "distance_to_sma20_pct": -1.455,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 108.0,
+        "iv_back": 97.9,
+        "iv_ratio": 1.103,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 43206.1,
+        "zero_gamma_strike": 310.0,
+        "distance_to_zero_gamma_pct": -11.583,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 2000.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 29.22,
+        "atr_pct": 10.52,
+        "rvol_10min": 0.45,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Semiconductors",
+        "market_cap": 242975703040,
+        "short_pct_float": 5.26,
+        "short_ratio": 0.71,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 13.26,
+        "vader_compound": 0.374,
+        "news_type": "Analyst",
+        "top_headline": "$100 Invested In Marvell Technology 15 Years Ago Would Be Worth This Much Today",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -1.455,
+        "market_spy_dist_pct": -0.258,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -0.813,
+        "sector_vs_market_spread": -0.555,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 94.5,
+        "call_iv_25d": 95.8,
+        "skew_ratio": 0.986,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.83,
+        "ask_sweep_prem": 2272907.0,
+        "total_flow_prem": 33299452.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 277.82,
+        "node_size": 2231658.0,
+        "n_prints": 200,
+        "window_start": "2026-06-29T19:56:52Z",
+        "window_end": "2026-06-29T23:59:49Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 34,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 73.49,
+        "last_earnings_date": "2026-05-27",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 157.87,
+        "front_iv": 108.0,
+        "vrp": -49.87,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 22323015.0,
+        "flow_persistence_pct": 21.04,
+        "flow_direction": "bullish",
+        "closing_accel": 1780390.0,
+        "n_ticks": 390,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 920.48,
+        "vwma_20": 286.63,
+        "rsi_5": 26.44,
+        "rsi_15": 52.88,
+        "gap_pct": 2.426,
+        "day_range": 9.945,
+        "candle_body": 0.2,
+        "dist_sma50": 28.556,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 10.1,
+        "vix_level": 17.62,
+        "execution_hour": 13,
+        "day_of_week": 1,
+        "sector_vs_spy": -3.094,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": 0.374,
+      "sweep_aggression_pct": 6.83,
+      "distance_to_zero_gamma_pct": -11.583,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 34,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 21.04
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "MRVL260731C00290000",
+        "expiry": "2026-07-31",
+        "strike": 290.0,
+        "dte": 35,
+        "entry_premium": 37.17,
+        "limit_price": 37.54,
+        "contracts": 2,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "141",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 23.67,
+          "ask": 26.38,
+          "mid": 25.025,
+          "bid_ask_spread_pct": 10.829,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 144.0,
+          "oi_prev": 141.0,
+          "oi_change": 3.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "accepted",
+        "order_id": "e7ca74fc-6185-414d-8398-44c0aab79ce7",
+        "error": null,
+        "submitted": true,
+        "limit_price": 37.54,
+        "contracts": 2
+      }
+    },
+    "exit": null,
     "status": "OPEN"
   }
 ]

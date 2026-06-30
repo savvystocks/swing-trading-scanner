@@ -6082,7 +6082,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -2.5,
+        "mfe_pct": -1.7,
         "mae_pct": -16.9
       }
     }
@@ -10262,7 +10262,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 0.0,
+        "mfe_pct": 0.2,
         "mae_pct": -7.0
       }
     }
@@ -11099,7 +11099,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -5.2,
-        "mae_pct": -8.6
+        "mae_pct": -43.1
       }
     }
   },
@@ -11516,7 +11516,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -41.2,
+        "mfe_pct": -37.1,
         "mae_pct": -41.2
       }
     }
@@ -11726,7 +11726,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -20.0,
-        "mae_pct": -20.0
+        "mae_pct": -30.0
       }
     }
   },
@@ -11935,7 +11935,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -2.6,
-        "mae_pct": -2.6
+        "mae_pct": -3.0
       }
     }
   },
@@ -12136,6 +12136,215 @@
         "submitted": true,
         "limit_price": 147.18,
         "contracts": 1
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -9.3,
+        "mae_pct": -9.3
+      }
+    }
+  },
+  {
+    "trade_set_id": "b916efbbbfe3",
+    "ticker": "ARM",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-30T19:21:01.078Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 47,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T19:21:01.078Z",
+      "macro": {
+        "spot": 356.65,
+        "sma20": 371.77,
+        "distance_to_sma20_pct": -4.066,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 97.2,
+        "iv_back": 105.5,
+        "iv_ratio": 0.921,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 8018.0,
+        "zero_gamma_strike": 400.0,
+        "distance_to_zero_gamma_pct": -12.155,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 250.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 36.07,
+        "atr_pct": 10.11,
+        "rvol_10min": 0.34,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Semiconductors",
+        "market_cap": 380609888256,
+        "short_pct_float": 11.26,
+        "short_ratio": 1.26,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 5.17,
+        "vader_compound": 0.159,
+        "news_type": "Analyst",
+        "top_headline": "Nvidia Isn't The Expensive AI Stock Anymore—AMD, Palantir And ARM Are",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -4.066,
+        "market_spy_dist_pct": 0.734,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 2.063,
+        "sector_vs_market_spread": 1.329,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 106.5,
+        "call_iv_25d": 105.6,
+        "skew_ratio": 1.009,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 15.85,
+        "ask_sweep_prem": 2459675.0,
+        "total_flow_prem": 15521309.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.5,
+        "heaviest_node_price": 358.43,
+        "node_size": 36962.0,
+        "n_prints": 200,
+        "window_start": "2026-06-30T17:27:18Z",
+        "window_end": "2026-06-30T19:20:47Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 56,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 95.78,
+        "last_earnings_date": "2026-05-05",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 106.94,
+        "front_iv": 97.2,
+        "vrp": -9.74,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 7667690.0,
+        "flow_persistence_pct": 26.67,
+        "flow_direction": "bullish",
+        "closing_accel": -4916388.0,
+        "n_ticks": 352,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 699.79,
+        "vwma_20": 380.39,
+        "rsi_5": 40.72,
+        "rsi_15": 51.48,
+        "gap_pct": 1.28,
+        "day_range": 5.194,
+        "candle_body": 0.438,
+        "dist_sma50": 21.728,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -8.3,
+        "vix_level": 16.5,
+        "execution_hour": 19,
+        "day_of_week": 1,
+        "sector_vs_spy": 1.541,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": 0.159,
+      "sweep_aggression_pct": 15.85,
+      "distance_to_zero_gamma_pct": -12.155,
+      "distance_to_heaviest_dp_node_pct": -0.5,
+      "days_since_earnings": 56,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 26.67
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "ARM260731C00370000",
+        "expiry": "2026-07-31",
+        "strike": 370.0,
+        "dte": 35,
+        "entry_premium": 42.94,
+        "limit_price": 43.37,
+        "contracts": 2,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "41",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 37.38,
+          "ask": 40.99,
+          "mid": 39.185,
+          "bid_ask_spread_pct": 9.213,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 47.0,
+          "oi_prev": 41.0,
+          "oi_change": 6.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "b99e4bed-0773-4cc3-9de5-dd25f21b9f6c",
+        "error": null,
+        "submitted": true,
+        "limit_price": 43.37,
+        "contracts": 2
       }
     },
     "exit": null,

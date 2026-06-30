@@ -22,3 +22,9 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - HOOD (600418280ba9) - 2026-06-30T13:31:09.436Z
+trade: winner=bullish_call loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

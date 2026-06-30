@@ -6263,7 +6263,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 38.7,
+        "mfe_pct": 39.2,
         "mae_pct": -9.4
       }
     }
@@ -9390,6 +9390,215 @@
         "error": null,
         "submitted": true,
         "limit_price": 79.46,
+        "contracts": 1
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -9.4,
+        "mae_pct": -9.4
+      }
+    }
+  },
+  {
+    "trade_set_id": "969777360cc8",
+    "ticker": "AMAT",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-30T17:23:33.234Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 36,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T17:23:33.234Z",
+      "macro": {
+        "spot": 732.65,
+        "sma20": 572.57,
+        "distance_to_sma20_pct": 27.959,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 87.1,
+        "iv_back": 85.6,
+        "iv_ratio": 1.018,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 16052.2,
+        "zero_gamma_strike": 640.0,
+        "distance_to_zero_gamma_pct": 12.646,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 40.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 47.25,
+        "atr_pct": 6.45,
+        "rvol_10min": 0.74,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Semiconductor Equipment & Materials",
+        "market_cap": 581285511168,
+        "short_pct_float": 2.77,
+        "short_ratio": 2.51,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 2.66,
+        "vader_compound": 0.437,
+        "news_type": "Analyst",
+        "top_headline": "Stock Of The Day: Is This The Top For Applied Materials?",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 27.959,
+        "market_spy_dist_pct": 0.604,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 1.758,
+        "sector_vs_market_spread": 1.154,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 87.9,
+        "call_iv_25d": 87.7,
+        "skew_ratio": 1.002,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 16.97,
+        "ask_sweep_prem": 5074359.0,
+        "total_flow_prem": 29903245.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 734.48,
+        "node_size": 41095.0,
+        "n_prints": 200,
+        "window_start": "2026-06-30T17:09:31Z",
+        "window_end": "2026-06-30T17:23:35Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 47,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 98.64,
+        "last_earnings_date": "2026-05-14",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 98.34,
+        "front_iv": 87.1,
+        "vrp": -11.24,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 5717547.0,
+        "flow_persistence_pct": 8.19,
+        "flow_direction": "bullish",
+        "closing_accel": -5441935.0,
+        "n_ticks": 234,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1075.15,
+        "vwma_20": 590.17,
+        "rsi_5": 81.25,
+        "rsi_15": 75.23,
+        "gap_pct": 0.484,
+        "day_range": 5.868,
+        "candle_body": 0.806,
+        "dist_sma50": 52.336,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 1.5,
+        "vix_level": 16.65,
+        "execution_hour": 17,
+        "day_of_week": 1,
+        "sector_vs_spy": 1.354,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": 0.437,
+      "sweep_aggression_pct": 16.97,
+      "distance_to_zero_gamma_pct": 12.646,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": 47,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 8.19
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "AMAT260731C00760000",
+        "expiry": "2026-07-31",
+        "strike": 760.0,
+        "dte": 35,
+        "entry_premium": 79.04,
+        "limit_price": 79.83,
+        "contracts": 1,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "51",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 60.16,
+          "ask": 66.18,
+          "mid": 63.17,
+          "bid_ask_spread_pct": 9.53,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 53.0,
+          "oi_prev": 51.0,
+          "oi_change": 2.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "9fec37f6-cec4-4cae-bc51-07062dd12ae5",
+        "error": null,
+        "submitted": true,
+        "limit_price": 79.83,
         "contracts": 1
       }
     },

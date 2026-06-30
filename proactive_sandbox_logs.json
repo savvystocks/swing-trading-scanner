@@ -1032,7 +1032,7 @@
       },
       "bearish_put": {
         "mfe_pct": -30.9,
-        "mae_pct": -46.1
+        "mae_pct": -46.8
       },
       "calendar_front": {
         "mfe_pct": -22.2,
@@ -6013,7 +6013,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -15.3,
+        "mfe_pct": -6.8,
         "mae_pct": -15.3
       }
     }
@@ -6222,7 +6222,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -9.4,
+        "mfe_pct": 1.1,
         "mae_pct": -9.4
       }
     }
@@ -6423,6 +6423,215 @@
         "error": null,
         "submitted": true,
         "limit_price": 11.81,
+        "contracts": 8
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -15.3,
+        "mae_pct": -15.3
+      }
+    }
+  },
+  {
+    "trade_set_id": "3eefb06a1de7",
+    "ticker": "HD",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-06-30T15:21:03.984Z",
+    "leg_budget_usd": 10000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 23,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-06-30T15:21:03.984Z",
+      "macro": {
+        "spot": 351.88,
+        "sma20": 328.41,
+        "distance_to_sma20_pct": 7.147,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 27.2,
+        "iv_back": 28.1,
+        "iv_ratio": 0.968,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 46702.3,
+        "zero_gamma_strike": 355.0,
+        "distance_to_zero_gamma_pct": -0.887,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 8.47,
+        "atr_pct": 2.41,
+        "rvol_10min": 0.16,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Consumer Cyclical",
+        "industry": "Home Improvement Retail",
+        "market_cap": 350935220224,
+        "short_pct_float": 1.51,
+        "short_ratio": 2.61,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 120.63,
+        "vader_compound": -0.012,
+        "news_type": "Unknown",
+        "top_headline": "'Big Short' Star Steve Eisman Warns Middle Class Is 'Starting To Crack', Tax Refunds 'Went Into The Gas Tank'",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 7.147,
+        "market_spy_dist_pct": 0.383,
+        "sector_etf": "XLY",
+        "sector_dist_pct": 0.751,
+        "sector_vs_market_spread": 0.368,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 28.9,
+        "call_iv_25d": 26.4,
+        "skew_ratio": 1.097,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.3,
+        "ask_sweep_prem": 1246304.0,
+        "total_flow_prem": 15015833.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 351.88,
+        "node_size": 57318.0,
+        "n_prints": 200,
+        "window_start": "2026-06-30T13:33:17Z",
+        "window_end": "2026-06-30T15:21:00Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 42,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 55.65,
+        "last_earnings_date": "2026-05-19",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 30.06,
+        "front_iv": 27.2,
+        "vrp": -2.86,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -1663450.0,
+        "flow_persistence_pct": 53.62,
+        "flow_direction": "bearish",
+        "closing_accel": -1526339.0,
+        "n_ticks": 112,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1095.27,
+        "vwma_20": 329.35,
+        "rsi_5": 100.0,
+        "rsi_15": 74.6,
+        "gap_pct": -0.457,
+        "day_range": 1.506,
+        "candle_body": 0.496,
+        "dist_sma50": 8.938,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -0.9,
+        "vix_level": 17.01,
+        "execution_hour": 15,
+        "day_of_week": 1,
+        "sector_vs_spy": 1.181,
+        "source": "yfinance+alpaca"
+      },
+      "news_sentiment_score": -0.012,
+      "sweep_aggression_pct": 8.3,
+      "distance_to_zero_gamma_pct": -0.887,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 42,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 53.62
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "HD260731C00365000",
+        "expiry": "2026-07-31",
+        "strike": 365.0,
+        "dte": 35,
+        "entry_premium": 11.86,
+        "limit_price": 11.98,
+        "contracts": 8,
+        "alloc_usd": 10000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "275",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 5.49,
+          "ask": 6.77,
+          "mid": 6.13,
+          "bid_ask_spread_pct": 20.881,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 276.0,
+          "oi_prev": 275.0,
+          "oi_change": 1.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "2641fc7e-61e9-46e6-a991-ca1547d030d8",
+        "error": null,
+        "submitted": true,
+        "limit_price": 11.98,
         "contracts": 8
       }
     },

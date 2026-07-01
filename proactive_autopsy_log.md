@@ -143,3 +143,12 @@
 
 **Determining factor:** Bearish put FAILED (-53%, move 0.0%): no breakdown materialised; spot held above zero-gamma 13.0.
 
+## Autopsy - MSTR (2529b1313811)
+- entered 2026-06-30T14:21:06.498Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 87.0.
+

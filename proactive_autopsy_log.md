@@ -152,3 +152,12 @@
 
 **Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 87.0.
 
+## Autopsy - RKLB (a5c8c8c0747b)
+- entered 2026-06-30T15:01:37.638Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +51.4% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 100.0 fed the squeeze.
+

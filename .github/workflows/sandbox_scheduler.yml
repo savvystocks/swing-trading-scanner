@@ -53,6 +53,7 @@ jobs:
           git add -f proactive_sandbox_logs.json 2>/dev/null || true
           git add -f sandbox_ticker_cooloff.json 2>/dev/null || true
           git add -f v10_tuning_advisory.md proactive_autopsy_log.md v10_tunable_parameters.json 2>/dev/null || true
+          git add -f data/harvest_inbox/*.jsonl data/harvest_state.json 2>/dev/null || true   # harvest transport -> local poller
           if git diff --cached --quiet; then echo "no new sandbox data"; exit 0; fi
           git commit -m "sandbox lab data [skip ci]"
           for i in 1 2 3 4 5; do

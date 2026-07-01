@@ -36,6 +36,11 @@ DEFAULTS = {
     "scanner_flow_limit": 600,            # rows pulled from UW flow per scan (wide net for the cheap tail)
     "scanner_premium_min": 0.30,          # per-contract premium floor for the affordable mid-cap band
     "scanner_premium_max": 4.00,          # per-contract premium ceiling (2ct x $4 x 100 = $800)
+    "harvest_topn": 20,                   # counterfactual: full-payload harvest of top-N contracts by flow per cycle
+    "harvest_random": 5,                  # counterfactual: mandatory random below-threshold sample (misscore detection)
+    "harvest_daily_cap": 300,             # max full-payload computations per day (bounds API usage)
+    "scanner_barrier_up": 0.30,           # triple-barrier up touch, stamped per candidate row
+    "scanner_barrier_down": -0.50,        # triple-barrier down touch, stamped per candidate row
 }
 
 

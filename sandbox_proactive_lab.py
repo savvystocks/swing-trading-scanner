@@ -1098,6 +1098,7 @@ def run_scheduled_cycle(mock=False):
             _notify("<b>DEGRADED</b> sandbox: UW flow scanner unreachable (no token / API down) - 0 candidates")
         print(f"\nno UW flow candidates this cycle ({'scanner UNREACHABLE' if not reachable else 'quiet market'}).")
         return None
+    entered = None
     for c in candidates:
         t = c["ticker"]
         try:
@@ -1121,8 +1122,19 @@ def run_scheduled_cycle(mock=False):
             sp = (leg.get("execution_cost") or {}).get("bid_ask_spread_pct")
             print(f"  {name:<14} {leg['structure']:<15} {occ:<26} x{leg['contracts']:<3} "
                   f"@lim ${leg['limit_price']:<6} spread {sp}% -> {o['status']} {o['order_id']}")
+        entered = rec
+        entered["_scan_candidate"] = c
+        break
+    try:                                                     # COUNTERFACTUAL HARVEST (observational, fail-open, post-trade)
+        import harvest_logger
+        summary = harvest_logger.harvest_scan(params, executed_record=entered, mock=mock)
+        print(f"harvest: {summary}")
+    except Exception as e:
+        print(f"harvest skipped (fail-open): {type(e).__name__}: {str(e)[:90]}")
+    if entered is not None:
+        entered.pop("_scan_candidate", None)
         print("\nGHA scheduled cycle complete: 1 cluster entered + logged.")
-        return rec
+        return entered
     print("\nno eligible candidate this cycle (all capped/cooled).")
     return None
 

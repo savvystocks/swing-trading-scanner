@@ -31,3 +31,10 @@ data/cache_uw/
 # Runtime dedup caches for alert systems (regeneratable, no value committed)
 data/paper_trades/drift_alerts_seen.json
 data/paper_trades/exit_alerts_seen.json
+
+# Counterfactual harvest DB (local-only, lives on this machine - never committed)
+data/harvest.db
+data/harvest.db-wal
+data/harvest.db-shm
+data/harvest_backups/
+# data/harvest_inbox/ IS committed - it is the GHA-logger -> local-poller transport

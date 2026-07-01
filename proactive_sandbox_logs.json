@@ -319,7 +319,7 @@
     },
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 51.3,
+        "mfe_pct": 55.9,
         "mae_pct": -27.6,
         "stage": "trailing",
         "scaled_out": {
@@ -11148,14 +11148,47 @@
         "contracts": 21
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 35.2
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 50.7,
+          "mae_pct": -39.4,
+          "stage": "closed",
+          "scaled_out": {
+            "at": "2026-07-01T18:31:18.270Z",
+            "return_pct": 47.9
+          }
+        }
+      },
+      "mfe_pct": 50.7,
+      "mae_pct": -39.4,
+      "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "ZM260731C00089000",
+        "closed_at": "2026-07-01T19:35:11.893Z",
+        "return_pct": 35.2,
+        "reason": "35.2% <= trail 40.6% (20% off peak MFE 50.7%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 50.7,
         "mae_pct": -39.4,
-        "stage": "trailing",
+        "stage": "closed",
         "scaled_out": {
           "at": "2026-07-01T18:31:18.270Z",
           "return_pct": 47.9
@@ -12930,7 +12963,11 @@
       "bullish_call": {
         "mfe_pct": 55.8,
         "mae_pct": -38.5,
-        "stage": "initial"
+        "stage": "scaled",
+        "scaled_out": {
+          "at": "2026-07-01T19:35:14.283Z",
+          "return_pct": 35.8
+        }
       }
     }
   },
@@ -14487,7 +14524,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 5.1,
+        "mfe_pct": 5.6,
         "mae_pct": -7.9,
         "stage": "initial"
       }

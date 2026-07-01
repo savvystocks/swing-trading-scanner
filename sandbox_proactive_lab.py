@@ -966,10 +966,14 @@ def run_trade_autopsy(record, leg_returns_pct, exit_reason="5d_time_exit",
 # ----------------------------------------------------------------------------
 # Phase 2: dynamic market-wide sourcing from Unusual Whales flow (NO hardcoded list)
 # ----------------------------------------------------------------------------
-def scan_candidates(params, limit=100):
-    """Aggregate whole-market UW flow alerts into ranked candidates with a flow-implied
-    direction. Fail-open: returns [] if UW is unreachable, so the cycle simply makes no entry
-    (it never falls back to a predefined list - the watchlist harness is dead)."""
+def scan_candidates(params, limit=None):
+    """Aggregate whole-market UW flow alerts into ranked candidates with a flow-implied direction,
+    PRE-FILTERED to the affordable band (per-contract premium fits the $800/2-contract budget) so
+    the funnel feeds cheap mid-caps instead of rejecting mega-caps downstream. Fail-open: returns []
+    if UW is unreachable. Never falls back to a predefined list."""
+    limit = limit or params.get("scanner_flow_limit", 600)          # wide net to reach the cheap tail
+    prem_lo = params.get("scanner_premium_min", 0.30)
+    prem_hi = params.get("scanner_premium_max", 4.00)               # 2ct x $4 x 100 = $800 ceiling
     try:
         from src.unusual_whales_api import UnusualWhalesClient
         uw = UnusualWhalesClient()
@@ -986,8 +990,12 @@ def scan_candidates(params, limit=100):
         t = (r.get("ticker") or "").upper()
         if not t or t in index_roots:               # drop index / non-equity underlyings up front
             continue
+        pc = _num(r.get("price"))                   # per-contract option premium (the affordability signal)
+        if pc is None or not (prem_lo <= pc <= prem_hi):    # AFFORDABILITY AT SOURCE ($0.30-$4.00 -> $800/2ct)
+            continue
         a = agg.setdefault(t, {"ticker": t, "call_prem": 0.0, "put_prem": 0.0,
-                               "underlying_price": _num(r.get("underlying_price"))})
+                               "underlying_price": _num(r.get("underlying_price")), "min_contract_premium": pc})
+        a["min_contract_premium"] = min(a["min_contract_premium"], pc)
         prem = _num(r.get("total_premium")) or 0.0
         if (r.get("type") or "").lower() == "call":
             a["call_prem"] += prem
@@ -1120,9 +1128,40 @@ def run_scheduled_cycle(mock=False):
 
 
 # ----------------------------------------------------------------------------
+# One-time legacy flush (clean-slate reset for the $800 / mid-cap regime)
+# ----------------------------------------------------------------------------
+def flush_positions(creds):
+    """ONE-TIME reset: close every open paper position (the $10k-era clog that hogs the ticker cap
+    and would pollute the mid-cap training set) + clear cool-off + mark OPEN log records FLUSHED, so
+    the $800 regime starts from a clean slate. Fail-open per position."""
+    if not all(creds):
+        print("flush: no paper creds - nothing to do")
+        return 0
+    positions = get_open_positions(creds)
+    closed = 0
+    for p in positions:
+        occ = p.get("symbol")
+        if occ and _close_position(occ, creds, percentage=100):
+            closed += 1
+            print(f"  flushed {occ}")
+    if os.path.exists(COOLOFF_PATH):
+        os.remove(COOLOFF_PATH)
+    log = _load_log_list()
+    for rec in log:
+        if rec.get("status") == "OPEN":
+            rec["status"] = "FLUSHED"
+    _save_log_list(log)
+    print(f"FLUSH complete: {closed}/{len(positions)} positions closed, cool-off cleared, log reset")
+    _notify(f"<b>FLUSH</b> closed {closed}/{len(positions)} legacy positions, cool-off cleared")
+    return closed
+
+
+# ----------------------------------------------------------------------------
 # Local demo (single ticker)
 # ----------------------------------------------------------------------------
 def main():
+    if os.environ.get("PROACTIVE_FLUSH") == "true" or "--flush" in sys.argv:   # one-time reset (dispatch -f flush=true)
+        return flush_positions(_paper_creds())
     if os.environ.get("GITHUB_ACTIONS") == "true":
         try:
             return run_scheduled_cycle(mock=os.environ.get("PROACTIVE_MOCK", "1") == "1")

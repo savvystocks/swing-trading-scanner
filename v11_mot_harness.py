@@ -569,6 +569,42 @@ check(3, "full chain: runner trail-closes (CLOSE_TRAIL) + autopsy",
       f"actions={[x['action'] for x in c3]} status={recR3.get('status')}")
 
 # =====================================================================
+print("\n=== DIMENSION 3C: SOURCING FILTER ($0.30-$4.00 band) + FLUSH ===")
+import src.unusual_whales_api as _uwmod
+_ouwc = _uwmod.UnusualWhalesClient
+_uwmod.UnusualWhalesClient = type("FUWC", (), {"__init__": lambda s: None, "enabled": True,
+    "flow_alerts": lambda s, ticker=None, limit=100, min_premium=None: {"data": [
+        {"ticker": "CHEAP", "price": 2.0, "type": "call", "total_premium": 100000, "underlying_price": 40},
+        {"ticker": "PRICEY", "price": 20.0, "type": "call", "total_premium": 500000, "underlying_price": 700},
+        {"ticker": "PENNY", "price": 0.10, "type": "put", "total_premium": 60000, "underlying_price": 5},
+        {"ticker": "MID", "price": 3.5, "type": "put", "total_premium": 200000, "underlying_price": 55},
+        {"ticker": "SPXW", "price": 2.0, "type": "call", "total_premium": 300000, "underlying_price": 7000}]}})
+cands = lab.scan_candidates(load_params())
+_uwmod.UnusualWhalesClient = _ouwc
+ctk = [c["ticker"] for c in cands]
+check(3, "scanner keeps only $0.30-$4.00 band, drops pricey/penny/index, ranks by premium",
+      ctk == ["MID", "CHEAP"], f"candidates={ctk}")
+check(3, "scanner stamps min_contract_premium on affordable candidates",
+      all("min_contract_premium" in c for c in cands) and cands[0]["min_contract_premium"] == 3.5, f"{[(c['ticker'], c.get('min_contract_premium')) for c in cands]}")
+
+# flush: closes all positions, clears cool-off, marks OPEN log records FLUSHED
+_wipe()
+lab._save_log_list([{"trade_set_id": "leg1", "ticker": "IWM", "status": "OPEN", "legs": {}}])
+json_dump = __import__("json").dump
+json_dump({"IWM": "2026-07-01T00:00:00Z"}, open(lab.COOLOFF_PATH, "w"))
+_ogp = lab.get_open_positions
+_ocpf = lab._close_position
+lab.get_open_positions = lambda creds=None: [{"symbol": "OCC1"}, {"symbol": "OCC2"}]
+lab._close_position = lambda occ, creds, percentage=100: True
+n = lab.flush_positions(("k", "s"))
+flushed_status = lab._load_log_list()[0]["status"]
+cooloff_gone = not os.path.exists(lab.COOLOFF_PATH)
+lab.get_open_positions = _ogp
+lab._close_position = _ocpf
+check(3, "flush closes all positions (2), clears cool-off, marks log FLUSHED",
+      n == 2 and cooloff_gone and flushed_status == "FLUSHED", f"closed={n} cooloff_gone={cooloff_gone} status={flushed_status}")
+
+# =====================================================================
 print("\n=== DIMENSION 4: SIZING FLOOR (per-leg bid/ask spread stamped) ===")
 import alpaca.data.historical.option as _aopt
 _oopt = _aopt.OptionHistoricalDataClient

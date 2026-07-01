@@ -30,9 +30,12 @@ DEFAULTS = {
     "expiry_exit_dte": 3,                 # hard exit: close a leg within 3d of expiry (overrides 24h hold)
     "min_contracts": 2,                   # AFFORDABILITY GATE: skip the trade if <2 contracts fit the $800 budget
     "max_contracts_per_ticker": 3,        # ticker concentration cap
-    "ticker_cooloff_hours": 24,           # 24h cool-off after a close before re-entry
+    "ticker_cooloff_hours": 4,            # 4h cool-off (was 24h) - allow same-day re-entry on a fresh setup
     "stale_order_max_minutes": 30,        # cancel unfilled limit orders older than this (3 cycles)
     "scanner_min_premium": 50000,         # V11: min UW flow premium ($) to surface a candidate (loose discovery)
+    "scanner_flow_limit": 600,            # rows pulled from UW flow per scan (wide net for the cheap tail)
+    "scanner_premium_min": 0.30,          # per-contract premium floor for the affordable mid-cap band
+    "scanner_premium_max": 4.00,          # per-contract premium ceiling (2ct x $4 x 100 = $800)
 }
 
 

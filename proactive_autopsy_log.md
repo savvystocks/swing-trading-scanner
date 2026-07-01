@@ -179,3 +179,14 @@
 
 **Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
 
+## Autopsy - HOOD (b774769b14d0)
+- entered 2026-06-24T22:12:33.857Z | trigger regime_compass_bypass (ultra-loose, fail-open) | exit CLOSE_STOP_LOSS+CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +40.1% | WINNER |
+| Flat (calendar) | CALENDAR_SPREAD | +0.0% |  |
+| Bearish (put) | LONG_PUT | -51.0% | loser |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 105.0 fed the squeeze.
+

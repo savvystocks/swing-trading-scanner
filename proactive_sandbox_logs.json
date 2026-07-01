@@ -4663,7 +4663,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -0.3,
+        "mfe_pct": 4.4,
         "mae_pct": -32.1,
         "stage": "initial"
       }
@@ -8753,7 +8753,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 19.8,
-        "mae_pct": -13.8,
+        "mae_pct": -14.4,
         "stage": "initial"
       }
     }
@@ -8963,7 +8963,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 13.9,
-        "mae_pct": -17.7,
+        "mae_pct": -18.8,
         "stage": "initial"
       }
     }
@@ -10520,7 +10520,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 0.2,
-        "mae_pct": -46.5,
+        "mae_pct": -47.3,
         "stage": "initial"
       }
     }
@@ -12295,7 +12295,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 9.8,
-        "mae_pct": -23.5,
+        "mae_pct": -25.2,
         "stage": "initial"
       }
     }
@@ -12504,7 +12504,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 43.6,
+        "mfe_pct": 44.5,
         "mae_pct": -17.0,
         "stage": "initial"
       }
@@ -13129,14 +13129,43 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -51.3
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": -6.8,
+          "mae_pct": -51.3,
+          "stage": "closed"
+        }
+      },
+      "mfe_pct": -6.8,
+      "mae_pct": -51.3,
+      "determining_factor": "Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 657.5 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "SMH260731C00685000",
+        "closed_at": "2026-07-01T18:21:05.711Z",
+        "return_pct": -51.3,
+        "reason": "-51.3% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -6.8,
-        "mae_pct": -49.7,
-        "stage": "initial"
+        "mae_pct": -51.3,
+        "stage": "closed"
       }
     }
   },
@@ -14454,7 +14483,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 1.4,
+        "mfe_pct": 3.2,
         "mae_pct": -7.9,
         "stage": "initial"
       }
@@ -14696,7 +14725,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 11.4,
+        "mfe_pct": 13.0,
         "mae_pct": -1.0,
         "stage": "initial"
       }

@@ -80,3 +80,30 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 194.0 fed the squeeze.
 
+## Autopsy - META (41b5aafcbf6a)
+- entered 2026-06-30T14:01:30.759Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -64.6% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-65%, move 0.0%): no breakdown materialised; spot held above zero-gamma 750.0.
+
+## Autopsy - EWZ (5bb625c41147)
+- entered 2026-06-30T18:31:08.386Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -53.4% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 39.0 worked against it.
+
+## Autopsy - TLT (6b713f25ad86)
+- entered 2026-06-30T19:01:17.489Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 87.5 worked against it.
+

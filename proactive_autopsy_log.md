@@ -235,3 +235,48 @@
 
 **Determining factor:** Bullish call FAILED (-66%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 50.0 worked against it.
 
+## Autopsy - IGV (1d8f9aa5fad4)
+- entered 2026-07-02T13:11:07.769Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -72.4% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-72%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 50.0 worked against it.
+
+## Autopsy - PFE (7db82b76429f)
+- entered 2026-07-02T15:14:23.575Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -100.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-100%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 24.5 worked against it.
+
+## Autopsy - EEM (470af0270fc4)
+- entered 2026-07-02T15:51:04.103Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -54.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 66.0 worked against it.
+
+## Autopsy - FXI (8538453ce82a)
+- entered 2026-07-02T16:12:27.980Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -61.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-62%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 32.0 worked against it.
+
+## Autopsy - JETS (9601f2990963)
+- entered 2026-07-02T18:11:08.549Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -51.7% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 34.0.
+

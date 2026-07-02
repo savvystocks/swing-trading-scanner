@@ -217,3 +217,21 @@
 
 **Determining factor:** Bullish call FAILED (-73%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 20.0 worked against it.
 
+## Autopsy - LAES (bb7095bb4c4b)
+- entered 2026-07-02T17:11:31.781Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -51.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-52%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 3.0 worked against it.
+
+## Autopsy - IGV (7ffbebdbac3c)
+- entered 2026-07-02T19:01:43.637Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -65.9% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-66%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 50.0 worked against it.
+

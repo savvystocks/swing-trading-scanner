@@ -190,3 +190,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 105.0 fed the squeeze.
 
+## Autopsy - NU (b955b03c1dd8)
+- entered 2026-07-02T13:41:28.166Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -56.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-57%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 13.0 worked against it.
+

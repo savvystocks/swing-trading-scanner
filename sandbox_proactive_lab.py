@@ -842,15 +842,16 @@ def manage_open_positions(creds, params, positions=None):
                                         "return_pct": dec["return_pct"], "action": "SCALE_OUT_50", "closed_ok": ok})
                     _notify(_sell_msg(closed_legs[-1]))           # Telegram SELL alert (fail-open)
             elif dec["action"].startswith("CLOSE"):          # stop / break-even / trail / expiry -> full close
-                path["stage"] = dec["stage"]                              # 'closed'
                 ok = _close_position(occ, creds, percentage=100)
-                rec["leg_exits"][leg_name] = {"occ": occ, "closed_at": _now_iso_ms(),
-                                              "return_pct": dec["return_pct"], "reason": dec["reason"],
-                                              "action": dec["action"], "closed_ok": ok}
-                record_close(rec["ticker"])                       # 24h cool-off
-                closed_legs.append({"ticker": rec["ticker"], "leg": leg_name, "occ": occ,
-                                    "return_pct": dec["return_pct"], "action": dec["action"], "closed_ok": ok})
-                _notify(_sell_msg(closed_legs[-1]))           # Telegram SELL alert (fail-open)
+                if ok:                                                    # only mark exited on a SUCCESSFUL close
+                    path["stage"] = dec["stage"]                          # (rejected close, e.g. market closed -> retry next cycle)
+                    rec["leg_exits"][leg_name] = {"occ": occ, "closed_at": _now_iso_ms(),
+                                                  "return_pct": dec["return_pct"], "reason": dec["reason"],
+                                                  "action": dec["action"], "closed_ok": ok}
+                    record_close(rec["ticker"])                       # 24h cool-off
+                    closed_legs.append({"ticker": rec["ticker"], "leg": leg_name, "occ": occ,
+                                        "return_pct": dec["return_pct"], "action": dec["action"], "closed_ok": ok})
+                    _notify(_sell_msg(closed_legs[-1]))           # Telegram SELL alert (fail-open)
             else:                                                         # HOLD (incl. the trail-arm transition)
                 path["stage"] = dec["stage"]                              # persist 'trailing' arm / 'initial'
         # 2. autopsy once the set has no remaining OPEN legs

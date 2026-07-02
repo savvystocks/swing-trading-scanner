@@ -10,7 +10,7 @@ db.INBOX_DIR = os.path.join(tmp, "inbox")
 os.makedirs(db.INBOX_DIR, exist_ok=True)
 
 import poller
-poller._market_open_today = lambda: True
+poller._market_open_now = lambda: True
 
 _clock = {"t": 1000}
 poller._now_ms = lambda: _clock["t"]

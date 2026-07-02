@@ -3,7 +3,7 @@ import sys
 import time
 import smtplib
 from email.mime.text import MIMEText
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import harvest_db as db
 from harvest_labeler import label_path
@@ -21,14 +21,19 @@ def _paper_creds():
     return os.environ.get("ALPACA_PAPER_API_KEY"), os.environ.get("ALPACA_PAPER_SECRET_KEY")
 
 
-def _market_open_today():
+def _market_open_now(buffer_min=5):
+    now = datetime.now(timezone.utc)
     try:
         import pandas_market_calendars as mcal
-        d = datetime.now(timezone.utc).date().isoformat()
-        sched = mcal.get_calendar("XNYS").schedule(start_date=d, end_date=d)
-        return not sched.empty
+        sched = mcal.get_calendar("XNYS").schedule(start_date=now.date().isoformat(), end_date=now.date().isoformat())
+        if sched.empty:
+            return False
+        o = sched.iloc[0]["market_open"].to_pydatetime()
+        c = sched.iloc[0]["market_close"].to_pydatetime()      # early-close half-days handled by the calendar
+        buf = timedelta(minutes=buffer_min)
+        return (o - buf) <= now <= (c + buf)                   # buffer preserves the near-open + near-close polls
     except Exception:
-        return datetime.now(timezone.utc).weekday() < 5
+        return now.weekday() < 5 and 13 <= now.hour < 21       # fallback: rough RTH window in UTC
 
 
 def _fetch_alpaca(symbols, creds):
@@ -99,8 +104,8 @@ def _poll_now(cand, now):
 
 
 def run_once():
-    if not _market_open_today():
-        print("market closed today (holiday/weekend) - no polling")
+    if not _market_open_now():
+        print("market closed / outside RTH session - no polling")
         return
     con = db.init_db()
     new, skipped = db.ingest_inbox(con)

@@ -16856,7 +16856,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -25.6,
-        "mae_pct": -28.2,
+        "mae_pct": -37.2,
         "stage": "initial"
       }
     }
@@ -17384,7 +17384,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -21.2,
+        "mfe_pct": -20.0,
         "mae_pct": -27.8,
         "stage": "initial"
       }
@@ -17885,7 +17885,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 2.0,
-        "mae_pct": -12.9,
+        "mae_pct": -13.6,
         "stage": "initial"
       }
     }
@@ -18134,7 +18134,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -13.2,
+        "mfe_pct": -11.8,
         "mae_pct": -17.8,
         "stage": "initial"
       }
@@ -18385,7 +18385,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -21.4,
-        "mae_pct": -25.0,
+        "mae_pct": -46.4,
         "stage": "initial"
       }
     }
@@ -18876,6 +18876,256 @@
         "error": null,
         "submitted": true,
         "limit_price": 4.03,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -18.8,
+        "mae_pct": -18.8,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "ee547cc13c06",
+    "ticker": "SQQQ",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-02T15:41:45.891Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 52,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-02T15:41:45.891Z",
+      "macro": {
+        "spot": 38.93,
+        "sma20": 39.6,
+        "distance_to_sma20_pct": -1.685,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 70.6,
+        "iv_back": 69.8,
+        "iv_ratio": 1.011,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 305406.6,
+        "zero_gamma_strike": 40.0,
+        "distance_to_zero_gamma_pct": -2.749,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -50.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 2.64,
+        "atr_pct": 6.79,
+        "rvol_10min": 0.51,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 551.01,
+        "vader_compound": -0.025,
+        "news_type": "Unknown",
+        "top_headline": "Tech Stocks' Relief Rally Crumbles: SOXL Craters 15%, AMD Sheds 6% As Recovery Fizzles",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -1.685,
+        "market_spy_dist_pct": 0.719,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 70.4,
+        "call_iv_25d": 89.6,
+        "skew_ratio": 0.786,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 25.86,
+        "ask_sweep_prem": 1176749.0,
+        "total_flow_prem": 4550425.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 38.93,
+        "node_size": 256443.0,
+        "n_prints": 200,
+        "window_start": "2026-07-02T15:00:35Z",
+        "window_end": "2026-07-02T15:41:15Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "iv_rank_1y": 69.77,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 101.23,
+        "front_iv": 70.6,
+        "vrp": -30.63,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 794430.0,
+        "flow_persistence_pct": 20.08,
+        "flow_direction": "bullish",
+        "closing_accel": 270091.0,
+        "n_ticks": 132,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 731.39,
+        "vwma_20": 40.19,
+        "rsi_5": 46.42,
+        "rsi_15": 39.15,
+        "gap_pct": 0.026,
+        "day_range": 6.576,
+        "candle_body": 0.402,
+        "dist_sma50": -9.104,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 0.8,
+        "vix_level": 16.64,
+        "execution_hour": 15,
+        "day_of_week": 3,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -71002.0,
+        "net_vanna": 9124448.0,
+        "net_charm": -57689790.0,
+        "delta_imbalance": 0.989,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.026,
+        "bid": 39.01,
+        "ask": 39.02,
+        "bid_size": 5000.0,
+        "ask_size": 5000.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.5,
+        "gap_pct": 0.026,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.025,
+      "sweep_aggression_pct": 25.86,
+      "distance_to_zero_gamma_pct": -2.749,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 20.08
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "SQQQ260731C00040500",
+        "expiry": "2026-07-31",
+        "strike": 40.5,
+        "dte": 35,
+        "entry_premium": 3.4,
+        "limit_price": 3.43,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "46",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.58,
+          "ask": 3.22,
+          "mid": 2.9,
+          "bid_ask_spread_pct": 22.069,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 46.0,
+          "oi_prev": 46.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "b8908a8a-2c81-40a6-a2f2-0c78743d6e3c",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.43,
         "contracts": 2
       }
     },

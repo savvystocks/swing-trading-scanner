@@ -199,3 +199,12 @@
 
 **Determining factor:** Bullish call FAILED (-57%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 13.0 worked against it.
 
+## Autopsy - VXX (a58a22e95d7e)
+- entered 2026-07-02T14:31:17.225Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -58.9% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-59%, move 0.0%): no breakdown materialised; spot held above zero-gamma 22.0.
+

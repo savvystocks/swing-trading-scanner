@@ -104,6 +104,19 @@ def _vertical_barrier_ts(signal_ts_ms, expiry_str):
     return min(v for v in (vt_ms, exp_ms) if v is not None)
 
 
+def _near_session_close(signal_ts_ms, window_min=45):
+    dt = datetime.fromtimestamp(signal_ts_ms / 1000.0, tz=timezone.utc).astimezone(ET)
+    close = dt.replace(hour=16, minute=0, second=0, microsecond=0)
+    try:
+        import pandas_market_calendars as mcal
+        sched = mcal.get_calendar("XNYS").schedule(start_date=dt.date().isoformat(), end_date=dt.date().isoformat())
+        if len(sched.index):
+            close = sched.iloc[0]["market_close"].tz_convert(ET).to_pydatetime()
+    except Exception:
+        pass
+    return (close - timedelta(minutes=window_min)) <= dt <= close
+
+
 def _load_state():
     st = {}
     if os.path.exists(STATE_PATH):
@@ -280,8 +293,18 @@ def harvest_scan(params, executed_record=None, mock=False):
     in_band_rows = [x for x in scored if x[2]]
     in_band_rows.sort(key=lambda x: _f(x[0].get("total_premium")) or 0.0, reverse=True)
     top_slice = in_band_rows[:topn]
-    below = in_band_rows[topn:]
-    rand_slice = random.sample(below, min(n_random, len(below))) if below else []
+
+    top_occs = {occ for _, occ, _ in top_slice}
+    p = params.get("harvest_random_p", 0.007)                                    # ~8 expected picks/day
+    eligible = [x for x in scored if x[1] not in top_occs and (_f(x[0].get("ask")) or 0) > 0]
+    rand_slice = [x for x in eligible if random.random() < p]                     # Bernoulli, spread across the day
+    if _near_session_close(signal_ts):                                            # near-close top-up guarantees >= n_random/day
+        picked = {x[1] for x in rand_slice}
+        shortfall = n_random - state["random_count"] - len(rand_slice)
+        if shortfall > 0:
+            extra = [x for x in eligible if x[1] not in picked]
+            random.shuffle(extra)
+            rand_slice.extend(extra[:shortfall])
 
     done = set()
     for flow, occ, _ in top_slice:

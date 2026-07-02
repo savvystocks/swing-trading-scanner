@@ -16090,7 +16090,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 8.3,
+        "mfe_pct": 13.3,
         "mae_pct": -28.3,
         "stage": "initial"
       }
@@ -16606,7 +16606,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -17.0,
-        "mae_pct": -34.7,
+        "mae_pct": -36.4,
         "stage": "initial"
       }
     }
@@ -17385,7 +17385,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -23.6,
-        "mae_pct": -23.6,
+        "mae_pct": -27.8,
         "stage": "initial"
       }
     }
@@ -17635,7 +17635,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -7.7,
-        "mae_pct": -7.7,
+        "mae_pct": -13.4,
         "stage": "initial"
       }
     }
@@ -17877,6 +17877,256 @@
         "submitted": true,
         "limit_price": 3.33,
         "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -7.5,
+        "mae_pct": -7.5,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "9ccc756caf26",
+    "ticker": "ZETA",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-02T15:11:05.013Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 48,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 24,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 50000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-02T15:11:05.013Z",
+      "macro": {
+        "spot": 20.73,
+        "sma20": 19.98,
+        "distance_to_sma20_pct": 3.739,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 67.7,
+        "iv_back": 85.9,
+        "iv_ratio": 0.788,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 1045215.5,
+        "zero_gamma_strike": 20.0,
+        "distance_to_zero_gamma_pct": 3.521,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 100.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.18,
+        "atr_pct": 5.71,
+        "rvol_10min": 0.4,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Software - Infrastructure",
+        "market_cap": 5169603072,
+        "short_pct_float": 13.45,
+        "short_ratio": 3.07,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 40.17,
+        "vader_compound": 0.476,
+        "news_type": "Analyst",
+        "top_headline": "If You Invested $1000 In Zeta Global Holdings Stock 5 Years Ago, You Would Have This Much Today",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 3.739,
+        "market_spy_dist_pct": 0.571,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -1.758,
+        "sector_vs_market_spread": -2.329,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 84.7,
+        "call_iv_25d": 86.6,
+        "skew_ratio": 0.979,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 5.61,
+        "ask_sweep_prem": 222277.0,
+        "total_flow_prem": 3963013.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -1.75,
+        "heaviest_node_price": 21.09,
+        "node_size": 36075.0,
+        "n_prints": 14,
+        "window_start": "2026-07-02T13:30:11Z",
+        "window_end": "2026-07-02T15:08:48Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 62,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 43.34,
+        "last_earnings_date": "2026-05-01",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 60.42,
+        "front_iv": 67.7,
+        "vrp": 7.28,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -407037.0,
+        "flow_persistence_pct": 34.9,
+        "flow_direction": "bearish",
+        "closing_accel": -410872.0,
+        "n_ticks": 102,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 887.64,
+        "vwma_20": 20.0,
+        "rsi_5": 95.27,
+        "rsi_15": 54.57,
+        "gap_pct": -0.144,
+        "day_range": 2.822,
+        "candle_body": 0.137,
+        "dist_sma50": 7.717,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -18.2,
+        "vix_level": 16.3,
+        "execution_hour": 15,
+        "day_of_week": 3,
+        "sector_vs_spy": -2.985,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 9313898.0,
+        "net_vanna": 5922367.0,
+        "net_charm": -5046478.0,
+        "delta_imbalance": 5.276,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.144,
+        "bid": 20.74,
+        "ask": 20.77,
+        "bid_size": 400.0,
+        "ask_size": 400.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.38,
+        "gap_pct": -0.144,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 13.45,
+        "float_shares": 220244034,
+        "shares_short": 30013348,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.476,
+      "sweep_aggression_pct": 5.61,
+      "distance_to_zero_gamma_pct": 3.521,
+      "distance_to_heaviest_dp_node_pct": -1.75,
+      "days_since_earnings": 62,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 34.9
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "ZETA260731C00021500",
+        "expiry": "2026-07-31",
+        "strike": 21.5,
+        "dte": 35,
+        "entry_premium": 1.74,
+        "limit_price": 1.76,
+        "contracts": 4,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "29",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.25,
+          "ask": 1.54,
+          "mid": 1.395,
+          "bid_ask_spread_pct": 20.789,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 27.0,
+          "oi_prev": 29.0,
+          "oi_change": -2.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "7adf6a3e-0a0e-4eea-a4e1-048def90300d",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.76,
+        "contracts": 4
       }
     },
     "exit": null,

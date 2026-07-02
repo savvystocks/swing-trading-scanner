@@ -208,3 +208,12 @@
 
 **Determining factor:** Bearish put FAILED (-59%, move 0.0%): no breakdown materialised; spot held above zero-gamma 22.0.
 
+## Autopsy - ICLN (b93911a0d2fe)
+- entered 2026-07-02T16:21:23.791Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -73.1% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-73%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 20.0 worked against it.
+

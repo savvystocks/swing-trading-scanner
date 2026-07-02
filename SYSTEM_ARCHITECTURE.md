@@ -10,8 +10,8 @@ running code differs from earlier design intent, the code wins and the gap is fl
 > ACCURACY NOTES (verified against source, correcting common misconceptions):
 > - `harvest_topn = 20` (top-20 by flow premium), not 15.
 > - `harvest_daily_cap = 300` full-payload computations/day (dedup keeps the real number far lower — ~190 on the first live day); it is not a 30–80 cap.
-> - The vertical barrier **hardcodes Friday of the signal week** in `harvest_logger._vertical_barrier_ts`; it does **not** consult the XNYS calendar. Calendar-awareness is the recommended fix, not current behavior (see Known Gaps).
-> - The poller's quote fallback is **Unusual Whales**, not EODHD. EODHD is not used anywhere in the live harvest path.
+> - The vertical barrier is **XNYS-calendar-aware** (fixed 2026-07-02): it resolves to the last trading session of the signal week at 16:00 ET (min expiry), correctly handling holiday-shortened weeks.
+> - The poller's quote fallback is **Unusual Whales**, not EODHD — and the current EODHD key has **no options-data access** (401/403 verified), so EODHD cannot supply option prices at all.
 
 ---
 
@@ -170,11 +170,11 @@ Key constraints: `candidates.candidate_id` and `labels.candidate_id` are PKs (on
 - **Missing / stale quote:** evaluation is skipped for that poll and `n_stale` is incremented; it never false-triggers a barrier. A candidate stale for a full session past its vertical is eventually **censored** (`label = null`, reason recorded) by the poller after a 24 h grace, and excluded from training.
 - **Expires worthless at the vertical:** `realized_return = -1.0`, outcome `vertical`, `label = -1`.
 
-### CURRENT LIMITATION — vertical barrier is NOT calendar-aware
-`_vertical_barrier_ts` computes `days_to_fri = (4 - weekday) % 7` and locks to **Friday 16:00 ET of the signal week** (min with expiry). It does **not** call the XNYS calendar. On a holiday-shortened week (e.g. Fri 3 Jul 2026, Independence Day observed) the barrier lands on a non-trading day, so those candidates get no poll that day and would be labeled on the next session's gapped bid. The intended fix is to snap the vertical to the *last XNYS trading session* of the week (the poller already imports `pandas_market_calendars`). Tracked in `reports/harvest_audit_2026-07-02.md` (defect C-1).
+### Vertical barrier — XNYS-calendar-aware (fixed 2026-07-02)
+`_vertical_barrier_ts` resolves the vertical to the **last XNYS trading session of the signal week** at 16:00 ET — via `pandas_market_calendars` (memoized by week, with a Friday walk-back fallback if the lib is unavailable) — then takes `min(..., expiry 16:00 ET)`. Holiday-shortened weeks resolve correctly (the week of Fri 3 Jul 2026 → Thu 2 Jul). `pandas_market_calendars` is in `requirements-sandbox.txt` so GHA computes it too. The pre-fix "yesterday" cohort, whose barrier had already passed with no poll, was **censored** (see fallback below).
 
 ### Quote sourcing & fallback (poller)
-Primary: batched **Alpaca** option NBBO (`OptionHistoricalDataClient.get_option_latest_quote`, chunk 100). Fallback: **Unusual Whales** flow-derived quotes (`_fetch_uw`) when Alpaca returns nothing. There is **no EODHD fallback** in the harvest path (EODHD is not used by V11 at all). The XNYS exchange calendar (`pandas_market_calendars`) is used by the poller's `_market_open_today()` holiday gate — i.e. for the poll schedule, distinct from the barrier computation above.
+Primary: batched **Alpaca** option NBBO (`OptionHistoricalDataClient.get_option_latest_quote`, chunk 100). Fallback: **Unusual Whales** flow-derived quotes (`_fetch_uw`). There is **no historical back-fill**: EODHD has no options-data access on the current key (401/403 verified), and the installed Alpaca client exposes no historical option quotes (`OptionQuotesRequest` absent). So a vertical that passed with no in-window poll is **censored** (label null) — never reconstructed from a trade price (bid-only discipline). The XNYS calendar also gates the poller's `_market_open_today()` holiday check.
 
 ---
 
@@ -202,14 +202,17 @@ Proves the logger cannot alter or crash live execution: `run_scheduled_cycle` is
 
 ---
 
-## KNOWN GAPS (open, from the 2026-07-02 live-session audit)
+## KNOWN GAPS (open)
 
-An honest anchor names what is broken. Full detail in `reports/harvest_audit_2026-07-02.md`:
+An honest anchor names what is broken. Full history in `reports/harvest_audit_2026-07-02.md`.
 
-1. **Vertical barrier hardcodes Friday** (Section 6) — mislabels on holiday-shortened weeks. Fix: use the XNYS last-session.
-2. **Poller does not `git pull`** — it ingests the *local* inbox only, so GHA-harvested candidates never reach the local DB until the repo is pulled. Fix: `git pull` at the start of `run_poller.bat`.
-3. **No server-side exit orders** — the trade exit state machine (+30% scale-out / −50% stop / +50%→trailing, all on the bid) is evaluated by the cron and executed as market closes; there are no standing OCO/bracket/stop orders, so positions are unprotected between cycles and over weekends.
-4. **Random sample yields 0** (Section 4) — `harvest_topn ≥` the in-band pool, so the "mandatory" 5 random rows never populate.
-5. **Scheduled poller had not fired** on the audit day (Task Scheduler ran only when the host was awake).
+**Resolved 2026-07-02/03 (removed from this list):** the Friday-hardcoded vertical barrier (now XNYS-calendar-aware, Section 6); and orphaned positions not being exit-evaluated — all 72 broker positions were reconciled and now carry OPEN tracking records, so the exit engine manages every one.
+
+Remaining:
+
+1. **No server-side exit orders — and Alpaca cannot fully provide them on options.** Empirically tested 2026-07-02: Alpaca paper accepts `limit` / `stop` / `stop_limit` on options but **rejects OCO, bracket, and `trailing_stop`** ("complex orders not supported for options"). So exits stay cron-evaluated (scale-out / stop / trailing on the bid); the most that can be added server-side is an independent GTC-limit take-profit **plus** a stop-loss with manual sibling-cancel — not yet wired into the live loop. (Related bug fixed: a rejected close no longer marks a leg exited; it retries next cycle.)
+2. **Poller does not `git pull`** — it ingests the *local* inbox only, so GHA-harvested candidates reach the local DB only when the repo is pulled. Fix: `git pull` at the start of `run_poller.bat`.
+3. **Random sample yields 0** (Section 4) — `harvest_topn ≥` the in-band pool, so the "mandatory" 5 random rows never populate.
+4. **Scheduled poller reliability** — Task Scheduler runs only when the host is awake; the poller had not fired on the audit day.
 
 These are limitations of the current commit, not of the design; they are the top of the fix queue.

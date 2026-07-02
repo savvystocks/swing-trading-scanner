@@ -61,13 +61,39 @@ def _occ_symbol(ticker, expiry, strike, right):
     return "%s%s%s%08d" % (str(ticker).upper(), d.strftime("%y%m%d"), r, int(round(s * 1000)))
 
 
+_WEEK_LAST_SESSION = {}
+
+
+def _week_last_session(dt_et):
+    monday = (dt_et - timedelta(days=dt_et.weekday())).date()
+    if monday in _WEEK_LAST_SESSION:
+        return _WEEK_LAST_SESSION[monday]
+    friday = monday + timedelta(days=4)
+    result = None
+    try:
+        import pandas_market_calendars as mcal
+        sched = mcal.get_calendar("XNYS").schedule(start_date=monday.isoformat(), end_date=friday.isoformat())
+        if len(sched.index):
+            result = sched.index[-1].date()
+    except Exception:
+        result = None
+    if result is None:
+        d = friday
+        while d.weekday() > 4:
+            d -= timedelta(days=1)
+        result = d
+    _WEEK_LAST_SESSION[monday] = result
+    return result
+
+
 def _vertical_barrier_ts(signal_ts_ms, expiry_str):
     dt = datetime.fromtimestamp(signal_ts_ms / 1000.0, tz=timezone.utc).astimezone(ET)
-    days_to_fri = (4 - dt.weekday()) % 7
-    friday = (dt + timedelta(days=days_to_fri)).replace(hour=16, minute=0, second=0, microsecond=0)
-    if friday < dt:
-        friday += timedelta(days=7)
-    fri_ms = int(friday.astimezone(timezone.utc).timestamp() * 1000)
+    last = _week_last_session(dt)
+    vt = datetime(last.year, last.month, last.day, 16, 0, tzinfo=ET)
+    if vt < dt:
+        nxt = _week_last_session(dt + timedelta(days=7))
+        vt = datetime(nxt.year, nxt.month, nxt.day, 16, 0, tzinfo=ET)
+    vt_ms = int(vt.astimezone(timezone.utc).timestamp() * 1000)
     exp_ms = None
     if expiry_str:
         try:
@@ -75,7 +101,7 @@ def _vertical_barrier_ts(signal_ts_ms, expiry_str):
             exp_ms = int(ed.astimezone(timezone.utc).timestamp() * 1000)
         except Exception:
             exp_ms = None
-    return min(v for v in (fri_ms, exp_ms) if v is not None)
+    return min(v for v in (vt_ms, exp_ms) if v is not None)
 
 
 def _load_state():

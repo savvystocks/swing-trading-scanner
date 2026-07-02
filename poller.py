@@ -130,7 +130,8 @@ def run_once():
         if q is None:
             db.append_bid_path(con, c["candidate_id"], now, None, None, None, True)
         else:
-            db.append_bid_path(con, c["candidate_id"], now, q["bid"], q["ask"], q["quote_ts"], q["stale"])
+            stale = q["stale"] or q["bid"] is None
+            db.append_bid_path(con, c["candidate_id"], now, q["bid"], q["ask"], q["quote_ts"], stale)
         path = db.get_path(con, c["candidate_id"])
         res = label_path(c["entry_ref"], c["barrier_up_pct"], c["barrier_down_pct"],
                          c["vertical_barrier_ts"], c["signal_ts_utc"], path)

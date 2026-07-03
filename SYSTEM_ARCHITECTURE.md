@@ -206,13 +206,16 @@ Proves the logger cannot alter or crash live execution: `run_scheduled_cycle` is
 
 An honest anchor names what is broken. Full history in `reports/harvest_audit_2026-07-02.md`.
 
-**Resolved 2026-07-02/03 (removed from this list):** the Friday-hardcoded vertical barrier (now XNYS-calendar-aware, Section 6); and orphaned positions not being exit-evaluated — all 72 broker positions were reconciled and now carry OPEN tracking records, so the exit engine manages every one.
+**Resolved 2026-07-02/03 (removed from this list):** the Friday-hardcoded vertical barrier (now XNYS-calendar-aware, Section 6); orphaned positions not being exit-evaluated — all 72 broker positions were reconciled and now carry OPEN tracking records, so the exit engine manages every one; and, on **2026-07-03**, three gaps closed at once by moving the poller off the laptop onto an always-on **Vultr VPS** (Ubuntu 24.04):
+
+- *Poller does not `git pull`* → the VPS cron runs `git pull --ff-only` as its first action every cycle, so GHA-harvested candidates reach the DB with no manual pull.
+- *Scheduled poller reliability / laptop dependence* → the poller runs from the VPS crontab (`*/15 13-21 * * 1-5` UTC, XNYS-session-gated), independent of whether the laptop is awake; the laptop is out of the pipeline and its DB was renamed `harvest.db.migrated-*`. The VPS DB was rebuilt from the committed inbox (1687 candidates, `integrity_check ok`, row-count parity).
+- *Random sample yields 0* → refactored to a whole-pool Bernoulli draw (`harvest_random_p`) with a near-session-close top-up guaranteeing ≥5 (Section 4); 14/14 harvester tests + passivity green.
+
+Also added (2026-07-03): **off-box DB backup** — nightly `sqlite3` online-backup → gzip → push to a separate private GitHub repo (`harvest-snapshots`, VPS write deploy key), retention 30, cron `30 21 * * 1-5` UTC.
 
 Remaining:
 
-1. **No server-side exit orders — and Alpaca cannot fully provide them on options.** Empirically tested 2026-07-02: Alpaca paper accepts `limit` / `stop` / `stop_limit` on options but **rejects OCO, bracket, and `trailing_stop`** ("complex orders not supported for options"). So exits stay cron-evaluated (scale-out / stop / trailing on the bid); the most that can be added server-side is an independent GTC-limit take-profit **plus** a stop-loss with manual sibling-cancel — not yet wired into the live loop. (Related bug fixed: a rejected close no longer marks a leg exited; it retries next cycle.)
-2. **Poller does not `git pull`** — it ingests the *local* inbox only, so GHA-harvested candidates reach the local DB only when the repo is pulled. Fix: `git pull` at the start of `run_poller.bat`.
-3. **Random sample yields 0** (Section 4) — `harvest_topn ≥` the in-band pool, so the "mandatory" 5 random rows never populate.
-4. **Scheduled poller reliability** — Task Scheduler runs only when the host is awake; the poller had not fired on the audit day.
+1. **No server-side exit orders — and Alpaca cannot fully provide them on options.** Empirically tested 2026-07-02: Alpaca paper accepts `limit` / `stop` / `stop_limit` on options but **rejects OCO, bracket, and `trailing_stop`** ("complex orders not supported for options"). So exits stay cron-evaluated (scale-out / stop / trailing on the bid); the most that can be added server-side is an independent GTC-limit take-profit **plus** a stop-loss with manual sibling-cancel — not yet wired into the live loop. (Related bug fixed: a rejected close no longer marks a leg exited; it retries next cycle.) *Being addressed next in the Phase-4 server-side-exit backstop work.*
 
-These are limitations of the current commit, not of the design; they are the top of the fix queue.
+This is a limitation of the current commit, not of the design; it is the top of the fix queue.

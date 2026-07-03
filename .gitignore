@@ -31,3 +31,15 @@ data/cache_uw/
 # Runtime dedup caches for alert systems (regeneratable, no value committed)
 data/paper_trades/drift_alerts_seen.json
 data/paper_trades/exit_alerts_seen.json
+
+# Counterfactual harvest DB (local-only, lives on this machine - never committed)
+data/harvest.db
+data/harvest.db-wal
+data/harvest.db-shm
+data/harvest_backups/
+data/poller.log
+data/poller.log.1
+# data/harvest_inbox/ IS committed - it is the GHA-logger -> local-poller transport
+
+# VPS secret env file (Alpaca/UW keys, chmod 600) - NEVER committed
+.harvest_env

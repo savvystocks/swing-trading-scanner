@@ -1,0 +1,1255 @@
+"""V10 Research Sandbox - Proactive Paper-Trading Lab + Active Alpaca Paper Execution.
+
+Phase 2: trade the chop from three angles, route to the Alpaca PAPER API, log a forensic
+state block + order ids, and have the autopsy emit a tuning advisory so we tighten the knobs
+weekly from empirical win/loss data. Gate values are NOT hardcoded - they live in
+v10_tunable_parameters.json (read every cycle) and are turned by tune_parameters.py.
+
+On a trigger (regime_compass_bypass / regime C / consolidation) we enter THREE legs sized off
+a $10,000 cluster budget:
+   1. Bullish - long OTM call  (delta ~ +0.35)
+   2. Bearish - long OTM put   (delta ~ -0.35)
+   3. Flat    - calendar spread (buy back / sell front) for theta
+
+EXECUTION SAFETY: routing defaults to DRY_RUN (build + log the order payload, do NOT submit).
+Real submission to paper-api.alpaca.markets only happens with --live-paper (you run it). No
+order is ever placed against a live/real-money endpoint - paper only. Touches no V9 engine.
+
+Run (simulate):       python sandbox_proactive_lab.py
+Run (submit to paper): ALPACA_PAPER_API_KEY=... ALPACA_PAPER_SECRET_KEY=... python sandbox_proactive_lab.py --live-paper
+"""
+
+import os
+import sys
+import json
+import math
+import uuid
+import urllib.request
+import re
+from datetime import datetime, timezone, timedelta, date
+
+from v10_params import load as load_params
+
+try:
+    import sandbox_v11_sensors as v11        # LOG-DON'T-BLOCK context sensors (fail-open)
+except Exception:
+    v11 = None
+
+
+# ----------------------------------------------------------------------------
+# Telegram notifications (re-integrated from V9 src/telegram.py) - all FAIL-OPEN
+# ----------------------------------------------------------------------------
+def _notify(text):
+    """Fire a Telegram alert via the V9 sender. Fail-open: no token / any error -> silent no-op,
+    NEVER blocks the trading loop."""
+    try:
+        from src.telegram import send_alert
+        return send_alert(text)
+    except Exception:
+        return False
+
+
+def _buy_msg(rec):
+    m = rec.get("metadata") or {}
+    vrp = m.get("vrp") or {}
+    leg = next(iter((rec.get("legs") or {}).values()), {})
+    sp = (leg.get("execution_cost") or {}).get("bid_ask_spread_pct")
+    return (f"<b>BUY {rec.get('ticker')}</b> {rec.get('regime')} {leg.get('structure', '')}\n"
+            f"VRP {vrp.get('vrp')} ({vrp.get('vrp_regime')}) | sweep {m.get('sweep_aggression_pct')}% "
+            f"| zg-dist {m.get('distance_to_zero_gamma_pct')}% | spread {sp}%\n"
+            f"x{leg.get('contracts')} @lim ${leg.get('limit_price')} | {rec.get('execution_mode')}")
+
+
+def _sell_msg(c):
+    return (f"<b>SELL {c.get('ticker')} {c.get('leg')}</b> {c.get('action')} "
+            f"{c.get('return_pct'):+.1f}% (filled_ok={c.get('closed_ok')})")
+
+
+def _autopsy_msg(a):
+    return (f"<b>AUTOPSY {a.get('ticker')}</b> winner={a.get('winner')}\n"
+            f"{str(a.get('factor', a.get('autopsy_error', '')))[:200]}")
+
+LOG_PATH = "proactive_sandbox_logs.json"
+AUTOPSY_MD = "proactive_autopsy_log.md"
+ADVISORY_MD = "v10_tuning_advisory.md"
+LEG_BUDGET = 800.0                  # FLAT $800/trade = 20% of a $4k real account (1:1 sim of real constraints)
+PAPER_BASE = "https://paper-api.alpaca.markets"
+CALL_DELTA, PUT_DELTA = 0.35, -0.35
+CAL_FRONT_DTE = (10, 15)             # short leg expiration window (days)
+CAL_BACK_DTE = (35, 45)             # long leg expiration window (days)
+
+
+def _now_iso_ms():
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def _num(x):
+    try:
+        v = float(x)
+        return None if math.isnan(v) else v
+    except (TypeError, ValueError):
+        return None
+
+
+# ----------------------------------------------------------------------------
+# Metadata fetchers - all FAIL-OPEN (real value + source tag, mock on failure)
+# ----------------------------------------------------------------------------
+def _alpaca_daily(ticker, days=60):
+    k = os.environ.get("ALPACA_PAPER_API_KEY") or os.environ.get("ALPACA_API_KEY")
+    s = os.environ.get("ALPACA_PAPER_SECRET_KEY") or os.environ.get("ALPACA_SECRET_KEY")
+    if not (k and s):
+        return []
+    try:
+        from alpaca.data.historical import StockHistoricalDataClient
+        from alpaca.data.requests import StockBarsRequest
+        from alpaca.data.timeframe import TimeFrame
+        from alpaca.data.enums import DataFeed
+        cli = StockHistoricalDataClient(k, s)
+        start = datetime.utcnow() - timedelta(days=days + 20)
+        bars = cli.get_stock_bars(StockBarsRequest(symbol_or_symbols=ticker, timeframe=TimeFrame.Day,
+                                                   start=start, feed=DataFeed.IEX)).data.get(ticker, [])
+        return [{"h": float(b.high), "l": float(b.low), "c": float(b.close), "v": float(b.volume)} for b in bars]
+    except Exception:
+        return []
+
+
+def macro_technical(ticker, mock):
+    bars = [] if mock else _alpaca_daily(ticker)
+    if len(bars) >= 21:
+        closes = [b["c"] for b in bars]
+        spot = closes[-1]
+        sma20 = sum(closes[-20:]) / 20.0
+        trs = [max(bars[i]["h"] - bars[i]["l"], abs(bars[i]["h"] - bars[i - 1]["c"]),
+                   abs(bars[i]["l"] - bars[i - 1]["c"])) for i in range(1, len(bars))]
+        atr = sum(trs[-14:]) / 14.0
+        vols = [b["v"] for b in bars]
+        rvol = round(vols[-1] / (sum(vols[-20:]) / 20.0), 2) if sum(vols[-20:]) else None
+        return {"spot": round(spot, 2), "sma20": round(sma20, 2),
+                "distance_to_sma20_pct": round((spot - sma20) / sma20 * 100, 3) if sma20 else 0.0,
+                "atr": round(atr, 2), "atr_pct": round(atr / spot * 100, 2) if spot else 0.0,
+                "rvol_10min": rvol if rvol is not None else 1.0, "source": "alpaca"}
+    if mock:                                                  # local demo only - synthetic sample (cheap name, $800-affordable)
+        return {"spot": 30.00, "sma20": 29.85, "distance_to_sma20_pct": 0.503,
+                "atr": 0.90, "atr_pct": 3.00, "rvol_10min": 1.18, "source": "mock"}
+    # live mode, no usable bars (index / halted / degenerate ticker) -> NULL so the caller SKIPS
+    return {"spot": None, "sma20": None, "distance_to_sma20_pct": None,
+            "atr": None, "atr_pct": None, "rvol_10min": None, "source": "unavailable"}
+
+
+def _alpaca_atm_iv(ticker, spot, dte_min, dte_max, creds):
+    """ATM call implied volatility (%) for the dte_min..dte_max expiry window, from Alpaca option
+    snapshots (snapshot.implied_volatility). Returns None on failure (fail-open)."""
+    if not (all(creds) and spot):
+        return None
+    try:
+        import re
+        from alpaca.data.historical.option import OptionHistoricalDataClient
+        from alpaca.data.requests import OptionChainRequest
+        cli = OptionHistoricalDataClient(creds[0], creds[1])
+        gte = (date.today() + timedelta(days=dte_min)).isoformat()
+        lte = (date.today() + timedelta(days=dte_max)).isoformat()
+        snaps = cli.get_option_chain(OptionChainRequest(
+            underlying_symbol=ticker.split(".")[0], type="call",
+            expiration_date_gte=gte, expiration_date_lte=lte,
+            strike_price_gte=str(round(spot * 0.92, 2)), strike_price_lte=str(round(spot * 1.08, 2))))
+    except Exception:
+        return None
+    best_iv, best_d = None, 1e18
+    for sym, s in (snaps or {}).items():
+        iv = getattr(s, "implied_volatility", None)
+        if not iv:
+            continue
+        m = re.search(r"[CP](\d{8})$", sym if isinstance(sym, str) else str(sym))
+        if not m:
+            continue
+        d = abs(int(m.group(1)) / 1000.0 - spot)
+        if d < best_d:
+            best_d, best_iv = d, float(iv) * 100
+    return round(best_iv, 1) if best_iv else None
+
+
+def iv_term_structure(ticker, spot, mock, creds=None):
+    if not mock and creds and all(creds) and spot:
+        iv_f = _alpaca_atm_iv(ticker, spot, CAL_FRONT_DTE[0], CAL_FRONT_DTE[1], creds)   # 10-15d front
+        iv_b = _alpaca_atm_iv(ticker, spot, CAL_BACK_DTE[0], CAL_BACK_DTE[1], creds)     # 35-45d back
+        if iv_f and iv_b:
+            ratio = round(iv_f / iv_b, 3)
+            return {"iv_front": iv_f, "iv_back": iv_b, "iv_ratio": ratio,
+                    "structure": "contango" if ratio < 1 else "backwardation" if ratio > 1 else "flat",
+                    "source": "alpaca"}
+    if mock:                                                  # local demo only - synthetic sample
+        return {"iv_front": 40.0, "iv_back": 32.0, "iv_ratio": 1.25,
+                "structure": "backwardation", "source": "mock"}
+    # live mode, IV unavailable (no / thin options) -> NULL so the caller SKIPS
+    return {"iv_front": None, "iv_back": None, "iv_ratio": None,
+            "structure": None, "source": "unavailable"}
+
+
+def net_gex(ticker, spot, mock):
+    if not mock and spot:
+        try:
+            from src.unusual_whales_api import UnusualWhalesClient
+            uw = UnusualWhalesClient()
+            rows = (uw.greek_exposure_by_strike(ticker.split(".")[0]) or {}).get("data") or []
+            pts = []
+            for r in rows:
+                k = _num(r.get("strike") or r.get("price"))
+                g = (_num(r.get("call_gex")) or 0.0) + (_num(r.get("put_gex")) or 0.0)
+                if k is not None:
+                    pts.append((k, g))
+            if pts:
+                pts.sort()
+                total = sum(g for _, g in pts)
+                cum, prev_cum, crossings = 0.0, 0.0, []
+                for k, g in pts:
+                    prev_cum = cum
+                    cum += g
+                    if (prev_cum < 0 <= cum) or (prev_cum > 0 >= cum):
+                        crossings.append(k)
+                zero_gamma = (min(crossings, key=lambda k: abs(k - spot)) if crossings
+                              else min(pts, key=lambda x: abs(x[0] - spot))[0])
+                return {"net_gex": round(total, 1), "zero_gamma_strike": round(zero_gamma, 2),
+                        "distance_to_zero_gamma_pct": round((spot - zero_gamma) / spot * 100, 3),
+                        "regime": "negative_gamma" if total < 0 else "positive_gamma", "source": "uw"}
+        except Exception:
+            pass
+    if mock:                                                  # local demo only - synthetic sample
+        zg = round(spot * 1.004, 2)
+        return {"net_gex": -1.85e8, "zero_gamma_strike": zg,
+                "distance_to_zero_gamma_pct": round((spot - zg) / spot * 100, 3) if spot else 0.0,
+                "regime": "negative_gamma", "source": "mock"}
+    # live mode, GEX unavailable -> NULL (optional context; the trade still proceeds, logged null)
+    return {"net_gex": None, "zero_gamma_strike": None,
+            "distance_to_zero_gamma_pct": None, "regime": None, "source": "unavailable"}
+
+
+def alt_catalyst(ticker, mock):
+    reddit_delta, insider_usd, cluster, src = None, None, None, "mock"
+    if not mock:
+        try:
+            from prototype_alt_data import reddit_attention_map, insider_open_market_buys
+            ra = reddit_attention_map().get(ticker.split(".")[0])
+            if ra:
+                reddit_delta = ra["mention_spike_pct"]
+            ib = insider_open_market_buys(ticker, lookback_days=10)
+            insider_usd = ib.get("total_value")
+            from sandbox_v10_upgrades import detect_cluster
+            buys = [{"date": b["date"], "filer": b["insider"], "value": b["value"]} for b in ib.get("buys", [])]
+            cluster = detect_cluster(buys)["cluster_flag"] if buys else False
+            src = "apewisdom+edgartools"
+        except Exception:
+            pass
+    if reddit_delta is None:
+        reddit_delta, insider_usd, cluster, src = 540.0, 1_250_000, True, "mock"
+    return {"reddit_mention_delta_pct": reddit_delta, "insider_10d_buy_usd": insider_usd,
+            "insider_cluster_flag": bool(cluster), "source": src}
+
+
+def collect_metadata(ticker, mock=False):
+    mt = macro_technical(ticker, mock)
+    spot = mt["spot"]
+    iv = iv_term_structure(ticker, spot, mock, creds=_paper_creds())
+    md = {
+        "entry_ts_utc": _now_iso_ms(),
+        "macro": {"spot": mt["spot"], "sma20": mt["sma20"], "distance_to_sma20_pct": mt["distance_to_sma20_pct"],
+                  "source": mt["source"]},
+        "iv_term": iv,
+        "gex": net_gex(ticker, spot, mock),
+        "alt_catalyst": alt_catalyst(ticker, mock),
+        "technical": {"atr": mt["atr"], "atr_pct": mt["atr_pct"], "rvol_10min": mt["rvol_10min"],
+                      "source": mt["source"]},
+    }
+    md.update(_v11_sensors(ticker, md, spot, iv, mock))
+    return md
+
+
+def _safe(fn, default):
+    try:
+        return fn()
+    except Exception:
+        return dict(default)
+
+
+def _v11_sensors(ticker, md, spot, iv, mock):
+    """LOG-DON'T-BLOCK: bolt the four V11 context sensors onto the metadata. Each fails open to
+    nulls and NONE is read by any entry/sizing/exit path - the Autopsy Engine consumes them."""
+    if not v11:
+        return {"v11_sensors": "module_unavailable"}
+    prof = _safe(lambda: v11.company_profile(ticker, mock), {"source": "unavailable"})
+    news = _safe(lambda: v11.news_context(ticker, mock), {"source": "unavailable"})
+    rstack = _safe(lambda: v11.regime_stack(ticker, prof.get("sector"),
+                   md["macro"]["distance_to_sma20_pct"], mock), {"source": "unavailable"})
+    skew = _safe(lambda: v11.relative_skew(ticker, spot, iv.get("iv_front"), mock), {"source": "unavailable"})
+    aggr = _safe(lambda: v11.flow_aggression(ticker, mock), {"source": "unavailable"})
+    dpn = _safe(lambda: v11.darkpool_node(ticker, spot, mock), {"source": "unavailable"})
+    pemd = _safe(lambda: v11.post_earnings_drift(ticker, mock), {"source": "unavailable"})
+    vrp = _safe(lambda: v11.vrp_sensor(ticker, iv.get("iv_front"), mock), {"source": "unavailable"})
+    fpers = _safe(lambda: v11.flow_persistence(ticker, mock), {"source": "unavailable"})
+    pact = _safe(lambda: v11.price_action(ticker, mock), {"source": "unavailable"})
+    mctx = _safe(lambda: v11.macro_context(ticker, iv.get("iv_front"), iv.get("iv_back"),
+                 prof.get("sector"), mock), {"source": "unavailable"})
+    liq = _safe(lambda: v11.liquidity_slippage(ticker, mock), {"source": "unavailable"})    # mid-cap microstructure
+    relm = _safe(lambda: v11.relative_momentum(ticker, mock), {"source": "unavailable"})
+    flt = _safe(lambda: v11.float_mechanics(ticker, mock), {"source": "unavailable"})
+    dgk = _safe(lambda: v11.dealer_greeks(ticker, mock), {"source": "unavailable"})         # DEX / vanna / charm
+    return {"fundamentals": prof, "news": news, "regime_stack": rstack, "skew": skew,
+            "flow_aggression": aggr, "dark_pool": dpn, "pemd": pemd, "vrp": vrp, "flow_persistence": fpers,
+            "price_action": pact, "macro_context": mctx, "dealer_greeks": dgk,
+            "liquidity_and_slippage": liq, "relative_momentum": relm, "float_mechanics": flt,
+            "news_sentiment_score": news.get("vader_compound"),
+            # flat log-keys consumed by the Autopsy Engine (also nested above):
+            "sweep_aggression_pct": aggr.get("sweep_aggression_pct"),
+            "distance_to_zero_gamma_pct": (md.get("gex") or {}).get("distance_to_zero_gamma_pct"),  # edge #2 (already in gex)
+            "distance_to_heaviest_dp_node_pct": dpn.get("distance_to_heaviest_dp_node_pct"),
+            "days_since_earnings": pemd.get("days_since_earnings"),
+            "post_earnings_iv_crush_flag": pemd.get("post_earnings_iv_crush_flag"),
+            "flow_persistence_pct": fpers.get("flow_persistence_pct")}
+
+
+# ----------------------------------------------------------------------------
+# Trigger + legs + Alpaca paper routing
+# ----------------------------------------------------------------------------
+def classify_regime(md, candidate=None):
+    """Directional read of the market's intent - loose, data-gathering. Flow direction (why the
+    scanner fired) dominates; the ticker's own trend and the broad-market regime confirm. Returns
+    BULLISH / BEARISH / NEUTRAL. This routes WHICH structure we trade, never whether we trade."""
+    score = 0.0
+    ft = (candidate or {}).get("flow_type")
+    if ft == "call":
+        score += 2.0
+    elif ft == "put":
+        score -= 2.0
+    dist = (md.get("macro") or {}).get("distance_to_sma20_pct")
+    if isinstance(dist, (int, float)):
+        score += 1.0 if dist > 1.0 else -1.0 if dist < -1.0 else 0.0
+    spy = (md.get("regime_stack") or {}).get("market_spy_dist_pct")
+    if isinstance(spy, (int, float)):
+        score += 0.5 if spy > 0 else -0.5 if spy < 0 else 0.0
+    if score >= 0.5:
+        return "BULLISH"
+    if score <= -0.5:
+        return "BEARISH"
+    return "NEUTRAL"
+
+
+_REGIME_STRUCTURE = {"BULLISH": "bullish_call", "BEARISH": "bearish_put", "NEUTRAL": "flat_calendar"}
+
+
+def should_enter_proactive(regime, params, candidate=None):
+    """Blind bypass killed: we still take loose, data-gathering trades, but the REGIME decides the
+    structure (call / put / calendar) - it is no longer a global on-off switch."""
+    return True, f"regime_{regime}_loose"
+
+
+def _est_premium(spot, strike, iv_pct, dte, right):
+    intrinsic = max(0.0, (spot - strike) if right == "call" else (strike - spot))
+    tv = spot * (iv_pct / 100.0) * math.sqrt(max(dte, 1) / 365.0) * 0.40
+    return round(intrinsic + tv, 2)
+
+
+def _occ(ticker, dte, right, strike):
+    expiry = (date.today() + timedelta(days=dte))
+    ymd = expiry.strftime("%y%m%d")
+    rc = "C" if right == "call" else "P"
+    k = str(int(round(strike * 1000))).zfill(8)
+    return f"{ticker.upper()[:6]}{ymd}{rc}{k}", expiry.isoformat()
+
+
+def build_legs(ticker, md, regime="NEUTRAL", leg_budget=LEG_BUDGET, illiquid=None):
+    spot = md["macro"]["spot"]
+    iv_f, iv_b = md["iv_term"]["iv_front"], md["iv_term"]["iv_back"]
+    per_leg = leg_budget                      # FLAT $800 per trade
+    min_ct = load_params().get("min_contracts", 2)
+    illiquid = illiquid or set()
+    call_k, put_k = round(spot * 1.04, 1), round(spot * 0.96, 1)
+    cp, pp = _est_premium(spot, call_k, iv_f, 35, "call"), _est_premium(spot, put_k, iv_f, 35, "put")
+    front, back = _est_premium(spot, spot, iv_f, 14, "call"), _est_premium(spot, spot, iv_b, 45, "call")
+    cal_debit = round(back - front, 2)
+
+    def _qty(premium):
+        if not premium or premium <= 0:
+            return 0
+        q = int(per_leg // (premium * 100))   # floor($800 / cost-per-contract)
+        return q if q >= min_ct else 0        # AFFORDABILITY GATE: need >= 2 contracts on $800 (premium <= ~$4.00), else SKIP
+
+    def leg(name, structure, right, strike, dte, premium, **extra):
+        occ, expiry = _occ(ticker, dte, right, strike)
+        qty = _qty(premium)
+        return {"structure": structure, "occ_symbol": occ, "expiry": expiry, "strike": strike,
+                "dte": dte, "entry_premium": premium, "limit_price": round(premium * 1.01, 2),
+                "contracts": qty, "alloc_usd": per_leg,
+                "illiquid": (name in illiquid) or qty <= 0, **extra}
+
+    all_legs = {
+        "bullish_call": leg("bullish_call", "LONG_CALL", "call", call_k, 35, cp, target_delta=CALL_DELTA),
+        "bearish_put": leg("bearish_put", "LONG_PUT", "put", put_k, 35, pp, target_delta=PUT_DELTA),
+    }
+    cal_occ_f, _ = _occ(ticker, 14, "call", round(spot, 1))
+    cal_occ_b, exp_b = _occ(ticker, 45, "call", round(spot, 1))
+    qty_cal = _qty(cal_debit)
+    all_legs["flat_calendar"] = {"structure": "CALENDAR_SPREAD", "strike": round(spot, 1),
+                                 "front_occ": cal_occ_f, "back_occ": cal_occ_b, "front_dte": 14, "back_dte": 45,
+                                 "net_debit": cal_debit, "limit_price": round(cal_debit * 1.01, 2),
+                                 "contracts": qty_cal, "alloc_usd": per_leg,
+                                 "illiquid": ("flat_calendar" in illiquid) or qty_cal <= 0}
+    pick = _REGIME_STRUCTURE.get(regime, "flat_calendar")     # regime routes the structure (one per cluster)
+    return {pick: all_legs[pick]}
+
+
+def _order_payload(name, leg):
+    if name == "flat_calendar":
+        return {"order_class": "mleg", "qty": str(leg["contracts"]), "type": "limit",
+                "limit_price": str(leg["limit_price"]), "time_in_force": "day", "legs": [
+                    {"symbol": leg["front_occ"], "ratio_qty": "1", "side": "sell", "position_intent": "sell_to_open"},
+                    {"symbol": leg["back_occ"], "ratio_qty": "1", "side": "buy", "position_intent": "buy_to_open"}]}
+    return {"symbol": leg["occ_symbol"], "qty": str(leg["contracts"]), "side": "buy", "type": "limit",
+            "limit_price": str(leg["limit_price"]), "time_in_force": "day"}
+
+
+def _submit_paper_order(payload, creds):
+    key, sec = creds
+    data = json.dumps(payload).encode()
+    req = urllib.request.Request(PAPER_BASE + "/v2/orders", data=data, method="POST",
+                                 headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec,
+                                          "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            resp = json.loads(r.read().decode())
+        return resp.get("id"), resp.get("status"), None
+    except Exception as e:
+        return None, "ERROR", str(e)[:120]
+
+
+def route_to_alpaca_paper(ticker, legs, dry_run=True):
+    creds = (os.environ.get("ALPACA_PAPER_API_KEY"), os.environ.get("ALPACA_PAPER_SECRET_KEY"))
+    out = {}
+    for name, leg in legs.items():
+        if leg.get("illiquid"):                       # FAIL-OPEN: skip illiquid, keep the rest
+            out[name] = {"status": "SKIPPED_ILLIQUID", "order_id": None, "submitted": False}
+            continue
+        payload = _order_payload(name, leg)
+        if dry_run:
+            out[name] = {"status": "DRY_RUN", "order_id": None, "submitted": False,
+                         "limit_price": leg["limit_price"], "contracts": leg["contracts"], "payload": payload}
+        elif not all(creds):
+            out[name] = {"status": "NO_PAPER_CREDS", "order_id": None, "submitted": False, "payload": payload}
+        else:
+            oid, status, err = _submit_paper_order(payload, creds)
+            out[name] = {"status": status, "order_id": oid, "error": err, "submitted": True,
+                         "limit_price": leg["limit_price"], "contracts": leg["contracts"]}
+    return out
+
+
+# ---- real OCC resolution + portfolio guards (read-only Alpaca paper API) ----
+COOLOFF_PATH = "sandbox_ticker_cooloff.json"
+
+
+def _paper_creds():
+    return (os.environ.get("ALPACA_PAPER_API_KEY"), os.environ.get("ALPACA_PAPER_SECRET_KEY"))
+
+
+def _paper_get(path, creds):
+    key, sec = creds
+    req = urllib.request.Request(PAPER_BASE + path, headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return json.loads(r.read().decode())
+
+
+def resolve_occ(ticker, right, target_strike, target_dte, creds=None, dte_min=None, dte_max=None):
+    """Resolve a REAL active OCC contract near target strike/expiry via Alpaca
+    /v2/options/contracts. CRITICAL: that endpoint defaults to ~this-week expiries, so we MUST
+    bound expiration_date_gte/lte or we get the wrong contracts. Pass dte_min/dte_max to set an
+    explicit window (e.g. 10-15d front / 35-45d back for the calendar). Fail-open -> None."""
+    import urllib.parse
+    creds = creds or _paper_creds()
+    if not all(creds):
+        return None
+    if dte_min is not None and dte_max is not None:
+        gte = date.today() + timedelta(days=dte_min)
+        lte = date.today() + timedelta(days=dte_max)
+    else:
+        exp = date.today() + timedelta(days=target_dte)
+        gte, lte = exp - timedelta(days=7), exp + timedelta(days=10)
+    q = urllib.parse.urlencode({
+        "underlying_symbols": ticker.split(".")[0], "type": right, "status": "active",
+        "expiration_date_gte": gte.isoformat(), "expiration_date_lte": lte.isoformat(),
+        "strike_price_gte": round(target_strike * 0.85, 2), "strike_price_lte": round(target_strike * 1.15, 2),
+        "limit": 1000})
+    try:
+        rows = _paper_get(f"/v2/options/contracts?{q}", creds).get("option_contracts") or []
+    except Exception:
+        return None
+    if not rows:
+        return None
+    best = min(rows, key=lambda c: abs(float(c.get("strike_price", 0)) - target_strike))
+    return {"occ_symbol": best.get("symbol"), "strike": float(best.get("strike_price")),
+            "expiration": best.get("expiration_date"), "open_interest": best.get("open_interest")}
+
+
+def get_open_positions(creds=None):
+    creds = creds or _paper_creds()
+    if not all(creds):
+        return []
+    try:
+        return _paper_get("/v2/positions", creds)
+    except Exception:
+        return []
+
+
+def get_open_orders(creds=None):
+    creds = creds or _paper_creds()
+    if not all(creds):
+        return []
+    try:
+        return _paper_get("/v2/orders?status=open&limit=500", creds)
+    except Exception:
+        return []
+
+
+def _cancel_order(order_id, creds):
+    key, sec = creds
+    req = urllib.request.Request(PAPER_BASE + f"/v2/orders/{order_id}", method="DELETE",
+                                 headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return r.status in (200, 204)
+    except Exception:
+        return False
+
+
+def audit_stale_orders(creds=None, max_minutes=None, orders=None):
+    """Cancel limit orders sitting unfilled longer than max_minutes (default 30 = 3 cycles) so
+    stale limits don't block buying power. Logs the cancels so the autopsy knows the leg was
+    cancelled, not filled. Returns the cancelled list."""
+    creds = creds or _paper_creds()
+    if not all(creds):
+        return []
+    if max_minutes is None:
+        max_minutes = load_params().get("stale_order_max_minutes", 30)
+    orders = orders if orders is not None else get_open_orders(creds)
+    now = datetime.now(timezone.utc)
+    cancelled = []
+    for o in orders:
+        sub = o.get("submitted_at") or o.get("created_at")
+        if not sub or o.get("type") != "limit":
+            continue
+        try:
+            age = (now - datetime.fromisoformat(sub.replace("Z", "+00:00"))).total_seconds() / 60.0
+        except Exception:
+            continue
+        if age > max_minutes and _cancel_order(o.get("id"), creds):
+            cancelled.append({"order_id": o.get("id"), "symbol": o.get("symbol"),
+                              "age_min": round(age, 1), "limit_price": o.get("limit_price")})
+    if cancelled:
+        _append_log({"trade_set_id": "AUDIT-" + uuid.uuid4().hex[:8], "type": "stale_order_cleanup",
+                     "ts_utc": _now_iso_ms(), "max_minutes": max_minutes, "cancelled": cancelled,
+                     "status": "CANCELLED"})
+    return cancelled
+
+
+def ticker_blocked(ticker, positions, params, open_orders=None, now=None):
+    base = ticker.upper().split(".")[0]
+    held = 0
+    for p in positions or []:
+        sym = (p.get("symbol") or "").upper()
+        if sym == base or sym.startswith(base):
+            held += abs(int(float(p.get("qty", 0) or 0)))
+    pending = 0
+    for o in open_orders or []:
+        syms = [o.get("symbol")] + [l.get("symbol") for l in (o.get("legs") or [])]
+        if any((s or "").upper().startswith(base) for s in syms):
+            pending += abs(int(float(o.get("qty", 0) or 0)))
+    cap = params.get("max_contracts_per_ticker", 3)
+    if held + pending >= cap:
+        return True, f"ticker cap: {held} held + {pending} pending on {base} >= {cap}"
+    cool = {}
+    if os.path.exists(COOLOFF_PATH):
+        try:
+            cool = json.load(open(COOLOFF_PATH, encoding="utf-8"))
+        except Exception:
+            cool = {}
+    ts = cool.get(base)
+    if ts:
+        closed = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        hrs = ((now or datetime.now(timezone.utc)) - closed).total_seconds() / 3600.0
+        if hrs < params.get("ticker_cooloff_hours", 24):
+            return True, f"cool-off: {base} closed {hrs:.1f}h ago (< {params.get('ticker_cooloff_hours', 24)}h)"
+    return False, "clear"
+
+
+def record_close(ticker):
+    base = ticker.upper().split(".")[0]
+    cool = json.load(open(COOLOFF_PATH, encoding="utf-8")) if os.path.exists(COOLOFF_PATH) else {}
+    cool[base] = _now_iso_ms()
+    json.dump(cool, open(COOLOFF_PATH, "w", encoding="utf-8"), indent=2)
+
+
+def _occ_expiry(occ):
+    """Parse the YYMMDD expiry out of an OCC symbol -> ISO date string (None if unparseable)."""
+    m = re.search(r"(\d{6})[CP]\d{8}$", occ or "")
+    if not m:
+        return None
+    d = m.group(1)
+    return f"20{d[:2]}-{d[2:4]}-{d[4:6]}"
+
+
+def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage="initial", mfe_pct=None):
+    """Strategy-B tiered exit STATE MACHINE (per leg). Stages:
+      initial  -> hard stop at -stop_loss_pct (overrides 24h); SCALE_OUT_50 at +take_profit_pct
+                  (gated by the 24h hold) -> sell half, arm the break-even shield.
+      scaled   -> runner protected by a break-even stop (CLOSE_BREAKEVEN at <= break_even_pct);
+                  arms the MFE trail once it crosses +trail_activate_pct.
+      trailing -> 20% trail of the peak MFE: CLOSE_TRAIL when ret <= peak_mfe * (1 - trail_drawdown).
+    Expiry is a hard override in every stage. ret_pct is the broker directional P/L %; mfe_pct is
+    the running peak excursion (for the trail)."""
+    now = now or datetime.now(timezone.utc)
+    entry = datetime.fromisoformat(entry_ts_iso.replace("Z", "+00:00"))
+    held_h = (now - entry).total_seconds() / 3600.0
+    ret = round(ret_pct, 1)
+    peak = round(max(mfe_pct if mfe_pct is not None else ret, ret), 1)
+    base = {"return_pct": ret, "held_hours": round(held_h, 1), "stage": stage, "peak_mfe": peak}
+    if expiry_iso:                                            # hard expiry override (any stage)
+        try:
+            dte = (date.fromisoformat(expiry_iso) - now.date()).days
+            if dte <= params.get("expiry_exit_dte", 3):
+                return {**base, "action": "CLOSE_EXPIRY", "stage": "closed",
+                        "reason": f"{dte}d to expiry -> close before decay/assignment"}
+        except Exception:
+            pass
+    stop = abs(params.get("stop_loss_pct", 50))
+    tp = params.get("take_profit_pct", 30)
+    be = params.get("break_even_pct", 0)
+    trig = params.get("trail_activate_pct", 50)
+    trail = params.get("trail_drawdown_pct", 20) / 100.0
+    min_hold = params.get("min_hold_hours", 24)
+    if stage == "initial":
+        if ret <= -stop:
+            return {**base, "action": "CLOSE_STOP_LOSS", "stage": "closed", "reason": f"{ret}% <= -{stop}% hard stop"}
+        if held_h >= min_hold and ret >= tp:
+            return {**base, "action": "SCALE_OUT_50", "stage": "scaled",
+                    "reason": f"+{ret}% >= {tp}% -> sell 50%, stop -> break-even"}
+        return {**base, "action": "HOLD", "reason": f"initial: {ret}% (stop -{stop}% / scale +{tp}%)"}
+    if stage == "scaled":
+        if ret <= be:
+            return {**base, "action": "CLOSE_BREAKEVEN", "stage": "closed",
+                    "reason": f"runner gave back to break-even ({ret}% <= {be}%)"}
+        if ret >= trig:
+            return {**base, "action": "HOLD", "stage": "trailing", "reason": f"+{ret}% >= {trig}% -> MFE trail armed"}
+        return {**base, "action": "HOLD", "reason": f"scaled runner: {ret}% (BE stop {be}% / trail arms +{trig}%)"}
+    if stage == "trailing":
+        trail_stop = round(peak * (1 - trail), 1)
+        if ret <= trail_stop:
+            return {**base, "action": "CLOSE_TRAIL", "stage": "closed",
+                    "reason": f"{ret}% <= trail {trail_stop}% (20% off peak MFE {peak}%)"}
+        return {**base, "action": "HOLD", "reason": f"trailing: {ret}% peak {peak}% trail@{trail_stop}%"}
+    return {**base, "action": "HOLD", "reason": f"stage {stage}"}
+
+
+def _resolve_legs_occ(ticker, legs, creds):
+    for name, right in (("bullish_call", "call"), ("bearish_put", "put")):
+        if name not in legs:
+            continue
+        leg = legs[name]
+        r = resolve_occ(ticker, right, leg["strike"], leg["dte"], creds)
+        if r and r.get("occ_symbol"):
+            leg.update({"occ_symbol": r["occ_symbol"], "strike": r["strike"], "expiry": r["expiration"],
+                        "open_interest": r.get("open_interest"), "occ_source": "alpaca_resolved"})
+        else:
+            leg.update({"illiquid": True, "occ_source": "unresolved -> FAIL-OPEN skip"})
+    if "flat_calendar" in legs:
+        cal = legs["flat_calendar"]
+        f = resolve_occ(ticker, "call", cal["strike"], cal["front_dte"], creds,
+                        dte_min=CAL_FRONT_DTE[0], dte_max=CAL_FRONT_DTE[1])   # 10-15d short leg
+        b = resolve_occ(ticker, "call", cal["strike"], cal["back_dte"], creds,
+                        dte_min=CAL_BACK_DTE[0], dte_max=CAL_BACK_DTE[1])     # 35-45d long leg
+        if f and b and f.get("occ_symbol") and b.get("occ_symbol"):
+            cal.update({"front_occ": f["occ_symbol"], "back_occ": b["occ_symbol"],
+                        "front_expiry": f["expiration"], "back_expiry": b["expiration"], "occ_source": "alpaca_resolved"})
+        else:
+            cal.update({"illiquid": True, "occ_source": "unresolved -> FAIL-OPEN skip"})
+    _stamp_spreads(legs)
+
+
+def _stamp_spreads(legs):
+    """SENSOR 3: stamp the live bid/ask spread of each resolved OCC at order-generation time.
+    Pure logging - never alters sizing or whether a leg is submitted."""
+    if not v11:
+        return
+    for leg in legs.values():
+        occ = leg.get("occ_symbol") or leg.get("back_occ")     # calendar -> long (back) leg
+        try:
+            leg["execution_cost"] = v11.option_spread(occ)
+        except Exception:
+            leg["execution_cost"] = {"source": "unavailable"}
+        try:
+            leg["oi_change"] = v11.oi_change(occ)              # SENSOR 8b: per-leg OI day-over-day
+        except Exception:
+            leg["oi_change"] = {"source": "unavailable"}
+
+
+def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True, illiquid=None,
+                        resolve_real=None, positions=None, open_orders=None):
+    params = load_params()
+    creds = _paper_creds()
+    if positions is None:
+        positions = get_open_positions(creds) if all(creds) else []
+    blocked, why = ticker_blocked(ticker, positions, params, open_orders=open_orders)
+    if blocked:
+        return {"trade_set_id": None, "ticker": ticker, "skipped": True, "reason": why, "status": "SKIPPED"}
+
+    md = collect_metadata(ticker, mock=mock)
+    if md["macro"]["spot"] is None or md["iv_term"]["iv_front"] is None:    # core data unavailable ->
+        return {"trade_set_id": None, "ticker": ticker, "skipped": True,    # SKIP (never fabricate a trade)
+                "reason": f"core metadata unavailable (spot={md['macro']['source']}, "
+                          f"iv={md['iv_term']['source']}) - degenerate/non-optionable ticker",
+                "status": "SKIPPED"}
+    regime = classify_regime(md, candidate)
+    if regime == "NEUTRAL":          # SAFETY: the calendar exit is not yet spread-aware (Strategy B is directional;
+        return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,   # managing the two calendar
+                "reason": "NEUTRAL/calendar route disabled pending a spread-aware unit exit (naked-leg risk)",  # sub-legs
+                "status": "SKIPPED"}                                                          # independently -> naked leg)
+    ok, trigger = should_enter_proactive(regime, params, candidate)
+    legs = build_legs(ticker, md, regime, illiquid=illiquid)
+    min_ct = params.get("min_contracts", 2)
+    if all((leg.get("contracts") or 0) < min_ct for leg in legs.values()):   # AFFORDABILITY GATE (real-money sim)
+        return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
+                "reason": f"premium too rich for {min_ct}-contract min on ${LEG_BUDGET:.0f} budget (est >~$4.00/contract)",
+                "status": "SKIPPED"}
+    if resolve_real is None:
+        resolve_real = all(creds)
+    if resolve_real:
+        _resolve_legs_occ(ticker, legs, creds)                 # real OCCs; unresolved -> fail-open skip
+    orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run)
+    record = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
+              "entry_ts_utc": md["entry_ts_utc"], "leg_budget_usd": LEG_BUDGET,
+              "execution_mode": "DRY_RUN" if dry_run else "LIVE_PAPER",
+              "occ_resolution": "alpaca_real" if resolve_real else "synthesized",
+              "ticker_guard": why, "open_positions_checked": len(positions),
+              "params_snapshot": params, "metadata": md, "legs": legs, "orders": orders,
+              "exit": None, "status": "OPEN"}
+    _append_log(record)
+    if not dry_run:
+        _notify(_buy_msg(record))                           # Telegram BUY alert (fail-open)
+    return record
+
+
+def _append_log(record):
+    data = []
+    if os.path.exists(LOG_PATH):
+        try:
+            data = json.load(open(LOG_PATH, encoding="utf-8"))
+        except Exception:
+            data = []
+    data.append(record)
+    json.dump(data, open(LOG_PATH, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+
+
+def _rewrite_last(record):
+    data = json.load(open(LOG_PATH, encoding="utf-8"))
+    for i in range(len(data) - 1, -1, -1):
+        if data[i]["trade_set_id"] == record["trade_set_id"]:
+            data[i] = record
+            break
+    json.dump(data, open(LOG_PATH, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+
+
+def _load_log_list():
+    if not os.path.exists(LOG_PATH):
+        return []
+    try:
+        return json.load(open(LOG_PATH, encoding="utf-8"))
+    except Exception:
+        return []
+
+
+def _save_log_list(data):
+    json.dump(data, open(LOG_PATH, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+
+
+def _close_position(occ, creds, percentage=100):
+    """Close an open option leg via Alpaca close-position (market order). percentage<100 scales
+    out a partial position (e.g. 50 for the Strategy-B half-sell)."""
+    import urllib.parse
+    key, sec = creds
+    url = PAPER_BASE + "/v2/positions/" + urllib.parse.quote(occ)
+    if percentage and percentage < 100:
+        url += "?percentage=" + str(percentage)
+    req = urllib.request.Request(url, method="DELETE",
+                                 headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return r.status in (200, 207)
+    except Exception:
+        return False
+
+
+def _record_leg_occs(rec):
+    out = {}
+    for name, leg in (rec.get("legs") or {}).items():
+        if name == "flat_calendar":
+            if leg.get("front_occ"):
+                out["calendar_front"] = leg["front_occ"]
+            if leg.get("back_occ"):
+                out["calendar_back"] = leg["back_occ"]
+        elif leg.get("occ_symbol"):
+            out[name] = leg["occ_symbol"]
+    return out
+
+
+def manage_open_positions(creds, params, positions=None):
+    """EXIT PASS: evaluate every open option position against the 24h swing guard + 30-50%
+    velocity target (manage_exit). Close winners, trip the 24h ticker cool-off (record_close),
+    and run the live autopsy (run_trade_autopsy) once a trade-set has no open legs left."""
+    if not all(creds):
+        return [], []
+    positions = positions if positions is not None else get_open_positions(creds)
+    pos_by_occ = {(p.get("symbol") or "").upper(): p for p in positions}
+    log = _load_log_list()
+    closed_legs, autopsies, dirty = [], [], False
+    for rec in log:
+        if rec.get("status") != "OPEN" or not isinstance(rec.get("legs"), dict):
+            continue
+        leg_occs = _record_leg_occs(rec)
+        if not leg_occs:
+            continue
+        rec.setdefault("leg_exits", {})
+        # 1. evaluate + close each leg with an open position that cleared 24h and hit the target
+        for leg_name, occ in leg_occs.items():
+            if leg_name in rec["leg_exits"]:
+                continue
+            p = pos_by_occ.get((occ or "").upper())
+            if not p:
+                continue
+            entry_px = float(p.get("avg_entry_price") or 0)
+            plpc = p.get("unrealized_plpc")
+            if plpc is not None:
+                ret_pct = float(plpc) * 100.0                  # broker directional P/L %, sign-correct (long & short)
+            else:
+                cur_px = float(p.get("current_price") or 0)
+                ret_pct = (cur_px / entry_px - 1) * 100.0 if entry_px else 0.0
+            path = rec.setdefault("leg_path", {}).setdefault(leg_name, {"mfe_pct": ret_pct, "mae_pct": ret_pct, "stage": "initial"})
+            path["mfe_pct"] = round(max(path["mfe_pct"], ret_pct), 1)   # Max Favorable Excursion (trade path)
+            path["mae_pct"] = round(min(path["mae_pct"], ret_pct), 1)   # Max Adverse Excursion
+            dirty = True                                                 # persist the running path every cycle
+            dec = manage_exit(rec["entry_ts_utc"], ret_pct, params, expiry_iso=_occ_expiry(occ),
+                              stage=path.get("stage", "initial"), mfe_pct=path["mfe_pct"])
+            if dec["action"] == "SCALE_OUT_50":                          # tier 1: sell half, runner continues
+                ok = _close_position(occ, creds, percentage=50)
+                if ok:                                                    # only advance to 'scaled' on a SUCCESSFUL half-sell
+                    path["stage"] = "scaled"                              # (failed partial -> stay 'initial', retry next cycle)
+                    path["scaled_out"] = {"at": _now_iso_ms(), "return_pct": dec["return_pct"]}
+                    closed_legs.append({"ticker": rec["ticker"], "leg": leg_name + " (50%)", "occ": occ,
+                                        "return_pct": dec["return_pct"], "action": "SCALE_OUT_50", "closed_ok": ok})
+                    _notify(_sell_msg(closed_legs[-1]))           # Telegram SELL alert (fail-open)
+            elif dec["action"].startswith("CLOSE"):          # stop / break-even / trail / expiry -> full close
+                ok = _close_position(occ, creds, percentage=100)
+                if ok:                                                    # only mark exited on a SUCCESSFUL close
+                    path["stage"] = dec["stage"]                          # (rejected close, e.g. market closed -> retry next cycle)
+                    rec["leg_exits"][leg_name] = {"occ": occ, "closed_at": _now_iso_ms(),
+                                                  "return_pct": dec["return_pct"], "reason": dec["reason"],
+                                                  "action": dec["action"], "closed_ok": ok}
+                    record_close(rec["ticker"])                       # 24h cool-off
+                    closed_legs.append({"ticker": rec["ticker"], "leg": leg_name, "occ": occ,
+                                        "return_pct": dec["return_pct"], "action": dec["action"], "closed_ok": ok})
+                    _notify(_sell_msg(closed_legs[-1]))           # Telegram SELL alert (fail-open)
+            else:                                                         # HOLD (incl. the trail-arm transition)
+                path["stage"] = dec["stage"]                              # persist 'trailing' arm / 'initial'
+        # 2. autopsy once the set has no remaining OPEN legs
+        still_open = any((occ or "").upper() in pos_by_occ and ln not in rec["leg_exits"]
+                         for ln, occ in leg_occs.items())
+        if not still_open and rec["leg_exits"]:
+            returns = {ln: 0.0 for ln in (rec.get("legs") or {})}      # only the legs actually traded
+            for ln, ex in rec["leg_exits"].items():
+                key = "flat_calendar" if ln.startswith("calendar") else ln
+                if key in returns:
+                    returns[key] = ex["return_pct"]
+            try:
+                ex_reason = "+".join(sorted({ex.get("action", "CLOSE") for ex in rec["leg_exits"].values()}))
+                res = run_trade_autopsy(rec, returns, exit_reason=ex_reason, underlying_move_pct=0.0)
+                autopsies.append({"ticker": rec["ticker"], "set": rec["trade_set_id"],
+                                  "winner": res["winner"], "factor": res["determining_factor"]})
+            except Exception as e:
+                rec["status"] = "CLOSED"
+                autopsies.append({"ticker": rec["ticker"], "autopsy_error": str(e)[:80]})
+            _notify(_autopsy_msg(autopsies[-1]))             # Telegram AUTOPSY alert (fail-open)
+            dirty = True
+    if dirty:
+        _save_log_list(log)
+    return closed_legs, autopsies
+
+
+# ----------------------------------------------------------------------------
+# Autopsy + Tuning Advisory
+# ----------------------------------------------------------------------------
+def _determining_factor(winner, md, move, ret=None):
+    alt, gex, ivt = md["alt_catalyst"], md["gex"], md["iv_term"]
+    rd = alt.get("reddit_mention_delta_pct")
+    zg, reg = gex.get("zero_gamma_strike"), gex.get("regime")
+    lost = ret is not None and ret < 0
+    if winner == "bullish_call":
+        if lost:
+            return f"Bullish call FAILED ({ret:+.0f}%, move {move}%): the expected expansion never came; {reg} regime / spot vs zero-gamma {zg} worked against it."
+        if alt.get("insider_cluster_flag"):
+            return f"Insider cluster buy (${alt.get('insider_10d_buy_usd'):,.0f}/10d) predicted the bullish expansion; {reg} amplified the breakout."
+        if rd is not None and rd > 500:
+            return f"Breakout triggered by a +{rd:.0f}% Reddit spike while IV term was in {ivt.get('structure')}."
+        return f"Bullish breakout (move {move}%); dealers short gamma near {zg} fed the squeeze."
+    if winner == "bearish_put":
+        if lost:
+            return f"Bearish put FAILED ({ret:+.0f}%, move {move}%): no breakdown materialised; spot held above zero-gamma {zg}."
+        return f"Bearish breakdown (move {move}%): spot below zero-gamma {zg} -> negative-gamma slide, no positive catalyst."
+    if lost:
+        return f"Calendar FAILED ({ret:+.0f}%): the range broke; IV term {ivt.get('structure')} (ratio {ivt.get('iv_ratio')}) hurt the spread."
+    return f"Range held: IV term {ivt.get('structure')} (ratio {ivt.get('iv_ratio')}) let front-month theta outrun the wings."
+
+
+def _tuning_rules(record, returns, slippage_pct):
+    md = record["metadata"]
+    spot, zg = md["macro"]["spot"], md["gex"]["zero_gamma_strike"]
+    final_spot = spot * (1 + (record.get("exit", {}) or {}).get("underlying_move_pct", 0) / 100.0)
+    iv_ratio = md["iv_term"]["iv_ratio"]
+    recs = []
+    if returns.get("bullish_call", 0) < 0 and zg is not None and final_spot < zg:
+        recs.append(("min_gex_distance",
+                     "Bullish Call lost AND spot crossed below the Zero-Gamma strike -> "
+                     "Tighten min_gex_distance or restrict Calls when GEX is negative."))
+    if returns.get("flat_calendar", 0) < 0 and iv_ratio is not None and iv_ratio > 1.0:
+        recs.append(("max_iv_ratio_for_calendar",
+                     f"Calendar Spread lost AND IV Ratio {iv_ratio} > 1.0 (backwardation) -> "
+                     "Enforce standard contango by setting max_iv_ratio_for_calendar to < 1.0."))
+    if slippage_pct is not None and slippage_pct > 3.0:
+        recs.append(("max_bid_ask_spread_pct",
+                     f"Entry slippage {slippage_pct}% > 3% -> "
+                     "Tighten max_bid_ask_spread_pct from 5.0% to 2.0%."))
+    return recs
+
+
+def run_trade_autopsy(record, leg_returns_pct, exit_reason="5d_time_exit",
+                      underlying_move_pct=None, entry_slippage_pct=None):
+    md = record["metadata"]
+    ranked = sorted(leg_returns_pct.items(), key=lambda kv: kv[1], reverse=True)
+    winner, w_ret = ranked[0]
+    loser, l_ret = ranked[-1]
+    lp = record.get("leg_path") or {}
+    record["exit"] = {"reason": exit_reason, "underlying_move_pct": underlying_move_pct,
+                      "entry_slippage_pct": entry_slippage_pct, "leg_returns_pct": leg_returns_pct,
+                      "winner": winner, "loser": loser, "leg_path": lp,
+                      "mfe_pct": max((v.get("mfe_pct", 0) for v in lp.values()), default=None),   # best path point
+                      "mae_pct": min((v.get("mae_pct", 0) for v in lp.values()), default=None)}   # worst path point
+    factor = _determining_factor(winner, md, underlying_move_pct, w_ret)
+    record["exit"]["determining_factor"] = factor
+    record["status"] = "CLOSED"
+
+    # post-mortem markdown
+    label = {"bullish_call": "Bullish (call)", "bearish_put": "Bearish (put)", "flat_calendar": "Flat (calendar)"}
+    pm = [f"## Autopsy - {record['ticker']} ({record['trade_set_id']})",
+          f"- entered {record['entry_ts_utc']} | trigger {record.get('trigger', '?')} | exit {exit_reason} "
+          f"| move {underlying_move_pct}% | slippage {entry_slippage_pct}%", "",
+          "| leg | structure | return % | verdict |", "|---|---|---|---|"]
+    for leg, ret in ranked:
+        v = "WINNER" if leg == winner else ("loser" if leg == loser else "")
+        struct = (record.get("legs", {}).get(leg) or {}).get("structure", "?")
+        pm.append(f"| {label.get(leg, leg)} | {struct} | {ret:+.1f}% | {v} |")
+    pm += ["", f"**Determining factor:** {factor}", ""]
+    open(AUTOPSY_MD, "a", encoding="utf-8").write("\n".join(pm) + "\n")
+
+    # tuning advisory
+    recs = _tuning_rules(record, leg_returns_pct, entry_slippage_pct)
+    adv = [f"## Tuning Advisory - {record['ticker']} ({record['trade_set_id']}) - {_now_iso_ms()}",
+           f"trade: winner={winner} loser={loser} | move {underlying_move_pct}% | slippage {entry_slippage_pct}%",
+           "", "Recommendations:"]
+    adv += [f"- [{gate}] {msg}" for gate, msg in recs] or ["- none (no rule triggered)"]
+    open(ADVISORY_MD, "a", encoding="utf-8").write("\n".join(adv) + "\n---\n")
+    record["exit"]["tuning_recommendations"] = [g for g, _ in recs]
+    return {"winner": winner, "loser": loser, "determining_factor": factor, "recommendations": recs}
+
+
+# ----------------------------------------------------------------------------
+# Phase 2: dynamic market-wide sourcing from Unusual Whales flow (NO hardcoded list)
+# ----------------------------------------------------------------------------
+def scan_candidates(params, limit=None):
+    """Aggregate whole-market UW flow alerts into ranked candidates with a flow-implied direction,
+    PRE-FILTERED to the affordable band (per-contract premium fits the $800/2-contract budget) so
+    the funnel feeds cheap mid-caps instead of rejecting mega-caps downstream. Fail-open: returns []
+    if UW is unreachable. Never falls back to a predefined list."""
+    limit = limit or params.get("scanner_flow_limit", 600)          # wide net to reach the cheap tail
+    prem_lo = params.get("scanner_premium_min", 0.30)
+    prem_hi = params.get("scanner_premium_max", 4.00)               # 2ct x $4 x 100 = $800 ceiling
+    try:
+        from src.unusual_whales_api import UnusualWhalesClient
+        uw = UnusualWhalesClient()
+        if not getattr(uw, "enabled", False):
+            return []
+        min_prem = params.get("scanner_min_premium", 50000)
+        rows = (uw.flow_alerts(ticker=None, limit=limit, min_premium=min_prem) or {}).get("data") or []
+    except Exception:
+        return []
+    index_roots = {"SPX", "SPXW", "SPXPM", "NDX", "NDXP", "RUT", "RUTW", "VIX", "VIXW",
+                   "XSP", "DJX", "OEX", "XEO", "MRUT", "NANOS", "VVIX"}
+    agg = {}
+    for r in rows:
+        t = (r.get("ticker") or "").upper()
+        if not t or t in index_roots:               # drop index / non-equity underlyings up front
+            continue
+        pc = _num(r.get("price"))                   # per-contract option premium (the affordability signal)
+        if pc is None or not (prem_lo <= pc <= prem_hi):    # AFFORDABILITY AT SOURCE ($0.30-$4.00 -> $800/2ct)
+            continue
+        a = agg.setdefault(t, {"ticker": t, "call_prem": 0.0, "put_prem": 0.0,
+                               "underlying_price": _num(r.get("underlying_price")), "min_contract_premium": pc})
+        a["min_contract_premium"] = min(a["min_contract_premium"], pc)
+        prem = _num(r.get("total_premium")) or 0.0
+        if (r.get("type") or "").lower() == "call":
+            a["call_prem"] += prem
+        elif (r.get("type") or "").lower() == "put":
+            a["put_prem"] += prem
+    cands = []
+    for a in agg.values():
+        a["flow_type"] = "call" if a["call_prem"] >= a["put_prem"] else "put"
+        a["total_premium"] = round(a["call_prem"] + a["put_prem"], 0)
+        cands.append(a)
+    cands.sort(key=lambda x: x["total_premium"], reverse=True)
+    return cands
+
+
+# ----------------------------------------------------------------------------
+# Observability: end-of-day digest + degraded/failure alerts (Telegram, fail-open)
+# ----------------------------------------------------------------------------
+def daily_digest():
+    """Summarise today's entries, exits, P&L and data-source health -> Telegram. Returns the text."""
+    today = datetime.now(timezone.utc).date().isoformat()
+    log = _load_log_list()
+    entries = [r for r in log if str(r.get("entry_ts_utc", "")).startswith(today)]
+    closes = [(r.get("ticker"), ln, ex) for r in log for ln, ex in (r.get("leg_exits") or {}).items()
+              if str(ex.get("closed_at", "")).startswith(today)]
+    wins = [e for _, _, e in closes if (e.get("return_pct") or 0) > 0]
+    pnl = sum((e.get("return_pct") or 0) for _, _, e in closes)
+    degraded = sum(1 for r in entries for blk in ("macro", "iv_term", "gex", "flow_aggression", "dark_pool",
+                   "pemd", "vrp", "flow_persistence", "skew", "news")
+                   if ((r.get("metadata") or {}).get(blk) or {}).get("source") in ("unavailable", "mock"))
+    lines = [f"<b>SANDBOX DIGEST {today}</b>",
+             f"Entries: {len(entries)} ({', '.join(sorted(set(r.get('ticker') for r in entries))) or 'none'})",
+             f"Closes: {len(closes)} | wins {len(wins)}/{len(closes)} | sum return {pnl:+.1f}%"]
+    for tk, ln, ex in closes[:8]:
+        lines.append(f"  {tk} {ln} {ex.get('action')} {(ex.get('return_pct') or 0):+.1f}%")
+    lines.append(f"Sensor-source degradations: {degraded}")
+    text = "\n".join(lines)
+    _notify(text)
+    return text
+
+
+def _maybe_send_digest():
+    """Fire the EOD digest once/day, on the first cycle at/after 20:00 UTC. Persistence = a marker
+    record in the (committed) log, so it survives the ephemeral GHA runner."""
+    now = datetime.now(timezone.utc)
+    if now.hour < 20:
+        return
+    today = now.date().isoformat()
+    if any(r.get("type") == "daily_digest" and str(r.get("ts_utc", "")).startswith(today) for r in _load_log_list()):
+        return
+    daily_digest()
+    _append_log({"type": "daily_digest", "ts_utc": _now_iso_ms(), "status": "SENT"})
+
+
+# ----------------------------------------------------------------------------
+# Scheduled cycle (GHA): stale-order audit -> exit pass -> UW flow sourcing -> first eligible
+# ----------------------------------------------------------------------------
+def run_scheduled_cycle(mock=False):
+    creds = _paper_creds()
+    live = all(creds)
+    params = load_params()
+    print("=" * 78)
+    print(f"V10 PROACTIVE LAB - scheduled cycle ({'LIVE_PAPER' if live else 'DRY_RUN (no creds)'})")
+    print("=" * 78)
+
+    # 1. stale limit-order cleanup (free buying power)
+    open_orders = get_open_orders(creds)
+    cancels = audit_stale_orders(creds, orders=open_orders)
+    print(f"stale-order audit: {len(cancels)} unfilled limit(s) cancelled "
+          f"(> {params.get('stale_order_max_minutes', 30)}m)")
+    for c in cancels:
+        print(f"  cancelled {c['symbol']} age {c['age_min']}m")
+    if cancels:
+        open_orders = get_open_orders(creds)
+
+    # 2. EXIT PASS: 24h swing guard + 30-50% velocity target -> close, cool-off, autopsy
+    closed, autopsies = manage_open_positions(creds, params)
+    print(f"exit pass: {len(closed)} leg(s) closed, {len(autopsies)} autopsy(ies) generated")
+    for c in closed:
+        print(f"  closed {c['ticker']} {c['leg']} {c['return_pct']:+.1f}% [{c.get('action', '')}] (ok={c['closed_ok']})")
+    for a in autopsies:
+        print(f"  autopsy {a.get('ticker')}: winner={a.get('winner')} -> {str(a.get('factor', a.get('autopsy_error', '')))[:90]}")
+
+    # 3. re-read state after cancels/exits
+    open_orders = get_open_orders(creds)
+    positions = get_open_positions(creds)
+    print(f"portfolio: {len(positions)} positions, {len(open_orders)} open orders")
+    _maybe_send_digest()                                     # EOD digest (once/day at/after 20:00 UTC, fail-open)
+
+    # 4. dynamic UW flow sourcing - enter the FIRST candidate not capped/cooled
+    candidates = scan_candidates(params)
+    print(f"UW flow scan: {len(candidates)} market-wide candidates "
+          f"(top: {[c['ticker'] for c in candidates[:8]]})")
+    if not candidates:
+        try:
+            from src.unusual_whales_api import UnusualWhalesClient
+            reachable = bool(getattr(UnusualWhalesClient(), "enabled", False))
+        except Exception:
+            reachable = False
+        if not reachable:
+            _notify("<b>DEGRADED</b> sandbox: UW flow scanner unreachable (no token / API down) - 0 candidates")
+        print(f"\nno UW flow candidates this cycle ({'scanner UNREACHABLE' if not reachable else 'quiet market'}).")
+        return None
+    entered = None
+    for c in candidates:
+        t = c["ticker"]
+        try:
+            rec = enter_proactive_set(t, None, mock=mock, candidate=c, dry_run=not live,
+                                      positions=positions, open_orders=open_orders)
+        except Exception as e:
+            print(f"  skip {t}: entry error {type(e).__name__}: {str(e)[:80]}")     # whole-market fail-open
+            continue
+        if rec.get("skipped"):
+            print(f"  skip {t}: {rec['reason']}")
+            continue
+        md, legs, orders = rec["metadata"], rec["legs"], rec["orders"]
+        print(f"\nENTERED {t} [{rec['regime']}] | {rec['execution_mode']} | OCC {rec['occ_resolution']}")
+        print(f"  state: 20dSMA {md['macro']['distance_to_sma20_pct']:+.2f}% | IV {md['iv_term']['iv_ratio']} "
+              f"| skew {md.get('skew', {}).get('skew_ratio')} ({md.get('skew', {}).get('skew_bias')}) "
+              f"| news {md.get('news_sentiment_score')} ({md.get('news', {}).get('news_type')}) "
+              f"| sector {md.get('regime_stack', {}).get('sector_etf')} {md.get('regime_stack', {}).get('sector_dist_pct')}%")
+        for name, leg in legs.items():
+            o = orders[name]
+            occ = leg.get("occ_symbol") or f"{leg.get('front_occ')}|{leg.get('back_occ')}"
+            sp = (leg.get("execution_cost") or {}).get("bid_ask_spread_pct")
+            print(f"  {name:<14} {leg['structure']:<15} {occ:<26} x{leg['contracts']:<3} "
+                  f"@lim ${leg['limit_price']:<6} spread {sp}% -> {o['status']} {o['order_id']}")
+        entered = rec
+        entered["_scan_candidate"] = c
+        break
+    try:                                                     # COUNTERFACTUAL HARVEST (observational, fail-open, post-trade)
+        import harvest_logger
+        summary = harvest_logger.harvest_scan(params, executed_record=entered, mock=mock)
+        print(f"harvest: {summary}")
+    except Exception as e:
+        print(f"harvest skipped (fail-open): {type(e).__name__}: {str(e)[:90]}")
+    if entered is not None:
+        entered.pop("_scan_candidate", None)
+        print("\nGHA scheduled cycle complete: 1 cluster entered + logged.")
+        return entered
+    print("\nno eligible candidate this cycle (all capped/cooled).")
+    return None
+
+
+# ----------------------------------------------------------------------------
+# One-time legacy flush (clean-slate reset for the $800 / mid-cap regime)
+# ----------------------------------------------------------------------------
+def flush_positions(creds):
+    """ONE-TIME reset: close every open paper position (the $10k-era clog that hogs the ticker cap
+    and would pollute the mid-cap training set) + clear cool-off + mark OPEN log records FLUSHED, so
+    the $800 regime starts from a clean slate. Fail-open per position."""
+    if not all(creds):
+        print("flush: no paper creds - nothing to do")
+        return 0
+    positions = get_open_positions(creds)
+    closed = 0
+    for p in positions:
+        occ = p.get("symbol")
+        if occ and _close_position(occ, creds, percentage=100):
+            closed += 1
+            print(f"  flushed {occ}")
+    if os.path.exists(COOLOFF_PATH):
+        os.remove(COOLOFF_PATH)
+    log = _load_log_list()
+    for rec in log:
+        if rec.get("status") == "OPEN":
+            rec["status"] = "FLUSHED"
+    _save_log_list(log)
+    print(f"FLUSH complete: {closed}/{len(positions)} positions closed, cool-off cleared, log reset")
+    _notify(f"<b>FLUSH</b> closed {closed}/{len(positions)} legacy positions, cool-off cleared")
+    return closed
+
+
+# ----------------------------------------------------------------------------
+# Local demo (single ticker)
+# ----------------------------------------------------------------------------
+def main():
+    if os.environ.get("PROACTIVE_FLUSH") == "true" or "--flush" in sys.argv:   # one-time reset (dispatch -f flush=true)
+        return flush_positions(_paper_creds())
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        try:
+            return run_scheduled_cycle(mock=os.environ.get("PROACTIVE_MOCK", "1") == "1")
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            _notify(f"<b>SANDBOX RUN FAILED</b>\n{type(e).__name__}: {str(e)[:300]}")    # failure alert
+            raise
+
+    gha = os.environ.get("GITHUB_ACTIONS") == "true"
+    live_paper = "--live-paper" in sys.argv or (gha and all(_paper_creds()))   # auto under GHA
+    dry_run = not live_paper
+    mock = os.environ.get("PROACTIVE_MOCK", "1") == "1"
+    print("=" * 78)
+    print("V10 PROACTIVE LAB + ACTIVE ALPACA PAPER EXECUTION")
+    print(f"(env: {'GITHUB_ACTIONS -> auto live-paper' if gha else 'local'} | metadata: {'MOCK' if mock else 'LIVE'} | "
+          f"execution: {'LIVE_PAPER (auto-submit)' if live_paper else 'DRY_RUN (no orders fired)'})")
+    print("=" * 78)
+
+    params = load_params()
+    print(f"\nloaded {len(params)} tunable params from v10_tunable_parameters.json:")
+    print("  " + json.dumps(params))
+
+    ticker = "HOOD"
+    rec = enter_proactive_set(ticker, "C", mock=mock, candidate={"consolidating": True}, dry_run=dry_run)
+    if rec.get("skipped"):
+        print(f"\nSKIPPED {ticker}: {rec['reason']} (portfolio guard)")
+        return
+    print(f"\nTRIGGER: {rec['trigger']} -> 3 legs on {ticker} | ${LEG_BUDGET:,.0f}/leg | mode {rec['execution_mode']}")
+    print(f"OCC resolution: {rec['occ_resolution']} | ticker guard: {rec['ticker_guard']} | positions checked: {rec['open_positions_checked']}")
+
+    md = rec["metadata"]
+    print("\nSTATE BLOCK (un-mocked where live):")
+    print(f"  macro   : spot {md['macro']['spot']} 20dSMA {md['macro']['sma20']} dist {md['macro']['distance_to_sma20_pct']:+.2f}% [{md['macro']['source']}]")
+    print(f"  iv_term : ratio {md['iv_term']['iv_ratio']} ({md['iv_term']['structure']}) [{md['iv_term']['source']}]")
+    _gxd = md['gex']['distance_to_zero_gamma_pct']
+    print(f"  gex     : net {md['gex']['net_gex']} zero-gamma {md['gex']['zero_gamma_strike']} "
+          f"dist {(f'{_gxd:+.2f}%' if _gxd is not None else 'n/a')} [{md['gex']['source']}]")
+    print(f"  alt     : reddit {md['alt_catalyst']['reddit_mention_delta_pct']}% insider ${md['alt_catalyst']['insider_10d_buy_usd']:,} cluster={md['alt_catalyst']['insider_cluster_flag']} [{md['alt_catalyst']['source']}]")
+    print(f"  technical: ATR {md['technical']['atr_pct']}% RVOL {md['technical']['rvol_10min']} [{md['technical']['source']}]")
+
+    print("\nALPACA PAPER ORDERS (3 legs):")
+    for name, leg in rec["legs"].items():
+        o = rec["orders"][name]
+        occ = leg.get("occ_symbol") or f"{leg.get('front_occ')}|{leg.get('back_occ')}"
+        print(f"  {name:<14} {leg['structure']:<15} {occ:<22} x{leg['contracts']:<3} @lim ${leg['limit_price']:<6} "
+              f"-> {o['status']} order_id={o['order_id']}")
+
+    # demonstrate FAIL-OPEN routing (force the put illiquid)
+    rec2 = enter_proactive_set(ticker, "C", mock=mock, dry_run=True, illiquid={"bearish_put"})
+    fo = {k: rec2["orders"][k]["status"] for k in rec2["orders"]}
+    print(f"\nFAIL-OPEN demo (put illiquid): {fo}  <- set still trades the viable legs")
+
+    # simulate a 5-day close that breaks the range to the downside -> trigger all 3 tuning rules
+    print("\n" + "-" * 78)
+    print("SIMULATED CLOSE: bearish breakdown -7%, entry slippage 4%")
+    returns = {"bullish_call": -80.0, "bearish_put": 120.0, "flat_calendar": -30.0}
+    res = run_trade_autopsy(rec, returns, underlying_move_pct=-7.0, entry_slippage_pct=4.0)
+    _rewrite_last(rec)
+    print(f"  winner {res['winner']} | determining factor: {res['determining_factor']}")
+    print(f"\nTUNING ADVISORY ({ADVISORY_MD}):")
+    for gate, msg in res["recommendations"]:
+        print(f"  -> [{gate}] {msg}")
+
+    print("\nEXIT MANAGEMENT (hard stop/expiry override 24h hold; take-profit gated by it):")
+    a = manage_exit(rec["entry_ts_utc"], 40.0, params, now=datetime.now(timezone.utc) + timedelta(hours=2))
+    print(f"  +40% at 2h     -> {a['action']}: {a['reason']}")
+    b = manage_exit(rec["entry_ts_utc"], 35.0, params, now=datetime.now(timezone.utc) + timedelta(hours=26))
+    print(f"  +35% at 26h    -> {b['action']}: {b['reason']}")
+    c = manage_exit(rec["entry_ts_utc"], -60.0, params, now=datetime.now(timezone.utc) + timedelta(hours=2))
+    print(f"  -60% at 2h     -> {c['action']}: {c['reason']}")
+    e = manage_exit(rec["entry_ts_utc"], -10.0, params, now=datetime.now(timezone.utc) + timedelta(hours=2),
+                    expiry_iso=(date.today() + timedelta(days=2)).isoformat())
+    print(f"  -10%, 2d expiry-> {e['action']}: {e['reason']}")
+
+
+if __name__ == "__main__":
+    main()

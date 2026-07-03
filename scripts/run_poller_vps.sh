@@ -6,7 +6,7 @@ mkdir -p "$REPO/data"
 LOG="$REPO/data/poller.log"
 {
   echo "=== $(date -u +%FT%TZ) poller run ==="
-  git pull --ff-only origin v10-research-sandbox
+  git pull --ff-only origin main
   set -a
   [ -f "$REPO/.harvest_env" ] && . "$REPO/.harvest_env"
   set +a

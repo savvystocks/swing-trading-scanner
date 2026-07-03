@@ -20,7 +20,7 @@ import math
 import urllib.request
 from datetime import datetime, timedelta
 
-UA = {"User-Agent": "v10-research-sandbox swing research (savvastgeorgiou@gmail.com)"}
+UA = {"User-Agent": "swing-trading harvest research (savvastgeorgiou@gmail.com)"}
 SEC_IDENTITY = "Savvas Georgiou savvastgeorgiou@gmail.com"
 
 

@@ -1,8 +1,8 @@
-name: sandbox-scheduler
+name: v10-lab
 
-# Isolated V10 R&D scheduler. Lives on main only because GHA crons fire from the default
-# branch, but it checks out and runs the v10-research-sandbox branch. It does NOT touch the
-# V9 engine (run_live_scan.py, live_scan.yml, leak_lambda.py, strategy_vault.py). Paper-only.
+# V10 lab - the single production engine (V9 retired 2026-07-04). Runs on main directly.
+# Paper-only: routes to the Alpaca paper API and commits the counterfactual-harvest
+# transport (inbox jsonl + state) to main for the VPS poller to ingest.
 
 on:
   schedule:
@@ -23,13 +23,12 @@ jobs:
     permissions:
       contents: write
     concurrency:
-      group: sandbox-scheduler
+      group: v10-lab
       cancel-in-progress: false
     steps:
-      - name: Checkout Sandbox Branch
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
-          ref: v10-research-sandbox
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -45,7 +44,7 @@ jobs:
           PROACTIVE_MOCK: "0"        # capture REAL macro/GEX/alt metadata, not mock
           PROACTIVE_FLUSH: ${{ github.event.inputs.flush }}   # 'true' on a flush dispatch, empty otherwise
         run: python sandbox_proactive_lab.py
-      - name: Persist forensic logs to sandbox branch
+      - name: Persist forensic logs to main
         if: always()
         run: |
           git config user.name "sandbox-bot"
@@ -53,12 +52,12 @@ jobs:
           git add -f proactive_sandbox_logs.json 2>/dev/null || true
           git add -f sandbox_ticker_cooloff.json 2>/dev/null || true
           git add -f v10_tuning_advisory.md proactive_autopsy_log.md v10_tunable_parameters.json 2>/dev/null || true
-          git add -f data/harvest_inbox/*.jsonl data/harvest_state.json 2>/dev/null || true   # harvest transport -> local poller
+          git add -f data/harvest_inbox/*.jsonl data/harvest_state.json 2>/dev/null || true   # harvest transport -> VPS poller (main)
           if git diff --cached --quiet; then echo "no new sandbox data"; exit 0; fi
           git commit -m "sandbox lab data [skip ci]"
           for i in 1 2 3 4 5; do
-            git push origin HEAD:v10-research-sandbox && break
+            git push origin HEAD:main && break
             echo "push rejected - rebasing onto sandbox, attempt $i"
-            git pull --rebase --autostash origin v10-research-sandbox || true
+            git pull --rebase --autostash origin main || true
             sleep 2
           done

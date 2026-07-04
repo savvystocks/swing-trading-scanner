@@ -1,0 +1,48 @@
+name: brain-weekly
+
+# V12 brain - the isolated analytical layer. Runs on GitHub's machines against a COPY of the nightly
+# snapshot from the private harvest-snapshots repo. It NEVER touches the VPS, the live harvest.db, or
+# the trading path. Sunday evening, after the week's last nightly snapshot; plus manual dispatch.
+on:
+  schedule:
+    - cron: "0 22 * * 0"          # Sunday 22:00 UTC
+  workflow_dispatch:
+
+jobs:
+  brain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install brain deps
+        run: pip install -r requirements-brain.txt
+      - name: Fetch latest snapshot (read-only deploy key)
+        env:
+          SNAP_KEY: ${{ secrets.HARVEST_SNAPSHOTS_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh && printf '%s\n' "$SNAP_KEY" > ~/.ssh/snap && chmod 600 ~/.ssh/snap
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/snap -o StrictHostKeyChecking=accept-new" \
+            git clone --depth 1 git@github.com:savvystocks/harvest-snapshots.git snapshots
+      - name: Run brain (Foundry -> Harness -> report)
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m src.brain.run_weekly --snapshot snapshots --out brain_work --reports reports/v12_weekly --telegram
+      - name: Commit weekly report
+        if: always()
+        run: |
+          git config user.name "brain-bot"
+          git config user.email "noreply@github.com"
+          git add -f reports/v12_weekly/*.md 2>/dev/null || true
+          if git diff --cached --quiet; then echo "no new brain report"; exit 0; fi
+          git commit -m "v12 brain weekly report [skip ci]"
+          for i in 1 2 3 4 5; do
+            git push origin HEAD:main && break
+            git pull --rebase --autostash origin main || true
+            sleep 2
+          done

@@ -68,14 +68,14 @@ Dispatch it right at the open — the ~1-min GHA spin-up means `flush_positions`
 | Market-open gate (safety add) | **ADDED** | `_market_is_open` on cycle+flush (`80e4ea5d`) | battery + MOT 74/74 |
 | `v10_lab` normal dispatch | **PASS** | — | run `28717261651`: deps install, secrets `***`, gate "market closed - no cycle", **0 orders, no junk commit** |
 | `health-check` | **PASS** | EODHD injection dropped | run `28717329028` green, **EODHD=0 occurrences**, 11/11 schemas OK |
-| Alert path (Telegram) | **SENT — awaiting your phone confirm** | temp `_drill_alert.yml` (now deleted) | run `28717465319`: `telegram_ok: True` via real `src.telegram.send_alert` |
+| Alert path (Telegram) | **PASS** | temp `_drill_alert.yml` (now deleted) | run `28717465319`: `telegram_ok: True` via real `src.telegram.send_alert`; **phone receipt confirmed by Savvas** |
 | Flush plumbing (closed market) | **PASS** | dry-guard (`80e4ea5d`) | run `28717485553`: "DRILL/CLOSED: would flush 72 position(s), 0 orders sent" + list; **0 orders** |
 | VPS plumbing | **PASS** | — | `run_poller_vps.sh` exit 0, pulled main, weekend no-op; both crons armed |
 | VPS full-chain drill | **PASS** | `poller.py --drill` (`773dc17a`) | on a **copy**: ingest → **503 bid_path → 503 barrier evals → 503 labels**; real `harvest.db` byte-identical (mtime/size/counts unchanged); all drill artifacts deleted |
 | Off-box snapshot | **PASS** | — | `harvest_20260703_2130.db.gz` pushed (`e66e685`) |
 | Zero-orders safety (every phase) | **PASS** | — | 173 orders / 72 positions, unchanged throughout |
 
-**One item is human-gated:** the alert path is server-side confirmed (`telegram_ok: True`) but only *passes* once Savvas confirms the drill message arrived on his phone.
+**All items PASS — full GO.** The alert path was the one human-gated item; Savvas confirmed the drill message arrived on his phone.
 
 ### The honest remainder — Monday-only observables no weekend drill can reach
 - **Live UW flow content.** The weekend UW call returns stale/empty flow; Monday's is live market-wide. *Healthy at the open:* `scan_candidates` returns real ranked candidates during RTH (visible in the v10_lab run log and the committed inbox).

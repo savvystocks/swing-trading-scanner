@@ -119,12 +119,12 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
 13. **Engine off GitHub Actions onto the VPS** — QUEUED. GHA cron is best-effort; the VPS is not. (The
     engine runs on GHA today; the poller already runs on the VPS.) Accept: zero missed cycles over a test
     month.
-14. **Barrier-configuration optimization** — QUEUED. Using the stored bid paths, executed only under item
-    7's PBO discipline. Accept: any barrier change justified with overfitting-adjusted evidence.
-15. **Live-capital gate** — QUEUED. Predefined, written criteria — edge verdict, slippage bounds, backstop
+14. **Live-capital gate** — QUEUED. Predefined, written criteria — edge verdict, slippage bounds, backstop
     reliability, drawdown limits — that must ALL pass before any real money. Accept: the criteria exist in
     this file long before they are tested. *(PLACEHOLDER: the vision-integration prompt will add the
-    staged amounts and best-case calendar.)*
+    staged amounts and best-case calendar.)* Referenced by NORTH_STAR.md as "item 14".
+15. **Barrier-configuration optimization** — QUEUED. Using the stored bid paths, executed only under item
+    7's PBO discipline. Accept: any barrier change justified with overfitting-adjusted evidence.
 
 ## Item table
 
@@ -143,5 +143,5 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
 | 11 | Probability-mapped Kelly sizing (Stage 4+) | C | QUEUED | Calibrated-prob sizing only after item 7 go; shadow→gate→size |
 | 12 | Free orthogonal sensors | B | IN-FLIGHT | earnings-drift + VIX-level SHIPPED; blackout/term-struct/S-3/FINRA/IBKR/FTD/halts QUEUED |
 | 13 | Engine off GitHub Actions onto the VPS | D | QUEUED | Zero missed cycles over a test month |
-| 14 | Barrier-configuration optimization | D | QUEUED | Barrier changes justified under item-7 PBO discipline |
-| 15 | Live-capital gate | D | QUEUED | Written criteria pass before any real money (amounts TBD by vision prompt) |
+| 14 | Live-capital gate | D | QUEUED | Written criteria pass before any real money (amounts TBD by vision prompt); NORTH_STAR "item 14" |
+| 15 | Barrier-configuration optimization | D | QUEUED | Barrier changes justified under item-7 PBO discipline |

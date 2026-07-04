@@ -4,6 +4,8 @@ SYSTEM_ARCHITECTURE.md is the single source of truth for how this system works. 
 
 Doc discipline: SYSTEM_ARCHITECTURE.md is strictly present-tense (what the code does now; the code wins; no future intent). ROADMAP.md is strictly future-tense (every item has a one-line acceptance criterion and a status: QUEUED / IN-FLIGHT / SHIPPED / REJECTED; it never claims something already exists). Graduation: when an item ships and its tests pass, the same commit flips it to SHIPPED in ROADMAP.md and writes its reality into SYSTEM_ARCHITECTURE.md; no item is ever silently deleted — it closes as SHIPPED or REJECTED with a one-line reason.
 
+NORTH_STAR.md is the charter (mission, principles, risk constraints); it outranks persuasion and changes only by Savvas's amendment. Read it before proposing anything that alters strategy, risk, or spend.
+
 Single engine: V10, on `main`, as of 2026-07-04. V9 was retired that day — the old Unusual-Whales-flow → Alpaca live engine and its workflows are gone. There is one branch, `main`; there is no separate sandbox branch anymore. Anything removed is recoverable from the `pre-v9-retire-*` and `archive/v10-research-sandbox-final` tags.
 
 Standing rules (non-negotiable):

@@ -455,6 +455,18 @@ def _paper_get(path, creds):
         return json.loads(r.read().decode())
 
 
+def _market_is_open(creds=None):
+    """True only if Alpaca reports the session open right now. Fail-CLOSED (no creds / API error ->
+    False) so a clock blip can never let a closed-market cycle or flush fire an order."""
+    creds = creds or _paper_creds()
+    if not all(creds):
+        return False
+    try:
+        return bool(_paper_get("/v2/clock", creds).get("is_open"))
+    except Exception:
+        return False
+
+
 def resolve_occ(ticker, right, target_strike, target_dte, creds=None, dte_min=None, dte_max=None):
     """Resolve a REAL active OCC contract near target strike/expiry via Alpaca
     /v2/options/contracts. CRITICAL: that endpoint defaults to ~this-week expiries, so we MUST
@@ -1060,6 +1072,9 @@ def run_scheduled_cycle(mock=False):
     print("=" * 78)
     print(f"V10 PROACTIVE LAB - scheduled cycle ({'LIVE_PAPER' if live else 'DRY_RUN (no creds)'})")
     print("=" * 78)
+    if live and not _market_is_open(creds):
+        print("market closed - no cycle: 0 orders, 0 exits, 0 harvest, no inbox commit")
+        return None
 
     # 1. stale limit-order cleanup (free buying power)
     open_orders = get_open_orders(creds)
@@ -1151,6 +1166,12 @@ def flush_positions(creds):
         print("flush: no paper creds - nothing to do")
         return 0
     positions = get_open_positions(creds)
+    if not _market_is_open(creds):
+        print(f"DRILL/CLOSED: market closed - would flush {len(positions)} position(s), 0 orders sent:")
+        for p in positions:
+            print(f"  would close {p.get('symbol')} (qty {p.get('qty', '?')})")
+        _notify(f"<b>FLUSH (dry - market closed)</b> would close {len(positions)} position(s); 0 orders sent")
+        return 0
     closed = 0
     for p in positions:
         occ = p.get("symbol")

@@ -594,15 +594,33 @@ json_dump = __import__("json").dump
 json_dump({"IWM": "2026-07-01T00:00:00Z"}, open(lab.COOLOFF_PATH, "w"))
 _ogp = lab.get_open_positions
 _ocpf = lab._close_position
+_omio = lab._market_is_open
 lab.get_open_positions = lambda creds=None: [{"symbol": "OCC1"}, {"symbol": "OCC2"}]
 lab._close_position = lambda occ, creds, percentage=100: True
+lab._market_is_open = lambda creds=None: True     # market-open branch: real closes
 n = lab.flush_positions(("k", "s"))
 flushed_status = lab._load_log_list()[0]["status"]
 cooloff_gone = not os.path.exists(lab.COOLOFF_PATH)
+lab._market_is_open = _omio
 lab.get_open_positions = _ogp
 lab._close_position = _ocpf
 check(3, "flush closes all positions (2), clears cool-off, marks log FLUSHED",
       n == 2 and cooloff_gone and flushed_status == "FLUSHED", f"closed={n} cooloff_gone={cooloff_gone} status={flushed_status}")
+
+# flush SAFETY: on a CLOSED market it is a dry no-op - lists positions, fires zero closes
+_ogp2 = lab.get_open_positions
+_ocpf2 = lab._close_position
+_omio2 = lab._market_is_open
+_closes_attempted = []
+lab.get_open_positions = lambda creds=None: [{"symbol": "OCC1"}, {"symbol": "OCC2"}]
+lab._close_position = lambda occ, creds, percentage=100: (_closes_attempted.append(occ), True)[1]
+lab._market_is_open = lambda creds=None: False
+n_dry = lab.flush_positions(("k", "s"))
+lab.get_open_positions = _ogp2
+lab._close_position = _ocpf2
+lab._market_is_open = _omio2
+check(3, "flush on CLOSED market is a dry no-op (0 orders, 0 closes)",
+      n_dry == 0 and len(_closes_attempted) == 0, f"returned={n_dry} closes_attempted={len(_closes_attempted)}")
 
 # =====================================================================
 print("\n=== DIMENSION 4: SIZING FLOOR (per-leg bid/ask spread stamped) ===")

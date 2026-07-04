@@ -2,6 +2,8 @@
 
 SYSTEM_ARCHITECTURE.md is the single source of truth for how this system works. Read it before doing any work in this repo. This file holds only the standing rules and deliberately carries no architecture description and no file lists — those live in SYSTEM_ARCHITECTURE.md and only there, so this file cannot drift.
 
+Doc discipline: SYSTEM_ARCHITECTURE.md is strictly present-tense (what the code does now; the code wins; no future intent). ROADMAP.md is strictly future-tense (every item has a one-line acceptance criterion and a status: QUEUED / IN-FLIGHT / SHIPPED / REJECTED; it never claims something already exists). Graduation: when an item ships and its tests pass, the same commit flips it to SHIPPED in ROADMAP.md and writes its reality into SYSTEM_ARCHITECTURE.md; no item is ever silently deleted — it closes as SHIPPED or REJECTED with a one-line reason.
+
 Single engine: V10, on `main`, as of 2026-07-04. V9 was retired that day — the old Unusual-Whales-flow → Alpaca live engine and its workflows are gone. There is one branch, `main`; there is no separate sandbox branch anymore. Anything removed is recoverable from the `pre-v9-retire-*` and `archive/v10-research-sandbox-final` tags.
 
 Standing rules (non-negotiable):

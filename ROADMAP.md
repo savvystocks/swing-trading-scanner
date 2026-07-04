@@ -1,22 +1,58 @@
 # ROADMAP
 
-Status legend: SHIPPED · IN-FLIGHT · QUEUED. SYSTEM_ARCHITECTURE.md is ground truth for how the live
-system works; this file is the forward plan and the pinned parameters that must not drift.
+> **Doc discipline (mirrored in CLAUDE.md):**
+> - **SYSTEM_ARCHITECTURE.md** is strictly **PRESENT tense** — what the code does now; the code wins; it
+>   never carries future intent.
+> - **ROADMAP.md** is strictly **FUTURE tense** — every item carries a one-line acceptance criterion and a
+>   status (QUEUED / IN-FLIGHT / SHIPPED / REJECTED); it never claims something already exists.
+> - **Graduation rule:** when an item ships and its tests pass, the SAME commit flips it to SHIPPED here
+>   and writes its reality into SYSTEM_ARCHITECTURE.md. No item is ever silently deleted — it closes as
+>   SHIPPED or REJECTED with a one-line reason.
+>
+> Item numbers are stable IDs; the **Phase (A→D)** conveys priority. Two follow-up prompts (vision
+> integration, owner-decisions integration) will amend this file — their placeholders are marked.
 
-## Execution track (the live engine + harvest path)
+## Foundation (shipped)
 
-1. **Single-engine consolidation (V9 retirement)** — SHIPPED 2026-07-04. One engine (V10) on one branch
-   (main); V9 and its workflows removed; the two-engines-one-account collision closed.
-2. **Server-side exit backstop** — QUEUED. An Alpaca-side GTC take-profit + stop as a backstop under the
-   cron-evaluated exits (Alpaca rejects OCO/bracket/trailing on options - see SYSTEM_ARCHITECTURE Known
-   Gaps). Cron reconciliation stays PRIMARY; resting siblings cancelled before the cron close.
-3. **Slippage ledger** — QUEUED. Measured round-trip slippage per fill, replacing the EV cost-model
-   placeholder (currently the per-row half-spread at signal time, GATE 2). This is the `ROADMAP item 3`
-   the brain's cost model points at.
-4. **Inbox retention prune** — QUEUED. Poller-side prune of committed inbox files older than 14 days,
-   only after every candidate_id is confirmed in the DB and a newer off-box backup exists.
+1. **Single-engine consolidation (V9 retirement)** — SHIPPED 2026-07-04. Accept: one engine (V10) on one
+   branch (main), V9 and its workflows removed, the two-engines-one-account collision closed. Reality in
+   SYSTEM_ARCHITECTURE.md.
 
-## Brain track (V12 - the isolated analytical layer, src/brain/)
+## Phase A — complete the operating system (near-term)
+
+2. **Server-side exit backstop** — QUEUED. Design pre-decided (owner decision): the resting broker-side
+   order is ALWAYS a **stop**; only its level is dynamic (−50% at entry → break-even past the shield
+   threshold → trailing levels), updated by **cancel/replace each cycle**; the +30% scale-out stays
+   cron-managed. Empirical tests T0–T5 run first and **T5 decides stop vs stop-limit**; config-flagged;
+   single-position canary through a full lifecycle before fleet-wide; MOT extended with order-
+   reconciliation checks. Lands in the **week-one Tier B drop**. Accept: every open position carries a
+   working broker-side floor at all times, and cron exits cancel resting siblings before closing.
+4. **Inbox retention pruning** — QUEUED. Poller deletes working-tree inbox files older than 14 days only
+   after verifying every candidate_id is in the DB and a newer DB backup exists. (Verified not yet built:
+   the `keep=14` prune in `harvest_db.backup()` prunes DB *backups*, not the inbox jsonl.) Accept: lean
+   checkout, zero data loss.
+
+## Phase B — enrich the dataset while it accumulates
+
+3. **Slippage ledger** — QUEUED. Log intended price vs actual fill for every V10 execution into a
+   queryable per-trade table; this replaces the EV engine's half-spread placeholder (the brain's
+   `ev.cost_model` points at "ROADMAP item 3"; today `entry_slippage_pct` is always null). Accept:
+   measured slippage feeding Gate-2 thresholds.
+12. **Free orthogonal sensors** — IN-FLIGHT. Each wired into the harvest payload as fail-open, log-only,
+    **never gating** (£0, versioned via `feature_set_version`). **Never EODHD.** Priority order (owner
+    decision):
+    - (1) **Earnings calendar** — the days-since-earnings SENSOR is **SHIPPED** (`post_earnings_drift`,
+      log-only, commit `1abde178`); its LOAD-BEARING use, the **entries blackout**, is **QUEUED** and
+      ships with the week-one Tier B drop (`earnings_blackout_days` is a dormant param, never enforced).
+    - (2) **Regime pack** — VIX **level** is **SHIPPED** (`macro_context`, yfinance `^VIX`, commit
+      `d2b02125`); VIX **term structure** (VIX vs VIX3M) is **QUEUED**.
+    - (3) **SEC EDGAR full-text S-3 / ATM shelf flag** ("dilution capacity active") — QUEUED.
+    - (4) **FINRA daily short-sale volume** — QUEUED.
+    - then unranked: **IBKR public borrow-fee/availability** — QUEUED; **SEC fails-to-deliver** — QUEUED;
+      **Nasdaq halts** — QUEUED.
+    Accept per sensor: null-safe, never backfilled, passivity suite green after each addition.
+
+## Phase C — the brain (V12 isolated analytical layer, `src/brain/`; gate: ~10–15k labeled rows)
 
 The brain reads ONLY the nightly gzipped snapshots from the private harvest-snapshots repo; it never
 touches the live harvest.db or the trading path. Two-way import isolation is asserted by
@@ -52,21 +88,60 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
      rather than dying. Insurance, not a current constraint at this system's scale.
 7. **Sequential edge test (SPRT)** — SHIPPED 2026-07-04. Wald SPRT on executed trades, evaluated weekly.
    **Pinned parameters (do not change quietly):**
-   - H0: win rate = empirical hurdle (GATE 2 breakeven) + cost.
-   - H1: win rate = empirical hurdle + **0.05** (a stated 5-percentage-point minimum edge).
+   - H0: win rate = the empirical **cost-inclusive breakeven** (GATE 2) **+ a stated margin m = 0.02**.
+     (NOT "breakeven + cost" - the breakeven already nets cost, so re-adding it double-counts.)
+   - H1: win rate = **H0 + 0.05** (a stated 5-percentage-point minimum edge).
    - alpha = **0.05**, beta = **0.20**.
+   - The SPRT **clock starts when the week-one Tier B drop lands** (owner-decisions integration).
    - Reported weekly as CONTINUE / REJECT (no edge) / ACCEPT (edge).
+8. **Meta-labeling model — Student (Stage 2)** — QUEUED. The V10 rules engine stays primary; a
+   gradient-boosted binary filter answers only "is this signal real?" on the harvested features. Feature
+   clustering to kill redundancy, MDA importance under purged CV, SHAP on every prediction. Trained on
+   full history with time-decay weights + regime features (no rolling-window amnesia). Gate: ~10–15k
+   labeled rows. Accept: trained, calibrated, and evaluated only through items 5–7 (OOS Wilson lower bound
+   on the calibrated hit rate exceeds the empirical hurdle; PBO below threshold; Deflated Sharpe positive
+   with trials counted; beats the rules engine on the same purged splits).
+9. **Ensemble abstention — Council (Stage 3)** — QUEUED. ~5 seed/window variants; disagreement above a set
+   band = no trade regardless of mean probability. Accept: abstention rate and its P&L effect measured on
+   paper.
+10. **Champion/challenger MLOps — Governor (Stage 4)** — QUEUED. Weekly retrain of challengers; promotion
+    only on predefined out-of-fold plus shadow criteria; kill-switches on feature drift (PSI), calibration
+    drift, and drawdown that fall back to the frozen rules engine. Hyperparameters frozen, re-tuned at most
+    quarterly under purged CV. Accept: fully automated weekly cycle with human-visible promotion reports.
+11. **Probability-mapped sizing (Stage 4+)** — QUEUED. Fractional Kelly on the EMPIRICAL return
+    distribution (Gate 2's expected shortfall, not binary assumptions), capped at the per-trade
+    allocation, portfolio-level correlation awareness so simultaneous same-thesis candidates size as one
+    bet. Accept: sizing driven by calibrated probabilities only after item 7 returns a go; deployed
+    shadow → gate → sizing.
 
-### Brain flywheel — QUEUED
+## Phase D — later
 
-- **Stage 2 - Student** (~10-15k labeled rows). LightGBM (or peer) on the Foundry dataset with GATE-1
-  sample weights, purged-CV out-of-fold predictions, GATE-3 calibration. Acceptance: OOS Wilson lower
-  bound on the calibrated hit rate exceeds the empirical hurdle; PBO below threshold; Deflated Sharpe
-  positive with trials counted; beats the rules engine on the same purged splits.
-- **Stage 3 - Council**. Diverse model ensemble + disagreement/abstention. Acceptance: council OOS edge
-  ≥ best single student, with lower variance across CPCV paths and a usable abstain rate.
-- **Stage 4 - Governor**. Lifecycle: shadow → gate → sizing. Champion/challenger promotion, and
-  kill-switches (drift, drawdown, calibration decay). Acceptance: shadow tracks live for N weeks within
-  tolerance before any sizing authority; kill-switches proven on injected faults.
-- **Stage 5 - Flywheel**. Continuous retrain + monitoring loop feeding the weekly report. Acceptance: a
-  hands-off weekly cycle (snapshot → retrain → evaluate → govern → report) with alerting, no manual step.
+13. **Engine off GitHub Actions onto the VPS** — QUEUED. GHA cron is best-effort; the VPS is not. (The
+    engine runs on GHA today; the poller already runs on the VPS.) Accept: zero missed cycles over a test
+    month.
+14. **Barrier-configuration optimization** — QUEUED. Using the stored bid paths, executed only under item
+    7's PBO discipline. Accept: any barrier change justified with overfitting-adjusted evidence.
+15. **Live-capital gate** — QUEUED. Predefined, written criteria — edge verdict, slippage bounds, backstop
+    reliability, drawdown limits — that must ALL pass before any real money. Accept: the criteria exist in
+    this file long before they are tested. *(PLACEHOLDER: the vision-integration prompt will add the
+    staged amounts and best-case calendar.)*
+
+## Item table
+
+| # | Item | Phase | Status | Gate / acceptance (one line) |
+|---|---|---|---|---|
+| 1 | Single-engine consolidation (V9 retirement) | Foundation | SHIPPED | One engine on main; collision closed |
+| 2 | Server-side exit backstop | A | QUEUED | Every open position carries a working broker-side floor |
+| 3 | Slippage ledger | B | QUEUED | Measured slippage feeds Gate-2 thresholds |
+| 4 | Inbox retention pruning | A | QUEUED | Lean checkout, zero data loss |
+| 5 | Data Foundry (Stage 0) + GATE 1 / 4a | C | SHIPPED | Versioned parquet + card; overlap weights + cache tested |
+| 6 | Truth Harness (Stage 1) + GATE 2 / 3 / 4b | C | SHIPPED | Purged-CV leakage caught; EV/calibration/guard shipped |
+| 7 | Sequential edge test (SPRT) | C | SHIPPED | Weekly CONTINUE/REJECT/ACCEPT; params pinned (H0=breakeven+0.02) |
+| 8 | Meta-labeling — Student (Stage 2) | C | QUEUED | Gate ~10–15k rows; beats rules engine via items 5–7 |
+| 9 | Ensemble abstention — Council (Stage 3) | C | QUEUED | Abstention rate + P&L effect measured on paper |
+| 10 | Champion/challenger MLOps — Governor (Stage 4) | C | QUEUED | Automated weekly cycle + kill-switches to rules engine |
+| 11 | Probability-mapped Kelly sizing (Stage 4+) | C | QUEUED | Calibrated-prob sizing only after item 7 go; shadow→gate→size |
+| 12 | Free orthogonal sensors | B | IN-FLIGHT | earnings-drift + VIX-level SHIPPED; blackout/term-struct/S-3/FINRA/IBKR/FTD/halts QUEUED |
+| 13 | Engine off GitHub Actions onto the VPS | D | QUEUED | Zero missed cycles over a test month |
+| 14 | Barrier-configuration optimization | D | QUEUED | Barrier changes justified under item-7 PBO discipline |
+| 15 | Live-capital gate | D | QUEUED | Written criteria pass before any real money (amounts TBD by vision prompt) |

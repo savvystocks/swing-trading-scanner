@@ -15,7 +15,10 @@ MIN_ROWS_CPCV = 1000       # below this PBO/DSR render N/A
 
 # SPRT parameters (predefined - mirrored into ROADMAP.md item 7 so they cannot be quietly changed):
 SPRT_ALPHA, SPRT_BETA = 0.05, 0.20
-SPRT_MIN_EDGE = 0.05       # H1 = empirical hurdle + 5 percentage points
+SPRT_MARGIN = 0.02         # H0 = the empirical cost-inclusive breakeven + this stated margin m
+SPRT_MIN_EDGE = 0.05       # H1 = H0 + 5 percentage points
+# NOTE: the breakeven already nets cost - H0 adds margin m only (adding cost again would double-count).
+# The SPRT clock starts when the week-one Tier B drop lands (owner-decisions integration).
 
 
 def _fmt(x, nd=4):
@@ -82,12 +85,12 @@ def weekly_edge_report(dataset_result, prev_rows=0, runtime_s=None):
                   f"- expectancy (mean realized_return, executed): {_fmt(float(ex['realized_return'].mean()))}", ""]
 
         # ---- SPRT on executed trades ----
-        p0 = min(max(hurdle + cost, 1e-3), 0.99)
+        p0 = min(max(hurdle + SPRT_MARGIN, 1e-3), 0.99)      # breakeven already nets cost; add margin m only
         p1 = min(p0 + SPRT_MIN_EDGE, 0.999)
         s = EV.sprt(wins, n_ex, p0, p1, SPRT_ALPHA, SPRT_BETA)
         summary["sprt"] = s["decision"]
-        lines += ["## Sequential edge test (SPRT)",
-                  f"- H0 win-rate={_fmt(p0,3)} (hurdle+cost)  H1={_fmt(p1,3)} (hurdle+{SPRT_MIN_EDGE})  "
+        lines += ["## Sequential edge test (SPRT)  [clock starts at the week-one Tier B drop]",
+                  f"- H0 win-rate={_fmt(p0,3)} (breakeven+margin {SPRT_MARGIN})  H1={_fmt(p1,3)} (H0+{SPRT_MIN_EDGE})  "
                   f"alpha={SPRT_ALPHA} beta={SPRT_BETA}",
                   f"- wins {wins}/{n_ex}  LLR={_fmt(s['llr'],3)}  bounds[{_fmt(s['lower'],3)}, {_fmt(s['upper'],3)}]",
                   f"- decision: **{s['decision']}**", ""]

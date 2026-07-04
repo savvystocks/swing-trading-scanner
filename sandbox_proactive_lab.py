@@ -1158,6 +1158,28 @@ def run_scheduled_cycle(mock=False):
 # ----------------------------------------------------------------------------
 # One-time legacy flush (clean-slate reset for the $800 / mid-cap regime)
 # ----------------------------------------------------------------------------
+FLUSH_SENTINEL = "data/FLUSH_PENDING"
+
+
+def _maybe_flush_pending(creds):
+    """One-time auto-flush at the open. If data/FLUSH_PENDING exists, returns True and the caller MUST
+    skip trading this cycle. It only closes positions when the market is LIVE; on a closed market it
+    leaves the sentinel and waits (no orders). After a live flush the sentinel file is removed and the
+    workflow's persist step commits the removal, so later cycles trade normally. Delete the file to cancel."""
+    if not os.path.exists(FLUSH_SENTINEL):
+        return False
+    if not _market_is_open(creds):
+        print("FLUSH_PENDING set but market closed - waiting for the open (no flush, no trade)")
+        return True
+    print("FLUSH_PENDING set + market open - executing the one-time flush")
+    flush_positions(creds)
+    try:
+        os.remove(FLUSH_SENTINEL)
+    except OSError:
+        pass
+    return True
+
+
 def flush_positions(creds):
     """ONE-TIME reset: close every open paper position (the $10k-era clog that hogs the ticker cap
     and would pollute the mid-cap training set) + clear cool-off + mark OPEN log records FLUSHED, so
@@ -1198,6 +1220,8 @@ def main():
         return flush_positions(_paper_creds())
     if os.environ.get("GITHUB_ACTIONS") == "true":
         try:
+            if _maybe_flush_pending(_paper_creds()):
+                return None                      # one-time flush pending/executed - skip trading this cycle
             return run_scheduled_cycle(mock=os.environ.get("PROACTIVE_MOCK", "1") == "1")
         except Exception as e:
             import traceback

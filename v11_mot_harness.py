@@ -622,6 +622,25 @@ lab._market_is_open = _omio2
 check(3, "flush on CLOSED market is a dry no-op (0 orders, 0 closes)",
       n_dry == 0 and len(_closes_attempted) == 0, f"returned={n_dry} closes_attempted={len(_closes_attempted)}")
 
+# one-time auto-flush sentinel: absent -> skip; pending+closed -> wait (no orders); pending+open -> flush+clear
+import tempfile as _tf
+_snt = os.path.join(_tf.mkdtemp(), "FLUSH_PENDING")
+_ofs, _omio3, _ogp3, _ocpf3 = lab.FLUSH_SENTINEL, lab._market_is_open, lab.get_open_positions, lab._close_position
+_flushcalls = []
+lab.FLUSH_SENTINEL = _snt
+lab.get_open_positions = lambda creds=None: [{"symbol": "OCC1"}]
+lab._close_position = lambda occ, creds, percentage=100: (_flushcalls.append(occ), True)[1]
+no_sentinel = lab._maybe_flush_pending(("k", "s"))
+open(_snt, "w").write("x")
+lab._market_is_open = lambda creds=None: False
+pend_closed = lab._maybe_flush_pending(("k", "s")); closed_safe = (len(_flushcalls) == 0 and os.path.exists(_snt))
+lab._market_is_open = lambda creds=None: True
+pend_open = lab._maybe_flush_pending(("k", "s")); open_flushed = (len(_flushcalls) == 1 and not os.path.exists(_snt))
+lab.FLUSH_SENTINEL, lab._market_is_open, lab.get_open_positions, lab._close_position = _ofs, _omio3, _ogp3, _ocpf3
+check(3, "auto-flush sentinel: skip when absent, wait when closed (0 orders), flush+clear when open",
+      (no_sentinel is False) and pend_closed and closed_safe and pend_open and open_flushed,
+      f"absent={no_sentinel} closed_safe={closed_safe} open_flushed={open_flushed}")
+
 # =====================================================================
 print("\n=== DIMENSION 4: SIZING FLOOR (per-leg bid/ask spread stamped) ===")
 import alpaca.data.historical.option as _aopt

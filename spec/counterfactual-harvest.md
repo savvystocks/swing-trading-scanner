@@ -38,8 +38,9 @@ rows get `skip_reason=prefilter`, null features. `entry_ref = ask` at signal tim
 
 ## Component 2 — barrier poller (`poller.py --once`)
 
-Windows Task Scheduler `SwingHarvestPoller`: weekdays 14:30 local, every 15 min for 6h30m (covers
-09:30–16:00 ET incl. open and close). Holidays skipped via `pandas_market_calendars` (XNYS).
+Runs on the always-on Vultr VPS from a crontab (`git pull --ff-only origin main` first, then
+`poller.py --once`), every 15 min across the RTH window on weekdays. The XNYS session is gated in-code
+by `_market_open_now` via `pandas_market_calendars` (holidays/half-days skipped).
 
 Each run: ingest inbox, back up DB, then for every open candidate (no label, `poll_tier != none`)
 fetch NBBO via batched Alpaca option snapshots (chunk 100; UW quotes fallback), append to `bid_path`,
@@ -63,11 +64,12 @@ vertical, `-1`. Halts/delistings/adjusted contracts → `censored`, `label null`
 ((exit_bid-entry_ref)/entry_ref), `touch_ts_utc`, `time_to_touch_min`, `mfe`, `mae`, `n_polls`,
 `n_stale`, `ambiguous_touch`, `poll_cadence_min`, `censored_reason`.
 
-## Local setup notes
-The poller needs paper creds in this machine's user env to fetch Alpaca (else it degrades to UW-only,
-mostly stale): `setx ALPACA_PAPER_API_KEY ...` and `setx ALPACA_PAPER_SECRET_KEY ...`. `GMAIL_USER` /
-`GMAIL_APP_PASSWORD` enable the optional one-line daily email summary. Remove the schedule with
-`schtasks /Delete /TN SwingHarvestPoller /F`.
+## VPS setup notes
+The poller runs on the Vultr VPS. Paper creds live in `~/.harvest_env` (chmod 600), sourced by the
+cron wrapper (`scripts/run_poller_vps.sh`), to fetch Alpaca (else it degrades to UW-only, mostly
+stale). `GMAIL_USER` / `GMAIL_APP_PASSWORD` enable the optional one-line daily email summary. The
+schedule is a VPS crontab entry; a nightly job also pushes a gzip DB snapshot to the private
+`harvest-snapshots` repo.
 
 ## Tests
 `test_harvest.py` (8 synthetic barrier paths). Harvester, poller, and passivity suites in the

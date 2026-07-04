@@ -43,18 +43,16 @@ July = EDT (UTC−4); BST = UTC+1. Market open **14:30 BST / 13:30 UTC / 09:30 E
 |---|---|---|---|---|
 | 14:00 | 13:00 | 09:00 | Pre-open GHA cycle + poller fires → **no-op** (market-closed gate) | (expected silence; not a fault) |
 | **14:30** | **13:30** | **09:30** | **Market opens.** First real `v10_lab` cycle runs; first VPS poller poll (5-min buffer → polls from 13:25 UTC) | by **13:40 UTC**: `gh run list --workflow=v10_lab.yml` — is a cycle running? If not, check cron-job.org / dispatch manually |
-| **14:30** | **13:30** | **09:30** | **Savvas dispatches the flush** (one-time, at the open): closes the 72 legacy positions | `gh run view <id> --log` shows "flushed …"; escalate: re-probe Alpaca positions |
+| **14:30** | **13:30** | **09:30** | **Auto-flush fires** — the first live cycle closes the 72 legacy positions and skips trading that cycle (no action from you) | by **13:50 UTC**: v10_lab run log shows "executing the one-time flush" and positions drop; else run the manual fallback below |
 | 14:40 | 13:40 | 09:40 | First inbox commit `candidates_20260706.jsonl` on main (if UW flow present) | by **14:00 UTC**: v10_lab run log — did `scan_candidates` return anything? UW reachable? |
 | 14:45 | 13:45 | 09:45 | First VPS ingest: poller pulls main, ingests new candidates, writes first `bid_path` rows | by **14:15 UTC**: `tail data/poller.log` on VPS — pull ok? ingest count? |
 | 14:30–15:00 | 13:30–14:00 | 09:30–10:00 | First **BUY alert** on Savvas's phone (when a cycle enters a trade) + the FLUSH alert | by **14:00 UTC**: was a trade entered (needs flow + gates)? Check Telegram secrets / `_notify` |
 | 21:00 | 20:00 | 16:00 | Market close. Last in-session cycle + poll | — |
 | 22:30 | 21:30 | 17:30 | Nightly off-box DB snapshot → private `harvest-snapshots` repo | by **22:00 BST**: `crontab -l` / `~/harvest-snapshots` on VPS |
 
-**The flush command (run at 14:30 BST / 13:30 UTC / 09:30 ET):**
-```
-gh workflow run v10_lab.yml --ref main -f flush=true
-```
-Dispatch it right at the open — the ~1-min GHA spin-up means `flush_positions` executes just after `is_open` flips true, so the closes are real (not dry). Every order that day, including the flush closes, is attributable to a `v10_lab` run.
+**The flush is now automatic — no action needed from you.** A committed `data/FLUSH_PENDING` sentinel makes the first live cycle after the open close the 72 legacy positions once, delete the sentinel, and skip trading that cycle; the next cycle enters fresh V10-only positions. It is fail-closed on the Alpaca clock — it never flushes on a closed market (verified this weekend: dispatch `28718898659` logged "waiting for the open" and placed zero orders, sentinel intact). Every order that day, including the flush closes, is attributable to a `v10_lab` run.
+
+Manual fallback, only if the auto-flush hasn't fired by ~13:50 UTC: `gh workflow run v10_lab.yml --ref main -f flush=true`. To cancel the auto-flush, delete `data/FLUSH_PENDING` from main before Monday.
 
 ---
 
@@ -70,6 +68,7 @@ Dispatch it right at the open — the ~1-min GHA spin-up means `flush_positions`
 | `health-check` | **PASS** | EODHD injection dropped | run `28717329028` green, **EODHD=0 occurrences**, 11/11 schemas OK |
 | Alert path (Telegram) | **PASS** | temp `_drill_alert.yml` (now deleted) | run `28717465319`: `telegram_ok: True` via real `src.telegram.send_alert`; **phone receipt confirmed by Savvas** |
 | Flush plumbing (closed market) | **PASS** | dry-guard (`80e4ea5d`) | run `28717485553`: "DRILL/CLOSED: would flush 72 position(s), 0 orders sent" + list; **0 orders** |
+| One-time auto-flush (hands-off) | **PASS** | sentinel + `_maybe_flush_pending` (`436aef41`) | armed on main; weekend dispatch `28718898659`: "waiting for the open", **0 orders**, sentinel intact; fires Monday at the open |
 | VPS plumbing | **PASS** | — | `run_poller_vps.sh` exit 0, pulled main, weekend no-op; both crons armed |
 | VPS full-chain drill | **PASS** | `poller.py --drill` (`773dc17a`) | on a **copy**: ingest → **503 bid_path → 503 barrier evals → 503 labels**; real `harvest.db` byte-identical (mtime/size/counts unchanged); all drill artifacts deleted |
 | Off-box snapshot | **PASS** | — | `harvest_20260703_2130.db.gz` pushed (`e66e685`) |
@@ -83,4 +82,4 @@ Dispatch it right at the open — the ~1-min GHA spin-up means `flush_positions`
 - **Real quote-driven labels.** The drill used canned bids; live, the poller polls **real Alpaca option NBBO**. *Healthy:* `bid_path` rows carry real bids and the first up/down labels resolve as prices move (verticals resolve at the week's last session).
 - **The gate flipping open.** *Healthy:* v10_lab cycles stop printing "market closed - no cycle" from 13:30 UTC onward and begin harvesting.
 
-Commits this session: `862793d1` (YAML fix), `80e4ea5d` (market-open gate), `49129dc8` (temp drill workflow, since deleted), `773dc17a` (poller `--drill`). All pushed; battery green before every push (barrier 8/8, passivity 8/8, harvester 14/14, poller 8/8, MOT 74/74).
+Commits this session: `862793d1` (YAML fix), `80e4ea5d` (market-open gate), `49129dc8` (temp drill workflow, since deleted), `773dc17a` (poller `--drill`), `436aef41` (one-time auto-flush sentinel). All pushed; battery green before every push (barrier 8/8, passivity 8/8, harvester 14/14, poller 8/8, MOT 75/75).

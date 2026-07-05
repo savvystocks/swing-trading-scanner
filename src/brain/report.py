@@ -84,6 +84,21 @@ def weekly_edge_report(dataset_result, prev_rows=0, runtime_s=None):
                   + (" (UNDERPOWERED, not a verdict)" if hit_underpowered else ""),
                   f"- expectancy (mean realized_return, executed): {_fmt(float(ex['realized_return'].mean()))}", ""]
 
+        # stratified by source premium (rule_score) - REPORTING ONLY; the SPRT object stays the pooled stream
+        if "rule_score" in ex.columns:
+            rs = ex["rule_score"]
+            strata = [(">=50k", rs >= 50000), ("25-50k", (rs >= 25000) & (rs < 50000))]
+            strat_lines = []
+            for nm, mask in strata:
+                sub = ex[mask.fillna(False)]
+                ns = len(sub)
+                if ns:
+                    w = int((sub["label"] == 1).sum()); h = w / ns
+                    slo, shi = EV.wilson_interval(w, ns)
+                    strat_lines.append(f"- source premium {nm}: n={ns} hit={_fmt(h,4)} Wilson95=[{_fmt(slo)}, {_fmt(shi)}]")
+            if strat_lines:
+                lines += ["_stratified by source premium (reporting only; the SPRT object is the pooled executed stream):_"] + strat_lines + [""]
+
         # ---- SPRT on executed trades ----
         p0 = min(max(hurdle + SPRT_MARGIN, 1e-3), 0.99)      # breakeven already nets cost; add margin m only
         p1 = min(p0 + SPRT_MIN_EDGE, 0.999)

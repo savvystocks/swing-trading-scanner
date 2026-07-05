@@ -212,7 +212,7 @@ def build_synthetic_snapshot(gz_path, n=140, seed=11):
                     "rule_score,executed,vertical_barrier_ts,barrier_up_pct,barrier_down_pct,poll_tier,sample_tier)"
                     " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                     (f"c{i}", "r1", "v10", str(fsv), sig, tk, f"{tk}260717C0001", 100.0, "call", "long",
-                     spread, entry, json.dumps(feats), float(rng.uniform(1e5, 2e6)), executed, vbar, 0.30, -0.50,
+                     spread, entry, json.dumps(feats), float(rng.uniform(2e4, 2e6)), executed, vbar, 0.30, -0.50,
                      "standard", str(tier)))
         # outcome: mix of up/down/vertical + a few censored/open (excluded by the Foundry)
         u = rng.random()

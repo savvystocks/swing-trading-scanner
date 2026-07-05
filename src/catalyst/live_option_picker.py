@@ -6,8 +6,13 @@ from datetime import datetime, timedelta
 logger = logging.getLogger(__name__)
 
 
+def _alpaca_keys():
+    return (os.environ.get("ALPACA_PAPER_API_KEY") or os.environ.get("ALPACA_API_KEY"),
+            os.environ.get("ALPACA_PAPER_SECRET_KEY") or os.environ.get("ALPACA_SECRET_KEY"))
+
+
 def find_best_call(symbol, spot, dte_min=20, dte_max=55):
-    if not os.environ.get("ALPACA_API_KEY") or not os.environ.get("ALPACA_SECRET_KEY"):
+    if not all(_alpaca_keys()):
         return None
     try:
         from alpaca.data.historical.option import OptionHistoricalDataClient
@@ -15,7 +20,7 @@ def find_best_call(symbol, spot, dte_min=20, dte_max=55):
     except ImportError:
         return None
 
-    client = OptionHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+    client = OptionHistoricalDataClient(*_alpaca_keys())
 
     try:
         full_check = client.get_option_chain(OptionChainRequest(underlying_symbol=symbol))
@@ -139,7 +144,7 @@ def _estimate_iv_crush_points(current_iv_pct, has_earnings_imminent, has_earning
 
 def find_best_put(symbol, spot, dte_min=20, dte_max=55):
     """Mirror of find_best_call for puts. Same 4-tier fallback logic."""
-    if not os.environ.get("ALPACA_API_KEY") or not os.environ.get("ALPACA_SECRET_KEY"):
+    if not all(_alpaca_keys()):
         return None
     try:
         from alpaca.data.historical.option import OptionHistoricalDataClient
@@ -147,7 +152,7 @@ def find_best_put(symbol, spot, dte_min=20, dte_max=55):
     except ImportError:
         return None
 
-    client = OptionHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+    client = OptionHistoricalDataClient(*_alpaca_keys())
 
     try:
         full_check = client.get_option_chain(OptionChainRequest(underlying_symbol=symbol))

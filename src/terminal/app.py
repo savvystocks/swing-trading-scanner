@@ -76,13 +76,18 @@ def _load_scan_cached(date):
     return scan
 
 
+def _alpaca_keys():
+    return (os.environ.get("ALPACA_PAPER_API_KEY") or os.environ.get("ALPACA_API_KEY"),
+            os.environ.get("ALPACA_PAPER_SECRET_KEY") or os.environ.get("ALPACA_SECRET_KEY"))
+
+
 def _fetch_live_premarket(ticker):
-    if not os.environ.get("ALPACA_API_KEY") or not os.environ.get("ALPACA_SECRET_KEY"):
+    if not all(_alpaca_keys()):
         return None
     try:
         from alpaca.data.historical.stock import StockHistoricalDataClient
         from alpaca.data.requests import StockLatestQuoteRequest
-        c = StockHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+        c = StockHistoricalDataClient(*_alpaca_keys())
         q = c.get_stock_latest_quote(StockLatestQuoteRequest(symbol_or_symbols=[ticker]))
         info = q.get(ticker)
         if not info:
@@ -103,14 +108,14 @@ def _fetch_live_premarket(ticker):
 
 @st.cache_data(ttl=60)
 def _fetch_live_quotes_batch(tickers_tuple):
-    if not os.environ.get("ALPACA_API_KEY") or not os.environ.get("ALPACA_SECRET_KEY"):
+    if not all(_alpaca_keys()):
         return {}
     if not tickers_tuple:
         return {}
     try:
         from alpaca.data.historical.stock import StockHistoricalDataClient
         from alpaca.data.requests import StockLatestQuoteRequest
-        c = StockHistoricalDataClient(os.environ["ALPACA_API_KEY"], os.environ["ALPACA_SECRET_KEY"])
+        c = StockHistoricalDataClient(*_alpaca_keys())
         us_tickers = [t for t in tickers_tuple if t and "." not in t]
         if not us_tickers:
             return {}

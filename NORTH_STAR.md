@@ -27,7 +27,7 @@ This is an income engine, built to fund freedom — pursued with professional pa
 - **Refusal is a feature.** Abstaining, gating, and sizing down are how the brain earns. A no-trade day is a valid output, not a malfunction.
 - **Freeze the teacher while the student learns.** The rules engine's parameters stay fixed during data collection; every change to strategy goes through the harness first, never through live feel.
 - **Fail open, fail loud.** If any intelligent layer dies, the system degrades to the frozen engine and keeps its records; and nothing is allowed to fail silently — every incident to date was quiet, so silence is treated as the primary enemy.
-- **£0 first.** The cheapest effective solution, always; what we own before what we could buy; paid only if genuinely irreplaceable, and every saving flagged.
+- **£0 first.** The cheapest effective solution, always; what we own before what we could buy; paid only if genuinely irreplaceable, and every saving flagged. Spending decisions are case-by-case: the math comes to the owner every time, and he decides.
 - **Small, reversible steps.** Tags, backups, canaries, checkpoints. Nothing irreversible happens without a gate, and nothing is ever truly deleted.
 - **Provenance on everything.** Versions, hashes, windows, timestamps — future-us must always be able to audit past-us.
 - **Patience is a position.** The weeks of data before the brain, the shadow period before influence, the gates before capital — the pace is the design. Every shortcut through it is a way of paying to lie to ourselves.
@@ -45,6 +45,10 @@ This is an income engine, built to fund freedom — pursued with professional pa
 ## Non-goals
 
 Not high-frequency or latency games. Not price prophecy — the brain judges the engine's signals; it does not divine the market from nothing. Not feature maximalism — every sensor earns inclusion by out-of-fold value or stays a logged observer. Not impressive backtests — no number exists to be shown off. Not trading for its own sake — activity is a cost, not an achievement. Not a multi-strategy platform — one strategy, perfected. (The owner's separate swing system remains a separate world.)
+
+## The decision record
+
+The standing record of all owner decisions lives in ROADMAP.md's decision table. Only their charter-level essence is duplicated here; if the two ever disagree, this file wins on values, the table wins on configuration.
 
 ## When things conflict, in this order
 
@@ -64,3 +68,4 @@ This file changes rarely and deliberately. Any AI session may PROPOSE an amendme
 
 - 2026-07-04 — v1.0 adopted. Charter created before the V12 brain build, so the machinery that generates persuasive numbers is judged by principles written in calm.
 - 2026-07-05 — v1.1: [CONFIRM] items and owner's vision set via the twelve-question owner questionnaire. Halt 30% with P(halt) proviso; live capital £1–5k staged; 5+ hrs/week; multi-strategy added to non-goals.
+- 2026-07-05 — v1.2: 21 further owner decisions integrated (engine, exits, risk, data, brain, ops, money). Freeze committed with two-tier scope; SPRT clock starts at full configuration. Promotion policy: eager within gates. Profits reinvested until amended. Spend: case-by-case with the math. Full record: ROADMAP.md standing-decisions table.

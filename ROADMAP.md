@@ -11,6 +11,15 @@
 >
 > Item numbers are stable IDs; the **Phase (A→D)** conveys priority. Two follow-up prompts (vision
 > integration, owner-decisions integration) will amend this file — their placeholders are marked.
+>
+> **Design constraint (owner, 2026-07-05):** the Foundry and Truth Harness are signal-agnostic and must
+> remain so — on a NO verdict from item 7, new signal sources plug into the same machinery. The strategy
+> is replaceable; the truth machinery is not.
+
+## Standing decisions
+
+- **Alerting: every-event alerts stay ON** (owner's explicit preference, 2026-07-05) — a standing
+  decision, not a task: entries, exits, autopsies, digests, and failures all push to the owner's phone.
 
 ## Foundation (shipped)
 
@@ -86,6 +95,10 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
      auto-select sigmoid < 1,000 OOF n else isotonic; Brier for both every run. (Idle until Stage 2.)
    - **GATE 4b** - compute guard: wall-clock / memory budget; degrade CPCV N 10→8→6 with a loud note
      rather than dying. Insurance, not a current constraint at this system's scale.
+   - **Weekly-report expected bands (QUEUED enhancement)** - render win rate, expectancy, equity curve,
+     and monthly P&L EACH against its statistically expected band (from the fitted return distribution +
+     current sample size), labeled NORMAL VARIANCE or DEGRADATION. Accept: no headline number ever
+     appears without its band. (Not yet built - the shipped harness renders Wilson intervals + EV/SPRT.)
 7. **Sequential edge test (SPRT)** — SHIPPED 2026-07-04. Wald SPRT on executed trades, evaluated weekly.
    **Pinned parameters (do not change quietly):**
    - H0: win rate = the empirical **cost-inclusive breakeven** (GATE 2) **+ a stated margin m = 0.02**.
@@ -108,11 +121,22 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
     only on predefined out-of-fold plus shadow criteria; kill-switches on feature drift (PSI), calibration
     drift, and drawdown that fall back to the frozen rules engine. Hyperparameters frozen, re-tuned at most
     quarterly under purged CV. Accept: fully automated weekly cycle with human-visible promotion reports.
+    - **P(halt) calculator (gate):** before any live capital, compute and present the probability of a 30%
+      drawdown from high-water under the fitted distribution at the proposed sizing; the owner signs off on
+      the number in writing. Accept: the number and sign-off recorded in `reports/`.
+    - **Ceiling Review (gate):** raising the brain's authority beyond gate-plus-sizing (toward originating
+      trades) may only be RAISED after a predefined shadow record exists (minimum weeks and prediction
+      count stated in advance), and only the owner may decide it. Until then the ceiling is gate + sizing.
+      Accept: the predefined thresholds written here before Stage 4 ships.
 11. **Probability-mapped sizing (Stage 4+)** — QUEUED. Fractional Kelly on the EMPIRICAL return
     distribution (Gate 2's expected shortfall, not binary assumptions), capped at the per-trade
     allocation, portfolio-level correlation awareness so simultaneous same-thesis candidates size as one
     bet. Accept: sizing driven by calibrated probabilities only after item 7 returns a go; deployed
     shadow → gate → sizing.
+16. **Teaching block (Stage 1)** — QUEUED. Every weekly report ends with one concept explained through
+    that week's actual rows (uniqueness weighting when overlaps first appear, calibration when the
+    reliability curve first draws, PBO when CPCV first runs, and so on). Accept: present in every report;
+    the concept rotates with what the data did.
 
 ## Phase D — later
 
@@ -121,8 +145,11 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
     month.
 14. **Live-capital gate** — QUEUED. Predefined, written criteria — edge verdict, slippage bounds, backstop
     reliability, drawdown limits — that must ALL pass before any real money. Accept: the criteria exist in
-    this file long before they are tested. *(PLACEHOLDER: the vision-integration prompt will add the
-    staged amounts and best-case calendar.)* Referenced by NORTH_STAR.md as "item 14".
+    this file long before they are tested. Staged amounts: **£1,000–5,000 initial** to prove survival,
+    scaling beyond only on live evidence. Best-case calendar (informational): data critical mass
+    ~mid-August 2026; Student trained + two-week shadow ~early September; gate-mode on paper through
+    September; live-capital review ~early October. **BEST CASE — the gates decide the real dates.**
+    Referenced by NORTH_STAR.md as "item 14".
 15. **Barrier-configuration optimization** — QUEUED. Using the stored bid paths, executed only under item
     7's PBO discipline. Accept: any barrier change justified with overfitting-adjusted evidence.
 
@@ -135,13 +162,14 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
 | 3 | Slippage ledger | B | QUEUED | Measured slippage feeds Gate-2 thresholds |
 | 4 | Inbox retention pruning | A | QUEUED | Lean checkout, zero data loss |
 | 5 | Data Foundry (Stage 0) + GATE 1 / 4a | C | SHIPPED | Versioned parquet + card; overlap weights + cache tested |
-| 6 | Truth Harness (Stage 1) + GATE 2 / 3 / 4b | C | SHIPPED | Purged-CV leakage caught; EV/calibration/guard shipped |
+| 6 | Truth Harness (Stage 1) + GATE 2 / 3 / 4b | C | SHIPPED | Purged-CV leakage caught; EV/calibration/guard shipped; weekly-report bands QUEUED |
 | 7 | Sequential edge test (SPRT) | C | SHIPPED | Weekly CONTINUE/REJECT/ACCEPT; params pinned (H0=breakeven+0.02) |
 | 8 | Meta-labeling — Student (Stage 2) | C | QUEUED | Gate ~10–15k rows; beats rules engine via items 5–7 |
 | 9 | Ensemble abstention — Council (Stage 3) | C | QUEUED | Abstention rate + P&L effect measured on paper |
-| 10 | Champion/challenger MLOps — Governor (Stage 4) | C | QUEUED | Automated weekly cycle + kill-switches to rules engine |
+| 10 | Champion/challenger MLOps — Governor (Stage 4) | C | QUEUED | Automated weekly cycle + kill-switches; P(halt) & Ceiling-Review gates |
 | 11 | Probability-mapped Kelly sizing (Stage 4+) | C | QUEUED | Calibrated-prob sizing only after item 7 go; shadow→gate→size |
 | 12 | Free orthogonal sensors | B | IN-FLIGHT | earnings-drift + VIX-level SHIPPED; blackout/term-struct/S-3/FINRA/IBKR/FTD/halts QUEUED |
 | 13 | Engine off GitHub Actions onto the VPS | D | QUEUED | Zero missed cycles over a test month |
-| 14 | Live-capital gate | D | QUEUED | Written criteria pass before any real money (amounts TBD by vision prompt); NORTH_STAR "item 14" |
+| 14 | Live-capital gate | D | QUEUED | £1–5k initial staged; criteria pass before real money; best-case live review ~early Oct (gates decide); NORTH_STAR "item 14" |
 | 15 | Barrier-configuration optimization | D | QUEUED | Barrier changes justified under item-7 PBO discipline |
+| 16 | Teaching block (Stage 1) | C | QUEUED | Every weekly report explains one concept via that week's rows |

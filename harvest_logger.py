@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import random
+import hashlib
 from datetime import datetime, timezone, timedelta
 
 try:
@@ -16,6 +17,16 @@ FEATURE_SET_VERSION = "v11-37feat"
 INDEX_ROOTS = {"SPX", "SPXW", "SPXPM", "NDX", "NDXP", "RUT", "RUTW", "VIX", "VIXW",
                "XSP", "DJX", "OEX", "XEO", "MRUT", "NANOS", "VVIX"}
 STATE_PATH = os.path.join(db.DATA_DIR, "harvest_state.json")
+
+_PARAMS_HASH_CACHE = {}
+
+
+def _params_hash(params):
+    """Short hash of the FULL effective tunables - the frozen-baseline stamp on every candidate row."""
+    s = json.dumps(params, sort_keys=True, default=str)
+    if s not in _PARAMS_HASH_CACHE:
+        _PARAMS_HASH_CACHE[s] = hashlib.sha256(s.encode("utf-8")).hexdigest()[:12]
+    return _PARAMS_HASH_CACHE[s]
 
 
 def _now_ms():
@@ -197,7 +208,8 @@ def _build_row(flow, params, signal_ts, run_id, sha, executed, skip_reason, samp
         poll_tier = "reduced"
     return {
         "candidate_id": uuid.uuid4().hex,
-        "run_id": run_id, "code_version": sha, "feature_set_version": FEATURE_SET_VERSION,
+        "run_id": run_id, "code_version": sha, "params_hash": _params_hash(params),
+        "feature_set_version": FEATURE_SET_VERSION,
         "signal_ts_utc": signal_ts,
         "ticker": ticker, "occ_symbol": occ, "expiry": flow.get("expiry"),
         "strike": _f(flow.get("strike")), "right": right, "side": "long",

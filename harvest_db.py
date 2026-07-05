@@ -16,7 +16,7 @@ def inbox_path():
     return os.path.join(INBOX_DIR, "candidates_%s.jsonl" % stamp)
 
 CANDIDATE_COLS = [
-    "candidate_id", "run_id", "code_version", "feature_set_version", "signal_ts_utc",
+    "candidate_id", "run_id", "code_version", "params_hash", "feature_set_version", "signal_ts_utc",
     "ticker", "occ_symbol", "expiry", "strike", "right", "side",
     "bid", "ask", "bid_size", "ask_size", "mid", "spread_pct", "last", "underlying_last",
     "entry_ref", "features", "rule_score", "executed", "skip_reason",
@@ -26,7 +26,7 @@ CANDIDATE_COLS = [
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS candidates (
     candidate_id TEXT PRIMARY KEY,
-    run_id TEXT, code_version TEXT, feature_set_version TEXT, signal_ts_utc INTEGER,
+    run_id TEXT, code_version TEXT, params_hash TEXT, feature_set_version TEXT, signal_ts_utc INTEGER,
     ticker TEXT, occ_symbol TEXT, expiry TEXT, strike REAL, "right" TEXT, side TEXT,
     bid REAL, ask REAL, bid_size REAL, ask_size REAL, mid REAL, spread_pct REAL, last REAL, underlying_last REAL,
     entry_ref REAL, features TEXT, rule_score REAL, executed INTEGER, skip_reason TEXT,
@@ -64,8 +64,15 @@ def connect(path=None):
 def init_db(path=None):
     con = connect(path)
     con.executescript(_SCHEMA)
+    _migrate(con)
     con.commit()
     return con
+
+
+def _migrate(con):
+    cols = {r[1] for r in con.execute("PRAGMA table_info(candidates)").fetchall()}
+    if "params_hash" not in cols:                     # add the frozen-baseline stamp column to a pre-existing DB
+        con.execute('ALTER TABLE candidates ADD COLUMN params_hash TEXT')
 
 
 def insert_candidate(con, row):

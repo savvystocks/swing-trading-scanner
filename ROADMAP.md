@@ -105,7 +105,11 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
      (NOT "breakeven + cost" - the breakeven already nets cost, so re-adding it double-counts.)
    - H1: win rate = **H0 + 0.05** (a stated 5-percentage-point minimum edge).
    - alpha = **0.05**, beta = **0.20**.
-   - The SPRT **clock starts when the week-one Tier B drop lands** (owner-decisions integration).
+   - The SPRT **clock starts the trading day AFTER the week-one Tier B drop merges** (after Monday's
+     Checkpoint 2). Executed trades before that date are warm-up, excluded from the SPRT; all harvested
+     candidates remain in the learning corpus regardless.
+   - **Stratified view is reporting only:** the pinned SPRT object is the POOLED executed stream; the
+     report's hit rate by source premium (>=50k vs 25-50k) is insight, never a driver of the decision.
    - Reported weekly as CONTINUE / REJECT (no edge) / ACCEPT (edge).
 8. **Meta-labeling model — Student (Stage 2)** — QUEUED. The V10 rules engine stays primary; a
    gradient-boosted binary filter answers only "is this signal real?" on the harvested features. Feature
@@ -173,3 +177,63 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
 | 14 | Live-capital gate | D | QUEUED | £1–5k initial staged; criteria pass before real money; best-case live review ~early Oct (gates decide); NORTH_STAR "item 14" |
 | 15 | Barrier-configuration optimization | D | QUEUED | Barrier changes justified under item-7 PBO discipline |
 | 16 | Teaching block (Stage 1) | C | QUEUED | Every weekly report explains one concept via that week's rows |
+
+
+## Standing owner decisions (2026-07-05)
+
+One line per decision. The charter-level essence of these is mirrored in NORTH_STAR.md; if the two ever
+disagree, NORTH_STAR wins on values and this table wins on configuration. (32 decisions; the freeze scope
+and SPRT clock are decisions 14/27.)
+
+| # | Area | Decision | Where it lives |
+|---|---|---|---|
+| 1 | Purpose | Income engine to fund freedom; truth first, profit as consequence | NORTH_STAR Mission + vision |
+| 2 | Strategy | Iterate on a NO verdict - the harness stays and hunts new signals | ROADMAP header constraint + item 7 |
+| 3 | Strategy | V10-only; one strategy perfected, not a platform | NORTH_STAR non-goals |
+| 4 | Money | £1-5k initial live capital to prove survival | NORTH_STAR risk + item 14 |
+| 5 | Risk | 30% drawdown auto-halt, with the P(halt) proviso | NORTH_STAR risk + item 10 |
+| 6 | Sizing | Aggressive fractional Kelly (half-Kelly+) only via the Governor | NORTH_STAR risk + item 11 |
+| 7 | Owner | 5+ hours/week, active co-development | NORTH_STAR owner's part |
+| 8 | Brain | Authority ceiling rises only by track record (Ceiling Review gate) | item 10 |
+| 9 | Ops | Every-event alerts stay ON | ROADMAP standing decisions |
+| 10 | Money | 3-month best-case calendar; gates decide the real dates | item 14 |
+| 11 | Owner | Judge the four numbers against expected bands, never feel | NORTH_STAR owner's part + item 6 |
+| 12 | Brain | Deep teaching - one concept per weekly report | item 16 |
+| 13 | Risk | Unbounded positions for now (revisit at the live gate) | scheduled decisions |
+| 14 | Engine | Volume push: cool-off 24h->4h + scanner_min_premium 50k->25k | v10_tunable_parameters.json (Tier A, SHIPPED) |
+| 15 | Entry | Earnings blackout: no new entry within 3 days of earnings | item 12 (Tier B) |
+| 16 | Exits | Keep the current exit design (state machine) | Phase C exits |
+| 17 | Exits | Theta-cliff study decides time exits | scheduled studies |
+| 18 | Exits | Hold over weekends | scheduled studies (weekend cost) |
+| 19 | Risk | Daily brake: 3 stop-outs or realized loss >= 2x allocation | Tier B |
+| 20 | Exits | Ratchet backstop: always a stop, dynamic level | item 2 (Tier B) |
+| 21 | Engine | One position per underlying (hard block) | Tier B |
+| 22 | Data | Adaptive harvest cap with poller reservation | Tier B |
+| 23 | Data | Random blind-spot sample to 10/day | Tier B |
+| 24 | Data | Sensor order: earnings -> regime -> EDGAR dilution -> FINRA | item 12 |
+| 25 | Brain | Gating temperament decided at the first calibration curve | scheduled decisions |
+| 26 | Brain | Eager-within-gates promotion | item 10 |
+| 27 | Ops | The freeze: Tier A tonight, Tier B one drop after Monday, 6 weeks solid | items 7 + 27 scope |
+| 28 | Ops | 30-minute watchdog, cross-watching (VPS + healthchecks.io) | Tier B |
+| 29 | Spend | Spend case-by-case; the math comes to the owner every time | NORTH_STAR principle 7 |
+| 30 | Money | Paper-vs-live decided at the live gate (rec: parallel, paper as slippage control) | scheduled decisions |
+| 31 | Money | Reinvest everything until further notice | NORTH_STAR + item 14 |
+| 32 | Money | Alpaca into live; evidence is final | item 14 |
+
+## Scheduled studies (week 6, from stored bid paths + counterfactual labels)
+
+| Study | Question | Data source | Decision it settles |
+|---|---|---|---|
+| Theta-cliff | Do the final ~2 days of hold add or destroy value? | stored bid_path of held positions | whether to add a time-based exit (dec 17) |
+| Weekend cost | Friday-hold -> Monday-gap return distribution? | labels of positions held over a weekend | whether to keep holding weekends (dec 18) |
+| Brake cost | What would the brake-skipped candidates have returned? | counterfactual labels of brake-skipped candidates | how to price / tune the daily brake (dec 19) |
+| Pyramiding value | Do same-ticker re-fires carry edge worth a 2nd position? | counterfactual labels of one-per-underlying skips | whether to relax one-per-underlying (dec 21) |
+
+## Scheduled decisions
+
+- **Gating temperament** - decided at the first real calibration reliability curve (how aggressively the
+  brain gates). Owner call.
+- **Position cap + paper-parallel** - decided at the live-capital gate (item 14): the per-underlying and
+  portfolio caps, and whether live runs in parallel with paper as a slippage control group (recommendation
+  on record: yes, parallel).
+- **Ceiling review** - per item 10's Ceiling Review gate; only the owner raises the brain's authority.

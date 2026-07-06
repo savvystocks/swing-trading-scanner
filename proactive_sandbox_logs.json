@@ -28590,7 +28590,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -24.2,
-        "mae_pct": -25.2,
+        "mae_pct": -30.6,
         "stage": "initial"
       }
     }
@@ -29342,7 +29342,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -12.9,
+        "mfe_pct": -10.5,
         "mae_pct": -25.4,
         "stage": "initial"
       }
@@ -32591,6 +32591,272 @@
         "submitted": true,
         "limit_price": 3.78,
         "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -25.0,
+        "mae_pct": -25.0,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "AUDIT-15b52e1a",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-07-06T17:21:29.728Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "cd8063ed-27dc-47f0-a6a5-5dd4c7170810",
+        "symbol": "VZ260807P00041000",
+        "age_min": 39.8,
+        "limit_price": "1.19"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "e176aeda41b6",
+    "ticker": "AAL",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-06T17:21:53.202Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 22,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-06T17:21:53.202Z",
+      "macro": {
+        "spot": 17.87,
+        "sma20": 16.09,
+        "distance_to_sma20_pct": 11.078,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 58.3,
+        "iv_back": 55.3,
+        "iv_ratio": 1.054,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 680905.5,
+        "zero_gamma_strike": 20.0,
+        "distance_to_zero_gamma_pct": -11.919,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.73,
+        "atr_pct": 4.08,
+        "rvol_10min": 0.55,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Industrials",
+        "industry": "Airlines",
+        "market_cap": 11809824768,
+        "short_pct_float": 9.78,
+        "short_ratio": 0.66,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 96.79,
+        "vader_compound": 0.142,
+        "news_type": "Analyst",
+        "top_headline": "Trump's America250 Celebrations to Close Reagan National Airport for Nearly 15 Hours (UPDATED)",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 11.078,
+        "market_spy_dist_pct": 1.382,
+        "sector_etf": "XLI",
+        "sector_dist_pct": 3.322,
+        "sector_vs_market_spread": 1.94,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 57.5,
+        "call_iv_25d": 53.0,
+        "skew_ratio": 1.085,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 3.31,
+        "ask_sweep_prem": 113566.0,
+        "total_flow_prem": 3434817.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 17.87,
+        "node_size": 1674656.0,
+        "n_prints": 200,
+        "window_start": "2026-07-06T17:16:03Z",
+        "window_end": "2026-07-06T17:21:45Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 74,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 64.56,
+        "last_earnings_date": "2026-04-23",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 47.38,
+        "front_iv": 58.3,
+        "vrp": 10.92,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -1346937.0,
+        "flow_persistence_pct": 66.68,
+        "flow_direction": "bearish",
+        "closing_accel": -71467.0,
+        "n_ticks": 232,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 993.98,
+        "vwma_20": 16.1,
+        "rsi_5": 50.0,
+        "rsi_15": 87.44,
+        "gap_pct": 0.977,
+        "day_range": 4.197,
+        "candle_body": 0.287,
+        "dist_sma50": 25.901,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 3.0,
+        "vix_level": 15.82,
+        "execution_hour": 17,
+        "day_of_week": 0,
+        "sector_vs_spy": -0.591,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 35300240.0,
+        "net_vanna": 10633260.0,
+        "net_charm": 867001.0,
+        "delta_imbalance": 4.527,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.056,
+        "bid": 17.85,
+        "ask": 17.86,
+        "bid_size": 10400.0,
+        "ask_size": 4000.0,
+        "obi": 0.4444,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.54,
+        "gap_pct": 0.977,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 9.78,
+        "float_shares": 654910177,
+        "shares_short": 64259886,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.142,
+      "sweep_aggression_pct": 3.31,
+      "distance_to_zero_gamma_pct": -11.919,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 74,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 66.68
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "AAL260807P00017000",
+        "expiry": "2026-08-07",
+        "strike": 17.0,
+        "dte": 35,
+        "entry_premium": 1.29,
+        "limit_price": 1.3,
+        "contracts": 6,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "22",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.69,
+          "ask": 0.81,
+          "mid": 0.75,
+          "bid_ask_spread_pct": 16.0,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 26.0,
+          "oi_prev": 22.0,
+          "oi_change": 4.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "a00e1829-19e2-42d1-9752-09e5d7652143",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.3,
+        "contracts": 6
       }
     },
     "exit": null,

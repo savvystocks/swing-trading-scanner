@@ -280,3 +280,21 @@
 
 **Determining factor:** Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 34.0.
 
+## Autopsy - OSCR (090a5254d004)
+- entered 2026-07-06T14:32:32.022Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.6% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 10.0 worked against it.
+
+## Autopsy - SCHW (331af513088a)
+- entered 2026-07-06T19:42:02.127Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -99.4% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-99%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 100.0 worked against it.
+

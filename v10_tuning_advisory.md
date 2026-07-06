@@ -178,3 +178,15 @@ trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - OSCR (090a5254d004) - 2026-07-06T19:51:28.307Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - SCHW (331af513088a) - 2026-07-06T19:51:29.462Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

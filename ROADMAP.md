@@ -36,6 +36,11 @@
    single-position canary through a full lifecycle before fleet-wide; MOT extended with order-
    reconciliation checks. Lands in the **week-one Tier B drop**. Accept: every open position carries a
    working broker-side floor at all times, and cron exits cancel resting siblings before closing.
+   Also in this drop (2026-07-06 live-day audit): `flush_positions` must not mark a log record FLUSHED
+   unless its broker close actually succeeded — otherwise the position orphans (broker-open,
+   record-FLUSHED, exit-engine-blind), as `PFE260814C00025500` did at go-live. And **one-per-underlying
+   (dec 21) must ignore legacy/orphaned stragglers**, so a corpse can't block a live signal on that
+   underlying for six weeks.
 4. **Inbox retention pruning** — QUEUED. Poller deletes working-tree inbox files older than 14 days only
    after verifying every candidate_id is in the DB and a newer DB backup exists. (Verified not yet built:
    the `keep=14` prune in `harvest_db.backup()` prunes DB *backups*, not the inbox jsonl.) Accept: lean

@@ -11,11 +11,12 @@ Snapshot time: 2026-07-06 ~17:05 UTC (mid-session; US market open 13:30–20:00 
 
 The core labelling / storage / learning-input chain is healthy and green — the frozen baseline is stamped
 perfectly, ingestion is idempotent with zero duplicates, labels are arithmetically exact, storage is intact,
-and the poller cadence is flawless. One real defect blocks a clean green: a double-triggered engine run
-collided on `git push`, and the rebase dropped a filled trade's harvest row, so that executed trade
-(`WULF260807C00024500`) is invisible to the learning chain. A single legacy position (`PFE`) also survived
-the open-flush. Both are bug-fix-class. Recommend fixing the commit-collision data loss before the Tier B
-go-ahead.
+and the poller cadence is flawless. Amber, not green, because a double-triggered engine run collided on
+`git push` and the rebase dropped one filled trade's harvest row (`WULF260807C00024500`) — lost to the
+learning chain for today — and a legacy position (`PFE`) survived the open-flush. Root cause of the data loss
+is FIXED FORWARD this session (commit fa5bdc92: schedule trigger dropped + inbox union-merge); PFE is being
+closed by the owner. The single lost WULF row stays absent from today's dataset. Section 7 (full-loop proof)
+is appended this evening; re-verify green then for the Tier B go-ahead.
 
 ---
 
@@ -57,9 +58,8 @@ go-ahead.
 - Flush: **71 sells in an 8-second burst 13:31:33–13:31:41Z** (at the open). Engine self-report:
   `FLUSH complete: 71/72 positions closed, cool-off cleared, log reset`. `FLUSH_PENDING` removed from main
   (commit d8d3f58). The flush cycle entered no trades (first buy 13:41, the following cycle). Correct.
-- **Straggler (Finding 2):** `PFE260814C00025500` (13 @ $0.28, uPL −$182) was NOT in the flush's 71 closes
-  and remains open. Current book = 21 positions = 20 today-entries + PFE. So the book is not strictly
-  "today's only."
+- **Straggler (Finding 2):** `PFE260814C00025500` (13 @ $0.28) was NOT closed by the flush and remains open.
+  Clean book = **20 positions opened today**; the 21st is this orphaned legacy leg (footnote below).
 - Executed reconciliation vs main inbox (source of truth): **20 of 21 Alpaca buy fills have a harvest
   executed row.**
   - `VZ260807P00041000` — harvest-logged but unfilled on Alpaca (the 1 "new" order; the engine logs at
@@ -103,33 +103,50 @@ and expected at one day of data. Full-loop proof appended here once done.
   (brain_weekly send 2026-07-05 + MOT dim5). No telegram send errors in today's runs. But `send_alert` is
   silent-on-success and the chat can't be read read-only, so there is no independent per-alert delivery
   receipt — confirm on your phone.
-- Flush closures: SILENT — no per-position SELL / autopsy alerts in the flush cycle (avoids 71-message spam).
+- Flush closures: the flush sends ONE summary alert (`FLUSH closed 71/72 legacy positions`) — not 71
+  per-position alerts. So the 71/72 shortfall was itself alerted at 13:31. (Correction to the initial pass.)
 - EOD digest: pending (fires after the 20:00 UTC close).
 
 ---
 
 ## Findings
 
-**Finding 1 — MEDIUM (gates Tier B): double-trigger + git-rebase data loss.**
-`v10_lab.yml` fires on both `schedule (*/10 13-21)` and `repository_dispatch` (cron-job.org). At 16:20 both
+**Finding 1 — MEDIUM: double-trigger + git-rebase data loss. FIXED (commit fa5bdc92).**
+`v10_lab.yml` fired on both `schedule (*/10 13-21)` and `repository_dispatch` (cron-job.org). At 16:20 both
 fired: schedule run 28806362961 (16:20:09) entered CRML and committed to main; dispatch run 28806400405
 (16:20:45) entered WULF (real filled paper trade, 2 @ $3.10) and committed `[main b0bf262]`, but its push was
 rejected and the rebase-retry hit `error: could not apply b0bf262` — the commit, and WULF's harvest row, was
-dropped. The row never reached main (confirmed: main inbox has no WULF call). Net: one filled trade
-permanently missing from the harvest. Recurs on any commit collision, so it also silently caps learning-chain
-completeness. Proposed fixes (bug-fix-class):
-- (a) Add `.gitattributes` with `data/harvest_inbox/*.jsonl merge=union` (and the state files) so concurrent
-  appends union-merge instead of conflicting — no row is ever dropped, even on collision. Root fix.
-- (b) Remove the redundant `schedule` trigger from v10_lab.yml (repository_dispatch is the reliable primary)
-  so two runs never fire in one slot. Reduces collision frequency; hygiene.
-- (c) Both (a) + (b).
+dropped (confirmed absent from main). One filled trade lost from the harvest. Fix applied: dropped the
+redundant `schedule` trigger (repository_dispatch is the sole driver; the concurrency group serialises runs)
+and added `.gitattributes` `data/harvest_inbox/*.jsonl merge=union` so the append-only transport never drops a
+row on a residual collision. The one lost WULF row (16:23, 2 @ $3.10) stays absent from today's dataset.
 
-**Finding 2 — LOW: flush straggler.** `PFE260814C00025500` was not in the flush's 71 closes ("71/72") and
-remains open. The exit engine still tracks it. Fix: a verify-all-closed retry in the flush, or a one-off
-manual close of PFE.
+**Finding 2 — LOW: flush orphaned a legacy position (`PFE260814C00025500`).** Diagnosis: PFE has a live bid
+($0.16, size 17; traded $0.17 at 16:58) — it is NOT a zero-bid corpse. At 13:31 (market open +1 min) the
+illiquid far-dated contract had no bid, so the flush's market-close returned False and PFE was not counted
+in the 71. But `flush_positions` (line 1206-1209) then marked ALL OPEN log records FLUSHED unconditionally,
+including PFE's — so the broker position stays open while its tracking record reads FLUSHED, and the exit
+engine (which only manages OPEN records) is now blind to it. It would sit until the 2026-08-14 expiry.
+Resolution: owner places a GTC limit sell (fills immediately at the $0.16 bid, ~$208 recovered). See Finding 3
+for the underlying flush bug.
 
-**Finding 3 — INFO:** the flush emits no alerts; the EOD digest and per-BUY Telegram delivery are not
-verifiable read-only (confirm on phone). A one-line flush-summary alert would be a small enhancement.
+**Finding 3 — MEDIUM (queued, Tier B — not changed mid-session): flush marks records FLUSHED on failed
+closes.** `flush_positions` flips every OPEN record to FLUSHED regardless of whether `_close_position`
+succeeded, orphaning any position it couldn't close (Finding 2). Fix: only mark a record FLUSHED when its
+close actually succeeded (else leave it OPEN so the exit engine keeps managing it and closes it once a bid
+returns), or re-fetch positions after the flush and reconcile. Also queue: one-per-underlying (Tier B) must
+ignore legacy/orphaned positions so a straggler cannot block a live signal on that underlying for six weeks.
+
+**Finding 4 — INFO:** the EOD digest (fires after the 20:00 UTC close) and per-BUY Telegram delivery are not
+verifiable read-only — confirm on phone. The flush itself does send a one-line summary alert (Section 8).
+
+---
+
+## Footnote — clean-book count
+
+"Positions opened today" = **20**. The broker shows 21 open; the extra is `PFE260814C00025500`, the
+Finding-2 orphan (a pre-go-live legacy leg the flush failed to close and then mislabelled FLUSHED). All 20
+of today's positions trace to a V10 run_id and an Alpaca fill.
 
 ---
 

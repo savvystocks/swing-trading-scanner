@@ -44,6 +44,18 @@ def run(snapshot_source, out_dir, reports_dir, cache_dir=None, telegram=False):
     ds = foundry.build_dataset(snap, out_dir, cache=weight_cache, baseline_null_rates=baseline_null)
     rep = report.weekly_edge_report(ds, prev_rows=state.get("prev_rows", 0), runtime_s=time.time() - t0)
 
+    # weekly ops self-test (owner decision 28): the VPS watchdog stamps watchdog_status.json into the
+    # snapshots repo; render it here. Reads only the snapshot checkout - isolation intact.
+    ops_line = "## Ops self-test (watchdog)\n\n- no watchdog_status.json in the snapshot repo (watchdog not deployed or not stamping)"
+    if os.path.isdir(snapshot_source):
+        wd = _load_json(os.path.join(snapshot_source, "watchdog_status.json"))
+        if wd:
+            ops_line = ("## Ops self-test (watchdog)\n\n- last stamp {ts} | market_open={mo} | "
+                        "inbox-commit age {age}m | status **{st}**").format(
+                ts=wd.get("ts_utc"), mo=wd.get("market_open"),
+                age=wd.get("last_inbox_commit_age_min"), st=wd.get("status"))
+    rep["markdown"] += "\n\n" + ops_line
+
     report_path = os.path.join(reports_dir, f"report_{ds['dataset_version']}.md")
     open(report_path, "w", encoding="utf-8").write(rep["markdown"])
 

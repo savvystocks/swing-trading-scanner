@@ -1,4 +1,6 @@
-"""V10 Research Sandbox - Alternative Data Prototype (STANDALONE, wired to nothing).
+"""V10 alt-data feeds - LIVE as fail-open sensors: the engine's alt_catalyst()
+(sandbox_proactive_lab.py) imports reddit_attention_map + insider_open_market_buys every payload.
+Log-only - no entry/sizing/exit path reads these. Architecture of record: SYSTEM_ARCHITECTURE.md.
 
 Two genuinely-free, ZERO-API-KEY edges orthogonal to our UW (institutional flow) +
 Alpaca (price/volume) stack, for the 3-5 day options momentum strategy:

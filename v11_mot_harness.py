@@ -697,6 +697,184 @@ check(5, "SELL + AUTOPSY alerts fire through the close chain", sell_fired and au
 check(5, "daily_digest builds a summary block", isinstance(dg, str) and "SANDBOX DIGEST" in dg)
 
 # =====================================================================
+print("\n=== DIMENSION 6: TIER B GATES (blackout / brake / one-per-underlying / park / backstop) ===")
+_wipe()
+import harvest_logger as _hl
+_params6 = load_params()
+_now_iso = lab._now_iso_ms()
+_today_iso = _now_iso[:10]
+
+# 6.1 backstop ratchet level math (mirrors manage_exit stages)
+lv_i = lab._backstop_level(2.00, "initial", None, _params6)
+lv_s = lab._backstop_level(2.00, "scaled", 40.0, _params6)
+lv_t = lab._backstop_level(2.00, "trailing", 100.0, _params6)
+check(6, "backstop levels: initial -50% / scaled break-even / trailing 20%-off-peak",
+      approx(lv_i, 1.00) and approx(lv_s, 2.00) and approx(lv_t, 3.60),
+      f"initial={lv_i} scaled={lv_s} trailing={lv_t}")
+
+# 6.2 OCC root boundary: BB never matches BBAI
+check(6, "occ root match: BB matches BB2608.., NOT BBAI2608..",
+      lab._occ_matches_base("BB260807P00011500", "BB") and not lab._occ_matches_base("BBAI260807C00005000", "BB"))
+
+# 6.3 one-per-underlying: tracked blocks; orphan + PARKED exempt; pending entry blocks
+_occA = "AMD260807C00100000"
+_recA = {"trade_set_id": "x1", "ticker": "AMD", "status": "OPEN", "legs": {"bullish_call": {"occ_symbol": _occA}}}
+_posA = [{"symbol": _occA, "qty": "2"}]
+b1, w1 = lab.ticker_blocked("AMD", _posA, _params6, open_orders=[], log=[_recA])
+b2, w2 = lab.ticker_blocked("AMD", _posA, _params6, open_orders=[], log=[])                       # orphan: no record
+b3, w3 = lab.ticker_blocked("AMD", _posA, _params6, open_orders=[], log=[dict(_recA, status="PARKED")])
+b4, w4 = lab.ticker_blocked("AMD", [], _params6, open_orders=[{"symbol": _occA, "side": "buy", "qty": "2"}], log=[])
+check(6, "one-per-underlying: tracked position blocks", b1 and "one-per-underlying" in w1, w1)
+check(6, "one-per-underlying: ORPHAN (no record) does NOT block", not b2, w2)
+check(6, "one-per-underlying: PARKED record does NOT block", not b3, w3)
+check(6, "one-per-underlying: pending entry order blocks", b4 and "pending" in w4, w4)
+
+# 6.4 earnings blackout: 2d -> SKIP; 10d -> no blackout skip; None -> fail-open
+_oped = v11.post_earnings_drift
+for _dte, _want in ((2, True), (10, False), (None, False)):
+    v11.post_earnings_drift = (lambda d: (lambda t, m=False, **k: {"days_to_earnings": d, "days_since_earnings": None,
+                               "post_earnings_iv_crush_flag": None, "source": "mot"}))(_dte)
+    _r = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
+    _got = bool(_r.get("skipped")) and "earnings blackout" in str(_r.get("reason", ""))
+    check(6, f"earnings blackout: days_to_earnings={_dte} -> {'SKIP' if _want else 'no blackout skip'}",
+          _got == _want, str(_r.get("reason", "entered"))[:70])
+    _wipe()
+v11.post_earnings_drift = _oped
+
+# 6.5 daily brake: 3 stop-outs OR 2x-allocation loss; clear otherwise
+def _mk_exit(action, ret):
+    return {"trade_set_id": "b" + action + str(ret), "ticker": "T", "status": "CLOSED",
+            "legs": {"bullish_call": {"occ_symbol": "T260807C00001000", "alloc_usd": 800.0}},
+            "leg_exits": {"bullish_call": {"occ": "T260807C00001000", "closed_at": _now_iso,
+                                           "return_pct": ret, "action": action, "closed_ok": True}}}
+br1 = lab.daily_brake_status(_params6, log=[_mk_exit("CLOSE_STOP_LOSS", -50)] * 3)
+br2 = lab.daily_brake_status(_params6, log=[_mk_exit("CLOSE_BREAKEVEN", -100), _mk_exit("CLOSE_TRAIL", -100)])
+br3 = lab.daily_brake_status(_params6, log=[_mk_exit("CLOSE_STOP_LOSS", -50)])
+check(6, "daily brake: 3 stop-outs trips", br1[0] and "stop-outs" in br1[1], br1[1])
+check(6, "daily brake: $1600 realized loss (2x alloc) trips without stop-outs", br2[0] and "2x allocation" in br2[1], br2[1])
+check(6, "daily brake: 1 stop-out stays clear", not br3[0], br3[1])
+
+# 6.6 park: N no-bid failures -> PARKED once; a live bid resets the counter
+_osp = v11.option_spread
+v11.option_spread = lambda occ: {"bid": None}
+_recP = {"trade_set_id": "p1", "ticker": "ZZ", "status": "OPEN", "legs": {"bullish_call": {"occ_symbol": "ZZ260807C00001000"}}}
+_pathP = {"close_fails": 4}
+_capP = []
+_onp = lab._notify
+lab._notify = lambda text: (_capP.append(text), True)[1]
+lab._note_close_failure(_recP, _pathP, "bullish_call", "ZZ260807C00001000", _params6)
+parked_ok = _recP["status"] == "PARKED" and len([t for t in _capP if "PARKED" in t]) == 1
+v11.option_spread = lambda occ: {"bid": 0.25}
+_recP2 = {"trade_set_id": "p2", "ticker": "ZZ", "status": "OPEN", "legs": {}}
+_pathP2 = {"close_fails": 4}
+lab._note_close_failure(_recP2, _pathP2, "bullish_call", "ZZ260807C00001000", _params6)
+reset_ok = _recP2["status"] == "OPEN" and _pathP2["close_fails"] == 0
+lab._notify = _onp
+v11.option_spread = _osp
+check(6, "park: 5th no-bid failure -> PARKED with ONE alert", parked_ok, f"status={_recP['status']} alerts={len(_capP)}")
+check(6, "park: live bid resets the fail counter (stays OPEN)", reset_ok, f"fails={_pathP2['close_fails']}")
+
+# 6.7 flush record-flip fix: only successfully-closed records marked FLUSHED
+_wipe()
+_occF1, _occF2 = "FA260807C00001000", "FB260807C00001000"
+lab._save_log_list([
+    {"trade_set_id": "f1", "ticker": "FA", "status": "OPEN", "legs": {"bullish_call": {"occ_symbol": _occF1}}},
+    {"trade_set_id": "f2", "ticker": "FB", "status": "OPEN", "legs": {"bullish_call": {"occ_symbol": _occF2}}}])
+_omio, _ogop, _ocp6, _onp6 = lab._market_is_open, lab.get_open_positions, lab._close_position, lab._notify
+lab._market_is_open = lambda creds=None: True
+lab.get_open_positions = lambda creds=None: [{"symbol": _occF1, "qty": "1"}, {"symbol": _occF2, "qty": "1"}]
+lab._close_position = lambda occ, creds, percentage=100: occ == _occF1          # FB close FAILS
+lab._notify = lambda text: True
+lab.flush_positions(("k", "s"))
+_lg = lab._load_log_list()
+_stF = {r["trade_set_id"]: r["status"] for r in _lg if r.get("trade_set_id")}
+lab._market_is_open, lab.get_open_positions, lab._close_position, lab._notify = _omio, _ogop, _ocp6, _onp6
+check(6, "flush fix: closed-ok record FLUSHED, failed-close record stays OPEN",
+      _stF.get("f1") == "FLUSHED" and _stF.get("f2") == "OPEN", str(_stF))
+
+# 6.8 backstop arming: canary-only, stop/gtc body, qty-sync cancel+resubmit
+_wipe()
+_occX, _occY = "XA260807C00002000", "YB260807C00002000"
+lab._save_log_list([
+    {"trade_set_id": "bx", "ticker": "XA", "status": "OPEN", "legs": {"bullish_call": {"occ_symbol": _occX}}},
+    {"trade_set_id": "by", "ticker": "YB", "status": "OPEN", "legs": {"bullish_call": {"occ_symbol": _occY}}}])
+_pos6 = [{"symbol": _occX, "qty": "2", "avg_entry_price": "2.00"},
+         {"symbol": _occY, "qty": "3", "avg_entry_price": "1.00"}]
+_subs, _cans = [], []
+_ospo, _ogoo, _ocan = lab._submit_paper_order, lab.get_open_orders, lab._cancel_order
+lab._submit_paper_order = lambda body, creds: (_subs.append(body), ("oid" + str(len(_subs)), "accepted", None))[1]
+lab.get_open_orders = lambda creds=None: []
+lab._cancel_order = lambda oid, creds: (_cans.append(oid), True)[1]
+_p6 = dict(_params6); _p6["backstop_enabled"] = True; _p6["backstop_canary_occ"] = _occX
+acts = lab.manage_backstops(("k", "s"), _p6, positions=_pos6)
+canary_ok = len(acts) == 1 and acts[0]["occ"] == _occX and len(_subs) == 1
+body_ok = _subs and _subs[0]["type"] == "stop" and _subs[0]["time_in_force"] == "gtc" and _subs[0]["stop_price"] == "1.0"
+check(6, "backstop canary: only the canary OCC armed", canary_ok, f"acts={[a['occ'] for a in acts]}")
+check(6, "backstop order: type=stop tif=gtc stop=entry x 0.50", bool(body_ok), str(_subs[0] if _subs else None))
+_subs.clear(); _cans.clear()
+_p6["backstop_canary_occ"] = ""
+lab.get_open_orders = lambda creds=None: [{"symbol": _occX, "type": "stop", "side": "sell", "id": "old1",
+                                           "stop_price": "1.0", "qty": "1"}]    # right level, WRONG qty (2 held)
+acts2 = lab.manage_backstops(("k", "s"), _p6, positions=_pos6)
+qty_sync = "old1" in _cans and any(b["symbol"] == _occX and b["qty"] == "2" for b in _subs)
+fleet = any(b["symbol"] == _occY for b in _subs)
+lab._submit_paper_order, lab.get_open_orders, lab._cancel_order = _ospo, _ogoo, _ocan
+check(6, "backstop qty-sync: wrong-qty stop cancelled + resubmitted at held qty", qty_sync, f"cancels={_cans}")
+check(6, "backstop fleet mode: non-canary position armed when canary empty", fleet)
+
+# 6.9 cancel-before-close + backstop-fill reconciliation + PDT ledger
+_wipe()
+_occR = "RC260807C00003000"
+lab._save_log_list([{"trade_set_id": "r1", "ticker": "RC", "status": "OPEN",
+                     "entry_ts_utc": _now_iso, "legs": {"bullish_call": {"occ_symbol": _occR}},
+                     "backstop": {"bullish_call": {"order_id": "bs1", "entry_px": 2.0, "stop_price": 1.0}}}])
+_calls = []
+_ocan2, _ocp7, _onp7 = lab._cancel_order, lab._close_position, lab._notify
+lab._cancel_order = lambda oid, creds: (_calls.append(("cancel", oid)), True)[1]
+lab._close_position = lambda occ, creds, percentage=100: (_calls.append(("close", occ)), True)[1]
+lab._notify = lambda text: True
+lab.manage_open_positions(("k", "s"), _params6,
+                          positions=[{"symbol": _occR, "avg_entry_price": "2.0", "unrealized_plpc": "-0.6", "qty": "2"}])
+order_ok = _calls and _calls[0] == ("cancel", "bs1") and ("close", _occR) in _calls
+check(6, "exit pass cancels the resting backstop BEFORE closing", order_ok, str(_calls))
+_wipe()
+lab._save_log_list([{"trade_set_id": "r2", "ticker": "RD", "status": "OPEN",
+                     "entry_ts_utc": _now_iso, "legs": {"bullish_call": {"occ_symbol": "RD260807C00003000"}},
+                     "backstop": {"bullish_call": {"order_id": "bs2", "entry_px": 2.0, "stop_price": 1.0}}}])
+_oof = lab._order_fill
+lab._order_fill = lambda oid, creds: {"price": 1.0, "at": _now_iso}
+lab.manage_open_positions(("k", "s"), _params6, positions=[])          # position GONE -> reconcile the stop fill
+lab._order_fill = _oof
+lab._cancel_order, lab._close_position, lab._notify = _ocan2, _ocp7, _onp7
+_lg2 = lab._load_log_list()
+_r2 = next((r for r in _lg2 if r.get("trade_set_id") == "r2"), {})
+_ex2 = (_r2.get("leg_exits") or {}).get("bullish_call") or {}
+_dt2 = [r for r in _lg2 if r.get("type") == "day_trade"]
+check(6, "backstop fill reconciled: CLOSE_BACKSTOP exit at -50%", _ex2.get("action") == "CLOSE_BACKSTOP" and approx(_ex2.get("return_pct"), -50.0), str(_ex2)[:90])
+check(6, "PDT ledger: same-day backstop fill logged as a day trade", len(_dt2) == 1, f"markers={len(_dt2)}")
+
+# 6.10 adaptive harvest cap: reserve + remainder + 429 halving + ceiling
+_opoc = _hl._projected_open_candidates
+_hl._projected_open_candidates = lambda: 2600                          # reserve = 26 calls x 26 runs = 676
+_pc = {"harvest_daily_cap": 300, "harvest_api_budget_per_day": 1500, "poller_chunk": 100,
+       "poller_runs_per_day": 26, "harvest_calls_per_payload": 3}
+_st1 = {"backoff_429": False}
+cap1 = _hl._adaptive_cap(_pc, _st1)                                     # (1500-676)//3 = 274
+_st2 = {"backoff_429": True}
+cap2 = _hl._adaptive_cap(_pc, _st2)                                     # 274 // 2 = 137
+cap3 = _hl._adaptive_cap({**_pc, "harvest_api_budget_per_day": 60000}, {"backoff_429": False})   # ceiling 300
+_hl._projected_open_candidates = _opoc
+check(6, "adaptive cap: floats into (budget - poller reserve) / calls-per-payload", cap1 == 274,
+      f"cap={cap1} inputs={_st1.get('cap_inputs')}")
+check(6, "adaptive cap: any 429 halves the day's cap", cap2 == 137, f"cap={cap2}")
+check(6, "adaptive cap: harvest_daily_cap stays the hard ceiling", cap3 == 300, f"cap={cap3}")
+
+# 6.11 digest renders the scoreboard + alert-reconciliation lines
+_dg6 = lab.daily_digest()
+check(6, "digest: scoreboard + alert reconciliation lines render",
+      "Scoreboard:" in _dg6 and "Alert reconciliation:" in _dg6)
+
+# =====================================================================
 _wipe()
 print("\n" + "=" * 70)
 total = len(RESULTS)
@@ -704,7 +882,8 @@ passed = sum(1 for r in RESULTS if r[2])
 by_dim = {}
 for dim, _, ok, _d in RESULTS:
     s = by_dim.setdefault(dim, [0, 0]); s[1] += 1; s[0] += int(ok)
-names = {1: "Input & Schema", 2: "Routing", 3: "Exit & Autopsy", 4: "Sizing Floor", 5: "Observability"}
+names = {1: "Input & Schema", 2: "Routing", 3: "Exit & Autopsy", 4: "Sizing Floor", 5: "Observability",
+         6: "Tier B Gates"}
 print("V11 FULL MOT (rigorous) - RESULT BY DIMENSION")
 for d in sorted(by_dim):
     pa, to = by_dim[d]

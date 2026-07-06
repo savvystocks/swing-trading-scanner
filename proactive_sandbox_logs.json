@@ -27334,7 +27334,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -46.5,
+        "mfe_pct": -30.0,
         "mae_pct": -46.5,
         "stage": "initial"
       }
@@ -29091,7 +29091,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -24.8,
+        "mfe_pct": -22.8,
         "mae_pct": -27.6,
         "stage": "initial"
       }
@@ -29836,6 +29836,257 @@
         "error": null,
         "submitted": true,
         "limit_price": 3.14,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -4.2,
+        "mae_pct": -4.2,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "a3e377413e0b",
+    "ticker": "CORZ",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-06T15:32:31.819Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 11,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-06T15:32:31.819Z",
+      "macro": {
+        "spot": 22.69,
+        "sma20": 26.72,
+        "distance_to_sma20_pct": -15.073,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 96.3,
+        "iv_back": 95.7,
+        "iv_ratio": 1.006,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 1384519.7,
+        "zero_gamma_strike": 28.0,
+        "distance_to_zero_gamma_pct": -23.402,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.89,
+        "atr_pct": 8.32,
+        "rvol_10min": 0.24,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Software - Infrastructure",
+        "market_cap": 7206459392,
+        "short_pct_float": 26.61,
+        "short_ratio": 5.91,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 270.07,
+        "vader_compound": 0.212,
+        "news_type": "Analyst",
+        "top_headline": "BTIG Maintains Buy on Core Scientific, Raises Price Target to $38",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -15.073,
+        "market_spy_dist_pct": 1.369,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 0.254,
+        "sector_vs_market_spread": -1.115,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 99.8,
+        "call_iv_25d": 91.4,
+        "skew_ratio": 1.092,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 3.09,
+        "ask_sweep_prem": 184342.0,
+        "total_flow_prem": 5969033.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.5,
+        "heaviest_node_price": 22.8,
+        "node_size": 134600.0,
+        "n_prints": 27,
+        "window_start": "2026-07-06T12:08:24Z",
+        "window_end": "2026-07-06T15:16:35Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 61,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 60.05,
+        "last_earnings_date": "2026-05-06",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 70.71,
+        "front_iv": 96.3,
+        "vrp": 25.59,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -13880.0,
+        "flow_persistence_pct": 0.92,
+        "flow_direction": "bearish",
+        "closing_accel": -124571.0,
+        "n_ticks": 120,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1188.34,
+        "vwma_20": 26.69,
+        "rsi_5": 18.03,
+        "rsi_15": 30.03,
+        "gap_pct": 3.872,
+        "day_range": 4.011,
+        "candle_body": 0.467,
+        "dist_sma50": -9.345,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 0.6,
+        "vix_level": 16.01,
+        "execution_hour": 15,
+        "day_of_week": 0,
+        "sector_vs_spy": -0.428,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 28335698.0,
+        "net_vanna": 26292885.0,
+        "net_charm": -15385561.0,
+        "delta_imbalance": 3.192,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.088,
+        "bid": 22.69,
+        "ask": 22.71,
+        "bid_size": 200.0,
+        "ask_size": 300.0,
+        "obi": -0.2,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.24,
+        "gap_pct": 3.872,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 26.61,
+        "float_shares": 255509840,
+        "shares_short": 74723999,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.212,
+      "sweep_aggression_pct": 3.09,
+      "distance_to_zero_gamma_pct": -23.402,
+      "distance_to_heaviest_dp_node_pct": -0.5,
+      "days_since_earnings": 61,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 0.92
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "CORZ260807P00022000",
+        "expiry": "2026-08-07",
+        "strike": 22.0,
+        "dte": 35,
+        "entry_premium": 2.71,
+        "limit_price": 2.74,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "27",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.94,
+          "ask": 2.45,
+          "mid": 2.195,
+          "bid_ask_spread_pct": 23.235,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 27.0,
+          "oi_prev": 27.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "9416cb2e-b5c1-4ad3-ac1d-f74b61dc0581",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.74,
         "contracts": 2
       }
     },

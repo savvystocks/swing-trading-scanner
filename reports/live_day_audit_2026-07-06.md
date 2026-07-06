@@ -90,12 +90,31 @@ is appended this evening; re-verify green then for the Tier B go-ahead.
 - Off-box snapshot: mechanism proven (Friday `harvest_20260703_2130.db.gz` pushed to harvest-snapshots),
   armed for tonight. Crontab: `*/15 13-21 * * 1-5` poller, `30 21 * * 1-5` snapshot push.
 
-## 7. The learning chain — full-loop proof — PENDING (this evening)
+## 7. The learning chain — full-loop proof — GREEN (appended 2026-07-06 ~23:15 UTC)
 
-Runs after tonight's off-box snapshot lands in harvest-snapshots (~21:30 UTC / 22:30 BST). Will manually
-dispatch `brain_weekly` once (reads only the snapshot photocopy) and verify: dataset rows > 0 with today's
-date range, populated tier/outcome tables, features > 0, report renders. UNDERPOWERED verdicts are correct
-and expected at one day of data. Full-loop proof appended here once done.
+Tonight's off-box snapshot landed on schedule (`harvest_20260706_2130.db.gz`, pushed by the 21:30 UTC VPS
+cron). `brain_weekly` dispatched once (run 28829327693) — SUCCESS. It read ONLY the snapshot photocopy:
+
+- snapshot: `harvest_20260706_2130` | live rows: candidates 3,247 / bid_path 12,069 / labels 1,827
+- dataset rows: **1,565** | date range **2026-07-01 → 2026-07-06 19:42 UTC** (today's data present)
+- tiers: none 1,123 / topn 395 / executed 47 | outcomes: vertical 1,436 / down 67 / up 62 | features: **115**
+- report rendered + committed: `reports/v12_weekly/report_harvest_20260706_2130.md`
+
+**The full loop — scan → inbox → DB → bid_path → labels → snapshot → Foundry — touched real market data
+end to end within 24 hours of go-live.**
+
+Verdict honesty (informational, not the pinned SPRT): the report renders **NO-EDGE** (SPRT REJECT, 1/47
+wins, expectancy −0.68) on the pooled executed stream. Split by era (queried read-only): **37 of 47 are
+pre-freeze legacy rows (2026-07-02, params_hash NULL, 1 win)**; **10 are frozen-baseline rows
+(82c5e6bf661f) that resolved same-day — 0/10, all fast down-touches**. Same-day resolvers are biased
+toward losers (a −50% touch resolves in hours; +30% touches and vertical wins take days), so the frozen
+edge is NOT yet measured. Per ROADMAP item 7 the pinned SPRT clock starts the trading day after the
+week-one Tier B drop merges; this REJECT is the legacy cohort's epitaph, not the frozen engine's verdict.
+Data-quality WARN (4 days zero random-tier rows) reflects that resolved-label subsets exclude Monday's
+still-open random rows — expected at day one.
+
+With Section 7 green, the Checkpoint-2 chain is proven end to end. Open items: the two queued Tier B
+bug-fixes (flush record-flip; one-per-underlying straggler exemption) and the owner's PFE close.
 
 ## 8. Alerts — AMBER (partial)
 
@@ -148,6 +167,3 @@ verifiable read-only — confirm on phone. The flush itself does send a one-line
 Finding-2 orphan (a pre-go-live legacy leg the flush failed to close and then mislabelled FLUSHED). All 20
 of today's positions trace to a V10 run_id and an Alpaca fill.
 
----
-
-*Section 7 (full-loop proof) to be appended this evening after the 22:30 BST off-box snapshot.*

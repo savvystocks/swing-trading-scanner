@@ -32598,7 +32598,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -25.0,
+        "mfe_pct": -18.3,
         "mae_pct": -31.7,
         "stage": "initial"
       }
@@ -33861,6 +33861,257 @@
         "submitted": true,
         "limit_price": 1.01,
         "contracts": 8
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -8.3,
+        "mae_pct": -8.3,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "554730901b27",
+    "ticker": "RIVN",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-06T18:12:06.203Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 27,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-06T18:12:06.203Z",
+      "macro": {
+        "spot": 19.68,
+        "sma20": 16.3,
+        "distance_to_sma20_pct": 20.699,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 76.3,
+        "iv_back": 79.4,
+        "iv_ratio": 0.961,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 3054500.9,
+        "zero_gamma_strike": 19.5,
+        "distance_to_zero_gamma_pct": 0.915,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 900.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.05,
+        "atr_pct": 5.35,
+        "rvol_10min": 0.88,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Consumer Cyclical",
+        "industry": "Auto Manufacturers",
+        "market_cap": 26407469056,
+        "short_pct_float": 14.59,
+        "short_ratio": 4.43,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 5.56,
+        "vader_compound": 0.064,
+        "news_type": "Earnings",
+        "top_headline": "Broadcom Stock Climbs on Report of Apple Chip Deal Extension to 2031",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 20.699,
+        "market_spy_dist_pct": 1.376,
+        "sector_etf": "XLY",
+        "sector_dist_pct": 1.485,
+        "sector_vs_market_spread": 0.109,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 82.7,
+        "call_iv_25d": 83.2,
+        "skew_ratio": 0.993,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.99,
+        "ask_sweep_prem": 441889.0,
+        "total_flow_prem": 4916851.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.5,
+        "heaviest_node_price": 19.78,
+        "node_size": 929713.0,
+        "n_prints": 200,
+        "window_start": "2026-07-06T14:05:09Z",
+        "window_end": "2026-07-06T18:09:05Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 67,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 85.52,
+        "last_earnings_date": "2026-04-30",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 87.81,
+        "front_iv": 76.3,
+        "vrp": -11.51,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 2262029.0,
+        "flow_persistence_pct": 24.73,
+        "flow_direction": "bullish",
+        "closing_accel": -571337.0,
+        "n_ticks": 283,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1276.76,
+        "vwma_20": 16.49,
+        "rsi_5": 95.7,
+        "rsi_15": 70.8,
+        "gap_pct": -0.483,
+        "day_range": 7.673,
+        "candle_body": 0.762,
+        "dist_sma50": 25.826,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -3.1,
+        "vix_level": 15.92,
+        "execution_hour": 18,
+        "day_of_week": 0,
+        "sector_vs_spy": -0.053,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 45308980.0,
+        "net_vanna": 27889917.0,
+        "net_charm": -4640960.0,
+        "delta_imbalance": 5.102,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.051,
+        "bid": 19.66,
+        "ask": 19.67,
+        "bid_size": 800.0,
+        "ask_size": 1700.0,
+        "obi": -0.36,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.87,
+        "gap_pct": -0.483,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 14.59,
+        "float_shares": 784395806,
+        "shares_short": 150288550,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.064,
+      "sweep_aggression_pct": 8.99,
+      "distance_to_zero_gamma_pct": 0.915,
+      "distance_to_heaviest_dp_node_pct": -0.5,
+      "days_since_earnings": 67,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 24.73
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "RIVN260807C00020500",
+        "expiry": "2026-08-07",
+        "strike": 20.5,
+        "dte": 35,
+        "entry_premium": 1.86,
+        "limit_price": 1.88,
+        "contracts": 4,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "72",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.48,
+          "ask": 1.7,
+          "mid": 1.59,
+          "bid_ask_spread_pct": 13.836,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 75.0,
+          "oi_prev": 72.0,
+          "oi_change": 3.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "c893d8fa-b046-47eb-a94a-4d4e37a73df7",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.88,
+        "contracts": 4
       }
     },
     "exit": null,

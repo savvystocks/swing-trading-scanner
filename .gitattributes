@@ -1,2 +1,6 @@
 *.sh text eol=lf
 *.bat text eol=crlf
+
+# Harvest transport is append-only; union-merge so two concurrent engine commits never drop rows
+# on a rebase collision (see the 2026-07-06 live-day audit - a filled trade's row was lost this way).
+data/harvest_inbox/*.jsonl merge=union

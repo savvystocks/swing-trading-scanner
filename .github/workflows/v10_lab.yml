@@ -5,8 +5,9 @@ name: v10-lab
 # transport (inbox jsonl + state) to main for the VPS poller to ingest.
 
 on:
-  schedule:
-    - cron: "*/10 13-21 * * 1-5"   # every 10m, US market hours (13:30-21:00 UTC), weekdays
+  # NOTE: no `schedule` trigger - repository_dispatch (cron-job.org) is the single driver. A second
+  # near-simultaneous run collides on the git push and its rebase drops harvest rows (see the
+  # 2026-07-06 live-day audit). One trigger + the concurrency group serialises runs.
   workflow_dispatch:               # manual / API dispatch (needs ref + PAT with actions:write)
     inputs:
       flush:

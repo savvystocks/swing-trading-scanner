@@ -28590,7 +28590,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -24.2,
-        "mae_pct": -24.2,
+        "mae_pct": -24.8,
         "stage": "initial"
       }
     }
@@ -30346,7 +30346,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -21.5,
+        "mfe_pct": -20.7,
         "mae_pct": -21.5,
         "stage": "initial"
       }
@@ -30848,7 +30848,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -14.1,
+        "mfe_pct": -12.4,
         "mae_pct": -14.1,
         "stage": "initial"
       }
@@ -31100,7 +31100,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -10.1,
-        "mae_pct": -10.9,
+        "mae_pct": -13.4,
         "stage": "initial"
       }
     }
@@ -31594,6 +31594,257 @@
         "submitted": true,
         "limit_price": 0.89,
         "contracts": 9
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -11.4,
+        "mae_pct": -11.4,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "353e07db6d94",
+    "ticker": "VZ",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-06T16:41:34.704Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 19,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-06T16:41:34.704Z",
+      "macro": {
+        "spot": 42.29,
+        "sma20": 45.36,
+        "distance_to_sma20_pct": -6.773,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 22.6,
+        "iv_back": 25.9,
+        "iv_ratio": 0.873,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -106421.2,
+        "zero_gamma_strike": 42.5,
+        "distance_to_zero_gamma_pct": -0.497,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.47,
+        "atr_pct": 3.48,
+        "rvol_10min": 1.01,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Communication Services",
+        "industry": "Telecom Services",
+        "market_cap": 176396484608,
+        "short_pct_float": 2.15,
+        "short_ratio": 3.98,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 99.5,
+        "vader_compound": -0.107,
+        "news_type": "Unknown",
+        "top_headline": "What's Driving Verizon Stock Thursday After Dow Jones Exit?",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -6.773,
+        "market_spy_dist_pct": 1.346,
+        "sector_etf": "XLC",
+        "sector_dist_pct": 0.448,
+        "sector_vs_market_spread": -0.898,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 39.0,
+        "call_iv_25d": 27.5,
+        "skew_ratio": 1.42,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 5.02,
+        "ask_sweep_prem": 659751.0,
+        "total_flow_prem": 13147679.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 1.5,
+        "heaviest_node_price": 41.66,
+        "node_size": 7142832.0,
+        "n_prints": 200,
+        "window_start": "2026-07-06T15:11:43Z",
+        "window_end": "2026-07-06T16:41:36Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 70,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 92.75,
+        "last_earnings_date": "2026-04-27",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 33.51,
+        "front_iv": 22.6,
+        "vrp": -10.91,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 91930.0,
+        "flow_persistence_pct": 5.64,
+        "flow_direction": "bullish",
+        "closing_accel": -207493.0,
+        "n_ticks": 192,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1016.54,
+        "vwma_20": 44.53,
+        "rsi_5": 10.28,
+        "rsi_15": 31.18,
+        "gap_pct": 1.022,
+        "day_range": 3.5,
+        "candle_body": 0.473,
+        "dist_sma50": -9.223,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -3.3,
+        "vix_level": 15.91,
+        "execution_hour": 16,
+        "day_of_week": 0,
+        "sector_vs_spy": 0.752,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -6670747.0,
+        "net_vanna": 59250420.0,
+        "net_charm": -11619480.0,
+        "delta_imbalance": 0.683,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.047,
+        "bid": 42.23,
+        "ask": 42.25,
+        "bid_size": 1800.0,
+        "ask_size": 2300.0,
+        "obi": -0.122,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 1.0,
+        "gap_pct": 1.022,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 2.15,
+        "float_shares": 4169754883,
+        "shares_short": 89914318,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.107,
+      "sweep_aggression_pct": 5.02,
+      "distance_to_zero_gamma_pct": -0.497,
+      "distance_to_heaviest_dp_node_pct": 1.5,
+      "days_since_earnings": 70,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 5.64
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "VZ260807P00041000",
+        "expiry": "2026-08-07",
+        "strike": 41.0,
+        "dte": 35,
+        "entry_premium": 1.18,
+        "limit_price": 1.19,
+        "contracts": 6,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "385",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.14,
+          "ask": 1.39,
+          "mid": 1.265,
+          "bid_ask_spread_pct": 19.763,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 394.0,
+          "oi_prev": 385.0,
+          "oi_change": 9.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "cd8063ed-27dc-47f0-a6a5-5dd4c7170810",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.19,
+        "contracts": 6
       }
     },
     "exit": null,

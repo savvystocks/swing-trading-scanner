@@ -27586,7 +27586,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -13.9,
-        "mae_pct": -22.2,
+        "mae_pct": -23.6,
         "stage": "initial"
       }
     }
@@ -30096,7 +30096,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -22.7,
-        "mae_pct": -22.7,
+        "mae_pct": -23.9,
         "stage": "initial"
       }
     }
@@ -30338,6 +30338,257 @@
         "error": null,
         "submitted": true,
         "limit_price": 1.71,
+        "contracts": 4
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -21.5,
+        "mae_pct": -21.5,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "637e3a36280c",
+    "ticker": "BMNR",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-06T15:51:56.587Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 13,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-06T15:51:56.587Z",
+      "macro": {
+        "spot": 15.59,
+        "sma20": 15.27,
+        "distance_to_sma20_pct": 2.101,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 89.0,
+        "iv_back": 86.5,
+        "iv_ratio": 1.029,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 2449536.7,
+        "zero_gamma_strike": 15.0,
+        "distance_to_zero_gamma_pct": 3.784,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 100.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.13,
+        "atr_pct": 7.23,
+        "rvol_10min": 0.29,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Capital Markets",
+        "market_cap": 8899638272,
+        "short_pct_float": 6.25,
+        "short_ratio": 0.94,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.25,
+        "vader_compound": 0.015,
+        "news_type": "Unknown",
+        "top_headline": "Bitmine Bought $74M in ETH as Strategy Sold $216M in BTC: What Is Happening?",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 2.101,
+        "market_spy_dist_pct": 1.357,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 4.132,
+        "sector_vs_market_spread": 2.775,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 88.2,
+        "call_iv_25d": 91.6,
+        "skew_ratio": 0.962,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 15.9,
+        "ask_sweep_prem": 637063.0,
+        "total_flow_prem": 4005663.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 1.75,
+        "heaviest_node_price": 15.32,
+        "node_size": 273659.0,
+        "n_prints": 95,
+        "window_start": "2026-07-06T08:05:33Z",
+        "window_end": "2026-07-06T15:51:56Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 0,
+        "post_earnings_iv_crush_flag": true,
+        "iv_rank_1y": 19.37,
+        "last_earnings_date": "2026-07-06",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 85.71,
+        "front_iv": 89.0,
+        "vrp": 3.29,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 2101696.0,
+        "flow_persistence_pct": 42.82,
+        "flow_direction": "bullish",
+        "closing_accel": 99792.0,
+        "n_ticks": 143,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 623.62,
+        "vwma_20": 15.25,
+        "rsi_5": 84.18,
+        "rsi_15": 45.28,
+        "gap_pct": -0.209,
+        "day_range": 8.416,
+        "candle_body": 0.989,
+        "dist_sma50": -15.129,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 2.5,
+        "vix_level": 15.92,
+        "execution_hour": 15,
+        "day_of_week": 0,
+        "sector_vs_spy": 1.32,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 6975143.0,
+        "net_vanna": 39264600.0,
+        "net_charm": -16092122.0,
+        "delta_imbalance": 1.356,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.064,
+        "bid": 15.61,
+        "ask": 15.62,
+        "bid_size": 600.0,
+        "ask_size": 1100.0,
+        "obi": -0.2941,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.27,
+        "gap_pct": -0.209,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 6.25,
+        "float_shares": 529618150,
+        "shares_short": 35538821,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.015,
+      "sweep_aggression_pct": 15.9,
+      "distance_to_zero_gamma_pct": 3.784,
+      "distance_to_heaviest_dp_node_pct": 1.75,
+      "days_since_earnings": 0,
+      "post_earnings_iv_crush_flag": true,
+      "flow_persistence_pct": 42.82
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "BMNR260807C00016000",
+        "expiry": "2026-08-07",
+        "strike": 16.0,
+        "dte": 35,
+        "entry_premium": 1.72,
+        "limit_price": 1.74,
+        "contracts": 4,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "1271",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.24,
+          "ask": 1.69,
+          "mid": 1.465,
+          "bid_ask_spread_pct": 30.717,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 1452.0,
+          "oi_prev": 1271.0,
+          "oi_change": 181.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "69123e07-2f59-4a24-ad37-692cce503290",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.74,
         "contracts": 4
       }
     },

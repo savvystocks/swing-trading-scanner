@@ -1,8 +1,0 @@
-ONE-TIME AUTO-FLUSH MARKER (armed 2026-07-04).
-
-The first v10_lab.yml cycle at/after the 2026-07-06 market open (Alpaca clock is_open=true)
-closes ALL legacy paper positions once, then deletes this file (committed back to main), and that
-cycle does NOT enter new trades. Trading resumes on the next cycle with a clean, V10-only book.
-
-Safety: never flushes on a closed market (fail-closed on the Alpaca /v2/clock); while this file
-exists the engine skips trading. To CANCEL the auto-flush, delete this file from main before Monday.

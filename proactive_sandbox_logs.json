@@ -28840,7 +28840,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -5.1,
+        "mfe_pct": -4.2,
         "mae_pct": -6.5,
         "stage": "initial"
       }
@@ -29088,7 +29088,14 @@
     },
     "exit": null,
     "status": "OPEN",
-    "leg_exits": {}
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -27.6,
+        "mae_pct": -27.6,
+        "stage": "initial"
+      }
+    }
   },
   {
     "trade_set_id": "87964c2df054",
@@ -29328,6 +29335,257 @@
         "submitted": true,
         "limit_price": 3.5,
         "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -23.7,
+        "mae_pct": -23.7,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "4b0412efa56e",
+    "ticker": "STUB",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-06T15:11:50.343Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 10,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-06T15:11:50.343Z",
+      "macro": {
+        "spot": 13.38,
+        "sma20": 11.56,
+        "distance_to_sma20_pct": 15.762,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 67.1,
+        "iv_back": 67.5,
+        "iv_ratio": 0.994,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 963536.0,
+        "zero_gamma_strike": 12.0,
+        "distance_to_zero_gamma_pct": 10.314,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.6,
+        "atr_pct": 4.49,
+        "rvol_10min": 0.46,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Communication Services",
+        "industry": "Internet Content & Information",
+        "market_cap": 5045877248,
+        "short_pct_float": 8.13,
+        "short_ratio": 3.47,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 621.22,
+        "vader_compound": 0.282,
+        "news_type": "Earnings",
+        "top_headline": "Morgan Stanley Maintains Equal-Weight on Stubhub Holdings, Raises Price Target to $10",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 15.762,
+        "market_spy_dist_pct": 1.302,
+        "sector_etf": "XLC",
+        "sector_dist_pct": 0.04,
+        "sector_vs_market_spread": -1.262,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 68.4,
+        "call_iv_25d": 68.5,
+        "skew_ratio": 0.999,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.71,
+        "ask_sweep_prem": 347175.0,
+        "total_flow_prem": 3985007.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 2.75,
+        "heaviest_node_price": 13.01,
+        "node_size": 47831.0,
+        "n_prints": 7,
+        "window_start": "2026-07-06T14:09:52Z",
+        "window_end": "2026-07-06T14:34:09Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 54,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 1.56,
+        "last_earnings_date": "2026-05-13",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 55.03,
+        "front_iv": 67.1,
+        "vrp": 12.07,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 373647.0,
+        "flow_persistence_pct": 94.34,
+        "flow_direction": "bullish",
+        "closing_accel": 253978.0,
+        "n_ticks": 66,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1288.71,
+        "vwma_20": 11.5,
+        "rsi_5": 97.13,
+        "rsi_15": 78.95,
+        "gap_pct": -0.389,
+        "day_range": 5.641,
+        "candle_body": 0.775,
+        "dist_sma50": 37.516,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -0.4,
+        "vix_level": 16.01,
+        "execution_hour": 15,
+        "day_of_week": 0,
+        "sector_vs_spy": 0.355,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 4841183.0,
+        "net_vanna": 832715.0,
+        "net_charm": -175512.0,
+        "delta_imbalance": 9.023,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.074,
+        "bid": 13.42,
+        "ask": 13.43,
+        "bid_size": 200.0,
+        "ask_size": 300.0,
+        "obi": -0.2,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.46,
+        "gap_pct": -0.389,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 8.13,
+        "float_shares": 253506529,
+        "shares_short": 21452092,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.282,
+      "sweep_aggression_pct": 8.71,
+      "distance_to_zero_gamma_pct": 10.314,
+      "distance_to_heaviest_dp_node_pct": 2.75,
+      "days_since_earnings": 54,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 94.34
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "STUB260807P00013000",
+        "expiry": "2026-08-07",
+        "strike": 13.0,
+        "dte": 35,
+        "entry_premium": 1.11,
+        "limit_price": 1.12,
+        "contracts": 7,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "1",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.73,
+          "ask": 0.88,
+          "mid": 0.805,
+          "bid_ask_spread_pct": 18.634,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 21.0,
+          "oi_prev": 1.0,
+          "oi_change": 20.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "319ecb90-34d8-46ba-b946-5c1f7965f5fc",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.12,
+        "contracts": 7
       }
     },
     "exit": null,

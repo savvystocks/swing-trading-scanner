@@ -28590,7 +28590,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -24.2,
-        "mae_pct": -24.8,
+        "mae_pct": -25.2,
         "stage": "initial"
       }
     }
@@ -29342,7 +29342,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -22.0,
+        "mfe_pct": -12.9,
         "mae_pct": -25.4,
         "stage": "initial"
       }
@@ -30346,7 +30346,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -20.7,
+        "mfe_pct": -19.8,
         "mae_pct": -21.5,
         "stage": "initial"
       }
@@ -31845,6 +31845,250 @@
         "submitted": true,
         "limit_price": 1.19,
         "contracts": 6
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "057b3379afbd",
+    "ticker": "KRE",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-06T16:51:23.191Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 19,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-06T16:51:23.191Z",
+      "macro": {
+        "spot": 75.3,
+        "sma20": 73.09,
+        "distance_to_sma20_pct": 3.017,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 24.3,
+        "iv_back": 23.8,
+        "iv_ratio": 1.021,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 636094.9,
+        "zero_gamma_strike": 78.0,
+        "distance_to_zero_gamma_pct": -3.586,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.32,
+        "atr_pct": 1.75,
+        "rvol_10min": 0.4,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 143.58,
+        "vader_compound": -0.03,
+        "news_type": "Macro",
+        "top_headline": "'European Central Bank Sources Says Policymakers Debating Doubling Banks' Minimum Reserve Requirement To 2% From 1%; Decision On Minimum Res",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 3.017,
+        "market_spy_dist_pct": 1.392,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 25.4,
+        "call_iv_25d": 24.5,
+        "skew_ratio": 1.038,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 24.1,
+        "ask_sweep_prem": 1210606.0,
+        "total_flow_prem": 5023395.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 75.3,
+        "node_size": 53456.0,
+        "n_prints": 39,
+        "window_start": "2026-07-06T13:30:46Z",
+        "window_end": "2026-07-06T16:08:18Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "iv_rank_1y": 10.39,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 16.78,
+        "front_iv": 24.3,
+        "vrp": 7.52,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 745403.0,
+        "flow_persistence_pct": 44.26,
+        "flow_direction": "bullish",
+        "closing_accel": 856071.0,
+        "n_ticks": 172,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1140.55,
+        "vwma_20": 72.91,
+        "rsi_5": 52.48,
+        "rsi_15": 63.14,
+        "gap_pct": -0.173,
+        "day_range": 1.235,
+        "candle_body": 0.419,
+        "dist_sma50": 6.476,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 0.5,
+        "vix_level": 15.92,
+        "execution_hour": 16,
+        "day_of_week": 0,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 14384457.0,
+        "net_vanna": -15449472.0,
+        "net_charm": -3756924.0,
+        "delta_imbalance": 1.869,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.013,
+        "bid": 75.3,
+        "ask": 75.31,
+        "bid_size": 1100.0,
+        "ask_size": 2400.0,
+        "obi": -0.3714,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.38,
+        "gap_pct": -0.173,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.03,
+      "sweep_aggression_pct": 24.1,
+      "distance_to_zero_gamma_pct": -3.586,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 44.26
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "KRE260807C00078500",
+        "expiry": "2026-08-07",
+        "strike": 78.5,
+        "dte": 35,
+        "entry_premium": 2.27,
+        "limit_price": 2.29,
+        "contracts": 3,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": null,
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.65,
+          "ask": 0.93,
+          "mid": 0.79,
+          "bid_ask_spread_pct": 35.443,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 0.0,
+          "oi_prev": 0.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "fdeff89e-eb79-4314-8f3b-267bb799e241",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.29,
+        "contracts": 3
       }
     },
     "exit": null,

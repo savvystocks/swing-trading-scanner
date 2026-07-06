@@ -28840,7 +28840,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -4.2,
+        "mfe_pct": -3.8,
         "mae_pct": -8.5,
         "stage": "initial"
       }
@@ -29844,7 +29844,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -4.2,
+        "mfe_pct": -3.8,
         "mae_pct": -8.5,
         "stage": "initial"
       }
@@ -32340,6 +32340,257 @@
         "submitted": true,
         "limit_price": 1.22,
         "contracts": 6
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -19.8,
+        "mae_pct": -19.8,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "10a036824fb5",
+    "ticker": "LEN",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-06T17:12:33.412Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 21,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-06T17:12:33.412Z",
+      "macro": {
+        "spot": 85.96,
+        "sma20": 90.13,
+        "distance_to_sma20_pct": -4.63,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 35.1,
+        "iv_back": 37.7,
+        "iv_ratio": 0.931,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -85583.4,
+        "zero_gamma_strike": 86.0,
+        "distance_to_zero_gamma_pct": -0.047,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 3.22,
+        "atr_pct": 3.75,
+        "rvol_10min": 0.33,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Consumer Cyclical",
+        "industry": "Residential Construction",
+        "market_cap": 20716982272,
+        "short_pct_float": 0.31,
+        "short_ratio": 0.19,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 119.26,
+        "vader_compound": 0.095,
+        "news_type": "Unknown",
+        "top_headline": "Americans Still Can't Afford to Buy — and Homebuilder Stocks Are Paying the Price",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -4.63,
+        "market_spy_dist_pct": 1.432,
+        "sector_etf": "XLY",
+        "sector_dist_pct": 1.473,
+        "sector_vs_market_spread": 0.041,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 41.5,
+        "call_iv_25d": 29.2,
+        "skew_ratio": 1.423,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 1.8,
+        "ask_sweep_prem": 78430.0,
+        "total_flow_prem": 4347738.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 86.17,
+        "node_size": 11316.0,
+        "n_prints": 17,
+        "window_start": "2026-07-06T13:44:47Z",
+        "window_end": "2026-07-06T17:06:12Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 25,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 29.74,
+        "last_earnings_date": "2026-06-11",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 48.99,
+        "front_iv": 35.1,
+        "vrp": -13.89,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -260201.0,
+        "flow_persistence_pct": 60.96,
+        "flow_direction": "bearish",
+        "closing_accel": -34043.0,
+        "n_ticks": 167,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 956.04,
+        "vwma_20": 90.23,
+        "rsi_5": 11.79,
+        "rsi_15": 35.21,
+        "gap_pct": 0.255,
+        "day_range": 3.048,
+        "candle_body": 0.95,
+        "dist_sma50": -3.645,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -2.6,
+        "vix_level": 15.9,
+        "execution_hour": 17,
+        "day_of_week": 0,
+        "sector_vs_spy": -0.126,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -1325707.0,
+        "net_vanna": 2855027.0,
+        "net_charm": -722413.0,
+        "delta_imbalance": 0.369,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 4.772,
+        "bid": 82.02,
+        "ask": 86.13,
+        "bid_size": 100.0,
+        "ask_size": 200.0,
+        "obi": -0.3333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.32,
+        "gap_pct": 0.255,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 0.31,
+        "float_shares": 204216448,
+        "shares_short": 556553,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.095,
+      "sweep_aggression_pct": 1.8,
+      "distance_to_zero_gamma_pct": -0.047,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": 25,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 60.96
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "LEN260807C00089000",
+        "expiry": "2026-08-07",
+        "strike": 89.0,
+        "dte": 35,
+        "entry_premium": 3.74,
+        "limit_price": 3.78,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": null,
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.18,
+          "ask": 2.87,
+          "mid": 2.525,
+          "bid_ask_spread_pct": 27.327,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 0.0,
+          "oi_prev": 0.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "22377b90-6658-407a-be7f-9a943a2bb9d4",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.78,
+        "contracts": 2
       }
     },
     "exit": null,

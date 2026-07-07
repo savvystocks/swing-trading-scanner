@@ -442,3 +442,12 @@
 
 **Determining factor:** Bearish put FAILED (-54%, move 0.0%): no breakdown materialised; spot held above zero-gamma 47.5.
 
+## Autopsy - CCL (355065e35f05)
+- entered 2026-07-06T19:31:45.064Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -56.1% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-56%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 3.0 worked against it.
+

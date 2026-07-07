@@ -190,3 +190,69 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - CIFR (d0f3b79a4180) - 2026-07-07T13:31:32.244Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - PL (31d3a2e21acc) - 2026-07-07T13:31:33.084Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---
+## Tuning Advisory - FRMI (f50a15f521f1) - 2026-07-07T13:31:33.887Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---
+## Tuning Advisory - CMG (6c771148a577) - 2026-07-07T13:31:34.677Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - NOK (e9a8ca47b18d) - 2026-07-07T13:31:35.417Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - CRML (09141f3678f9) - 2026-07-07T13:31:36.185Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---
+## Tuning Advisory - KWEB (ff0817078791) - 2026-07-07T13:31:37.151Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---
+## Tuning Advisory - NN (fe573fd3f491) - 2026-07-07T13:31:38.171Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---
+## Tuning Advisory - DIS (2ac3bd8a3c86) - 2026-07-07T13:31:38.896Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - RIVN (554730901b27) - 2026-07-07T13:31:39.642Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - XP (85d008e5dc85) - 2026-07-07T13:31:40.470Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---

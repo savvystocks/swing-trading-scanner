@@ -10,6 +10,12 @@ db.DATA_DIR = tmp
 db.DB_PATH = os.path.join(tmp, "harvest.db")
 db.INBOX_DIR = os.path.join(tmp, "inbox")
 hl.STATE_PATH = os.path.join(tmp, "state.json")
+# isolate the engine's committed-state files - the Tier B daily brake / scoreboard read LOG_PATH,
+# so a run against the real log would trip the brake and skip the entry this test asserts on.
+lab.LOG_PATH = os.path.join(tmp, "logs.json")
+lab.COOLOFF_PATH = os.path.join(tmp, "cooloff.json")
+lab.AUTOPSY_MD = os.path.join(tmp, "autopsy.md")
+lab.ADVISORY_MD = os.path.join(tmp, "advisory.md")
 
 CANDS = [{"ticker": "AAA", "total_premium": 900000, "flow_type": "call", "underlying_price": 20},
          {"ticker": "BBB", "total_premium": 800000, "flow_type": "put", "underlying_price": 18},

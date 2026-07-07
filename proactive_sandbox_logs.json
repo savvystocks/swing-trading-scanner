@@ -37611,7 +37611,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -33.3,
-        "mae_pct": -33.3,
+        "mae_pct": -37.5,
         "stage": "initial"
       }
     }
@@ -37854,6 +37854,257 @@
         "submitted": true,
         "limit_price": 1.82,
         "contracts": 4
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -14.3,
+        "mae_pct": -14.3,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "bdc4ab92784f",
+    "ticker": "NUAI",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-07T14:12:48.134Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 17,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-07T14:12:48.134Z",
+      "macro": {
+        "spot": 4.37,
+        "sma20": 5.5,
+        "distance_to_sma20_pct": -20.658,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 188.1,
+        "iv_back": 194.4,
+        "iv_ratio": 0.968,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 991452.2,
+        "zero_gamma_strike": 5.0,
+        "distance_to_zero_gamma_pct": -14.416,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.77,
+        "atr_pct": 17.57,
+        "rvol_10min": 0.27,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Software - Infrastructure",
+        "market_cap": 441121984,
+        "short_pct_float": 12.61,
+        "short_ratio": 1.62,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 4.65,
+        "vader_compound": 0.26,
+        "news_type": "Analyst",
+        "top_headline": "B. Riley Securities Initiates Coverage On New Era Energy & Digital with Buy Rating, Announces Price Target of $10",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -20.658,
+        "market_spy_dist_pct": 0.87,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -3.709,
+        "sector_vs_market_spread": -4.579,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 187.3,
+        "call_iv_25d": 171.8,
+        "skew_ratio": 1.09,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 10.39,
+        "ask_sweep_prem": 345655.0,
+        "total_flow_prem": 3326180.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -2.751,
+        "heaviest_node_price": 4.49,
+        "node_size": 37321.0,
+        "n_prints": 4,
+        "window_start": "2026-07-07T11:50:51Z",
+        "window_end": "2026-07-07T14:06:21Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 53,
+        "post_earnings_iv_crush_flag": false,
+        "iv_rank_1y": 54.8,
+        "last_earnings_date": "2026-05-15",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 132.13,
+        "front_iv": 188.1,
+        "vrp": 55.97,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -73288.0,
+        "flow_persistence_pct": 88.27,
+        "flow_direction": "bearish",
+        "closing_accel": -30162.0,
+        "n_ticks": 42,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 494.82,
+        "vwma_20": 5.58,
+        "rsi_5": 10.47,
+        "rsi_15": 38.97,
+        "gap_pct": -3.26,
+        "day_range": 6.186,
+        "candle_body": 0.87,
+        "dist_sma50": -12.402,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -6.3,
+        "vix_level": 16.04,
+        "execution_hour": 14,
+        "day_of_week": 1,
+        "sector_vs_spy": -5.029,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 8498067.0,
+        "net_vanna": 2767886.0,
+        "net_charm": -5539893.0,
+        "delta_imbalance": 4.672,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.229,
+        "bid": 4.35,
+        "ask": 4.36,
+        "bid_size": 400.0,
+        "ask_size": 400.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.26,
+        "gap_pct": -3.26,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 12.61,
+        "float_shares": 74675724,
+        "shares_short": 12486276,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.26,
+      "sweep_aggression_pct": 10.39,
+      "distance_to_zero_gamma_pct": -14.416,
+      "distance_to_heaviest_dp_node_pct": -2.751,
+      "days_since_earnings": 53,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 88.27
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "NUAI260807C00004500",
+        "expiry": "2026-08-07",
+        "strike": 4.5,
+        "dte": 35,
+        "entry_premium": 1.02,
+        "limit_price": 1.03,
+        "contracts": 7,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": null,
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.62,
+          "ask": 1.37,
+          "mid": 0.995,
+          "bid_ask_spread_pct": 75.377,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 0.0,
+          "oi_prev": 0.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "ad0da77a-0fbf-4ef7-9bcd-288b882e43e1",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.03,
+        "contracts": 7
       }
     },
     "exit": null,

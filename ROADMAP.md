@@ -233,7 +233,7 @@ and SPRT clock are decisions 14/27.)
 | 16b | Exits | WHY the 24h take-profit hold: deliberate PDT avoidance for the sub-$25k live future, NOT a quirk - changing it requires a NORTH_STAR amendment; backstop same-day stop fills are the accepted, logged exception; margin-vs-CASH decided at item 14 | v10_params min_hold_hours comment + item 14 |
 | 17 | Exits | Theta-cliff study decides time exits | scheduled studies |
 | 18 | Exits | Hold over weekends | scheduled studies (weekend cost) |
-| 19 | Risk | Daily brake: 3 stop-outs or realized loss >= 2x allocation | Tier B |
+| 19 | Risk | Daily brake (3 stop-outs / loss >= 2x alloc): SHADOW during paper accumulation (evaluates + logs, does NOT suppress entries; would-have-blocked trades tagged `brake_shadow` and measured), ACTIVE only at the live-capital gate proven by that shadow data; eventual form may be a learned Governor rule | `brake_mode` param (shadow now) + item 14 (active) + NORTH_STAR risk |
 | 20 | Exits | Ratchet backstop: always a stop, dynamic level | item 2 (Tier B) |
 | 21 | Engine | One position per underlying (hard block) | Tier B |
 | 22 | Data | Adaptive harvest cap with poller reservation | Tier B |
@@ -254,7 +254,7 @@ and SPRT clock are decisions 14/27.)
 |---|---|---|---|
 | Theta-cliff | Do the final ~2 days of hold add or destroy value? | stored bid_path of held positions | whether to add a time-based exit (dec 17) |
 | Weekend cost | Friday-hold -> Monday-gap return distribution? | labels of positions held over a weekend | whether to keep holding weekends (dec 18) |
-| Brake cost | What would the brake-skipped candidates have returned? | counterfactual labels of brake-skipped candidates | how to price / tune the daily brake (dec 19) |
+| Brake cost | What would the brake-blocked trades have returned vs the allowed ones? | the `brake_shadow`-tagged executed trades (shadow mode logs them live) vs the rest, in the weekly report | whether/how to arm the brake ACTIVE at the live gate (dec 19) |
 | Pyramiding value | Do same-ticker re-fires carry edge worth a 2nd position? | counterfactual labels of one-per-underlying skips | whether to relax one-per-underlying (dec 21) |
 
 ## Scheduled decisions

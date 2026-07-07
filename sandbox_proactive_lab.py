@@ -669,6 +669,26 @@ def daily_brake_status(params, log=None):
     return False, f"clear ({stopouts} stop-outs, ${loss_usd:.0f} realized loss)", stopouts, loss_usd
 
 
+def brake_decision(params, log=None):
+    """Resolve the daily brake into (mode, braked, active, reason, stopouts, loss_usd).
+
+    OWNER DECISION 2026-07-08: during the paper-accumulation phase the brake runs in SHADOW - its
+    JUDGMENT stays on (it evaluates its trigger every session and logs when it WOULD halt) but its
+    ACTION is off (it does NOT suppress entries). On paper a stop-out is a completed, high-value data
+    point, not a loss to prevent; halting would throw away the richest outcomes on the hardest days,
+    which is exactly the data we are here to collect. The would-have-blocked trades are the free
+    measurement of the brake's value before it ever protects real money. Modes:
+      off    - no evaluation, no logging.
+      shadow - evaluate + log the trip, but entries still fire and are tagged 'brake_shadow'.
+      active - the real halt (Tier B behaviour); armed only at the live-capital gate (ROADMAP item 14).
+    This is a RISK-CONTROL wiring change only: it touches no entry gate, signal, or threshold."""
+    mode = str(params.get("brake_mode", "shadow") or "shadow").lower()
+    if mode == "off":
+        return "off", False, False, "brake off", 0, 0.0
+    braked, why, n_so, loss_usd = daily_brake_status(params, log=log)
+    return mode, braked, (braked and mode == "active"), why, n_so, loss_usd
+
+
 _TERMINAL_ORDER = {"canceled", "cancelled", "filled", "expired", "rejected", "done_for_day"}
 
 
@@ -1522,18 +1542,22 @@ def run_scheduled_cycle(mock=False):
         for a in bs_actions:
             print(f"  stop {a['occ']} @ {a['stop']} x{a['qty']} -> {a['status']}{' ' + str(a['err']) if a['err'] else ''}")
 
-    # 3c. daily brake (owner decision 19): closes the ENTRY gate only - exits/backstops/harvest continue
-    braked, brake_why, n_so, loss_usd = daily_brake_status(params)
+    # 3c. daily brake (owner decisions 19 + 2026-07-08 shadow): JUDGMENT always evaluates + logs; the
+    #     ACTION (suppressing entries) fires ONLY in 'active' mode. In 'shadow' every entry still fires
+    #     and is tagged so we measure the brake's would-have-blocked set for free.
+    brake_mode, braked, brake_active, brake_why, n_so, loss_usd = brake_decision(params)
     if braked:
         today_s = datetime.now(timezone.utc).date().isoformat()
         if not any(r.get("type") == "daily_brake" and str(r.get("ts_utc", "")).startswith(today_s)
                    for r in _load_log_list()):
-            _append_log({"type": "daily_brake", "ts_utc": _now_iso_ms(), "reason": brake_why,
-                         "stopouts": n_so, "realized_loss_usd": round(loss_usd, 2),
-                         "status": "BRAKED"})                # committed marker: the week-6 counterfactual study reads these
-            _notify(f"<b>DAILY BRAKE</b> {brake_why} - no new entries until the next session "
-                    f"(exits, backstops and the harvest continue)")
-        print(f"DAILY BRAKE ACTIVE: {brake_why} - entry pass skipped")
+            _append_log({"type": "daily_brake", "ts_utc": _now_iso_ms(), "mode": brake_mode,
+                         "reason": brake_why, "stopouts": n_so, "realized_loss_usd": round(loss_usd, 2),
+                         "status": "BRAKED" if brake_active else "SHADOW"})   # committed marker for the shadow study
+            _notify(f"<b>DAILY BRAKE ({brake_mode})</b> {brake_why} - " +
+                    ("no new entries until the next session (exits, backstops, harvest continue)"
+                     if brake_active else "SHADOW: entries still fire and are tagged for measurement"))
+        print(f"DAILY BRAKE {'ACTIVE' if brake_active else 'SHADOW'}: {brake_why}"
+              + ("" if brake_active else " (entries NOT suppressed)"))
 
     # 4. dynamic UW flow sourcing - enter the FIRST candidate not capped/cooled
     candidates = scan_candidates(params)
@@ -1550,7 +1574,7 @@ def run_scheduled_cycle(mock=False):
         print(f"\nno UW flow candidates this cycle ({'scanner UNREACHABLE' if not reachable else 'quiet market'}).")
         return None
     entered = None
-    for c in ([] if braked else candidates):                 # brake: skip entries, keep the harvest below
+    for c in ([] if brake_active else candidates):           # ONLY 'active' suppresses; shadow lets entries fire
         t = c["ticker"]
         try:
             rec = enter_proactive_set(t, None, mock=mock, candidate=c, dry_run=not live,
@@ -1575,6 +1599,14 @@ def run_scheduled_cycle(mock=False):
                   f"@lim ${leg['limit_price']:<6} spread {sp}% -> {o['status']} {o['order_id']}")
         entered = rec
         entered["_scan_candidate"] = c
+        if braked:      # SHADOW: this entry WOULD have been blocked by the brake -> tag it (record + the
+            try:        # harvest metadata, so f.brake_shadow reaches the brain) as the free measurement.
+                entered["brake_shadow_blocked"] = True
+                entered["brake_stopouts_at_entry"] = n_so
+                entered.setdefault("metadata", {})["brake_shadow"] = True
+                _rewrite_last(entered)                       # persist the tag onto the just-logged record (fail-open)
+            except Exception:
+                pass
         break
     try:                                                     # COUNTERFACTUAL HARVEST (observational, fail-open, post-trade)
         import harvest_logger

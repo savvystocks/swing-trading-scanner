@@ -12,6 +12,7 @@ from . import harness as H
 MIN_EXECUTED = 30          # below this the engine hit-rate verdict is UNDERPOWERED
 MIN_ROWS_EV = 50           # below this the empirical EV thresholds are UNDERPOWERED
 MIN_ROWS_CPCV = 1000       # below this PBO/DSR render N/A
+MIN_BRAKE_DAYS = 5         # below this the brake-shadow measurement renders UNDERPOWERED
 
 # SPRT parameters (predefined - mirrored into ROADMAP.md item 7 so they cannot be quietly changed):
 SPRT_ALPHA, SPRT_BETA = 0.05, 0.20
@@ -98,6 +99,36 @@ def weekly_edge_report(dataset_result, prev_rows=0, runtime_s=None):
                     strat_lines.append(f"- source premium {nm}: n={ns} hit={_fmt(h,4)} Wilson95=[{_fmt(slo)}, {_fmt(shi)}]")
             if strat_lines:
                 lines += ["_stratified by source premium (reporting only; the SPRT object is the pooled executed stream):_"] + strat_lines + [""]
+
+        # ---- daily-brake SHADOW measurement (reporting only) ----
+        # f.brake_shadow tags each executed trade that fired AFTER the daily brake would have tripped
+        # that session (shadow mode does NOT suppress entries). Comparing would-have-blocked vs allowed
+        # answers "what did the brake save vs cost?" - our free measurement before it protects real money.
+        bs_col = next((c for c in ex.columns if c.split(".")[-1] == "brake_shadow"), None)
+        blocked = ex[ex[bs_col].fillna(False).astype(bool)] if bs_col is not None else ex.iloc[0:0]
+        if len(blocked):
+            allowed = ex[~ex.index.isin(blocked.index)]
+            brake_days = int(pd.to_datetime(blocked["signal_ts"], unit="ms", utc=True).dt.date.nunique())
+            def _brake_line(nm, sub):
+                ns = len(sub)
+                if not ns:
+                    return f"- {nm}: n=0"
+                w = int((sub["label"] == 1).sum()); h = w / ns
+                blo, bhi = EV.wilson_interval(w, ns)
+                return (f"- {nm}: n={ns} hit={_fmt(h,4)} Wilson95=[{_fmt(blo)}, {_fmt(bhi)}] "
+                        f"mean_return={_fmt(float(sub['realized_return'].mean()))} "
+                        f"total_return={_fmt(float(sub['realized_return'].sum()),2)}")
+            up = brake_days < MIN_BRAKE_DAYS
+            lines += ["## Daily brake - SHADOW measurement (reporting only; in shadow the brake does NOT suppress entries)"
+                      + (" - UNDERPOWERED" if up else ""),
+                      f"- would-have-tripped on {brake_days} day(s)" + (f" of {MIN_BRAKE_DAYS} needed" if up else "")
+                      + f"; would-have-blocked {len(blocked)} executed entries",
+                      _brake_line("would-have-blocked (brake ACTIVE would remove these)", blocked),
+                      _brake_line("allowed (brake ACTIVE would keep these)", allowed),
+                      "_blocked worse than allowed -> the brake helps; blocked better -> it costs edge._", ""]
+        else:
+            lines += ["## Daily brake - SHADOW measurement",
+                      "- 0 brake-days recorded yet (UNDERPOWERED); populated once a shadow session hits the trigger.", ""]
 
         # ---- SPRT on executed trades ----
         p0 = min(max(hurdle + SPRT_MARGIN, 1e-3), 0.99)      # breakeven already nets cost; add margin m only

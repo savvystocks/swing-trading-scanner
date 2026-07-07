@@ -38,8 +38,13 @@ DEFAULTS = {
     "max_contracts_per_ticker": 3,        # SUBORDINATED to one_position_per_underlying (kept only as a belt-and-braces ceiling)
     "ticker_cooloff_hours": 4,            # 4h cool-off (was 24h) - allow same-day re-entry on a fresh setup
     "stale_order_max_minutes": 30,        # cancel unfilled limit orders older than this (3 cycles)
-    "daily_brake_stopouts": 3,            # TIER B (owner decision 19): 3 stop-outs today -> no new entries this session
+    "daily_brake_stopouts": 3,            # TIER B (owner decision 19): 3 stop-outs today -> the brake TRIPS
     "daily_brake_loss_multiple": 2.0,     # ... OR realized session loss >= 2x the $800 allocation
+    "brake_mode": "shadow",               # off | shadow | active. SHADOW during paper accumulation (2026-07-08):
+                                          # the brake evaluates + logs its trip but does NOT suppress entries -
+                                          # a stop-out is a data point, not a loss; would-have-blocked trades are
+                                          # tagged 'brake_shadow' for a free measurement. ACTIVE only at the
+                                          # live-capital gate (ROADMAP item 14). Not a signal/recipe change.
     "backstop_enabled": False,            # TIER B (owner decision 20): ratchet broker-side stop; OFF until the canary passes
     "backstop_canary_occ": "",            # canary mode: when set, ONLY this OCC gets a backstop (one full lifecycle first)
     "backstop_type": "stop",              # T5 DECISION (2026-07-06): plain stop - affordable-band p90 spread 17.9% < 30%,

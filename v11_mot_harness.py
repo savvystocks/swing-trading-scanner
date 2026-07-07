@@ -754,6 +754,17 @@ check(6, "daily brake: 3 stop-outs trips", br1[0] and "stop-outs" in br1[1], br1
 check(6, "daily brake: $1600 realized loss (2x alloc) trips without stop-outs", br2[0] and "2x allocation" in br2[1], br2[1])
 check(6, "daily brake: 1 stop-out stays clear", not br3[0], br3[1])
 
+# 6.5b brake MODES (2026-07-08): judgment always evaluates; ACTION (suppress) only in 'active'
+_trip = [_mk_exit("CLOSE_STOP_LOSS", -50)] * 3
+m_off = lab.brake_decision({**_params6, "brake_mode": "off"}, log=_trip)
+m_sh = lab.brake_decision({**_params6, "brake_mode": "shadow"}, log=_trip)
+m_ac = lab.brake_decision({**_params6, "brake_mode": "active"}, log=_trip)
+m_def = lab.brake_decision(dict(_params6), log=_trip)          # _params6 = load_params() -> default shadow
+check(6, "brake mode OFF: not evaluated, never braked", m_off[1] is False and m_off[2] is False, str(m_off[:3]))
+check(6, "brake mode SHADOW: judged braked=True but active(suppress)=False", m_sh[1] is True and m_sh[2] is False, str(m_sh[:3]))
+check(6, "brake mode ACTIVE: braked=True and active=True (suppresses)", m_ac[1] is True and m_ac[2] is True, str(m_ac[:3]))
+check(6, "brake DEFAULT is shadow (unsuppressed) - entries fire", m_def[0] == "shadow" and m_def[1] is True and m_def[2] is False, str(m_def[:3]))
+
 # 6.6 park: N no-bid failures -> PARKED once; a live bid resets the counter
 _osp = v11.option_spread
 v11.option_spread = lambda occ: {"bid": None}

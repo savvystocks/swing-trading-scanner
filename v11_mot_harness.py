@@ -801,10 +801,11 @@ lab._save_log_list([
 _pos6 = [{"symbol": _occX, "qty": "2", "avg_entry_price": "2.00"},
          {"symbol": _occY, "qty": "3", "avg_entry_price": "1.00"}]
 _subs, _cans = [], []
-_ospo, _ogoo, _ocan = lab._submit_paper_order, lab.get_open_orders, lab._cancel_order
+_ospo, _ogoo, _ocan, _oos8 = lab._submit_paper_order, lab.get_open_orders, lab._cancel_order, lab._order_state
 lab._submit_paper_order = lambda body, creds: (_subs.append(body), ("oid" + str(len(_subs)), "accepted", None))[1]
 lab.get_open_orders = lambda creds=None: []
 lab._cancel_order = lambda oid, creds: (_cans.append(oid), True)[1]
+lab._order_state = lambda oid, creds: None                 # no fill on the just-cancelled ratchet order
 _p6 = dict(_params6); _p6["backstop_enabled"] = True; _p6["backstop_canary_occ"] = _occX
 acts = lab.manage_backstops(("k", "s"), _p6, positions=_pos6)
 canary_ok = len(acts) == 1 and acts[0]["occ"] == _occX and len(_subs) == 1
@@ -818,7 +819,7 @@ lab.get_open_orders = lambda creds=None: [{"symbol": _occX, "type": "stop", "sid
 acts2 = lab.manage_backstops(("k", "s"), _p6, positions=_pos6)
 qty_sync = "old1" in _cans and any(b["symbol"] == _occX and b["qty"] == "2" for b in _subs)
 fleet = any(b["symbol"] == _occY for b in _subs)
-lab._submit_paper_order, lab.get_open_orders, lab._cancel_order = _ospo, _ogoo, _ocan
+lab._submit_paper_order, lab.get_open_orders, lab._cancel_order, lab._order_state = _ospo, _ogoo, _ocan, _oos8
 check(6, "backstop qty-sync: wrong-qty stop cancelled + resubmitted at held qty", qty_sync, f"cancels={_cans}")
 check(6, "backstop fleet mode: non-canary position armed when canary empty", fleet)
 
@@ -829,29 +830,66 @@ lab._save_log_list([{"trade_set_id": "r1", "ticker": "RC", "status": "OPEN",
                      "entry_ts_utc": _now_iso, "legs": {"bullish_call": {"occ_symbol": _occR}},
                      "backstop": {"bullish_call": {"order_id": "bs1", "entry_px": 2.0, "stop_price": 1.0}}}])
 _calls = []
-_ocan2, _ocp7, _onp7 = lab._cancel_order, lab._close_position, lab._notify
+_ocan2, _ocp7, _onp7, _oos9 = lab._cancel_order, lab._close_position, lab._notify, lab._order_state
 lab._cancel_order = lambda oid, creds: (_calls.append(("cancel", oid)), True)[1]
 lab._close_position = lambda occ, creds, percentage=100: (_calls.append(("close", occ)), True)[1]
 lab._notify = lambda text: True
+lab._order_state = lambda oid, creds: {"status": "canceled", "filled_qty": 0}   # stop confirmed DEAD, no fill
 lab.manage_open_positions(("k", "s"), _params6,
                           positions=[{"symbol": _occR, "avg_entry_price": "2.0", "unrealized_plpc": "-0.6", "qty": "2"}])
 order_ok = _calls and _calls[0] == ("cancel", "bs1") and ("close", _occR) in _calls
-check(6, "exit pass cancels the resting backstop BEFORE closing", order_ok, str(_calls))
+check(6, "exit pass cancels + CONFIRMS the resting backstop BEFORE closing", order_ok, str(_calls))
 _wipe()
 lab._save_log_list([{"trade_set_id": "r2", "ticker": "RD", "status": "OPEN",
                      "entry_ts_utc": _now_iso, "legs": {"bullish_call": {"occ_symbol": "RD260807C00003000"}},
-                     "backstop": {"bullish_call": {"order_id": "bs2", "entry_px": 2.0, "stop_price": 1.0}}}])
-_oof = lab._order_fill
-lab._order_fill = lambda oid, creds: {"price": 1.0, "at": _now_iso}
+                     "backstop": {"bullish_call": {"order_id": "bs2", "entry_px": 2.0, "qty": 2, "stop_price": 1.0}}}])
+lab._order_state = lambda oid, creds: {"status": "filled", "filled_qty": "2", "filled_avg_price": "1.0", "filled_at": _now_iso}
 lab.manage_open_positions(("k", "s"), _params6, positions=[])          # position GONE -> reconcile the stop fill
-lab._order_fill = _oof
-lab._cancel_order, lab._close_position, lab._notify = _ocan2, _ocp7, _onp7
+lab._cancel_order, lab._close_position, lab._notify, lab._order_state = _ocan2, _ocp7, _onp7, _oos9
 _lg2 = lab._load_log_list()
 _r2 = next((r for r in _lg2 if r.get("trade_set_id") == "r2"), {})
 _ex2 = (_r2.get("leg_exits") or {}).get("bullish_call") or {}
 _dt2 = [r for r in _lg2 if r.get("type") == "day_trade"]
 check(6, "backstop fill reconciled: CLOSE_BACKSTOP exit at -50%", _ex2.get("action") == "CLOSE_BACKSTOP" and approx(_ex2.get("return_pct"), -50.0), str(_ex2)[:90])
 check(6, "PDT ledger: same-day backstop fill logged as a day trade", len(_dt2) == 1, f"markers={len(_dt2)}")
+
+# 6.12 CONFIRMED-CANCEL (the CRITICAL fix): an unconfirmable stop cancel must NOT close - retry, not deadlock
+_wipe()
+_occU = "UF260807C00004000"
+lab._save_log_list([{"trade_set_id": "u1", "ticker": "UF", "status": "OPEN", "entry_ts_utc": _now_iso,
+                     "legs": {"bullish_call": {"occ_symbol": _occU}},
+                     "backstop": {"bullish_call": {"order_id": "us1", "entry_px": 2.0, "qty": 2}}}])
+_uc = []
+_ocanU, _ocpU, _onpU, _oosU = lab._cancel_order, lab._close_position, lab._notify, lab._order_state
+lab._cancel_order = lambda oid, creds: False                          # cancel DELETE not accepted
+lab._order_state = lambda oid, creds: {"status": "accepted", "filled_qty": 0}   # stop still LIVE (non-terminal)
+lab._close_position = lambda occ, creds, percentage=100: (_uc.append(occ), True)[1]
+lab._notify = lambda text: True
+lab.manage_open_positions(("k", "s"), _params6,
+                          positions=[{"symbol": _occU, "avg_entry_price": "2.0", "unrealized_plpc": "-0.6", "qty": "2"}])
+_rU = next((r for r in lab._load_log_list() if r.get("trade_set_id") == "u1"), {})
+lab._cancel_order, lab._close_position, lab._notify, lab._order_state = _ocanU, _ocpU, _onpU, _oosU
+check(6, "confirmed-cancel: live stop -> NO close, leg stays OPEN (retry, not deadlock)",
+      len(_uc) == 0 and _rU.get("status") == "OPEN" and "bullish_call" not in (_rU.get("leg_exits") or {}),
+      f"closes={len(_uc)} status={_rU.get('status')} exits={list((_rU.get('leg_exits') or {}).keys())}")
+
+# 6.13 reconciliation polls SUPERSEDED order ids (the HIGH fix: a ratchet resubmit must not lose an old fill)
+_wipe()
+_occP = "PG260807C00005000"
+lab._save_log_list([{"trade_set_id": "p3", "ticker": "PG", "status": "OPEN", "entry_ts_utc": _now_iso,
+                     "legs": {"bullish_call": {"occ_symbol": _occP}},
+                     "backstop": {"bullish_call": {"order_id": "new_id", "prior_order_ids": ["old_id"],
+                                                   "entry_px": 2.0, "qty": 2}}}])
+_oosP, _onpP = lab._order_state, lab._notify
+lab._order_state = lambda oid, creds: ({"status": "filled", "filled_qty": "2", "filled_avg_price": "1.2", "filled_at": _now_iso}
+                                       if oid == "old_id" else {"status": "canceled", "filled_qty": 0})
+lab._notify = lambda text: True
+lab.manage_open_positions(("k", "s"), _params6, positions=[])
+_rP = next((r for r in lab._load_log_list() if r.get("trade_set_id") == "p3"), {})
+_exP = (_rP.get("leg_exits") or {}).get("bullish_call") or {}
+lab._order_state, lab._notify = _oosP, _onpP
+check(6, "reconciliation finds a fill on a SUPERSEDED backstop id (-40%)",
+      _exP.get("action") == "CLOSE_BACKSTOP" and approx(_exP.get("return_pct"), -40.0), str(_exP)[:80])
 
 # 6.10 adaptive harvest cap: reserve + remainder + 429 halving + ceiling
 _opoc = _hl._projected_open_candidates

@@ -16,7 +16,7 @@ set +a
 git fetch -q origin main || true
 NOW=$(date -u +%s)
 DOW=$(date -u +%u)
-HHMM=$(date -u +%H%M)
+HHMM=$((10#$(date -u +%H%M)))            # 10# forces base-10 (a leading-zero HHMM is not octal)
 MARKET=1
 if [ "$DOW" -ge 6 ] || [ "$HHMM" -lt 1345 ] || [ "$HHMM" -gt 2000 ]; then MARKET=0; fi
 LAST=$(git log origin/main -1 --format=%ct -- data/harvest_inbox/ 2>/dev/null || echo 0)

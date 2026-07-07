@@ -891,6 +891,27 @@ lab._order_state, lab._notify = _oosP, _onpP
 check(6, "reconciliation finds a fill on a SUPERSEDED backstop id (-40%)",
       _exP.get("action") == "CLOSE_BACKSTOP" and approx(_exP.get("return_pct"), -40.0), str(_exP)[:80])
 
+# 6.14 orphan adoption (ROADMAP 2b): one-per-underlying reads RECORDS -> an orphan must be ADOPTED to block
+_wipe()
+_occO = "ORPH260821C00010000"
+# before adoption: a held position with NO record does NOT block its ticker (proves it reads records)
+_b_before, _ = lab.ticker_blocked("ORPH", [{"symbol": _occO, "qty": "2"}], _params6, open_orders=[], log=[])
+_onpO = lab._notify; lab._notify = lambda text: True
+_ad = lab.reconcile_orphans(("k", "s"), _params6, positions=[{"symbol": _occO, "qty": "2", "avg_entry_price": "1.20"}], log=[])
+_recO = next((r for r in lab._load_log_list() if r.get("adopted")), {})
+_occK = "KNWN260821C00010000"                                # a PARKED straggler must NOT be adopted (stays exempt)
+_ad2 = lab.reconcile_orphans(("k", "s"), _params6, positions=[{"symbol": _occK, "qty": "1", "avg_entry_price": "0.5"}],
+                             log=[{"trade_set_id": "k1", "ticker": "KNWN", "status": "PARKED",
+                                   "legs": {"bullish_call": {"occ_symbol": _occK}}}])
+lab._notify = _onpO
+_b_after, _wA = lab.ticker_blocked("ORPH", [{"symbol": _occO, "qty": "2"}], _params6, open_orders=[],
+                                   log=[dict(_recO)] if _recO else [])
+check(6, "2b: orphan (no record) does NOT block re-entry (one-per-underlying reads RECORDS)", not _b_before)
+check(6, "2b: reconcile_orphans adopts the orphan into an OPEN record",
+      _ad == [_occO] and _recO.get("status") == "OPEN" and _recO.get("adopted") is True and _recO.get("ticker") == "ORPH")
+check(6, "2b: PARKED straggler is NOT adopted (stays exempt)", _ad2 == [])
+check(6, "2b: after adoption the underlying IS blocked", _b_after and "one-per-underlying" in _wA)
+
 # 6.10 adaptive harvest cap: reserve + remainder + 429 halving + ceiling
 _opoc = _hl._projected_open_candidates
 _hl._projected_open_candidates = lambda: 2600                          # reserve = 26 calls x 26 runs = 676

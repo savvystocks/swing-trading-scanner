@@ -1420,6 +1420,57 @@ def _maybe_send_digest():
     _append_log({"type": "daily_digest", "ts_utc": _now_iso_ms(), "status": "SENT"})
 
 
+def reconcile_orphans(creds, params, positions=None, log=None):
+    """ROADMAP item 2b: cycle-start broker-vs-record ROLL-CALL. A dropped trade record (rare
+    double-push collision on the non-union-merged log) leaves a live broker position with NO tracking
+    record - unmanaged by the exit engine AND invisible to one-per-underlying, which reads OPEN
+    RECORDS (not raw positions). ADOPT any position whose OCC appears in NO record into a fresh
+    reconstructed OPEN record (entry_ref = avg_entry_price) so the exit engine manages it and the
+    underlying is blocked from re-entry. Positions that match a known record - including PARKED /
+    FLUSHED stragglers - are left alone (those are intentionally exempt). Returns the adopted OCCs."""
+    if not all(creds):
+        return []
+    positions = positions if positions is not None else get_open_positions(creds)
+    log_list = log if log is not None else _load_log_list()
+    known = set()
+    for rec in log_list:
+        if isinstance(rec.get("legs"), dict):
+            for occ in _record_leg_occs(rec).values():
+                known.add((occ or "").upper())
+    adopted = []
+    for p in positions:
+        occ = (p.get("symbol") or "").upper()
+        if not occ or occ in known:
+            continue
+        qty = abs(int(float(p.get("qty") or 0)))
+        avg = float(p.get("avg_entry_price") or 0)
+        if qty < 1:
+            continue
+        m = re.match(r"^([A-Z]+)\d{6}[CP]\d+$", occ)
+        now = _now_iso_ms()
+        log_list.append({
+            "trade_set_id": "ADOPT-" + uuid.uuid4().hex[:10], "ticker": m.group(1) if m else occ,
+            "status": "OPEN", "entry_ts_utc": now, "adopted": True,
+            "adopted_from": {"occ": occ, "qty": qty, "avg_entry_price": avg, "at": now},
+            "regime": "ADOPTED", "trigger": "orphan_reconcile", "execution_mode": "ADOPTED",
+            "occ_resolution": "adopted", "leg_budget_usd": round(avg * qty * 100, 2),
+            "metadata": {"macro": {"spot": avg, "source": "adopted"},
+                         "gex": {"zero_gamma_strike": None, "regime": None},
+                         "iv_term": {"iv_ratio": None, "structure": None},
+                         "alt_catalyst": {"reddit_mention_delta_pct": None, "insider_10d_buy_usd": None,
+                                          "insider_cluster_flag": False}},
+            "legs": {"adopted_leg": {"structure": "ADOPTED", "occ_symbol": occ,
+                                     "expiry": _occ_expiry(occ), "entry_premium": avg, "contracts": qty}},
+            "leg_path": {"adopted_leg": {"mfe_pct": 0.0, "mae_pct": 0.0, "stage": "initial"}},
+            "leg_exits": {}, "exit": None})
+        adopted.append(occ)
+    if adopted:
+        _save_log_list(log_list)
+        _notify(f"<b>ADOPTED {len(adopted)} orphan position(s)</b>: {', '.join(adopted[:6])} - "
+                f"reconstructed OPEN records; the exit engine + one-per-underlying now see them")
+    return adopted
+
+
 # ----------------------------------------------------------------------------
 # Scheduled cycle (GHA): stale-order audit -> exit pass -> UW flow sourcing -> first eligible
 # ----------------------------------------------------------------------------
@@ -1433,6 +1484,12 @@ def run_scheduled_cycle(mock=False):
     if live and not _market_is_open(creds):
         print("market closed - no cycle: 0 orders, 0 exits, 0 harvest, no inbox commit")
         return None
+
+    # 0. orphan roll-call (item 2b): adopt any live position with no tracking record BEFORE the exit
+    #    pass, so a trade record dropped by a push collision can't leave a position unmanaged.
+    adopted = reconcile_orphans(creds, params)
+    if adopted:
+        print(f"orphan reconcile: adopted {len(adopted)} unmanaged position(s) -> {adopted}")
 
     # 1. stale limit-order cleanup (free buying power)
     open_orders = get_open_orders(creds)

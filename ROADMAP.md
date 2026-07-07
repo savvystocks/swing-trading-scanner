@@ -46,14 +46,16 @@
    only when its broker close actually succeeded (the PFE orphan class is closed), and a give-up/PARK
    state stops per-cycle retry spam on zero-bid corpses (one alert, digest-visible, auto-resolves at
    expiry). One-per-underlying (dec 21) exempts orphaned/PARKED stragglers.
-2b. **Cycle-start broker-vs-record reconciliation** — QUEUED (raised by the 2026-07-07 Tier B review).
+2b. **Cycle-start broker-vs-record reconciliation** — SHIPPED (2026-07-07, `reconcile_orphans`).
    `proactive_sandbox_logs.json` is NOT union-merged (JSON can't be), so a rare double-push collision
-   (made slightly likelier by the re-added backup schedule) can still drop a TRADE RECORD, leaving a
-   live broker position with no OPEN tracking record — an unmanaged orphan. Fix: at each cycle start,
-   diff `get_open_positions` against the OPEN-record leg OCCs and ADOPT any unmatched position into a
-   fresh reconstructed OPEN record (entry_ref = avg_entry_price) so the exit engine manages it and
-   one-per-underlying counts it. Accept: no live position is ever unmanaged for more than one cycle.
-   Until then the watchdog + the digest scoreboard (entries-vs-positions) are the detection net.
+   can drop a TRADE RECORD, leaving a live broker position with no OPEN tracking record — unmanaged by
+   the exit engine AND invisible to one-per-underlying (which reads OPEN RECORDS, not raw positions).
+   `reconcile_orphans` runs at cycle start (step 0, before the exit pass): it diffs `get_open_positions`
+   against every record's leg OCCs and ADOPTS any unmatched position into a fresh reconstructed OPEN
+   record (entry_ref = avg_entry_price), so the exit engine manages it and one-per-underlying blocks
+   the underlying. PARKED / FLUSHED stragglers (known records) are left exempt. MOT Dimension 6 proves
+   the before/after: a sub-cap orphan does not block until adopted. **Gates the backstop fleet-wide
+   rollout** (with the canary lifecycle).
 4. **Inbox retention pruning** — QUEUED. Poller deletes working-tree inbox files older than 14 days only
    after verifying every candidate_id is in the DB and a newer DB backup exists. (Verified not yet built:
    the `keep=14` prune in `harvest_db.backup()` prunes DB *backups*, not the inbox jsonl.) Accept: lean

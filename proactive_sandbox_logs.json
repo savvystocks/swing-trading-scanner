@@ -40414,6 +40414,272 @@
       }
     },
     "exit": null,
+    "status": "OPEN",
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -15.4,
+        "mae_pct": -15.4,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "AUDIT-7dc2d5b6",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-07-07T15:51:17.769Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "e111dccd-fd7b-484f-9d75-97647d26c9db",
+        "symbol": "ARQQ260821P00020000",
+        "age_min": 38.5,
+        "limit_price": "2.99"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "9f9a33fe5294",
+    "ticker": "SLV",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-07T15:51:18.999Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 24,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "min_rvol": 1.0,
+      "max_bid_ask_spread_pct": 5.0,
+      "min_flow_dominance_pct": 30.0,
+      "earnings_blackout_days": 1,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 5,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-07T15:51:18.999Z",
+      "macro": {
+        "spot": 54.86,
+        "sma20": 57.26,
+        "distance_to_sma20_pct": -4.185,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 44.1,
+        "iv_back": 44.0,
+        "iv_ratio": 1.002,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 804257.8,
+        "zero_gamma_strike": 85.0,
+        "distance_to_zero_gamma_pct": -54.94,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -66.7,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 2.26,
+        "atr_pct": 4.12,
+        "rvol_10min": 0.18,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 25.35,
+        "vader_compound": 0.14,
+        "news_type": "Macro",
+        "top_headline": "If You Invested $100 In iShares Silver Trust Stock 5 Years Ago, You Would Have This Much Today",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -4.185,
+        "market_spy_dist_pct": 0.764,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 45.6,
+        "call_iv_25d": 45.2,
+        "skew_ratio": 1.009,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.82,
+        "ask_sweep_prem": 646360.0,
+        "total_flow_prem": 9482386.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.5,
+        "heaviest_node_price": 55.13,
+        "node_size": 187469.0,
+        "n_prints": 149,
+        "window_start": "2026-07-07T08:00:17Z",
+        "window_end": "2026-07-07T15:51:07Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "iv_rank_1y": 24.99,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 50.51,
+        "front_iv": 44.1,
+        "vrp": -6.41,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -4294384.0,
+        "flow_persistence_pct": 46.42,
+        "flow_direction": "bearish",
+        "closing_accel": -1850354.0,
+        "n_ticks": 142,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 995.42,
+        "vwma_20": 57.39,
+        "rsi_5": 73.48,
+        "rsi_15": 34.51,
+        "gap_pct": -1.248,
+        "day_range": 1.95,
+        "candle_body": 0.505,
+        "dist_sma50": -14.893,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 0.1,
+        "vix_level": 16.37,
+        "execution_hour": 15,
+        "day_of_week": 1,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -15143618.0,
+        "net_vanna": 203774844.0,
+        "net_charm": -84352941.0,
+        "delta_imbalance": 0.856,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.018,
+        "bid": 54.83,
+        "ask": 54.84,
+        "bid_size": 200.0,
+        "ask_size": 1200.0,
+        "obi": -0.7143,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.17,
+        "gap_pct": -1.248,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.14,
+      "sweep_aggression_pct": 6.82,
+      "distance_to_zero_gamma_pct": -54.94,
+      "distance_to_heaviest_dp_node_pct": -0.5,
+      "days_since_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 46.42
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "SLV260807C00057000",
+        "expiry": "2026-08-07",
+        "strike": 57.0,
+        "dte": 35,
+        "entry_premium": 3.0,
+        "limit_price": 3.03,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "24",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.91,
+          "ask": 2.0,
+          "mid": 1.955,
+          "bid_ask_spread_pct": 4.604,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 84.0,
+          "oi_prev": 24.0,
+          "oi_change": 60.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "e139b263-a365-43ce-b968-f6f4797a8e19",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.03,
+        "contracts": 2
+      }
+    },
+    "exit": null,
     "status": "OPEN"
   }
 ]

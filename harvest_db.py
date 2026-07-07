@@ -25,7 +25,7 @@ CANDIDATE_COLS = [
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS candidates (
-    candidate_id TEXT PRIMARY KEY,
+    candidate_id TEXT PRIMARY KEY NOT NULL,
     run_id TEXT, code_version TEXT, params_hash TEXT, feature_set_version TEXT, signal_ts_utc INTEGER,
     ticker TEXT, occ_symbol TEXT, expiry TEXT, strike REAL, "right" TEXT, side TEXT,
     bid REAL, ask REAL, bid_size REAL, ask_size REAL, mid REAL, spread_pct REAL, last REAL, underlying_last REAL,
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS bid_path (
 CREATE INDEX IF NOT EXISTS idx_bidpath_cand ON bid_path(candidate_id);
 
 CREATE TABLE IF NOT EXISTS labels (
-    candidate_id TEXT PRIMARY KEY,
+    candidate_id TEXT PRIMARY KEY NOT NULL,
     outcome TEXT, label INTEGER, realized_return REAL, touch_ts_utc INTEGER, time_to_touch_min REAL,
     mfe REAL, mae REAL, n_polls INTEGER, n_stale INTEGER, ambiguous_touch INTEGER,
     poll_cadence_min REAL, censored_reason TEXT

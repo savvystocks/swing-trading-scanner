@@ -143,7 +143,48 @@ def _load_state():
     st.setdefault("payload_count", 0)
     st.setdefault("topn_count", 0)
     st.setdefault("random_count", 0)
+    st.setdefault("backoff_429", False)      # any 429 seen today -> the adaptive cap halves (decision 22)
+    st.setdefault("cap_today", None)
     return st
+
+
+def _projected_open_candidates():
+    """Estimate the poller's steady-state open cohort from the last 5 sessions' committed inbox files
+    (the engine checkout carries them; the labels themselves live on the VPS). Pollable = rows whose
+    poll_tier is not 'none'."""
+    n = 0
+    import glob as _glob
+    for f in sorted(_glob.glob(os.path.join(db.INBOX_DIR, "candidates_*.jsonl")))[-5:]:
+        try:
+            with open(f, encoding="utf-8") as fh:
+                for line in fh:
+                    if line.strip() and '"poll_tier": "none"' not in line:
+                        n += 1
+        except Exception:
+            pass
+    return n
+
+
+def _adaptive_cap(params, state):
+    """TIER B (owner decision 22): ADAPTIVE HARVEST CAP with a HARD poller reservation. The poller's
+    projected quote need (open cohort / chunk x runs per day) is reserved UNTOUCHABLE off the daily
+    provider budget; the engine's full-payload cap floats into the remainder, ceilinged by
+    harvest_daily_cap. Any 429 observed today halves the cap for the rest of the day. The chosen cap
+    and its inputs are stamped into harvest_state.json (committed) - the log of record."""
+    ceiling = params.get("harvest_daily_cap", 300)
+    budget = params.get("harvest_api_budget_per_day", 6000)
+    chunk = max(1, params.get("poller_chunk", 100))
+    runs = params.get("poller_runs_per_day", 26)
+    per_payload = max(1, params.get("harvest_calls_per_payload", 3))
+    reserve = -(-_projected_open_candidates() // chunk) * runs           # ceil-div: RESERVED, untouchable
+    cap = max(0, min(ceiling, (budget - reserve) // per_payload))
+    if state.get("backoff_429"):
+        cap //= 2
+    if state.get("cap_today") != cap:
+        state["cap_today"] = cap
+        state["cap_inputs"] = {"reserve": reserve, "budget": budget, "ceiling": ceiling,
+                               "backoff_429": bool(state.get("backoff_429"))}
+    return cap
 
 
 def _save_state(st):
@@ -225,6 +266,9 @@ def _build_row(flow, params, signal_ts, run_id, sha, executed, skip_reason, samp
     }
 
 
+_SAW_429 = {"flag": False}                   # set by _flow_rows on a rate-limit; read once per harvest_scan
+
+
 def _flow_rows(params):
     try:
         from src.unusual_whales_api import UnusualWhalesClient
@@ -234,7 +278,9 @@ def _flow_rows(params):
         limit = params.get("scanner_flow_limit", 600)
         min_prem = params.get("scanner_min_premium", 50000)
         return (uw.flow_alerts(ticker=None, limit=limit, min_premium=min_prem) or {}).get("data") or []
-    except Exception:
+    except Exception as e:
+        if "429" in str(e):
+            _SAW_429["flag"] = True          # rate-limited -> the adaptive cap halves for the rest of the day
         return []
 
 
@@ -258,7 +304,7 @@ def harvest_scan(params, executed_record=None, mock=False):
     state = _load_state()
     topn = params.get("harvest_topn", 20)
     n_random = params.get("harvest_random", 5)
-    cap = params.get("harvest_daily_cap", 300)
+    cap = _adaptive_cap(params, state)       # decision 22: floats into the remainder after the poller reserve
     prem_lo = params.get("scanner_premium_min", 0.30)
     prem_hi = params.get("scanner_premium_max", 4.00)
 
@@ -286,6 +332,9 @@ def harvest_scan(params, executed_record=None, mock=False):
             written["executed"] += 1
 
     rows = _flow_rows(params)
+    if _SAW_429["flag"]:
+        state["backoff_429"] = True
+        _SAW_429["flag"] = False
     scored = []
     for flow in rows:
         ticker = str(flow.get("ticker") or "").upper()
@@ -353,4 +402,5 @@ def harvest_scan(params, executed_record=None, mock=False):
 
     state["contracts"].extend(done)
     _save_state(state)
+    written["cap_today"] = cap               # the daily cap chosen, surfaced in the cycle log
     return written

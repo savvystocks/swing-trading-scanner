@@ -29,22 +29,39 @@
 
 ## Phase A — complete the operating system (near-term)
 
-2. **Server-side exit backstop** — QUEUED. Design pre-decided (owner decision): the resting broker-side
-   order is ALWAYS a **stop**; only its level is dynamic (−50% at entry → break-even past the shield
-   threshold → trailing levels), updated by **cancel/replace each cycle**; the +30% scale-out stays
-   cron-managed. Empirical tests T0–T5 run first and **T5 decides stop vs stop-limit**; config-flagged;
-   single-position canary through a full lifecycle before fleet-wide; MOT extended with order-
-   reconciliation checks. Lands in the **week-one Tier B drop**. Accept: every open position carries a
-   working broker-side floor at all times, and cron exits cancel resting siblings before closing.
-   Also in this drop (2026-07-06 live-day audit): `flush_positions` must not mark a log record FLUSHED
-   unless its broker close actually succeeded — otherwise the position orphans (broker-open,
-   record-FLUSHED, exit-engine-blind), as `PFE260814C00025500` did at go-live. And **one-per-underlying
-   (dec 21) must ignore legacy/orphaned stragglers**, so a corpse can't block a live signal on that
-   underlying for six weeks.
+2. **Server-side exit backstop** — IN-FLIGHT (built on the Tier B branch 2026-07-06; ships config-OFF,
+   canary flips it on). Design pre-decided (owner decision): the resting broker-side order is ALWAYS a
+   **stop**; only its level is dynamic (−50% at entry → break-even past the shield threshold → trailing
+   levels), updated each cycle; the +30% scale-out stays cron-managed. **T0–T5 empirical results
+   (2026-07-06, Alpaca paper):** T0 plain stop on options ACCEPTED; T1 stop_limit ACCEPTED; T2 GTC
+   ACCEPTED (the backstop survives overnight); T3 PATCH-replace REJECTED on queued orders → the mechanic
+   is cancel+resubmit; T4 closed-market submissions queue cleanly; **T5 decision: plain STOP** —
+   affordable-band p90 spread 17.9% (< the 30% pre-stated threshold; executed-band median 0.99%), and a
+   bad fill beats no fill per NORTH_STAR. Config: `backstop_enabled` / `backstop_canary_occ` /
+   `backstop_type`. PDT: same-day stop fills are accepted by design and every one is logged as a
+   `day_trade` marker. MOT extended (Dimension 6, 26 checks incl. order-reconciliation). Accept: every
+   open position carries a working broker-side floor at all times, and cron exits cancel resting
+   siblings before closing.
+   Also in this drop (2026-07-06 live-day audit, built): `flush_positions` now marks a record FLUSHED
+   only when its broker close actually succeeded (the PFE orphan class is closed), and a give-up/PARK
+   state stops per-cycle retry spam on zero-bid corpses (one alert, digest-visible, auto-resolves at
+   expiry). One-per-underlying (dec 21) exempts orphaned/PARKED stragglers.
+2b. **Cycle-start broker-vs-record reconciliation** — QUEUED (raised by the 2026-07-07 Tier B review).
+   `proactive_sandbox_logs.json` is NOT union-merged (JSON can't be), so a rare double-push collision
+   (made slightly likelier by the re-added backup schedule) can still drop a TRADE RECORD, leaving a
+   live broker position with no OPEN tracking record — an unmanaged orphan. Fix: at each cycle start,
+   diff `get_open_positions` against the OPEN-record leg OCCs and ADOPT any unmatched position into a
+   fresh reconstructed OPEN record (entry_ref = avg_entry_price) so the exit engine manages it and
+   one-per-underlying counts it. Accept: no live position is ever unmanaged for more than one cycle.
+   Until then the watchdog + the digest scoreboard (entries-vs-positions) are the detection net.
 4. **Inbox retention pruning** — QUEUED. Poller deletes working-tree inbox files older than 14 days only
    after verifying every candidate_id is in the DB and a newer DB backup exists. (Verified not yet built:
    the `keep=14` prune in `harvest_db.backup()` prunes DB *backups*, not the inbox jsonl.) Accept: lean
    checkout, zero data loss.
+4b. **NOT-NULL primary keys on the LIVE harvest.db** — QUEUED. The fresh-DB DDL gained
+   `NOT NULL` on `candidates`/`labels` PKs (Tier B); the live VPS DB keeps the old DDL until a
+   copy-rename rebuild (`integrity_check` before and after, outside market hours). Purely defensive:
+   all writers assign uuid4 ids. Accept: live DDL matches `harvest_db._SCHEMA`, zero row loss.
 
 ## Phase B — enrich the dataset while it accumulates
 
@@ -158,7 +175,10 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
     scaling beyond only on live evidence. Best-case calendar (informational): data critical mass
     ~mid-August 2026; Student trained + two-week shadow ~early September; gate-mode on paper through
     September; live-capital review ~early October. **BEST CASE — the gates decide the real dates.**
-    Referenced by NORTH_STAR.md as "item 14".
+    Referenced by NORTH_STAR.md as "item 14". **Decide margin vs CASH account at this gate**: a cash
+    account is exempt from PDT and may dissolve the 24h-hold constraint at the £1–5k stage (the 24h
+    take-profit hold exists as deliberate PDT avoidance — see the decision table and the code comment at
+    `min_hold_hours`).
 15. **Barrier-configuration optimization** — QUEUED. Using the stored bid paths, executed only under item
     7's PBO discipline. Accept: any barrier change justified with overfitting-adjusted evidence.
 
@@ -167,7 +187,7 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
 | # | Item | Phase | Status | Gate / acceptance (one line) |
 |---|---|---|---|---|
 | 1 | Single-engine consolidation (V9 retirement) | Foundation | SHIPPED | One engine on main; collision closed |
-| 2 | Server-side exit backstop | A | QUEUED | Every open position carries a working broker-side floor |
+| 2 | Server-side exit backstop | A | IN-FLIGHT | Every open position carries a working broker-side floor; T0–T5 done, ships config-OFF, canary flips on |
 | 3 | Slippage ledger | B | QUEUED | Measured slippage feeds Gate-2 thresholds |
 | 4 | Inbox retention pruning | A | QUEUED | Lean checkout, zero data loss |
 | 5 | Data Foundry (Stage 0) + GATE 1 / 4a | C | SHIPPED | Versioned parquet + card; overlap weights + cache tested |
@@ -208,6 +228,7 @@ and SPRT clock are decisions 14/27.)
 | 14 | Engine | Volume push: cool-off 24h->4h + scanner_min_premium 50k->25k | v10_tunable_parameters.json (Tier A, SHIPPED) |
 | 15 | Entry | Earnings blackout: no new entry within 3 days of earnings | item 12 (Tier B) |
 | 16 | Exits | Keep the current exit design (state machine) | Phase C exits |
+| 16b | Exits | WHY the 24h take-profit hold: deliberate PDT avoidance for the sub-$25k live future, NOT a quirk - changing it requires a NORTH_STAR amendment; backstop same-day stop fills are the accepted, logged exception; margin-vs-CASH decided at item 14 | v10_params min_hold_hours comment + item 14 |
 | 17 | Exits | Theta-cliff study decides time exits | scheduled studies |
 | 18 | Exits | Hold over weekends | scheduled studies (weekend cost) |
 | 19 | Risk | Daily brake: 3 stop-outs or realized loss >= 2x allocation | Tier B |

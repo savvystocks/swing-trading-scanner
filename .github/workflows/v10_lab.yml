@@ -5,9 +5,17 @@ name: v10-lab
 # transport (inbox jsonl + state) to main for the VPS poller to ingest.
 
 on:
-  # NOTE: no `schedule` trigger - repository_dispatch (cron-job.org) is the single driver. A second
-  # near-simultaneous run collides on the git push and its rebase drops harvest rows (see the
-  # 2026-07-06 live-day audit). One trigger + the concurrency group serialises runs.
+  schedule:
+    - cron: "5,35 13-20 * * 1-5"   # SPARSE BACKUP trigger only - cron-job.org repository_dispatch is
+                                   # the primary (*/10 at :00,:10,..). Offset to :05/:35 so the backup
+                                   # never lands on a primary slot. Overlap is harmless for the HARVEST
+                                   # transport: the concurrency group serialises runs and
+                                   # data/harvest_inbox/*.jsonl union-merges (.gitattributes, fa5bdc92).
+                                   # KNOWN RESIDUAL: proactive_sandbox_logs.json is NOT union-merged, so
+                                   # a rare double-push collision can still drop a TRADE RECORD -> the
+                                   # cycle-start broker-vs-record reconciliation (ROADMAP item 2b) is the
+                                   # real backstop for that. DO NOT remove this schedule as "redundant" -
+                                   # it is the engine's only heartbeat if cron-job.org dies.
   workflow_dispatch:               # manual / API dispatch (needs ref + PAT with actions:write)
     inputs:
       flush:

@@ -367,11 +367,12 @@ def darkpool_node(ticker, spot, mock=False):
 # EDGE 4 - Post-earnings momentum drift: days since report + IV-crush flag
 def post_earnings_drift(ticker, mock=False, crush_iv_rank=30.0):
     out = {"days_since_earnings": None, "post_earnings_iv_crush_flag": None,
+           "days_to_earnings": None, "next_earnings_date": None,
            "iv_rank_1y": None, "last_earnings_date": None, "source": "unavailable"}
     if mock:
         return out
     base = ticker.split(".")[0]
-    days, last_ed = None, None
+    days, last_ed, days_to, next_ed = None, None, None, None
     try:
         import yfinance as yf
         ed = yf.Ticker(base).get_earnings_dates(limit=12)
@@ -382,6 +383,12 @@ def post_earnings_drift(ticker, mock=False, crush_iv_rank=30.0):
         if past:
             last_ed = max(past)
             days = (today - last_ed).days
+        # TIER B: forward calendar off the SAME fetch (no extra call) - powers the 3-day earnings
+        # blackout in enter_proactive_set. Fail-open: null -> the blackout never blocks.
+        future = [d.date() for d in idx if hasattr(d, "date") and d.date() > today]
+        if future:
+            next_ed = min(future)
+            days_to = (next_ed - today).days
     except Exception:
         pass
     ivr = None
@@ -394,8 +401,9 @@ def post_earnings_drift(ticker, mock=False, crush_iv_rank=30.0):
     except Exception:
         pass
     flag = bool(days is not None and days <= 5 and ivr is not None and ivr < crush_iv_rank) if days is not None else None
-    src = "yfinance+uw" if (days is not None or ivr is not None) else "unavailable"
+    src = "yfinance+uw" if (days is not None or days_to is not None or ivr is not None) else "unavailable"
     return {"days_since_earnings": days, "post_earnings_iv_crush_flag": flag,
+            "days_to_earnings": days_to, "next_earnings_date": next_ed.isoformat() if next_ed else None,
             "iv_rank_1y": round(ivr, 2) if ivr is not None else None,
             "last_earnings_date": last_ed.isoformat() if last_ed else None, "source": src}
 

@@ -1,4 +1,6 @@
-"""V10 Research Sandbox - dynamic routers & sizing modifiers (STANDALONE).
+"""V10 dynamic routers & sizing modifiers - mostly prototypes, but detect_cluster() is LIVE:
+the engine's alt_catalyst() imports it for the insider-cluster flag (log-only, fail-open).
+Architecture of record: SYSTEM_ARCHITECTURE.md.
 
 Five advanced upgrades implemented as DYNAMIC ROUTERS (alter the structure chosen) and
 SIZING MODIFIERS (alter fractional-Kelly allocation). By design NONE of these acts as a

@@ -12,6 +12,9 @@ LOG="$REPO/data/poller.log"
   set +a
   [ -f "$REPO/.venv/bin/activate" ] && . "$REPO/.venv/bin/activate"
   python poller.py --once
+  # cross-watching (owner decision 28): every poller run pings healthchecks.io; silence -> email.
+  # HEALTHCHECK_URL lives in .harvest_env (owner-created check). No-op when unset.
+  [ -n "${HEALTHCHECK_URL:-}" ] && curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL" >/dev/null 2>&1
 } >> "$LOG" 2>&1
 if [ "$(stat -c%s "$LOG" 2>/dev/null || echo 0)" -gt 5242880 ]; then
   mv -f "$LOG" "$LOG.1"

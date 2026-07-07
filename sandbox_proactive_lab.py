@@ -1,19 +1,18 @@
-"""V10 Research Sandbox - Proactive Paper-Trading Lab + Active Alpaca Paper Execution.
+"""V10 engine - the single production engine (paper), driven by v10_lab.yml on main.
 
-Phase 2: trade the chop from three angles, route to the Alpaca PAPER API, log a forensic
-state block + order ids, and have the autopsy emit a tuning advisory so we tighten the knobs
-weekly from empirical win/loss data. Gate values are NOT hardcoded - they live in
-v10_tunable_parameters.json (read every cycle) and are turned by tune_parameters.py.
-
-On a trigger (regime_compass_bypass / regime C / consolidation) we enter THREE legs sized off
-a $10,000 cluster budget:
-   1. Bullish - long OTM call  (delta ~ +0.35)
-   2. Bearish - long OTM put   (delta ~ -0.35)
-   3. Flat    - calendar spread (buy back / sell front) for theta
+WHAT IT ACTUALLY DOES (architecture of record: SYSTEM_ARCHITECTURE.md): each cycle it audits
+stale orders, runs the exit pass (tiered stop / scale-out / trail state machine + ratchet
+broker-side backstop when enabled), then sources candidates market-wide from Unusual Whales
+flow, and enters ONE regime-routed directional leg (long call if BULLISH, long put if BEARISH)
+sized off a flat $800 budget. NEUTRAL/calendar routing is DISABLED pending a spread-aware unit
+exit. Entry gates: one-position-per-underlying, 3-day earnings blackout, daily brake, cool-off,
+affordability. After the trade decision, the counterfactual harvest logs every scored candidate
+(fail-open, post-trade - it can never alter or crash the trade path). Gate values live in
+v10_tunable_parameters.json (read every cycle), turned only by owner decision.
 
 EXECUTION SAFETY: routing defaults to DRY_RUN (build + log the order payload, do NOT submit).
-Real submission to paper-api.alpaca.markets only happens with --live-paper (you run it). No
-order is ever placed against a live/real-money endpoint - paper only. Touches no V9 engine.
+Real submission to paper-api.alpaca.markets only happens with --live-paper or under GHA with
+paper creds. No order is ever placed against a live/real-money endpoint - paper only.
 
 Run (simulate):       python sandbox_proactive_lab.py
 Run (submit to paper): ALPACA_PAPER_API_KEY=... ALPACA_PAPER_SECRET_KEY=... python sandbox_proactive_lab.py --live-paper
@@ -39,14 +38,20 @@ except Exception:
 # ----------------------------------------------------------------------------
 # Telegram notifications (re-integrated from V9 src/telegram.py) - all FAIL-OPEN
 # ----------------------------------------------------------------------------
+_NOTIFY_STATS = {"sent": 0, "failed": 0}       # per-process alert-path honesty counters (digest line)
+
+
 def _notify(text):
     """Fire a Telegram alert via the V9 sender. Fail-open: no token / any error -> silent no-op,
-    NEVER blocks the trading loop."""
+    NEVER blocks the trading loop. Every outcome is counted so a dead channel shows up in the
+    daily digest the same day instead of being discovered by vibes."""
     try:
         from src.telegram import send_alert
-        return send_alert(text)
+        ok = bool(send_alert(text))
     except Exception:
-        return False
+        ok = False
+    _NOTIFY_STATS["sent" if ok else "failed"] += 1
+    return ok
 
 
 def _buy_msg(rec):
@@ -302,6 +307,7 @@ def _v11_sensors(ticker, md, spot, iv, mock):
             "distance_to_zero_gamma_pct": (md.get("gex") or {}).get("distance_to_zero_gamma_pct"),  # edge #2 (already in gex)
             "distance_to_heaviest_dp_node_pct": dpn.get("distance_to_heaviest_dp_node_pct"),
             "days_since_earnings": pemd.get("days_since_earnings"),
+            "days_to_earnings": pemd.get("days_to_earnings"),        # powers the 3d earnings blackout (fail-open)
             "post_earnings_iv_crush_flag": pemd.get("post_earnings_iv_crush_flag"),
             "flow_persistence_pct": fpers.get("flow_persistence_pct")}
 
@@ -559,20 +565,49 @@ def audit_stale_orders(creds=None, max_minutes=None, orders=None):
     return cancelled
 
 
-def ticker_blocked(ticker, positions, params, open_orders=None, now=None):
+def _occ_matches_base(sym, base):
+    """True if OCC symbol `sym` belongs to underlying `base` - the root must be followed by the
+    6-digit expiry, so BB never matches BBAI contracts."""
+    sym = (sym or "").upper()
+    return sym == base or (sym.startswith(base) and sym[len(base):len(base) + 1].isdigit())
+
+
+def ticker_blocked(ticker, positions, params, open_orders=None, now=None, log=None):
+    """Entry guard. TIER B (owner decision 21): ONE POSITION PER UNDERLYING - a hard block that
+    SUPERSEDES max_contracts_per_ticker (the old cap is kept only as a subordinated belt-and-braces
+    ceiling below). Exemptions, from the 2026-07-06 audit: broker positions with NO OPEN tracking
+    record (legacy stragglers / flush orphans, e.g. PFE) and PARKED records never block - a zero-bid
+    corpse must not freeze a ticker's live signals for six weeks."""
     base = ticker.upper().split(".")[0]
+    if params.get("one_position_per_underlying", True):
+        log = log if log is not None else _load_log_list()
+        tracked = set()
+        for rec in log:
+            if rec.get("status") == "OPEN":                    # PARKED / FLUSHED / CLOSED never block
+                for occ in _record_leg_occs(rec).values():
+                    tracked.add((occ or "").upper())
+        for p in positions or []:
+            sym = (p.get("symbol") or "").upper()
+            if sym in tracked and _occ_matches_base(sym, base):
+                return True, f"one-per-underlying: open tracked position {sym}"
+        for o in open_orders or []:
+            if (o.get("side") or "buy") != "buy" and o.get("order_class") != "mleg":
+                continue                                        # resting sells (backstops/exits) belong to positions
+            syms = [o.get("symbol")] + [l.get("symbol") for l in (o.get("legs") or [])]
+            if any(_occ_matches_base(s, base) for s in syms if s):
+                return True, f"one-per-underlying: pending entry order on {base}"
     held = 0
     for p in positions or []:
         sym = (p.get("symbol") or "").upper()
-        if sym == base or sym.startswith(base):
+        if _occ_matches_base(sym, base):
             held += abs(int(float(p.get("qty", 0) or 0)))
     pending = 0
     for o in open_orders or []:
         syms = [o.get("symbol")] + [l.get("symbol") for l in (o.get("legs") or [])]
-        if any((s or "").upper().startswith(base) for s in syms):
+        if any(_occ_matches_base(s, base) for s in syms if s):
             pending += abs(int(float(o.get("qty", 0) or 0)))
     cap = params.get("max_contracts_per_ticker", 3)
-    if held + pending >= cap:
+    if held + pending >= cap:                                   # subordinated to one-per-underlying above
         return True, f"ticker cap: {held} held + {pending} pending on {base} >= {cap}"
     cool = {}
     if os.path.exists(COOLOFF_PATH):
@@ -603,6 +638,249 @@ def _occ_expiry(occ):
         return None
     d = m.group(1)
     return f"20{d[:2]}-{d[2:4]}-{d[4:6]}"
+
+
+def daily_brake_status(params, log=None):
+    """TIER B (owner decision 19): 3 stop-outs today OR realized session loss >= 2x the $800
+    allocation -> no NEW entries until the next session. Exits, backstops and the harvest continue -
+    the brake only closes the entry gate. Counted from the committed log's leg_exits so it survives
+    ephemeral GHA runners. Returns (braked, why, stopouts, realized_loss_usd)."""
+    log = log if log is not None else _load_log_list()
+    today = datetime.now(timezone.utc).date().isoformat()
+    stopouts, loss_usd = 0, 0.0
+    for rec in log:
+        legs = rec.get("legs") or {}
+        for ln, ex in (rec.get("leg_exits") or {}).items():
+            if not str(ex.get("closed_at", "")).startswith(today):
+                continue
+            ret = ex.get("return_pct") or 0.0
+            key = "flat_calendar" if ln.startswith("calendar") else ln
+            alloc = (legs.get(key) or {}).get("alloc_usd") or LEG_BUDGET
+            if ret < 0:
+                loss_usd += -ret / 100.0 * alloc
+                if ex.get("action") in ("CLOSE_STOP_LOSS", "CLOSE_BACKSTOP"):
+                    stopouts += 1
+    max_so = params.get("daily_brake_stopouts", 3)
+    max_loss = params.get("daily_brake_loss_multiple", 2.0) * LEG_BUDGET
+    if stopouts >= max_so:
+        return True, f"{stopouts} stop-outs >= {max_so}", stopouts, loss_usd
+    if loss_usd >= max_loss:
+        return True, f"realized session loss ${loss_usd:.0f} >= ${max_loss:.0f} (2x allocation)", stopouts, loss_usd
+    return False, f"clear ({stopouts} stop-outs, ${loss_usd:.0f} realized loss)", stopouts, loss_usd
+
+
+_TERMINAL_ORDER = {"canceled", "cancelled", "filled", "expired", "rejected", "done_for_day"}
+
+
+def _order_state(order_id, creds):
+    """Raw Alpaca order dict, or None on any failure (fail-open)."""
+    if not order_id:
+        return None
+    try:
+        return _paper_get(f"/v2/orders/{order_id}", creds)
+    except Exception:
+        return None
+
+
+def _order_fill(order_id, creds):
+    """Return {'price','at','qty'} if ANY contracts filled - status 'filled', OR a terminal
+    'canceled'/'expired' order with filled_qty>0 (a partial that filled then got cancelled by the
+    ratchet). Reads filled_qty so a partial fill is never invisible. None if nothing filled."""
+    o = _order_state(order_id, creds)
+    if not o:
+        return None
+    try:
+        fq = int(float(o.get("filled_qty") or 0))
+        px = o.get("filled_avg_price")
+        if fq > 0 and px:
+            return {"price": float(px), "at": o.get("filled_at") or _now_iso_ms(), "qty": fq}
+    except Exception:
+        pass
+    return None
+
+
+def _backstop_order_ids(bs):
+    """Current + superseded backstop order ids - reconciliation must poll ALL of them, because a
+    ratchet cancel+resubmit can leave a filled OLD id that the new id no longer points at."""
+    return [i for i in ([bs.get("order_id")] + list(bs.get("prior_order_ids") or [])) if i]
+
+
+def _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs):
+    """Reconcile broker backstop fills across the current + superseded order ids (idempotent per id).
+    A FULL fill closes the leg (CLOSE_BACKSTOP leg_exit + 24h cool-off); a PARTIAL fill is booked as
+    its own leg_exit keyed by order id so the brake / scoreboard / digest count it while the leg stays
+    open for the remainder. Every same-day fill appends a PDT day_trade marker. Returns True iff the
+    leg is now FULLY exited."""
+    bs = (rec.get("backstop") or {}).get(leg_name)
+    if not bs:
+        return leg_name in (rec.get("leg_exits") or {})
+    seen = bs.setdefault("reconciled_ids", [])
+    entry_px = bs.get("entry_px") or 0
+    booked_full = leg_name in (rec.get("leg_exits") or {})
+    for oid in _backstop_order_ids(bs):
+        if oid in seen:
+            continue
+        f = _order_fill(oid, creds)
+        if not f:
+            continue
+        seen.append(oid)
+        ret = round((f["price"] / entry_px - 1) * 100.0, 1) if entry_px else 0.0
+        full = f["qty"] >= (bs.get("qty") or f["qty"]) and not booked_full
+        key = leg_name if full else f"{leg_name}~bs{str(oid)[:6]}"
+        rec.setdefault("leg_exits", {})[key] = {
+            "occ": occ, "closed_at": f["at"], "return_pct": ret, "filled_qty": f["qty"],
+            "reason": f"broker backstop filled {f['qty']}{'' if full else ' (partial)'} @ {f['price']}",
+            "action": "CLOSE_BACKSTOP", "closed_ok": True}
+        closed_legs.append({"ticker": rec["ticker"], "leg": leg_name + ("" if full else " (partial)"),
+                            "occ": occ, "return_pct": ret, "action": "CLOSE_BACKSTOP", "closed_ok": True})
+        _notify(_sell_msg(closed_legs[-1]))
+        if str(f["at"])[:10] == str(rec.get("entry_ts_utc", ""))[:10]:
+            log.append({"type": "day_trade", "ts_utc": _now_iso_ms(), "ticker": rec["ticker"],
+                        "occ": occ, "via": "CLOSE_BACKSTOP", "status": "LOGGED"})
+        if full:
+            bs["reconciled"] = True
+            record_close(rec["ticker"])
+            booked_full = True
+    return booked_full
+
+
+def _retire_stop(rec, leg_name, occ, creds, log, closed_legs):
+    """Safely take down a resting broker stop BEFORE a cron close/scale. Best-effort cancel, then
+    CONFIRM terminal via GET and capture any fill during its life. Returns True ONLY when the stop is
+    confirmed gone (so _close_position can't collide with a live stop holding the qty). A cancel we
+    cannot confirm returns False -> the caller skips the close this cycle and retries next cycle
+    (the CRITICAL fix: never mark a stop cancelled on an unconfirmed DELETE)."""
+    bs = (rec.get("backstop") or {}).get(leg_name)
+    if not bs or not bs.get("order_id") or bs.get("retired"):
+        return True
+    _cancel_order(bs["order_id"], creds)                 # best-effort; the GET below is the authority
+    o = _order_state(bs["order_id"], creds)
+    _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs)   # book any fill during its life
+    if o is None:
+        return False                                     # cannot confirm terminal -> do NOT close blind
+    if (o.get("status") or "").lower() in _TERMINAL_ORDER:
+        bs["retired"] = True
+        return True
+    return False                                         # still active / partially_filled -> retry next cycle
+
+
+def _backstop_level(entry_px, stage, peak_mfe, params):
+    """The ratchet: initial -> the -50% hard-stop level; scaled -> break-even; trailing -> 20% off
+    the peak MFE. Absolute premium (broker stop_price), floored at $0.01. Mirrors manage_exit so the
+    resting stop and the cron exit can never disagree on the level."""
+    if stage == "scaled":
+        pct = params.get("break_even_pct", 0)
+    elif stage == "trailing":
+        pct = (peak_mfe or 0.0) * (1 - params.get("trail_drawdown_pct", 20) / 100.0)
+    else:
+        pct = -abs(params.get("stop_loss_pct", 50))
+    return max(0.01, round(entry_px * (1 + pct / 100.0), 2))
+
+
+def _submit_backstop(occ, qty, stop_price, params, creds):
+    typ = params.get("backstop_type", "stop")
+    body = {"symbol": occ, "qty": str(int(qty)), "side": "sell", "type": typ,
+            "stop_price": str(stop_price), "time_in_force": "gtc"}   # T2 (2026-07-06): gtc accepted -> survives overnight
+    if typ == "stop_limit":
+        buf = params.get("backstop_limit_buffer_pct", 25) / 100.0
+        body["limit_price"] = str(max(0.01, round(stop_price * (1 - buf), 2)))
+    return _submit_paper_order(body, creds)
+
+
+def manage_backstops(creds, params, positions=None, log=None):
+    """TIER B (owner decision 20 / ROADMAP item 2): RATCHET BACKSTOP. Every open tracked leg carries
+    a resting broker-side STOP (T5 decision 2026-07-06: plain stop - affordable-band p90 spread is
+    17.9% and a bad fill beats no fill per NORTH_STAR) whose level ratchets with the exit stage:
+    -50% -> break-even -> MFE trail. Level or qty drift -> cancel + resubmit (T3: PATCH replace is
+    rejected on queued option orders). The +30% scale-out stays cron-managed. Config-flagged:
+    backstop_enabled (OFF until the canary passes); backstop_canary_occ restricts arming to the one
+    canary position through a full lifecycle before fleet-wide."""
+    if not params.get("backstop_enabled", False) or not all(creds):
+        return []
+    positions = positions if positions is not None else get_open_positions(creds)
+    pos_by_occ = {(p.get("symbol") or "").upper(): p for p in positions}
+    log_list = log if log is not None else _load_log_list()
+    canary = (params.get("backstop_canary_occ") or "").upper()
+    stops_by_sym = {}
+    for o in get_open_orders(creds):
+        if o.get("type") in ("stop", "stop_limit") and o.get("side") == "sell":
+            stops_by_sym[(o.get("symbol") or "").upper()] = o
+    actions, dirty = [], False
+    for rec in log_list:
+        if rec.get("status") != "OPEN" or not isinstance(rec.get("legs"), dict):
+            continue
+        for leg_name, occ in _record_leg_occs(rec).items():
+            sym = (occ or "").upper()
+            if canary and sym != canary:
+                continue                                          # canary mode: one position only
+            if leg_name in (rec.get("leg_exits") or {}):
+                continue
+            p = pos_by_occ.get(sym)
+            if not p:
+                continue
+            qty = abs(int(float(p.get("qty") or 0)))
+            entry_px = float(p.get("avg_entry_price") or 0)
+            if qty < 1 or entry_px <= 0:
+                continue
+            path = (rec.get("leg_path") or {}).get(leg_name) or {}
+            level = _backstop_level(entry_px, path.get("stage", "initial"), path.get("mfe_pct"), params)
+            existing = stops_by_sym.get(sym)
+            if existing:
+                cur_px = float(existing.get("stop_price") or 0)
+                cur_qty = abs(int(float(existing.get("qty") or 0)))
+                if abs(cur_px - level) < params.get("backstop_min_delta", 0.01) and cur_qty == qty:
+                    continue                                      # already resting at the right level/qty
+                if not _cancel_order(existing.get("id"), creds):  # ratchet move: cancel must be ACCEPTED
+                    continue                                      # (else keep the old stop live; retry next cycle)
+                _capture_backstop_fill(rec, leg_name, occ, creds, log_list, [])   # book a partial fill on it
+                if leg_name in (rec.get("leg_exits") or {}):      # the old stop fully filled -> leg done, don't re-arm
+                    dirty = True
+                    continue
+            oid, status, err = _submit_backstop(occ, qty, level, params, creds)
+            prev = (rec.get("backstop") or {}).get(leg_name) or {}
+            priors = list(prev.get("prior_order_ids") or [])
+            if prev.get("order_id") and prev.get("order_id") != oid and not prev.get("reconciled"):
+                priors.append(prev["order_id"])                   # keep the superseded id so a late fill is found
+            rec.setdefault("backstop", {})[leg_name] = {
+                "order_id": oid, "prior_order_ids": priors[-10:],
+                "reconciled_ids": list(prev.get("reconciled_ids") or []),
+                "stop_price": level, "qty": qty, "entry_px": entry_px,
+                "type": params.get("backstop_type", "stop"), "stage": path.get("stage", "initial"),
+                "at": _now_iso_ms(), "status": status, "error": err}
+            actions.append({"occ": occ, "stop": level, "qty": qty, "status": status, "err": err})
+            dirty = True
+    if dirty:
+        _save_log_list(log_list)
+    return actions
+
+
+def _note_close_failure(rec, path, leg_name, occ, params, creds=None):
+    """GIVE-UP/PARK (2026-07-06 audit, the orphan root-fix): after N consecutive rejected closes with
+    a fresh quote showing NO bid, the record transitions to PARKED - ONE alert, retries stop, stays
+    visible in the digest, auto-resolves at expiry. A rejected close WITH a live bid resets nothing
+    permanent: the counter climbs but a returning bid zeroes it and normal retries resume. On park,
+    any resting backstop is best-effort cancelled (it was already retired before the close attempt,
+    but a corpse must not leave a live GTC stop behind)."""
+    fails = path["close_fails"] = path.get("close_fails", 0) + 1
+    if fails < params.get("close_fail_park_after", 5):
+        return
+    bid = None
+    try:
+        bid = (v11.option_spread(occ) or {}).get("bid") if v11 else None
+    except Exception:
+        bid = None
+    if bid:
+        path["close_fails"] = 0                                   # a market exists again -> keep retrying normally
+        return
+    bs = (rec.get("backstop") or {}).get(leg_name) or {}
+    if creds:
+        for oid in _backstop_order_ids(bs):
+            _cancel_order(oid, creds)
+    rec["status"] = "PARKED"
+    rec["parked"] = {"at": _now_iso_ms(), "leg": leg_name, "occ": occ, "close_fails": fails,
+                     "reason": f"no bid after {fails} rejected closes - zero-bid corpse"}
+    _notify(f"<b>PARKED {rec.get('ticker')}</b> {occ}: no bid after {fails} rejected closes - "
+            f"retries stop; auto-resolves at expiry {_occ_expiry(occ)}")
 
 
 def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage="initial", mfe_pct=None):
@@ -720,6 +998,15 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,   # managing the two calendar
                 "reason": "NEUTRAL/calendar route disabled pending a spread-aware unit exit (naked-leg risk)",  # sub-legs
                 "status": "SKIPPED"}                                                          # independently -> naked leg)
+    # TIER B (owner decision 15): 3-day earnings blackout. Reads the days_to_earnings already in the
+    # collected metadata (no extra API call). FAIL-OPEN on data: a null sensor never blocks - a
+    # yfinance outage must degrade to "no blackout", not halt the engine.
+    dte_earn = (md.get("pemd") or {}).get("days_to_earnings")
+    ebd = params.get("earnings_blackout_days", 3)
+    if isinstance(dte_earn, (int, float)) and 0 <= dte_earn <= ebd:
+        return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
+                "reason": f"earnings blackout: reports in {int(dte_earn)}d (<= {ebd}d window)",
+                "status": "SKIPPED"}
     ok, trigger = should_enter_proactive(regime, params, candidate)
     legs = build_legs(ticker, md, regime, illiquid=illiquid)
     min_ct = params.get("min_contracts", 2)
@@ -739,9 +1026,9 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
               "ticker_guard": why, "open_positions_checked": len(positions),
               "params_snapshot": params, "metadata": md, "legs": legs, "orders": orders,
               "exit": None, "status": "OPEN"}
-    _append_log(record)
     if not dry_run:
-        _notify(_buy_msg(record))                           # Telegram BUY alert (fail-open)
+        record["buy_alert_delivered"] = _notify(_buy_msg(record))   # honesty flag - reconciled in the digest
+    _append_log(record)
     return record
 
 
@@ -831,6 +1118,9 @@ def manage_open_positions(creds, params, positions=None):
                 continue
             p = pos_by_occ.get((occ or "").upper())
             if not p:
+                # position gone -> did the broker-side stop (current OR a superseded id) fire? reconcile.
+                if _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs):
+                    dirty = True
                 continue
             entry_px = float(p.get("avg_entry_price") or 0)
             plpc = p.get("unrealized_plpc")
@@ -846,17 +1136,34 @@ def manage_open_positions(creds, params, positions=None):
             dec = manage_exit(rec["entry_ts_utc"], ret_pct, params, expiry_iso=_occ_expiry(occ),
                               stage=path.get("stage", "initial"), mfe_pct=path["mfe_pct"])
             if dec["action"] == "SCALE_OUT_50":                          # tier 1: sell half, runner continues
+                if not _retire_stop(rec, leg_name, occ, creds, log, closed_legs):
+                    dirty = True                                          # stop live / cancel unconfirmed ->
+                    continue                                             # do NOT sell against it; retry next cycle
+                if leg_name in rec["leg_exits"]:                          # a full backstop fill during retire closed it
+                    dirty = True
+                    continue
                 ok = _close_position(occ, creds, percentage=50)
                 if ok:                                                    # only advance to 'scaled' on a SUCCESSFUL half-sell
                     path["stage"] = "scaled"                              # (failed partial -> stay 'initial', retry next cycle)
+                    path["close_fails"] = 0
                     path["scaled_out"] = {"at": _now_iso_ms(), "return_pct": dec["return_pct"]}
                     closed_legs.append({"ticker": rec["ticker"], "leg": leg_name + " (50%)", "occ": occ,
                                         "return_pct": dec["return_pct"], "action": "SCALE_OUT_50", "closed_ok": ok})
                     _notify(_sell_msg(closed_legs[-1]))           # Telegram SELL alert (fail-open)
+                else:
+                    _note_close_failure(rec, path, leg_name, occ, params, creds)   # park a zero-bid corpse after N fails
+                dirty = True
             elif dec["action"].startswith("CLOSE"):          # stop / break-even / trail / expiry -> full close
+                if not _retire_stop(rec, leg_name, occ, creds, log, closed_legs):
+                    dirty = True                                          # a filled close + live stop would double-sell:
+                    continue                                             # skip until the stop is confirmed gone
+                if leg_name in rec["leg_exits"]:                          # backstop already fully closed the leg
+                    dirty = True
+                    continue
                 ok = _close_position(occ, creds, percentage=100)
                 if ok:                                                    # only mark exited on a SUCCESSFUL close
                     path["stage"] = dec["stage"]                          # (rejected close, e.g. market closed -> retry next cycle)
+                    path["close_fails"] = 0
                     rec["leg_exits"][leg_name] = {"occ": occ, "closed_at": _now_iso_ms(),
                                                   "return_pct": dec["return_pct"], "reason": dec["reason"],
                                                   "action": dec["action"], "closed_ok": ok}
@@ -864,6 +1171,13 @@ def manage_open_positions(creds, params, positions=None):
                     closed_legs.append({"ticker": rec["ticker"], "leg": leg_name, "occ": occ,
                                         "return_pct": dec["return_pct"], "action": dec["action"], "closed_ok": ok})
                     _notify(_sell_msg(closed_legs[-1]))           # Telegram SELL alert (fail-open)
+                    if str(rec.get("entry_ts_utc", ""))[:10] == datetime.now(timezone.utc).date().isoformat():
+                        # PDT LEDGER: same-day full close (e.g. hard stop) consumed a day trade
+                        log.append({"type": "day_trade", "ts_utc": _now_iso_ms(), "ticker": rec["ticker"],
+                                    "occ": occ, "via": dec["action"], "status": "LOGGED"})
+                else:
+                    _note_close_failure(rec, path, leg_name, occ, params, creds)   # park a zero-bid corpse after N fails
+                dirty = True
             else:                                                         # HOLD (incl. the trail-arm transition)
                 path["stage"] = dec["stage"]                              # persist 'trailing' arm / 'initial'
         # 2. autopsy once the set has no remaining OPEN legs
@@ -884,6 +1198,28 @@ def manage_open_positions(creds, params, positions=None):
                 rec["status"] = "CLOSED"
                 autopsies.append({"ticker": rec["ticker"], "autopsy_error": str(e)[:80]})
             _notify(_autopsy_msg(autopsies[-1]))             # Telegram AUTOPSY alert (fail-open)
+            dirty = True
+    # PARKED auto-resolve: a parked corpse whose every leg is past expiry closed itself (-100%). Before
+    # stamping -100%, reconcile any backstop fill (a stop that fired before/at park must win over the
+    # fabricated worthless mark) so the brake / scoreboard / week-6 study see the real exit.
+    today_d = datetime.now(timezone.utc).date()
+    for rec in log:
+        if rec.get("status") != "PARKED":
+            continue
+        occs = _record_leg_occs(rec)
+        for ln, occ in occs.items():
+            if ln not in rec.get("leg_exits", {}):
+                _capture_backstop_fill(rec, ln, occ, creds, log, closed_legs)
+        exps = [_occ_expiry(o) for o in occs.values()]
+        if occs and all(e and date.fromisoformat(e) < today_d for e in exps):
+            rec.setdefault("leg_exits", {})
+            for ln, occ in occs.items():
+                if ln not in rec["leg_exits"]:
+                    rec["leg_exits"][ln] = {"occ": occ, "closed_at": _now_iso_ms(), "return_pct": -100.0,
+                                            "reason": "parked corpse expired worthless",
+                                            "action": "CLOSE_EXPIRED_WORTHLESS", "closed_ok": True}
+            rec["status"] = "CLOSED"
+            _notify(f"<b>PARKED RESOLVED {rec.get('ticker')}</b> expired worthless (-100%)")
             dirty = True
     if dirty:
         _save_log_list(log)
@@ -1044,6 +1380,28 @@ def daily_digest():
     for tk, ln, ex in closes[:8]:
         lines.append(f"  {tk} {ln} {ex.get('action')} {(ex.get('return_pct') or 0):+.1f}%")
     lines.append(f"Sensor-source degradations: {degraded}")
+    # 9b DAILY SCOREBOARD (reporting only): today + running totals since go-live
+    TRACK_START = "2026-07-06"
+    recs = [r for r in log if r.get("trade_set_id") and isinstance(r.get("legs"), dict)]
+    open_now = [r for r in recs if r.get("status") == "OPEN"]
+    parked = [r for r in recs if r.get("status") == "PARKED"]
+    completed = [r for r in recs if r.get("status") == "CLOSED" and str(r.get("entry_ts_utc", "")) >= TRACK_START]
+    legs_closed = [(r, ln, ex) for r in recs for ln, ex in (r.get("leg_exits") or {}).items()
+                   if str(ex.get("closed_at", "")) >= TRACK_START]
+    leg_wins = [x for x in legs_closed if (x[2].get("return_pct") or 0) > 0]
+    wr = f" ({100.0 * len(leg_wins) / len(legs_closed):.0f}%)" if legs_closed else ""
+    lines.append(f"Scoreboard: open now {len(open_now)} | parked {len(parked)} | since {TRACK_START}: "
+                 f"{len(completed)} trade-sets completed, legs {len(leg_wins)}/{len(legs_closed)} wins{wr}")
+    # alert-path honesty: entries made vs BUY alerts delivered + this process's send counters
+    live_entries = [r for r in entries if r.get("buy_alert_delivered") is not None]
+    buy_ok = sum(1 for r in live_entries if r.get("buy_alert_delivered"))
+    lines.append(f"Alert reconciliation: {len(live_entries)} live entries -> {buy_ok} BUY alerts delivered "
+                 f"| sends this run: ok {_NOTIFY_STATS['sent']} / failed {_NOTIFY_STATS['failed']}")
+    day_trades = [r for r in log if r.get("type") == "day_trade" and str(r.get("ts_utc", "")).startswith(today)]
+    if day_trades:
+        lines.append(f"Day trades consumed today (PDT ledger): {len(day_trades)}")
+    if any(r.get("type") == "daily_brake" and str(r.get("ts_utc", "")).startswith(today) for r in log):
+        lines.append("DAILY BRAKE tripped today - entries were halted")
     text = "\n".join(lines)
     _notify(text)
     return text
@@ -1100,6 +1458,26 @@ def run_scheduled_cycle(mock=False):
     print(f"portfolio: {len(positions)} positions, {len(open_orders)} open orders")
     _maybe_send_digest()                                     # EOD digest (once/day at/after 20:00 UTC, fail-open)
 
+    # 3b. ratchet backstops (owner decision 20): re-arm resting broker stops to current stage levels
+    bs_actions = manage_backstops(creds, params, positions=positions)
+    if bs_actions:
+        print(f"backstops: {len(bs_actions)} armed/ratcheted")
+        for a in bs_actions:
+            print(f"  stop {a['occ']} @ {a['stop']} x{a['qty']} -> {a['status']}{' ' + str(a['err']) if a['err'] else ''}")
+
+    # 3c. daily brake (owner decision 19): closes the ENTRY gate only - exits/backstops/harvest continue
+    braked, brake_why, n_so, loss_usd = daily_brake_status(params)
+    if braked:
+        today_s = datetime.now(timezone.utc).date().isoformat()
+        if not any(r.get("type") == "daily_brake" and str(r.get("ts_utc", "")).startswith(today_s)
+                   for r in _load_log_list()):
+            _append_log({"type": "daily_brake", "ts_utc": _now_iso_ms(), "reason": brake_why,
+                         "stopouts": n_so, "realized_loss_usd": round(loss_usd, 2),
+                         "status": "BRAKED"})                # committed marker: the week-6 counterfactual study reads these
+            _notify(f"<b>DAILY BRAKE</b> {brake_why} - no new entries until the next session "
+                    f"(exits, backstops and the harvest continue)")
+        print(f"DAILY BRAKE ACTIVE: {brake_why} - entry pass skipped")
+
     # 4. dynamic UW flow sourcing - enter the FIRST candidate not capped/cooled
     candidates = scan_candidates(params)
     print(f"UW flow scan: {len(candidates)} market-wide candidates "
@@ -1115,7 +1493,7 @@ def run_scheduled_cycle(mock=False):
         print(f"\nno UW flow candidates this cycle ({'scanner UNREACHABLE' if not reachable else 'quiet market'}).")
         return None
     entered = None
-    for c in candidates:
+    for c in ([] if braked else candidates):                 # brake: skip entries, keep the harvest below
         t = c["ticker"]
         try:
             rec = enter_proactive_set(t, None, mock=mock, candidate=c, dry_run=not live,
@@ -1195,17 +1573,23 @@ def flush_positions(creds):
         _notify(f"<b>FLUSH (dry - market closed)</b> would close {len(positions)} position(s); 0 orders sent")
         return 0
     closed = 0
+    closed_occs = set()
     for p in positions:
         occ = p.get("symbol")
         if occ and _close_position(occ, creds, percentage=100):
             closed += 1
+            closed_occs.add(occ.upper())
             print(f"  flushed {occ}")
     if os.path.exists(COOLOFF_PATH):
         os.remove(COOLOFF_PATH)
     log = _load_log_list()
     for rec in log:
         if rec.get("status") == "OPEN":
-            rec["status"] = "FLUSHED"
+            occs = [(o or "").upper() for o in _record_leg_occs(rec).values()]
+            if not occs or all(o in closed_occs for o in occs):   # 2026-07-06 AUDIT FIX: only records whose broker
+                rec["status"] = "FLUSHED"                         # closes SUCCEEDED (or with nothing at the broker) -
+                                                                  # a failed close stays OPEN so the exit engine keeps
+                                                                  # managing it (no more PFE orphans)
     _save_log_list(log)
     print(f"FLUSH complete: {closed}/{len(positions)} positions closed, cool-off cleared, log reset")
     _notify(f"<b>FLUSH</b> closed {closed}/{len(positions)} legacy positions, cool-off cleared")

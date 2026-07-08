@@ -39,13 +39,23 @@
    affordable-band p90 spread 17.9% (< the 30% pre-stated threshold; executed-band median 0.99%), and a
    bad fill beats no fill per NORTH_STAR. Config: `backstop_enabled` / `backstop_canary_occ` /
    `backstop_type`. PDT: same-day stop fills are accepted by design and every one is logged as a
-   `day_trade` marker. MOT extended (Dimension 6, 26 checks incl. order-reconciliation). Accept: every
+   `day_trade` marker. MOT extended (Dimension 6, 39 checks incl. order-reconciliation). Accept: every
    open position carries a working broker-side floor at all times, and cron exits cancel resting
    siblings before closing.
    Also in this drop (2026-07-06 live-day audit, built): `flush_positions` now marks a record FLUSHED
    only when its broker close actually succeeded (the PFE orphan class is closed), and a give-up/PARK
    state stops per-cycle retry spam on zero-bid corpses (one alert, digest-visible, auto-resolves at
    expiry). One-per-underlying (dec 21) exempts orphaned/PARKED stragglers.
+   **2026-07-08 (canary lifecycle + session-review fixes, live on main 97cad722 / 39aae9eb):** the BAC
+   canary validated arm + ratchet + cancel-before-close but closed before its stop ever fired, so
+   stop-fill-and-reconcile is still un-exercised live → a fresh canary `QSR260821C00077500` (liquid,
+   2026-08-21) now carries the machinery. Six review findings fixed: `_order_fill` gated on terminal
+   status and a terminal PARTIAL is audit-only (`bs['partials']`, no phantom `~bs` leg_exit) — this
+   kills the strand that would have blocked re-entry forever AND the stop-out double-count; the daily
+   digest is shadow-aware (no longer claims entries were halted in shadow); the executed harvest row
+   logs the REAL Alpaca spread (`execution_cost.bid_ask_spread_pct`), not the synthetic premium/limit
+   gap (a ~0.99% constant); the VPS watchdog market gate is DST-correct (`poller._market_open_now`).
+   Fleet-wide still gated on the full canary lifecycle.
 2b. **Cycle-start broker-vs-record reconciliation** — SHIPPED (2026-07-07, `reconcile_orphans`).
    `proactive_sandbox_logs.json` is NOT union-merged (JSON can't be), so a rare double-push collision
    can drop a TRADE RECORD, leaving a live broker position with no OPEN tracking record — unmanaged by

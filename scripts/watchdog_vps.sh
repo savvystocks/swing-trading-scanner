@@ -16,11 +16,12 @@ set -a
 set +a
 git fetch -q origin main || true
 NOW=$(date -u +%s)
-# DST-correct market gate: reuse poller._market_open_now (XNYS calendar, DST + early-close aware) instead
-# of a hardcoded UTC window that would false-alarm every winter morning (Nov-Mar RTH is 14:30-21:00 UTC,
-# not 13:30-20:00). Any python hiccup -> treat as closed (fail-safe: silence, never a false stall alert).
+# DST-correct market gate WITH a post-open grace: reuse poller._stale_watch_eligible (XNYS calendar, DST +
+# early-close aware; True only 30m after open through close so we never false-alarm before the first cycle
+# lands). Replaces the hardcoded UTC window that would false-alarm every winter morning. Any python hiccup
+# -> treat as closed (fail-safe: silence, never a false stall alert).
 PY="$REPO/.venv/bin/python"; [ -x "$PY" ] || PY=python3
-MARKET=$("$PY" -c "import sys; sys.path.insert(0,'$REPO'); from poller import _market_open_now; print(1 if _market_open_now(buffer_min=0) else 0)" 2>/dev/null || echo 0)
+MARKET=$("$PY" -c "import sys; sys.path.insert(0,'$REPO'); from poller import _stale_watch_eligible; print(1 if _stale_watch_eligible() else 0)" 2>/dev/null || echo 0)
 case "$MARKET" in 0|1) ;; *) MARKET=0 ;; esac
 LAST=$(git log origin/main -1 --format=%ct -- data/harvest_inbox/ 2>/dev/null || echo 0)
 AGE=$(( (NOW - LAST) / 60 ))

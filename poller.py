@@ -36,6 +36,24 @@ def _market_open_now(buffer_min=5):
         return now.weekday() < 5 and 13 <= now.hour < 21       # fallback: rough RTH window in UTC
 
 
+def _stale_watch_eligible(open_grace_min=30):
+    """For the VPS watchdog only: True from open_grace_min minutes AFTER today's open through the close
+    (DST + holiday aware via XNYS). The post-open grace lets the engine land its first inbox commit so the
+    watchdog never false-alarms in the gap between the opening bell and the first cycle (the reason the old
+    hardcoded 13:45 UTC gate existed - now DST-correct instead of summer-only)."""
+    now = datetime.now(timezone.utc)
+    try:
+        import pandas_market_calendars as mcal
+        sched = mcal.get_calendar("XNYS").schedule(start_date=now.date().isoformat(), end_date=now.date().isoformat())
+        if sched.empty:
+            return False
+        o = sched.iloc[0]["market_open"].to_pydatetime()
+        c = sched.iloc[0]["market_close"].to_pydatetime()      # early-close half-days handled by the calendar
+        return (o + timedelta(minutes=open_grace_min)) <= now <= c
+    except Exception:
+        return now.weekday() < 5 and 15 <= now.hour < 20       # fallback: conservative mid-session UTC window (post-open in both DST regimes)
+
+
 def _fetch_alpaca(symbols, creds):
     out = {}
     if not all(creds) or not symbols:

@@ -813,6 +813,7 @@ _pos6 = [{"symbol": _occX, "qty": "2", "avg_entry_price": "2.00"},
          {"symbol": _occY, "qty": "3", "avg_entry_price": "1.00"}]
 _subs, _cans = [], []
 _ospo, _ogoo, _ocan, _oos8 = lab._submit_paper_order, lab.get_open_orders, lab._cancel_order, lab._order_state
+_onp8 = lab._notify; lab._notify = lambda text: True        # arm now _notify's -> stub it like every neighbour
 lab._submit_paper_order = lambda body, creds: (_subs.append(body), ("oid" + str(len(_subs)), "accepted", None))[1]
 lab.get_open_orders = lambda creds=None: []
 lab._cancel_order = lambda oid, creds: (_cans.append(oid), True)[1]
@@ -830,9 +831,28 @@ lab.get_open_orders = lambda creds=None: [{"symbol": _occX, "type": "stop", "sid
 acts2 = lab.manage_backstops(("k", "s"), _p6, positions=_pos6)
 qty_sync = "old1" in _cans and any(b["symbol"] == _occX and b["qty"] == "2" for b in _subs)
 fleet = any(b["symbol"] == _occY for b in _subs)
-lab._submit_paper_order, lab.get_open_orders, lab._cancel_order, lab._order_state = _ospo, _ogoo, _ocan, _oos8
+lab._submit_paper_order, lab.get_open_orders, lab._cancel_order, lab._order_state, lab._notify = _ospo, _ogoo, _ocan, _oos8, _onp8
 check(6, "backstop qty-sync: wrong-qty stop cancelled + resubmitted at held qty", qty_sync, f"cancels={_cans}")
 check(6, "backstop fleet mode: non-canary position armed when canary empty", fleet)
+
+# 6.8b rejected submit (session-review fix): a broker rejection returns a TRUTHY id + terminal status; it
+#       must NOT be persisted as the resting stop (else next cycle reads a dead order_id, thinks it is armed,
+#       and the real re-arm goes silent). order_id must be None so the re-arm counts as a fresh first-arm.
+_wipe()
+_occZ = "ZC260807C00002000"
+lab._save_log_list([{"trade_set_id": "bz", "ticker": "ZC", "status": "OPEN",
+                     "legs": {"bullish_call": {"occ_symbol": _occZ}}}])
+_ospoZ, _ogooZ, _oosZ, _onpZ = lab._submit_paper_order, lab.get_open_orders, lab._order_state, lab._notify
+lab._submit_paper_order = lambda body, creds: ("deadid", "rejected", None)   # truthy id, TERMINAL status
+lab.get_open_orders = lambda creds=None: []
+lab._order_state = lambda oid, creds: None
+lab._notify = lambda text: True
+_pZ = dict(_params6); _pZ["backstop_enabled"] = True; _pZ["backstop_canary_occ"] = _occZ
+lab.manage_backstops(("k", "s"), _pZ, positions=[{"symbol": _occZ, "qty": "2", "avg_entry_price": "2.00"}])
+_bsZ = ((next((r for r in lab._load_log_list() if r.get("trade_set_id") == "bz"), {})).get("backstop") or {}).get("bullish_call") or {}
+lab._submit_paper_order, lab.get_open_orders, lab._order_state, lab._notify = _ospoZ, _ogooZ, _oosZ, _onpZ
+check(6, "backstop rejected submit: dead id NOT persisted as the resting stop (real re-arm stays first-arm)",
+      _bsZ.get("order_id") is None and _bsZ.get("status") == "rejected", str(_bsZ)[:80])
 
 # 6.9 cancel-before-close + backstop-fill reconciliation + PDT ledger
 _wipe()

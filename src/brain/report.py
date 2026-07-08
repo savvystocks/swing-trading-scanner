@@ -14,6 +14,9 @@ MIN_ROWS_EV = 50           # below this the empirical EV thresholds are UNDERPOW
 MIN_ROWS_CPCV = 1000       # below this PBO/DSR render N/A
 MIN_BRAKE_DAYS = 5         # below this the brake-shadow measurement renders UNDERPOWERED
 MIN_BAND = 15              # below this an iv-rank / spread band renders UNDERPOWERED (no verdict-shaped number)
+# Executed rows before this logged a SYNTHETIC spread (entry_premium/limit_price, a ~0.99% constant); only
+# rows from here carry the REAL Alpaca spread (execution_cost). The spread band counts ONLY rows since then.
+REAL_SPREAD_SINCE_MS = int(pd.Timestamp("2026-07-09T00:00:00Z").value // 1_000_000)
 
 # SPRT parameters (predefined - mirrored into ROADMAP.md item 7 so they cannot be quietly changed):
 SPRT_ALPHA, SPRT_BETA = 0.05, 0.20
@@ -104,13 +107,14 @@ def weekly_edge_report(dataset_result, prev_rows=0, runtime_s=None):
         # ---- structural-bleed measurement (reporting only): option expensiveness + spread width ----
         # The 2026-07-07 entry review flagged that the engine never checks IV rank or spread at entry.
         # We add no gate on suspicion - we MEASURE. Split completed executed trades into fixed bands.
-        def _band_split(title, series, cuts, labels):
+        def _band_split(title, series, cuts, labels, frame=None):
+            fr = ex if frame is None else frame
             if series is None or int(series.notna().sum()) == 0:
                 return [f"## {title}", "- UNDERPOWERED - field not populated on executed trades yet", ""]
             out = [f"## {title}  (reporting only; not a gate)"]
             masks = [series < cuts[0], (series >= cuts[0]) & (series < cuts[1]), series >= cuts[1]]
             for nm, mask in zip(labels, masks):
-                sub = ex[mask.fillna(False)]
+                sub = fr[mask.fillna(False)]
                 ns = len(sub)
                 if ns < MIN_BAND:
                     out.append(f"- {nm}: n={ns} - UNDERPOWERED")
@@ -124,9 +128,16 @@ def weekly_edge_report(dataset_result, prev_rows=0, runtime_s=None):
         lines += _band_split("Engine edge by option expensiveness (IV rank at entry: cheap<33 / normal 33-67 / expensive>=67)",
                              ex[ivr_col] if ivr_col is not None else None, [33.0, 67.0],
                              ["cheap (IV rank <33)", "normal (33-67)", "expensive (>=67)"])
-        lines += _band_split("Engine edge by spread width at entry (tight<2% / medium 2-8% / wide>=8%)",
-                             ex["spread_pct"] if "spread_pct" in ex.columns else None, [2.0, 8.0],
-                             ["tight (<2%)", "medium (2-8%)", "wide (>=8%)"])
+        # SPREAD REOPENED (2026-07-08): executed rows before 2026-07-09 logged a synthetic spread
+        # (entry_premium/limit_price, a ~0.99% constant) - the prior "engine only holds tight spreads"
+        # reading was that artifact, not a real finding. This band rebuilds on the REAL Alpaca spread now
+        # logged on executed rows, counting ONLY sessions from 2026-07-09 on, UNDERPOWERED until it fills.
+        ex_rs = ex[ex["signal_ts"] >= REAL_SPREAD_SINCE_MS] if "signal_ts" in ex.columns else ex.iloc[0:0]
+        lines += [f"_Spread question REOPENED: prior tight-only reading was a synthetic-spread artifact; "
+                  f"real executed-spread sample building since 2026-07-09 (n={len(ex_rs)} so far)._", ""]
+        lines += _band_split("Engine edge by spread width at entry (tight<2% / medium 2-8% / wide>=8%) - REAL spread, since 2026-07-09",
+                             ex_rs["spread_pct"] if "spread_pct" in ex_rs.columns else None, [2.0, 8.0],
+                             ["tight (<2%)", "medium (2-8%)", "wide (>=8%)"], frame=ex_rs)
 
         # ---- daily-brake SHADOW measurement (reporting only) ----
         # f.brake_shadow tags each executed trade that fired AFTER the daily brake would have tripped

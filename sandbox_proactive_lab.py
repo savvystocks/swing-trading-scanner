@@ -876,17 +876,25 @@ def manage_backstops(creds, params, positions=None, log=None):
                     dirty = True
                     continue
             oid, status, err = _submit_backstop(occ, qty, level, params, creds)
+            live = bool(oid) and (status or "").lower() not in _TERMINAL_ORDER   # a REJECTED submit returns a truthy id
             prev = (rec.get("backstop") or {}).get(leg_name) or {}
             priors = list(prev.get("prior_order_ids") or [])
             if prev.get("order_id") and prev.get("order_id") != oid and not prev.get("reconciled"):
                 priors.append(prev["order_id"])                   # keep the superseded id so a late fill is found
             rec.setdefault("backstop", {})[leg_name] = {
-                "order_id": oid, "prior_order_ids": priors[-10:],
+                "order_id": oid if live else None,                # never persist a dead/rejected id as the resting stop
+                "prior_order_ids": priors[-10:],
                 "reconciled_ids": list(prev.get("reconciled_ids") or []),
                 "stop_price": level, "qty": qty, "entry_px": entry_px,
                 "type": params.get("backstop_type", "stop"), "stage": path.get("stage", "initial"),
                 "at": _now_iso_ms(), "status": status, "error": err}
             actions.append({"occ": occ, "stop": level, "qty": qty, "status": status, "err": err})
+            stg = path.get("stage", "initial")
+            armed_new = existing is None                          # no stop was RESTING before this submit -> first arm, or a re-arm
+            stage_moved = bool(prev.get("stage")) and prev.get("stage") != stg   # after a rejected/vanished stop (so the real arm always alerts)
+            if live and (armed_new or stage_moved):               # Telegram only when a stop actually rests, on arm / stage ratchet (not every level nudge)
+                _notify(f"<b>BACKSTOP {'ARMED' if armed_new else 'RATCHETED->' + stg}</b> {occ} "
+                        f"sell {params.get('backstop_type', 'stop')} @ {level} x{qty} ({stg}) -> {status}")
             dirty = True
     if dirty:
         _save_log_list(log_list)

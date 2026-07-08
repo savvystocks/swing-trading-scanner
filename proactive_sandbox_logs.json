@@ -33331,14 +33331,48 @@
         "contracts": 6
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": 57.8
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 78.3,
+          "mae_pct": -15.7,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-08T13:31:37.168Z",
+            "return_pct": 34.9
+          }
+        }
+      },
+      "mfe_pct": 78.3,
+      "mae_pct": -15.7,
+      "determining_factor": "Bearish breakdown (move 0.0%): spot below zero-gamma 20.0 -> negative-gamma slide, no positive catalyst.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "AAL260807P00017000",
+        "closed_at": "2026-07-08T16:11:22.940Z",
+        "return_pct": 57.8,
+        "reason": "57.8% <= trail 62.6% (20% off peak MFE 78.3%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 78.3,
         "mae_pct": -15.7,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-08T13:31:37.168Z",

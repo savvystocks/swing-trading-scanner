@@ -28429,7 +28429,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 53.8,
+        "mfe_pct": 61.5,
         "mae_pct": -35.2,
         "stage": "trailing",
         "scaled_out": {
@@ -35218,7 +35218,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 25.0,
+        "mfe_pct": 29.2,
         "mae_pct": -10.0,
         "stage": "initial"
       }
@@ -40500,7 +40500,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -1.6,
-        "mae_pct": -29.5,
+        "mae_pct": -30.2,
         "stage": "initial"
       }
     },
@@ -42063,15 +42063,47 @@
         "contracts": 3
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -89.5
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": -23.7,
+          "mae_pct": -100.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -23.7,
+      "mae_pct": -100.0,
+      "determining_factor": "Bullish call FAILED (-90%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 45.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "IP260807C00040000",
+        "closed_at": "2026-07-08T13:41:18.929Z",
+        "return_pct": -89.5,
+        "reason": "-89.5% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -23.7,
         "mae_pct": -100.0,
-        "stage": "initial",
-        "close_fails": 1
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -42849,7 +42881,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -12.8,
-        "mae_pct": -38.5,
+        "mae_pct": -48.7,
         "stage": "initial"
       }
     }
@@ -45427,7 +45459,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 29.9,
+        "mfe_pct": 53.2,
         "mae_pct": -10.4,
         "stage": "initial"
       }

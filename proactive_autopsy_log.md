@@ -586,3 +586,12 @@
 
 **Determining factor:** Calendar FAILED (-66%): the range broke; IV term None (ratio None) hurt the spread.
 
+## Autopsy - IP (d71108ba5c82)
+- entered 2026-07-07T16:31:31.278Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -89.5% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-90%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 45.0 worked against it.
+

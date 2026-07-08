@@ -258,6 +258,21 @@ and SPRT clock are decisions 14/27.)
 | Brake cost | What would the brake-blocked trades have returned vs the allowed ones? | the `brake_shadow`-tagged executed trades (shadow mode logs them live) vs the rest, in the weekly report | whether/how to arm the brake ACTIVE at the live gate (dec 19) |
 | Pyramiding value | Do same-ticker re-fires carry edge worth a 2nd position? | counterfactual labels of one-per-underlying skips | whether to relax one-per-underlying (dec 21) |
 
+## Strategy question list (measure-first; no gate on suspicion)
+
+- **Q: Do trades on over-priced options (high IV rank at entry) lose more?**
+  Method: compare piles + the weekly report's IV-rank split (cheap<33 / normal 33-67 / expensive>=67).
+  Gate: preliminary weekly now; decision-grade at ~150 completed executed / ~5k graded.
+  Tripwire: only a severe, well-sampled band underperformance is harness evidence for ONE entry-gate
+  change, done once, with the SPRT/params clock noted. Preliminary (2026-07-07, UNDERPOWERED): NOT
+  supported - expensive-IV candidates hit the up-barrier slightly *more* often; returns don't worsen with IV.
+- **Q: Do wide-spread contracts underperform after real costs?**
+  Method: same, plus the fill-vs-intention (slippage) ledger, item 3.
+  Gate + tripwire: same as above. Preliminary (2026-07-07, UNDERPOWERED): supported in the counterfactual
+  (wide-spread candidates win 21% vs 34% tight, non-overlapping CIs, worse mean return) - BUT every executed
+  trade so far is tight-spread (<2%), so the engine may already dodge the bleed via fill mechanics; the
+  executed bleed is unconfirmed until the slippage ledger and more executed rows exist.
+
 ## Scheduled decisions
 
 - **Gating temperament** - decided at the first real calibration reliability curve (how aggressively the

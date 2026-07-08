@@ -13,6 +13,7 @@ MIN_EXECUTED = 30          # below this the engine hit-rate verdict is UNDERPOWE
 MIN_ROWS_EV = 50           # below this the empirical EV thresholds are UNDERPOWERED
 MIN_ROWS_CPCV = 1000       # below this PBO/DSR render N/A
 MIN_BRAKE_DAYS = 5         # below this the brake-shadow measurement renders UNDERPOWERED
+MIN_BAND = 15              # below this an iv-rank / spread band renders UNDERPOWERED (no verdict-shaped number)
 
 # SPRT parameters (predefined - mirrored into ROADMAP.md item 7 so they cannot be quietly changed):
 SPRT_ALPHA, SPRT_BETA = 0.05, 0.20
@@ -99,6 +100,33 @@ def weekly_edge_report(dataset_result, prev_rows=0, runtime_s=None):
                     strat_lines.append(f"- source premium {nm}: n={ns} hit={_fmt(h,4)} Wilson95=[{_fmt(slo)}, {_fmt(shi)}]")
             if strat_lines:
                 lines += ["_stratified by source premium (reporting only; the SPRT object is the pooled executed stream):_"] + strat_lines + [""]
+
+        # ---- structural-bleed measurement (reporting only): option expensiveness + spread width ----
+        # The 2026-07-07 entry review flagged that the engine never checks IV rank or spread at entry.
+        # We add no gate on suspicion - we MEASURE. Split completed executed trades into fixed bands.
+        def _band_split(title, series, cuts, labels):
+            if series is None or int(series.notna().sum()) == 0:
+                return [f"## {title}", "- UNDERPOWERED - field not populated on executed trades yet", ""]
+            out = [f"## {title}  (reporting only; not a gate)"]
+            masks = [series < cuts[0], (series >= cuts[0]) & (series < cuts[1]), series >= cuts[1]]
+            for nm, mask in zip(labels, masks):
+                sub = ex[mask.fillna(False)]
+                ns = len(sub)
+                if ns < MIN_BAND:
+                    out.append(f"- {nm}: n={ns} - UNDERPOWERED")
+                    continue
+                w = int((sub["label"] == 1).sum()); h = w / ns
+                blo, bhi = EV.wilson_interval(w, ns)
+                out.append(f"- {nm}: n={ns} up-hit={_fmt(h,4)} Wilson95=[{_fmt(blo)}, {_fmt(bhi)}] "
+                           f"mean_return={_fmt(float(sub['realized_return'].mean()))}")
+            return out + [""]
+        ivr_col = next((c for c in ex.columns if c.split(".")[-1] == "iv_rank_1y"), None)
+        lines += _band_split("Engine edge by option expensiveness (IV rank at entry: cheap<33 / normal 33-67 / expensive>=67)",
+                             ex[ivr_col] if ivr_col is not None else None, [33.0, 67.0],
+                             ["cheap (IV rank <33)", "normal (33-67)", "expensive (>=67)"])
+        lines += _band_split("Engine edge by spread width at entry (tight<2% / medium 2-8% / wide>=8%)",
+                             ex["spread_pct"] if "spread_pct" in ex.columns else None, [2.0, 8.0],
+                             ["tight (<2%)", "medium (2-8%)", "wide (>=8%)"])
 
         # ---- daily-brake SHADOW measurement (reporting only) ----
         # f.brake_shadow tags each executed trade that fired AFTER the daily brake would have tripped

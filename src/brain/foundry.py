@@ -15,7 +15,7 @@ import pandas as pd
 from . import weights as W
 
 PROVENANCE = ["candidate_id", "feature_set_version", "sample_tier", "executed", "params_hash",
-              "rule_score", "signal_ts", "ticker", "occ_symbol"]
+              "rule_score", "signal_ts", "ticker", "occ_symbol", "spread_pct"]
 DERIVED = ["outcome", "label", "realized_return", "time_to_resolution_min", "mfe", "mae",
            "resolution_ts", "window_start", "window_end", "mean_concurrency", "avg_uniqueness",
            "weight", "half_spread"]

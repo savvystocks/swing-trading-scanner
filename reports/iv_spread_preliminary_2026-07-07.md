@@ -1,5 +1,17 @@
 # PRELIMINARY / UNDERPOWERED — IV-rank & spread-width vs outcome (2026-07-07)
 
+> CORRECTION (2026-07-08): the **executed-trade spread numbers below are an artifact — ignore them.**
+> The harvest logged each executed row's spread from the order's own premium/limit price (bid =
+> entry_premium, ask = limit_price ≈ premium × 1.01), so every executed trade came out ≈0.99% "tight"
+> by construction — it was never the real market spread. The claim in the caveat bullet that "the engine
+> is already only holding tight-spread contracts / dodging wide-spread bleed by fill mechanics" is
+> therefore UNFOUNDED; whether our actual fills hit wide spreads is currently **unmeasured**. Fixed
+> 2026-07-08: executed rows now log the real Alpaca quote spread (leg.execution_cost.bid_ask_spread_pct);
+> the split becomes meaningful once new executed rows accumulate. What still stands unchanged is **View 2
+> (all-graded / counterfactual)** — those rows use real Unusual Whales bid/ask, so the "wide-spread
+> candidates underperform" signal there is real. The IV-rank findings are unaffected.
+
+
 **Direction only, NOT a verdict.** Tiny/young data. No gate is being added — this is the "measure first"
 answer to the 2026-07-07 entry-review suspicion that the engine bleeds by ignoring option expensiveness
 (IV rank) and spread width at entry. Read-only cut of the current pile. Cut points: IV rank cheap <33 /

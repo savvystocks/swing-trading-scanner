@@ -902,6 +902,31 @@ lab._order_state, lab._notify = _oosP, _onpP
 check(6, "reconciliation finds a fill on a SUPERSEDED backstop id (-40%)",
       _exP.get("action") == "CLOSE_BACKSTOP" and approx(_exP.get("return_pct"), -40.0), str(_exP)[:80])
 
+# 6.15 partial-fill fix (session-review #1/#5): a live partially_filled stop is NEVER booked (id not
+#      burned -> no strand); a TERMINAL partial is audit-only (no leg_exit, not a stop-out) so the leg
+#      keeps its remainder for the cron's single exit (no double-count, no permanent re-entry block)
+_wipe()
+_occPF = "PF260807C00006000"
+_oosPF, _onpF = lab._order_state, lab._notify
+lab._notify = lambda text: True
+lab._order_state = lambda oid, creds: {"status": "partially_filled", "filled_qty": "1",
+                                       "filled_avg_price": "1.0", "filled_at": _now_iso}   # STILL LIVE
+_live_partial = lab._order_fill("pf_live", ("k", "s"))
+_recPF = {"trade_set_id": "pf1", "ticker": "PF", "status": "OPEN", "entry_ts_utc": _now_iso,
+          "legs": {"bullish_call": {"occ_symbol": _occPF}},
+          "backstop": {"bullish_call": {"order_id": "pf_id", "entry_px": 2.0, "qty": 2}}}
+lab._order_state = lambda oid, creds: {"status": "canceled", "filled_qty": "1",
+                                       "filled_avg_price": "1.0", "filled_at": _now_iso}    # TERMINAL partial (1 of 2)
+_clpf = []
+_full = lab._capture_backstop_fill(_recPF, "bullish_call", _occPF, ("k", "s"), [], _clpf)
+_bsPF = (_recPF.get("backstop") or {}).get("bullish_call") or {}
+lab._order_state, lab._notify = _oosPF, _onpF
+check(6, "partial fix: a live partially_filled stop returns no fill (id not burned mid-flight)", _live_partial is None)
+check(6, "partial fix: terminal partial books NO leg_exit + reports leg NOT fully-exited",
+      _full is False and "bullish_call" not in (_recPF.get("leg_exits") or {}) and len(_clpf) == 0)
+check(6, "partial fix: terminal partial recorded to bs['partials'] for audit (1 of 2)",
+      len(_bsPF.get("partials") or []) == 1 and (_bsPF.get("partials") or [{}])[0].get("filled_qty") == 1)
+
 # 6.14 orphan adoption (ROADMAP 2b): one-per-underlying reads RECORDS -> an orphan must be ADOPTED to block
 _wipe()
 _occO = "ORPH260821C00010000"

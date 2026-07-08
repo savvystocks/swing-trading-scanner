@@ -326,6 +326,13 @@ def harvest_scan(params, executed_record=None, mock=False):
                     "underlying_price": spot, "total_premium": rule_score}
             row = _build_row(flow, params, signal_ts, run_id, sha, True, None, "executed", md)
             row["occ_symbol"] = occ
+            # 2026-07-08 session-review fix: the executed row's spread must be the REAL Alpaca quote spread
+            # at entry (leg.execution_cost.bid_ask_spread_pct), NOT the synthetic entry_premium/limit_price
+            # gap (a ~0.99% constant that made every executed trade look tight). Measurement-only override:
+            # entry_ref, the label barriers and the bid path are all untouched.
+            _rsp = (leg.get("execution_cost") or {}).get("bid_ask_spread_pct")
+            if isinstance(_rsp, (int, float)):
+                row["spread_pct"] = round(float(_rsp), 3)
             _write_row(row)
             executed_occ.add(occ)
             state["contracts"].append(occ)

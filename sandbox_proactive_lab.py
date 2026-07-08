@@ -711,11 +711,16 @@ def _order_state(order_id, creds):
 
 
 def _order_fill(order_id, creds):
-    """Return {'price','at','qty'} if ANY contracts filled - status 'filled', OR a terminal
-    'canceled'/'expired' order with filled_qty>0 (a partial that filled then got cancelled by the
-    ratchet). Reads filled_qty so a partial fill is never invisible. None if nothing filled."""
+    """Return {'price','at','qty'} ONLY for a TERMINAL order that filled contracts (status in
+    _TERMINAL_ORDER with filled_qty>0) - a 'filled' stop, or a 'canceled'/'expired' stop that partially
+    filled before the ratchet cancel took it down. A still-live 'partially_filled' order returns None so
+    its id is never burned mid-flight (we re-poll it next cycle until terminal - the fix for the strand
+    where a non-terminal partial booked once then the completing fill was skipped forever). None if the
+    order is non-terminal or nothing filled."""
     o = _order_state(order_id, creds)
     if not o:
+        return None
+    if (o.get("status") or "").lower() not in _TERMINAL_ORDER:
         return None
     try:
         fq = int(float(o.get("filled_qty") or 0))
@@ -734,11 +739,14 @@ def _backstop_order_ids(bs):
 
 
 def _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs):
-    """Reconcile broker backstop fills across the current + superseded order ids (idempotent per id).
-    A FULL fill closes the leg (CLOSE_BACKSTOP leg_exit + 24h cool-off); a PARTIAL fill is booked as
-    its own leg_exit keyed by order id so the brake / scoreboard / digest count it while the leg stays
-    open for the remainder. Every same-day fill appends a PDT day_trade marker. Returns True iff the
-    leg is now FULLY exited."""
+    """Reconcile broker backstop fills across the current + superseded order ids (idempotent per id; only
+    TERMINAL fills are ever booked - see _order_fill). A fill for the FULL leg qty closes the leg
+    (CLOSE_BACKSTOP leg_exit + record_close + 24h cool-off). A terminal PARTIAL fill (the ratchet cancel
+    caught the stop after it filled some but not all) is recorded to bs['partials'] for audit ONLY - it
+    does NOT create a leg_exit and does NOT count as a stop-out, so the leg keeps its remaining qty for
+    the cron to close as the single, correct exit (this kills the double-count + the strand where the
+    phantom ~bs exit blocked re-entry forever). Every same-day fill appends a PDT day_trade marker.
+    Returns True iff the leg is now FULLY exited."""
     bs = (rec.get("backstop") or {}).get(leg_name)
     if not bs:
         return leg_name in (rec.get("leg_exits") or {})
@@ -754,21 +762,24 @@ def _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs):
         seen.append(oid)
         ret = round((f["price"] / entry_px - 1) * 100.0, 1) if entry_px else 0.0
         full = f["qty"] >= (bs.get("qty") or f["qty"]) and not booked_full
-        key = leg_name if full else f"{leg_name}~bs{str(oid)[:6]}"
-        rec.setdefault("leg_exits", {})[key] = {
-            "occ": occ, "closed_at": f["at"], "return_pct": ret, "filled_qty": f["qty"],
-            "reason": f"broker backstop filled {f['qty']}{'' if full else ' (partial)'} @ {f['price']}",
-            "action": "CLOSE_BACKSTOP", "closed_ok": True}
-        closed_legs.append({"ticker": rec["ticker"], "leg": leg_name + ("" if full else " (partial)"),
-                            "occ": occ, "return_pct": ret, "action": "CLOSE_BACKSTOP", "closed_ok": True})
-        _notify(_sell_msg(closed_legs[-1]))
-        if str(f["at"])[:10] == str(rec.get("entry_ts_utc", ""))[:10]:
-            log.append({"type": "day_trade", "ts_utc": _now_iso_ms(), "ticker": rec["ticker"],
-                        "occ": occ, "via": "CLOSE_BACKSTOP", "status": "LOGGED"})
         if full:
+            rec.setdefault("leg_exits", {})[leg_name] = {
+                "occ": occ, "closed_at": f["at"], "return_pct": ret, "filled_qty": f["qty"],
+                "reason": f"broker backstop filled {f['qty']} @ {f['price']}",
+                "action": "CLOSE_BACKSTOP", "closed_ok": True}
+            closed_legs.append({"ticker": rec["ticker"], "leg": leg_name, "occ": occ,
+                                "return_pct": ret, "action": "CLOSE_BACKSTOP", "closed_ok": True})
+            _notify(_sell_msg(closed_legs[-1]))
             bs["reconciled"] = True
             record_close(rec["ticker"])
             booked_full = True
+        else:
+            bs.setdefault("partials", []).append(          # audit only - NO leg_exit, NOT a stop-out
+                {"order_id": oid, "filled_qty": f["qty"], "price": f["price"], "return_pct": ret, "at": f["at"]})
+            _notify(f"backstop PARTIAL {f['qty']} {occ} @ {f['price']} ({ret:+.1f}%) - remainder stays open for the cron close")
+        if str(f["at"])[:10] == str(rec.get("entry_ts_utc", ""))[:10]:
+            log.append({"type": "day_trade", "ts_utc": _now_iso_ms(), "ticker": rec["ticker"],
+                        "occ": occ, "via": "CLOSE_BACKSTOP", "status": "LOGGED"})
     return booked_full
 
 
@@ -1428,8 +1439,14 @@ def daily_digest():
     day_trades = [r for r in log if r.get("type") == "day_trade" and str(r.get("ts_utc", "")).startswith(today)]
     if day_trades:
         lines.append(f"Day trades consumed today (PDT ledger): {len(day_trades)}")
-    if any(r.get("type") == "daily_brake" and str(r.get("ts_utc", "")).startswith(today) for r in log):
-        lines.append("DAILY BRAKE tripped today - entries were halted")
+    bmark = next((r for r in log if r.get("type") == "daily_brake"
+                  and str(r.get("ts_utc", "")).startswith(today)), None)
+    if bmark:
+        if bmark.get("status") == "BRAKED":
+            lines.append(f"DAILY BRAKE tripped today ({bmark.get('reason')}) - new entries were HALTED")
+        else:
+            lines.append(f"DAILY BRAKE would have tripped ({bmark.get('reason')}) - SHADOW: "
+                         "entries still fired and are tagged for measurement")
     text = "\n".join(lines)
     _notify(text)
     return text

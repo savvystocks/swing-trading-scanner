@@ -631,3 +631,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 19.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - OXY (ab4f64f69efe)
+- entered 2026-07-07T18:52:01.462Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +59.1% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 51.0 fed the squeeze.
+

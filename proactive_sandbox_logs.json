@@ -45595,14 +45595,48 @@
         "contracts": 3
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 59.1
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 137.0,
+          "mae_pct": -10.4,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-08T19:01:41.120Z",
+            "return_pct": 81.2
+          }
+        }
+      },
+      "mfe_pct": 137.0,
+      "mae_pct": -10.4,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 51.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "OXY260807C00053000",
+        "closed_at": "2026-07-08T19:21:23.144Z",
+        "return_pct": 59.1,
+        "reason": "59.1% <= trail 109.6% (20% off peak MFE 137.0%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 137.0,
         "mae_pct": -10.4,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-08T19:01:41.120Z",

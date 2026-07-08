@@ -248,6 +248,57 @@ def build_synthetic_snapshot(gz_path, n=140, seed=11):
     os.remove(tmp)
     return gz_path
 
+def test_foundry_pools_across_params_hash():
+    # params_hash fingerprints the WHOLE tunables dict, so it rotates on any operational-config change
+    # (e.g. a backstop canary swap) with NO change to the trading recipe. The Foundry must pool every row
+    # across all params_hash values and never segment by them, or an ops change would fragment the brain's
+    # first training sample. This locks that invariant: a snapshot with 2 distinct hashes must come back
+    # fully pooled, every row of both cohorts present.
+    d = tempfile.mkdtemp(prefix="brain_hash_")
+    dbp = os.path.join(d, "harvest.db")
+    con = sqlite3.connect(dbp)
+    con.executescript("""
+      CREATE TABLE candidates (candidate_id TEXT PRIMARY KEY, feature_set_version TEXT, signal_ts_utc INTEGER,
+        ticker TEXT, occ_symbol TEXT, entry_ref REAL, features TEXT, rule_score REAL, executed INTEGER,
+        vertical_barrier_ts INTEGER, barrier_up_pct REAL, barrier_down_pct REAL, sample_tier TEXT,
+        spread_pct REAL, params_hash TEXT);
+      CREATE TABLE bid_path (id INTEGER PRIMARY KEY AUTOINCREMENT, candidate_id TEXT, poll_ts_utc INTEGER,
+        bid REAL, ask REAL, quote_ts INTEGER, stale INTEGER);
+      CREATE TABLE labels (candidate_id TEXT PRIMARY KEY, outcome TEXT, label INTEGER, realized_return REAL,
+        touch_ts_utc INTEGER, time_to_touch_min REAL, mfe REAL, mae REAL, n_polls INTEGER, n_stale INTEGER,
+        ambiguous_touch INTEGER, poll_cadence_min REAL, censored_reason TEXT);
+    """)
+    base = 1_780_000_000_000
+    hashes = ["hashOLD_recipe", "hashNEW_after_canary_swap"]   # SAME recipe; hash rotated by an ops change
+    n_each = 20
+    for h_i, h in enumerate(hashes):
+        for j in range(n_each):
+            cid = f"c{h_i}_{j}"
+            sig = base + (h_i * 100 + j) * (DAY // 10)
+            con.execute("INSERT INTO candidates (candidate_id,feature_set_version,signal_ts_utc,ticker,occ_symbol,"
+                        "entry_ref,features,rule_score,executed,vertical_barrier_ts,barrier_up_pct,barrier_down_pct,"
+                        "sample_tier,spread_pct,params_hash) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (cid, "fs_v3", sig, "AAPL", "AAPL260717C0001", 2.0, json.dumps({"flow": {"x": 1.0}}),
+                         1e5, j % 2, sig + 2 * DAY, 0.30, -0.50, "topn", 3.0, h))
+            ret = 0.30 if j % 2 == 0 else -0.50
+            con.execute("INSERT INTO labels (candidate_id,outcome,label,realized_return,touch_ts_utc,"
+                        "time_to_touch_min,mfe,mae,n_polls,n_stale,ambiguous_touch,poll_cadence_min) "
+                        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (cid, "up" if ret > 0 else "down", 1 if ret > 0 else -1, ret, sig + DAY, 1440.0,
+                         max(ret, 0.1), min(ret, -0.05), 5, 0, 0, 15.0))
+            con.execute("INSERT INTO bid_path (candidate_id,poll_ts_utc,bid,ask,quote_ts,stale) VALUES (?,?,?,?,?,?)",
+                        (cid, sig, 2.0, 2.1, sig, 0))
+    con.commit(); con.close()
+    res = foundry.build_dataset({"db_path": dbp, "snapshot_id": "hashtest"}, os.path.join(d, "work"))
+    df = res["df"]
+    present = set(df["params_hash"].dropna().unique())
+    per = df["params_hash"].value_counts().to_dict()
+    chk("foundry pools BOTH params_hash cohorts (no segmentation)", present == set(hashes), f"present={present}")
+    chk("foundry keeps every gradeable row across hashes", len(df) == 2 * n_each, f"rows={len(df)} exp={2 * n_each}")
+    chk("foundry: each hash cohort fully represented", all(per.get(h) == n_each for h in hashes), f"{per}")
+    shutil.rmtree(d, ignore_errors=True)
+
+
 def test_end_to_end_synthetic():
     d = tempfile.mkdtemp(prefix="brain_test_")
     gz = build_synthetic_snapshot(os.path.join(d, "harvest_20260704_2130.db.gz"))
@@ -267,8 +318,9 @@ if __name__ == "__main__":
     test_ev_solver()
     test_calibration_selection()
     test_isolation()
+    test_foundry_pools_across_params_hash()
     test_end_to_end_synthetic()
-    total = 7 * 3
+    total = 8 * 3
     print(f"\nTOTAL: brain suite - {len(fails)} failure(s)")
     if fails:
         raise SystemExit("FAILS: " + ", ".join(fails))

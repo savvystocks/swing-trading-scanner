@@ -126,6 +126,11 @@ def build_dataset(snapshot, out_dir, cache=None, baseline_null_rates=None):
         df["resolution_ts"] = df["touch_ts_utc"].where(df["touch_ts_utc"].notna(), df["vertical_barrier_ts"])
         df["time_to_resolution_min"] = df["time_to_touch_min"].where(
             df["time_to_touch_min"].notna(), (df["resolution_ts"] - df["signal_ts"]) / 60000.0)
+        # params_hash is PROVENANCE ONLY: the Foundry pools EVERY row across ALL params_hash values and
+        # NEVER groups/filters/segments by it. Load-bearing invariant - params_hash fingerprints the whole
+        # tunables dict, so an operational-config change (e.g. a backstop canary swap) rotates it WITHOUT
+        # any change to the trading recipe; segmenting by it would fragment the brain's training sample.
+        # Locked by test_brain.test_foundry_pools_across_params_hash. (Line below is column-existence only.)
         if "params_hash" not in df:
             df["params_hash"] = None
         # half-spread at signal, as a FRACTION of premium (spread_pct is a percentage). Cost placeholder.

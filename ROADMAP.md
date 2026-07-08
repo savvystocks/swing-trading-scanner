@@ -66,6 +66,23 @@
    the underlying. PARKED / FLUSHED stragglers (known records) are left exempt. MOT Dimension 6 proves
    the before/after: a sub-cap orphan does not block until adopted. **Gates the backstop fleet-wide
    rollout** (with the canary lifecycle).
+2c. **Notebook-vs-broker over-count sweep (stale OPEN + unconfirmed closes)** — QUEUED. The DUAL of 2b:
+   2b adopts broker positions missing a record; 2c closes the OTHER drift — records the notebook holds
+   OPEN/CLOSED that the broker does NOT reconcile with (diagnostic 2026-07-08: 36 OPEN records vs 26 live
+   broker positions, delta ~10). Two classes. (a) STALE OPEN: an entry limit that never filled (the
+   stale-order-cleanup cancels the order but leaves the record OPEN), and — pre-`one_position_per_underlying`
+   — DUPLICATE records for a single filled position (confirmed case: two `SLV260807C00058000` records
+   entered 40 min apart on 2026-07-06; the `-50%` stop fired and closed the real position via one record
+   (`CLOSE_STOP_LOSS`, `closed_ok=true`), the sibling's own close then failed (`close_fails=1`) and it is
+   stuck OPEN, both records sharing the one position's `mae_pct=-51.2` because the exit pass matches by OCC).
+   (b) UNCONFIRMED CLOSE: records booked CLOSED with `closed_ok=false` (2026-07-08: 7 legs incl PFE −100%,
+   TSLA, AMAT, IGV, JETS, HOOD) where the close order never confirmed, so the broker may still hold the
+   position while the notebook shows CLOSED. Accept: a read-only broker-diff roll-call (cycle start or end)
+   that, for every OPEN or `closed_ok=false` record with NO matching live position, marks it terminally
+   reconciled (e.g. `RECONCILED_GONE`) so it stops blocking `one_position_per_underlying` and stops inflating
+   the scoreboard; and for a `closed_ok=false` whose position DOES still exist, hands it back to the exit
+   engine (or lets 2b re-adopt). Idempotent, passivity-safe, MOT-covered, changes NO entry selection —
+   pure bookkeeping hygiene. Does not gate anything; run it before relying on the live scoreboard.
 4. **Inbox retention pruning** — QUEUED. Poller deletes working-tree inbox files older than 14 days only
    after verifying every candidate_id is in the DB and a newer DB backup exists. (Verified not yet built:
    the `keep=14` prune in `harvest_db.backup()` prunes DB *backups*, not the inbox jsonl.) Accept: lean

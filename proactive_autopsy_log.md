@@ -613,3 +613,21 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 20.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - XLE (1be69d42e9f1)
+- entered 2026-07-06T14:21:46.385Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +85.7% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; negative_gamma amplified the breakout.
+
+## Autopsy - SOFI (ab208270ec50)
+- entered 2026-07-06T18:32:17.437Z | trigger regime_BEARISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +41.7% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 19.0 -> negative-gamma slide, no positive catalyst.
+

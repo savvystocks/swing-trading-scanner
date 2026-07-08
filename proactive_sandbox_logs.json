@@ -28424,18 +28424,53 @@
         "contracts": 5
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 85.7
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 113.2,
+          "mae_pct": -35.2,
+          "stage": "closed",
+          "scaled_out": {
+            "at": "2026-07-07T19:21:17.756Z",
+            "return_pct": 34.1
+          },
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 113.2,
+      "mae_pct": -35.2,
+      "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; negative_gamma amplified the breakout.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "XLE260807C00055500",
+        "closed_at": "2026-07-08T16:31:41.917Z",
+        "return_pct": 85.7,
+        "reason": "85.7% <= trail 90.6% (20% off peak MFE 113.2%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 113.2,
         "mae_pct": -35.2,
-        "stage": "trailing",
+        "stage": "closed",
         "scaled_out": {
           "at": "2026-07-07T19:21:17.756Z",
           "return_pct": 34.1
-        }
+        },
+        "close_fails": 0
       }
     }
   },
@@ -35280,14 +35315,48 @@
         "contracts": 5
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": 41.7
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 53.3,
+          "mae_pct": -10.0,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-08T13:51:18.423Z",
+            "return_pct": 38.3
+          }
+        }
+      },
+      "mfe_pct": 53.3,
+      "mae_pct": -10.0,
+      "determining_factor": "Bearish breakdown (move 0.0%): spot below zero-gamma 19.0 -> negative-gamma slide, no positive catalyst.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "SOFI260807P00018000",
+        "closed_at": "2026-07-08T16:31:43.474Z",
+        "return_pct": 41.7,
+        "reason": "41.7% <= trail 42.6% (20% off peak MFE 53.3%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 53.3,
         "mae_pct": -10.0,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-08T13:51:18.423Z",

@@ -247,6 +247,7 @@ and SPRT clock are decisions 14/27.)
 | 30 | Money | Paper-vs-live decided at the live gate (rec: parallel, paper as slippage control) | scheduled decisions |
 | 31 | Money | Reinvest everything until further notice | NORTH_STAR + item 14 |
 | 32 | Money | Alpaca into live; evidence is final | item 14 |
+| 33 | Engine | Dead knobs `min_rvol` + `min_flow_dominance_pct` REMOVED 2026-07-08 (read by nothing; never gated anything). Do NOT restore. `max_bid_ask_spread_pct` kept but is advisory-only, not a gate. `should_enter_proactive()` (a no-op that always returned True) deleted the same day. | v10_params / v10_tunable_parameters (hygiene, behavior-identical) |
 
 ## Scheduled studies (week 6, from stored bid paths + counterfactual labels)
 

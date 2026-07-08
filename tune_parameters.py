@@ -5,7 +5,7 @@ tuning advisory the autopsy wrote.
 
   python tune_parameters.py --show
   python tune_parameters.py --advisory
-  python tune_parameters.py --gate min_rvol --value 3.0
+  python tune_parameters.py --gate take_profit_pct --value 40
   python tune_parameters.py --gate regime_compass_bypass --value false
 """
 

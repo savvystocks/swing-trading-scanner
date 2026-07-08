@@ -3,12 +3,26 @@
 WHAT IT ACTUALLY DOES (architecture of record: SYSTEM_ARCHITECTURE.md): each cycle it audits
 stale orders, runs the exit pass (tiered stop / scale-out / trail state machine + ratchet
 broker-side backstop when enabled), then sources candidates market-wide from Unusual Whales
-flow, and enters ONE regime-routed directional leg (long call if BULLISH, long put if BEARISH)
+flow and enters ONE regime-routed directional leg (long call if BULLISH, long put if BEARISH)
 sized off a flat $800 budget. NEUTRAL/calendar routing is DISABLED pending a spread-aware unit
-exit. Entry gates: one-position-per-underlying, 3-day earnings blackout, daily brake, cool-off,
-affordability. After the trade decision, the counterfactual harvest logs every scored candidate
-(fail-open, post-trade - it can never alter or crash the trade path). Gate values live in
-v10_tunable_parameters.json (read every cycle), turned only by owner decision.
+exit, so the calendar spread the old header described is NOT traded.
+
+The ten real gates a candidate clears, in order (scan_candidates then enter_proactive_set):
+   1. big fast flow: >= scanner_min_premium total premium, from up to scanner_flow_limit UW alerts
+   2. cheap contract: per-contract price within [scanner_premium_min, scanner_premium_max] ($0.30-$4.00)
+   3. not an index underlying
+   (aggregate surviving alerts by ticker, rank by total flow premium, take the first that also clears:)
+   4. one position per underlying (already-held / pending-entry names skipped)
+   5. usable data: a real spot price AND a real implied-vol reading
+   6. a clear direction: regime is BULLISH or BEARISH, not NEUTRAL
+   7. not within earnings_blackout_days of earnings
+   8. affordable at >= min_contracts on the $800 budget
+   9. a real, tradeable OCC resolvable at Alpaca near the target strike/expiry
+   10. the leg is not illiquid (unresolved -> fail-open skipped)
+The first survivor is entered; ONE trade per cycle. The daily brake runs in SHADOW (logs, does not
+suppress). Gate values live in v10_tunable_parameters.json (read every cycle), turned only by owner
+decision. After the trade decision the counterfactual harvest logs every scored candidate (fail-open,
+post-trade - it can never alter or crash the trade path).
 
 EXECUTION SAFETY: routing defaults to DRY_RUN (build + log the order payload, do NOT submit).
 Real submission to paper-api.alpaca.markets only happens with --live-paper or under GHA with
@@ -339,12 +353,6 @@ def classify_regime(md, candidate=None):
 
 
 _REGIME_STRUCTURE = {"BULLISH": "bullish_call", "BEARISH": "bearish_put", "NEUTRAL": "flat_calendar"}
-
-
-def should_enter_proactive(regime, params, candidate=None):
-    """Blind bypass killed: we still take loose, data-gathering trades, but the REGIME decides the
-    structure (call / put / calendar) - it is no longer a global on-off switch."""
-    return True, f"regime_{regime}_loose"
 
 
 def _est_premium(spot, strike, iv_pct, dte, right):
@@ -1027,7 +1035,7 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
                 "reason": f"earnings blackout: reports in {int(dte_earn)}d (<= {ebd}d window)",
                 "status": "SKIPPED"}
-    ok, trigger = should_enter_proactive(regime, params, candidate)
+    trigger = f"regime_{regime}_loose"          # (was should_enter_proactive() - it only ever returned this)
     legs = build_legs(ticker, md, regime, illiquid=illiquid)
     min_ct = params.get("min_contracts", 2)
     if all((leg.get("contracts") or 0) < min_ct for leg in legs.values()):   # AFFORDABILITY GATE (real-money sim)

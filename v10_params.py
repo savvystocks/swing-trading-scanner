@@ -13,9 +13,9 @@ PARAMS_PATH = "v10_tunable_parameters.json"
 
 DEFAULTS = {
     "regime_compass_bypass": True,
-    "min_rvol": 1.0,
-    "max_bid_ask_spread_pct": 5.0,
-    "min_flow_dominance_pct": 30.0,
+    # NOTE: min_rvol and min_flow_dominance_pct were removed 2026-07-08 - they were dead knobs, read by
+    # NOTHING in the engine. Do not "restore" them (see ROADMAP decision table). Recorded, not enforced.
+    "max_bid_ask_spread_pct": 5.0,        # advisory only (weekly tuning note) - NOT an entry gate; spread is logged, measured, not gated
     "earnings_blackout_days": 3,          # TIER B (owner decision 15): no NEW entry within 3d of earnings; fail-open if sensor null
     "alt_reddit_min_mentions": 10,
     "alt_insider_min_dollar_value": 10000,

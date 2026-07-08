@@ -40635,14 +40635,45 @@
         "contracts": 3
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -50.4
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": -1.6,
+          "mae_pct": -50.4,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -1.6,
+      "mae_pct": -50.4,
+      "determining_factor": "Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 59.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "BAC260821C00062500",
+        "closed_at": "2026-07-08T19:51:25.912Z",
+        "return_pct": -50.4,
+        "reason": "-50.4% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -1.6,
-        "mae_pct": -49.6,
-        "stage": "initial"
+        "mae_pct": -50.4,
+        "stage": "closed",
+        "close_fails": 0
       }
     },
     "backstop": {
@@ -40657,7 +40688,8 @@
         "stage": "initial",
         "at": "2026-07-08T13:31:45.936Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "retired": true
       }
     }
   },

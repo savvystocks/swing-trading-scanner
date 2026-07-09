@@ -721,3 +721,12 @@
 
 **Determining factor:** Bullish call FAILED (-56%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 80.0 worked against it.
 
+## Autopsy - IYR (f70856f9071e)
+- entered 2026-07-09T16:21:24.092Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -69.2% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-69%, move 0.0%): no breakdown materialised; spot held above zero-gamma 103.5.
+

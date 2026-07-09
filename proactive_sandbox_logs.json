@@ -42067,7 +42067,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -12.0,
+        "mfe_pct": -10.9,
         "mae_pct": -39.9,
         "stage": "initial"
       }
@@ -45064,7 +45064,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 29.5,
-        "mae_pct": -43.2,
+        "mae_pct": -45.5,
         "stage": "initial"
       }
     }
@@ -49899,7 +49899,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -19.1,
+        "mfe_pct": -18.4,
         "mae_pct": -22.7,
         "stage": "initial"
       }
@@ -53566,7 +53566,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -5.2,
+        "mfe_pct": -4.1,
         "mae_pct": -9.3,
         "stage": "initial"
       }
@@ -54948,6 +54948,285 @@
       "min_contract_premium": 1.52,
       "flow_type": "put",
       "total_premium": 94696.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 9,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -23.4,
+        "mae_pct": -23.4,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "451760de8a8e",
+    "ticker": "POET",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-09T17:52:25.672Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 38,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-09T17:52:25.672Z",
+      "macro": {
+        "spot": 8.89,
+        "sma20": 10.59,
+        "distance_to_sma20_pct": -16.033,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 107.5,
+        "iv_back": 118.6,
+        "iv_ratio": 0.906,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 4196788.4,
+        "zero_gamma_strike": 7.0,
+        "distance_to_zero_gamma_pct": 21.26,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.98,
+        "atr_pct": 11.05,
+        "rvol_10min": 0.34,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Semiconductors",
+        "market_cap": 1530010368,
+        "short_pct_float": 15.75,
+        "short_ratio": 0.61,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.62,
+        "vader_compound": 0.251,
+        "news_type": "Unknown",
+        "top_headline": "POET Technologies Shares Climb as Chart Defends 200-Day Moving Average",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -16.033,
+        "market_spy_dist_pct": 1.282,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 0.757,
+        "sector_vs_market_spread": -0.525,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 120.8,
+        "call_iv_25d": 123.4,
+        "skew_ratio": 0.979,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 12.22,
+        "ask_sweep_prem": 474283.0,
+        "total_flow_prem": 3882157.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -1.25,
+        "heaviest_node_price": 9.0,
+        "node_size": 491354.0,
+        "n_prints": 15,
+        "window_start": "2026-07-09T12:36:31Z",
+        "window_end": "2026-07-09T17:49:21Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 56,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 33,
+        "next_earnings_date": "2026-08-11",
+        "iv_rank_1y": 42.03,
+        "last_earnings_date": "2026-05-14",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 104.16,
+        "front_iv": 107.5,
+        "vrp": 3.34,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 733514.0,
+        "flow_persistence_pct": 36.21,
+        "flow_direction": "bullish",
+        "closing_accel": 125578.0,
+        "n_ticks": 263,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 403.4,
+        "vwma_20": 11.03,
+        "rsi_5": 32.55,
+        "rsi_15": 24.23,
+        "gap_pct": 3.767,
+        "day_range": 5.115,
+        "candle_body": 0.176,
+        "dist_sma50": -23.746,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -11.1,
+        "vix_level": 16.02,
+        "execution_hour": 17,
+        "day_of_week": 3,
+        "sector_vs_spy": -0.497,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 38462984.0,
+        "net_vanna": 19741134.0,
+        "net_charm": -41603431.0,
+        "delta_imbalance": 5.128,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.113,
+        "bid": 8.86,
+        "ask": 8.87,
+        "bid_size": 1100.0,
+        "ask_size": 900.0,
+        "obi": 0.1,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.32,
+        "gap_pct": 3.767,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 15.75,
+        "float_shares": 152958909,
+        "shares_short": 27170397,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.251,
+      "sweep_aggression_pct": 12.22,
+      "distance_to_zero_gamma_pct": 21.26,
+      "distance_to_heaviest_dp_node_pct": -1.25,
+      "days_since_earnings": 56,
+      "days_to_earnings": 33,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 36.21,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "POET260807C00009000",
+        "expiry": "2026-08-07",
+        "strike": 9.0,
+        "dte": 35,
+        "entry_premium": 1.18,
+        "limit_price": 1.19,
+        "contracts": 6,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "26",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.97,
+          "ask": 1.19,
+          "mid": 1.08,
+          "bid_ask_spread_pct": 20.37,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 23.0,
+          "oi_prev": 26.0,
+          "oi_change": -3.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "3b22e362-1c4a-483e-b433-d309dfe8b8cd",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.19,
+        "contracts": 6
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "POET",
+      "call_prem": 232000.0,
+      "put_prem": 0.0,
+      "underlying_price": 8.905,
+      "min_contract_premium": 2.32,
+      "flow_type": "call",
+      "total_premium": 232000.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 9

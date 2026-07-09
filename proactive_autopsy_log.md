@@ -703,3 +703,21 @@
 
 **Determining factor:** Bearish put FAILED (-90%, move 0.0%): no breakdown materialised; spot held above zero-gamma 7.5.
 
+## Autopsy - ASHR (0665b1317b6f)
+- entered 2026-07-09T13:42:03.211Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -70.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-71%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 37.5 worked against it.
+
+## Autopsy - SHEL (5f97808884ac)
+- entered 2026-07-09T14:11:57.274Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -55.9% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-56%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 80.0 worked against it.
+

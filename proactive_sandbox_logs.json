@@ -41000,7 +41000,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 5.1,
+        "mfe_pct": 7.7,
         "mae_pct": -38.5,
         "stage": "initial"
       }
@@ -45049,7 +45049,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 29.5,
-        "mae_pct": -34.1,
+        "mae_pct": -37.9,
         "stage": "initial"
       }
     }
@@ -48130,7 +48130,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -15.8,
+        "mfe_pct": -13.3,
         "mae_pct": -31.7,
         "stage": "initial"
       }
@@ -48414,5 +48414,276 @@
         "stage": "initial"
       }
     }
+  },
+  {
+    "trade_set_id": "e31d3645ad4f",
+    "ticker": "KWEB",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-09T14:02:06.267Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 21,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-09T14:02:06.267Z",
+      "macro": {
+        "spot": 26.29,
+        "sma20": 25.34,
+        "distance_to_sma20_pct": 3.735,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 33.5,
+        "iv_back": 34.8,
+        "iv_ratio": 0.963,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 5762837.1,
+        "zero_gamma_strike": 27.0,
+        "distance_to_zero_gamma_pct": -2.701,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -75.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.59,
+        "atr_pct": 2.23,
+        "rvol_10min": 0.23,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 842.1,
+        "vader_compound": 0.333,
+        "news_type": "Unknown",
+        "top_headline": "Chinese, Brazilian ETFs And More On CNBC's 'Final Trades'",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 3.735,
+        "market_spy_dist_pct": 0.911,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 37.3,
+        "call_iv_25d": 36.1,
+        "skew_ratio": 1.034,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 1.66,
+        "ask_sweep_prem": 95715.0,
+        "total_flow_prem": 5762871.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 26.29,
+        "node_size": 87444.0,
+        "n_prints": 30,
+        "window_start": "2026-07-09T08:00:15Z",
+        "window_end": "2026-07-09T13:59:51Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 69.96,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 27.47,
+        "front_iv": 33.5,
+        "vrp": 6.03,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -30342.0,
+        "flow_persistence_pct": 35.7,
+        "flow_direction": "bearish",
+        "closing_accel": -8343.0,
+        "n_ticks": 30,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 856.55,
+        "vwma_20": 25.26,
+        "rsi_5": 81.67,
+        "rsi_15": 53.65,
+        "gap_pct": -0.909,
+        "day_range": 0.78,
+        "candle_body": 0.561,
+        "dist_sma50": -2.544,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -1.3,
+        "vix_level": 16.55,
+        "execution_hour": 14,
+        "day_of_week": 3,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 11288795.0,
+        "net_vanna": 116035809.0,
+        "net_charm": -36902287.0,
+        "delta_imbalance": 1.322,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.038,
+        "bid": 26.28,
+        "ask": 26.29,
+        "bid_size": 4700.0,
+        "ask_size": 8300.0,
+        "obi": -0.2769,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.22,
+        "gap_pct": -0.909,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.333,
+      "sweep_aggression_pct": 1.66,
+      "distance_to_zero_gamma_pct": -2.701,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 35.7,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "KWEB260807C00027500",
+        "expiry": "2026-08-07",
+        "strike": 27.5,
+        "dte": 35,
+        "entry_premium": 1.09,
+        "limit_price": 1.1,
+        "contracts": 7,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "36",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.33,
+          "ask": 0.67,
+          "mid": 0.5,
+          "bid_ask_spread_pct": 68.0,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 541.0,
+          "oi_prev": 36.0,
+          "oi_change": 505.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "854efd1c-dfde-4d6b-9954-4797ccaecaa1",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.1,
+        "contracts": 7
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "KWEB",
+      "call_prem": 545345.0,
+      "put_prem": 0.0,
+      "underlying_price": 26.29,
+      "min_contract_premium": 0.33,
+      "flow_type": "call",
+      "total_premium": 545345.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 6
   }
 ]

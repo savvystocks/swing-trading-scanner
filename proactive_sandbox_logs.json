@@ -29855,7 +29855,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 61.1,
+        "mfe_pct": 66.7,
         "mae_pct": -44.4,
         "stage": "trailing",
         "close_fails": 0,
@@ -39966,7 +39966,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 10.0,
+        "mfe_pct": 11.5,
         "mae_pct": -38.5,
         "stage": "initial"
       }
@@ -49899,7 +49899,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -18.4,
+        "mfe_pct": -17.7,
         "mae_pct": -22.7,
         "stage": "initial"
       }
@@ -54954,7 +54954,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -22.2,
+        "mfe_pct": -21.8,
         "mae_pct": -23.4,
         "stage": "initial"
       }
@@ -55499,6 +55499,300 @@
       "min_contract_premium": 1.43,
       "flow_type": "put",
       "total_premium": 274560.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 9,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -12.8,
+        "mae_pct": -12.8,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "AUDIT-2ff4f2ce",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-07-09T18:11:16.851Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "5f071498-fe99-41fe-a8e1-7a12b4c4baec",
+        "symbol": "REPL260814C00011500",
+        "age_min": 38.7,
+        "limit_price": "1.92"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "4092120e253f",
+    "ticker": "DKNG",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-09T18:11:59.272Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 39,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-09T18:11:59.272Z",
+      "macro": {
+        "spot": 26.39,
+        "sma20": 26.56,
+        "distance_to_sma20_pct": -0.648,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 54.3,
+        "iv_back": 63.7,
+        "iv_ratio": 0.852,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 1700309.6,
+        "zero_gamma_strike": 27.5,
+        "distance_to_zero_gamma_pct": -4.206,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.23,
+        "atr_pct": 4.67,
+        "rvol_10min": 0.54,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Consumer Cyclical",
+        "industry": "Gambling",
+        "market_cap": 13092839424,
+        "short_pct_float": 8.39,
+        "short_ratio": 3.03,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 6.62,
+        "vader_compound": 0.237,
+        "news_type": "Unknown",
+        "top_headline": "DraftKings Plans To Roll Out Online Sportsbook, Casino In Alberta On July 13",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -0.648,
+        "market_spy_dist_pct": 1.269,
+        "sector_etf": "XLY",
+        "sector_dist_pct": 0.344,
+        "sector_vs_market_spread": -0.925,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 61.8,
+        "call_iv_25d": 50.1,
+        "skew_ratio": 1.233,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 13.18,
+        "ask_sweep_prem": 482547.0,
+        "total_flow_prem": 3660811.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 26.39,
+        "node_size": 99257.0,
+        "n_prints": 58,
+        "window_start": "2026-07-09T12:04:01Z",
+        "window_end": "2026-07-09T18:11:30Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 64,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 27,
+        "next_earnings_date": "2026-08-05",
+        "iv_rank_1y": 54.95,
+        "last_earnings_date": "2026-05-06",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 63.93,
+        "front_iv": 54.3,
+        "vrp": -9.63,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -817945.0,
+        "flow_persistence_pct": 52.05,
+        "flow_direction": "bearish",
+        "closing_accel": 241498.0,
+        "n_ticks": 278,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1000.35,
+        "vwma_20": 26.69,
+        "rsi_5": 64.2,
+        "rsi_15": 40.78,
+        "gap_pct": -0.221,
+        "day_range": 4.226,
+        "candle_body": 0.641,
+        "dist_sma50": 3.46,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -9.4,
+        "vix_level": 16.03,
+        "execution_hour": 18,
+        "day_of_week": 3,
+        "sector_vs_spy": -2.048,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 10718933.0,
+        "net_vanna": 22664102.0,
+        "net_charm": -6448273.0,
+        "delta_imbalance": 2.499,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.038,
+        "bid": 26.39,
+        "ask": 26.4,
+        "bid_size": 100.0,
+        "ask_size": 200.0,
+        "obi": -0.3333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.52,
+        "gap_pct": -0.221,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 8.39,
+        "float_shares": 481458288,
+        "shares_short": 40470013,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.237,
+      "sweep_aggression_pct": 13.18,
+      "distance_to_zero_gamma_pct": -4.206,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 64,
+      "days_to_earnings": 27,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 52.05,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "DKNG260807P00025500",
+        "expiry": "2026-08-07",
+        "strike": 25.5,
+        "dte": 35,
+        "entry_premium": 1.77,
+        "limit_price": 1.79,
+        "contracts": 4,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "5",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.21,
+          "ask": 1.42,
+          "mid": 1.315,
+          "bid_ask_spread_pct": 15.97,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 9.0,
+          "oi_prev": 5.0,
+          "oi_change": 4.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "f8b5e15d-6dbf-4d38-8fbc-02f0fe991a62",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.79,
+        "contracts": 4
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "DKNG",
+      "call_prem": 0.0,
+      "put_prem": 68595.0,
+      "underlying_price": 26.43,
+      "min_contract_premium": 2.69,
+      "flow_type": "put",
+      "total_premium": 68595.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 9

@@ -51557,7 +51557,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -12.3,
-        "mae_pct": -12.3,
+        "mae_pct": -15.1,
         "stage": "initial"
       }
     }
@@ -51844,6 +51844,285 @@
       "min_contract_premium": 3.0,
       "flow_type": "put",
       "total_premium": 34800.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 8,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -35.4,
+        "mae_pct": -35.4,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "4b5b187be08e",
+    "ticker": "STLA",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-09T16:01:58.450Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 30,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-09T16:01:58.450Z",
+      "macro": {
+        "spot": 5.33,
+        "sma20": 6.08,
+        "distance_to_sma20_pct": -12.242,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 50.4,
+        "iv_back": 58.2,
+        "iv_ratio": 0.866,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 736270.3,
+        "zero_gamma_strike": 7.5,
+        "distance_to_zero_gamma_pct": -40.713,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.19,
+        "atr_pct": 3.62,
+        "rvol_10min": 1.11,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Consumer Cyclical",
+        "industry": "Auto Manufacturers",
+        "market_cap": 15487178752,
+        "short_pct_float": 2.66,
+        "short_ratio": 4.22,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 7.98,
+        "vader_compound": 0.2,
+        "news_type": "Product",
+        "top_headline": "Chrysler Recalls 12,592 2026 Ram 1500 Vehicles Over Headlight Wiring Causing Parking And Daytime Running Lights To Fail",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -12.242,
+        "market_spy_dist_pct": 1.052,
+        "sector_etf": "XLY",
+        "sector_dist_pct": -0.155,
+        "sector_vs_market_spread": -1.207,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 54.5,
+        "call_iv_25d": 58.7,
+        "skew_ratio": 0.929,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.7,
+        "ask_sweep_prem": 338313.0,
+        "total_flow_prem": 3889521.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.499,
+        "heaviest_node_price": 5.3,
+        "node_size": 1097433.0,
+        "n_prints": 51,
+        "window_start": "2026-07-09T09:22:41Z",
+        "window_end": "2026-07-09T16:01:25Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 70,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 21,
+        "next_earnings_date": "2026-07-30",
+        "iv_rank_1y": 80.55,
+        "last_earnings_date": "2026-04-30",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 49.47,
+        "front_iv": 50.4,
+        "vrp": 0.93,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -69717.0,
+        "flow_persistence_pct": 10.61,
+        "flow_direction": "bearish",
+        "closing_accel": -123631.0,
+        "n_ticks": 123,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1051.99,
+        "vwma_20": 6.11,
+        "rsi_5": 0.0,
+        "rsi_15": 15.2,
+        "gap_pct": -1.664,
+        "day_range": 1.873,
+        "candle_body": 0.2,
+        "dist_sma50": -23.181,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -7.8,
+        "vix_level": 16.12,
+        "execution_hour": 16,
+        "day_of_week": 3,
+        "sector_vs_spy": -2.341,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -744514.0,
+        "net_vanna": 11888545.0,
+        "net_charm": -3194715.0,
+        "delta_imbalance": 0.872,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.187,
+        "bid": 5.34,
+        "ask": 5.35,
+        "bid_size": 10000.0,
+        "ask_size": 62800.0,
+        "obi": -0.7253,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 1.13,
+        "gap_pct": -1.664,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 2.66,
+        "float_shares": 2441411068,
+        "shares_short": 76930540,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.2,
+      "sweep_aggression_pct": 8.7,
+      "distance_to_zero_gamma_pct": -40.713,
+      "distance_to_heaviest_dp_node_pct": 0.499,
+      "days_since_earnings": 70,
+      "days_to_earnings": 21,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 10.61,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "STLA260807P00005000",
+        "expiry": "2026-08-07",
+        "strike": 5.0,
+        "dte": 35,
+        "entry_premium": 0.33,
+        "limit_price": 0.33,
+        "contracts": 24,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "13",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.22,
+          "ask": 0.27,
+          "mid": 0.245,
+          "bid_ask_spread_pct": 20.408,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 65.0,
+          "oi_prev": 13.0,
+          "oi_change": 52.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "4340767d-89a6-4767-b9fa-4b7df3f42caf",
+        "error": null,
+        "submitted": true,
+        "limit_price": 0.33,
+        "contracts": 24
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "STLA",
+      "call_prem": 0.0,
+      "put_prem": 140581.0,
+      "underlying_price": 5.345,
+      "min_contract_premium": 1.25,
+      "flow_type": "put",
+      "total_premium": 140581.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8

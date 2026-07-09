@@ -53598,7 +53598,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -4.1,
-        "mae_pct": -13.4,
+        "mae_pct": -15.5,
         "stage": "initial"
       }
     }
@@ -53877,7 +53877,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -5.8,
-        "mae_pct": -8.3,
+        "mae_pct": -9.2,
         "stage": "initial"
       }
     }
@@ -56955,6 +56955,285 @@
       "min_contract_premium": 0.49,
       "flow_type": "call",
       "total_premium": 115836.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 10,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -21.2,
+        "mae_pct": -21.2,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "8fe28898f451",
+    "ticker": "BAC",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-09T19:02:14.523Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 43,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-09T19:02:14.523Z",
+      "macro": {
+        "spot": 59.34,
+        "sma20": 57.47,
+        "distance_to_sma20_pct": 3.256,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 28.3,
+        "iv_back": 26.0,
+        "iv_ratio": 1.088,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 2613710.0,
+        "zero_gamma_strike": 59.0,
+        "distance_to_zero_gamma_pct": 0.573,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.18,
+        "atr_pct": 1.99,
+        "rvol_10min": 0.53,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Banks - Diversified",
+        "market_cap": 421111693312,
+        "short_pct_float": 0.0,
+        "short_ratio": 0.0,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.63,
+        "vader_compound": 0.275,
+        "news_type": "Earnings",
+        "top_headline": "SK Hynix 7X Oversubscription Boosts Semi Stocks; Earnings Season Ahead; Oil Pulls Back After Iran Attacks",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 3.256,
+        "market_spy_dist_pct": 1.158,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 2.579,
+        "sector_vs_market_spread": 1.421,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 27.7,
+        "call_iv_25d": 24.0,
+        "skew_ratio": 1.155,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 47.25,
+        "ask_sweep_prem": 12488779.0,
+        "total_flow_prem": 26433413.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 59.34,
+        "node_size": 616575.0,
+        "n_prints": 200,
+        "window_start": "2026-07-09T14:48:08Z",
+        "window_end": "2026-07-09T19:00:38Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 85,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 5,
+        "next_earnings_date": "2026-07-14",
+        "iv_rank_1y": 28.63,
+        "last_earnings_date": "2026-04-15",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 20.93,
+        "front_iv": 28.3,
+        "vrp": 7.37,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 1133118.0,
+        "flow_persistence_pct": 20.77,
+        "flow_direction": "bullish",
+        "closing_accel": -703926.0,
+        "n_ticks": 333,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1107.75,
+        "vwma_20": 57.33,
+        "rsi_5": 61.62,
+        "rsi_15": 62.43,
+        "gap_pct": 0.42,
+        "day_range": 1.677,
+        "candle_body": 0.789,
+        "dist_sma50": 9.516,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 2.3,
+        "vix_level": 16.05,
+        "execution_hour": 19,
+        "day_of_week": 3,
+        "sector_vs_spy": 0.628,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 42794097.0,
+        "net_vanna": -9491252.0,
+        "net_charm": -4180714.0,
+        "delta_imbalance": 4.05,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.017,
+        "bid": 59.34,
+        "ask": 59.35,
+        "bid_size": 1400.0,
+        "ask_size": 4600.0,
+        "obi": -0.5333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.51,
+        "gap_pct": 0.42,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 0.0,
+        "float_shares": 7069126845,
+        "shares_short": 9091,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.275,
+      "sweep_aggression_pct": 47.25,
+      "distance_to_zero_gamma_pct": 0.573,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 85,
+      "days_to_earnings": 5,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 20.77,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "BAC260807C00062000",
+        "expiry": "2026-08-07",
+        "strike": 62.0,
+        "dte": 35,
+        "entry_premium": 2.08,
+        "limit_price": 2.1,
+        "contracts": 3,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "512",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.66,
+          "ask": 0.72,
+          "mid": 0.69,
+          "bid_ask_spread_pct": 8.696,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 584.0,
+          "oi_prev": 512.0,
+          "oi_change": 72.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "812258df-933e-4813-aa15-eab40a76994b",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.1,
+        "contracts": 3
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "BAC",
+      "call_prem": 101651.0,
+      "put_prem": 0.0,
+      "underlying_price": 59.355,
+      "min_contract_premium": 2.21,
+      "flow_type": "call",
+      "total_premium": 101651.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 10

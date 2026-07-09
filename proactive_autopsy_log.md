@@ -730,3 +730,12 @@
 
 **Determining factor:** Bearish put FAILED (-69%, move 0.0%): no breakdown materialised; spot held above zero-gamma 103.5.
 
+## Autopsy - RIVN (84b48aea72ef)
+- entered 2026-07-07T18:21:23.685Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -52.3% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 20.0.
+

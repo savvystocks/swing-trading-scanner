@@ -649,3 +649,57 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 59.0 worked against it.
 
+## Autopsy - SONY (7e6b3477ab16)
+- entered 2026-07-06T14:12:06.819Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -60.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-60%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 20.5 worked against it.
+
+## Autopsy - CORZ (a3e377413e0b)
+- entered 2026-07-06T15:32:31.819Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -68.4% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-68%, move 0.0%): no breakdown materialised; spot held above zero-gamma 28.0.
+
+## Autopsy - EEM (354108d41a7c)
+- entered 2026-07-07T17:11:41.141Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -51.8% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 66.0.
+
+## Autopsy - CPRT (8561123f4035)
+- entered 2026-07-07T17:32:03.054Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -65.2% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-65%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 22.5 worked against it.
+
+## Autopsy - NOK (8253ae215279)
+- entered 2026-07-07T17:51:43.285Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -53.4% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-53%, move 0.0%): no breakdown materialised; spot held above zero-gamma 15.0.
+
+## Autopsy - MSTX (7283911e841f)
+- entered 2026-07-07T19:12:00.401Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -89.9% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-90%, move 0.0%): no breakdown materialised; spot held above zero-gamma 7.5.
+

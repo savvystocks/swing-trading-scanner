@@ -42052,7 +42052,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -13.1,
+        "mfe_pct": -12.0,
         "mae_pct": -39.9,
         "stage": "initial"
       }
@@ -45049,7 +45049,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 29.5,
-        "mae_pct": -37.9,
+        "mae_pct": -38.6,
         "stage": "initial"
       }
     }
@@ -48130,7 +48130,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -13.3,
+        "mfe_pct": 11.7,
         "mae_pct": -31.7,
         "stage": "initial"
       }
@@ -48682,6 +48682,285 @@
       "min_contract_premium": 0.33,
       "flow_type": "call",
       "total_premium": 545345.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 6,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -49.3,
+        "mae_pct": -49.3,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "5f97808884ac",
+    "ticker": "SHEL",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-09T14:11:57.274Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 22,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-09T14:11:57.274Z",
+      "macro": {
+        "spot": 81.72,
+        "sma20": 80.27,
+        "distance_to_sma20_pct": 1.8,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 23.4,
+        "iv_back": 28.0,
+        "iv_ratio": 0.836,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 441848.2,
+        "zero_gamma_strike": 80.0,
+        "distance_to_zero_gamma_pct": 2.105,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.41,
+        "atr_pct": 1.73,
+        "rvol_10min": 0.07,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Energy",
+        "industry": "Oil & Gas Integrated",
+        "market_cap": 226453618688,
+        "short_pct_float": 1.96,
+        "short_ratio": 4.31,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 17.92,
+        "vader_compound": 0.229,
+        "news_type": "Unknown",
+        "top_headline": "Here’s How Much You Would Have Made Owning Shell Stock In The Last 5 Years",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 1.8,
+        "market_spy_dist_pct": 0.741,
+        "sector_etf": "XLE",
+        "sector_dist_pct": 0.746,
+        "sector_vs_market_spread": 0.005,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 27.0,
+        "call_iv_25d": 27.4,
+        "skew_ratio": 0.988,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 1.07,
+        "ask_sweep_prem": 142800.0,
+        "total_flow_prem": 13379997.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 81.72,
+        "node_size": 154957.0,
+        "n_prints": 13,
+        "window_start": "2026-07-09T13:15:45Z",
+        "window_end": "2026-07-09T14:05:52Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 63,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 21,
+        "next_earnings_date": "2026-07-30",
+        "iv_rank_1y": 67.92,
+        "last_earnings_date": "2026-05-07",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 27.92,
+        "front_iv": 23.4,
+        "vrp": -4.52,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -242679.0,
+        "flow_persistence_pct": 74.16,
+        "flow_direction": "bearish",
+        "closing_accel": -181791.0,
+        "n_ticks": 32,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 981.69,
+        "vwma_20": 80.18,
+        "rsi_5": 91.38,
+        "rsi_15": 48.29,
+        "gap_pct": -0.438,
+        "day_range": 0.538,
+        "candle_body": 0.398,
+        "dist_sma50": -2.669,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -4.6,
+        "vix_level": 16.43,
+        "execution_hour": 14,
+        "day_of_week": 3,
+        "sector_vs_spy": 4.114,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 4822428.0,
+        "net_vanna": 1884981.0,
+        "net_charm": -2235837.0,
+        "delta_imbalance": 2.986,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.024,
+        "bid": 81.73,
+        "ask": 81.75,
+        "bid_size": 400.0,
+        "ask_size": 600.0,
+        "obi": -0.2,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.07,
+        "gap_pct": -0.438,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 1.96,
+        "float_shares": 2746963722,
+        "shares_short": 29857241,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.229,
+      "sweep_aggression_pct": 1.07,
+      "distance_to_zero_gamma_pct": 2.105,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 63,
+      "days_to_earnings": 21,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 74.16,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "SHEL260807C00085000",
+        "expiry": "2026-08-07",
+        "strike": 85.0,
+        "dte": 35,
+        "entry_premium": 2.37,
+        "limit_price": 2.39,
+        "contracts": 3,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "1",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.77,
+          "ask": 1.72,
+          "mid": 1.245,
+          "bid_ask_spread_pct": 76.305,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 3.0,
+          "oi_prev": 1.0,
+          "oi_change": 2.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "1ae127a8-0776-484d-abfb-ebeaeb133a79",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.39,
+        "contracts": 3
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "SHEL",
+      "call_prem": 181210.0,
+      "put_prem": 0.0,
+      "underlying_price": 81.68,
+      "min_contract_premium": 3.0,
+      "flow_type": "call",
+      "total_premium": 181210.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 6

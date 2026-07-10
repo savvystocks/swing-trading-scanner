@@ -892,3 +892,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 11.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - BILL (7720e5c51336)
+- entered 2026-07-10T15:52:07.759Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -51.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 40.0.
+

@@ -856,3 +856,12 @@
 
 **Determining factor:** Bearish put FAILED (-99%, move 0.0%): no breakdown materialised; spot held above zero-gamma 47.5.
 
+## Autopsy - SOFI (5830aca9f5bc)
+- entered 2026-07-07T15:01:46.874Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +29.2% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 19.0 fed the squeeze.
+

@@ -52723,7 +52723,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -15.4,
-        "mae_pct": -24.2,
+        "mae_pct": -24.9,
         "stage": "initial"
       }
     }
@@ -62265,6 +62265,285 @@
       "min_contract_premium": 3.95,
       "flow_type": "call",
       "total_premium": 46610.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 14,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -27.8,
+        "mae_pct": -27.8,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "ad5c472655e1",
+    "ticker": "FLY",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-10T15:31:32.308Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 41,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-10T15:31:32.308Z",
+      "macro": {
+        "spot": 24.4,
+        "sma20": 28.69,
+        "distance_to_sma20_pct": -14.963,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 106.5,
+        "iv_back": 113.2,
+        "iv_ratio": 0.941,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 71934.9,
+        "zero_gamma_strike": 22.0,
+        "distance_to_zero_gamma_pct": 9.836,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 100.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 2.21,
+        "atr_pct": 9.06,
+        "rvol_10min": 0.13,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Industrials",
+        "industry": "Aerospace & Defense",
+        "market_cap": 4002412288,
+        "short_pct_float": 12.05,
+        "short_ratio": 1.25,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 74.19,
+        "vader_compound": 0.295,
+        "news_type": "Earnings",
+        "top_headline": "Firefly Aerospace Stock Trending After Landing $13 Million NASA Subcontract for Mars Mission",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -14.963,
+        "market_spy_dist_pct": 1.283,
+        "sector_etf": "XLI",
+        "sector_dist_pct": 0.556,
+        "sector_vs_market_spread": -0.727,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 111.0,
+        "call_iv_25d": 114.4,
+        "skew_ratio": 0.97,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 2.06,
+        "ask_sweep_prem": 133456.0,
+        "total_flow_prem": 6474607.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -1.5,
+        "heaviest_node_price": 24.77,
+        "node_size": 20000.0,
+        "n_prints": 4,
+        "window_start": "2026-07-10T13:31:48Z",
+        "window_end": "2026-07-10T15:07:11Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 67,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 25,
+        "next_earnings_date": "2026-08-04",
+        "iv_rank_1y": 52.3,
+        "last_earnings_date": "2026-05-04",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 127.69,
+        "front_iv": 106.5,
+        "vrp": -21.19,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -941755.0,
+        "flow_persistence_pct": 63.37,
+        "flow_direction": "bearish",
+        "closing_accel": -394979.0,
+        "n_ticks": 113,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 946.03,
+        "vwma_20": 29.01,
+        "rsi_5": 4.64,
+        "rsi_15": 31.05,
+        "gap_pct": 0.929,
+        "day_range": 5.328,
+        "candle_body": 0.862,
+        "dist_sma50": -31.821,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -6.7,
+        "vix_level": 15.45,
+        "execution_hour": 15,
+        "day_of_week": 4,
+        "sector_vs_spy": -2.073,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 731904.0,
+        "net_vanna": 4233872.0,
+        "net_charm": -12502740.0,
+        "delta_imbalance": 1.278,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.656,
+        "bid": 24.24,
+        "ask": 24.4,
+        "bid_size": 200.0,
+        "ask_size": 100.0,
+        "obi": 0.3333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.13,
+        "gap_pct": 0.929,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 12.05,
+        "float_shares": 95940836,
+        "shares_short": 11836941,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.295,
+      "sweep_aggression_pct": 2.06,
+      "distance_to_zero_gamma_pct": 9.836,
+      "distance_to_heaviest_dp_node_pct": -1.5,
+      "days_since_earnings": 67,
+      "days_to_earnings": 25,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 63.37,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "FLY260807C00025000",
+        "expiry": "2026-08-07",
+        "strike": 25.0,
+        "dte": 35,
+        "entry_premium": 3.22,
+        "limit_price": 3.25,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": null,
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.37,
+          "ask": 3.15,
+          "mid": 2.76,
+          "bid_ask_spread_pct": 28.261,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 0.0,
+          "oi_prev": 0.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "37557e73-be8b-4f3f-95ba-28ad5159b226",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.25,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "FLY",
+      "call_prem": 732490.0,
+      "put_prem": 0.0,
+      "underlying_price": 24.4,
+      "min_contract_premium": 3.23,
+      "flow_type": "call",
+      "total_premium": 732490.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 14

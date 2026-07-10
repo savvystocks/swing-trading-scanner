@@ -748,3 +748,102 @@
 
 **Determining factor:** Bearish put FAILED (-86%, move 0.0%): no breakdown materialised; spot held above zero-gamma 80.0.
 
+## Autopsy - BB (dc36c78d4b0a)
+- entered 2026-07-06T14:51:29.995Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -66.9% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-67%, move 0.0%): no breakdown materialised; spot held above zero-gamma 12.0.
+
+## Autopsy - KLAR (09bf10b0977f)
+- entered 2026-07-07T14:51:25.575Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -69.2% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-69%, move 0.0%): no breakdown materialised; spot held above zero-gamma 20.0.
+
+## Autopsy - BP (74e416c41f3c)
+- entered 2026-07-07T19:31:35.825Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -51.3% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 38.0 worked against it.
+
+## Autopsy - KWEB (e31d3645ad4f)
+- entered 2026-07-09T14:02:06.267Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -56.5% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-56%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 27.0 worked against it.
+
+## Autopsy - LUV (d7b5cab7f916)
+- entered 2026-07-09T14:52:29.982Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -80.9% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-81%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 50.0 worked against it.
+
+## Autopsy - XLE (0ec6fe0318cd)
+- entered 2026-07-09T15:32:59.850Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -63.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-63%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 55.0 worked against it.
+
+## Autopsy - CART (7de8fe979ebd)
+- entered 2026-07-09T15:52:01.711Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -85.4% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-85%, move 0.0%): no breakdown materialised; spot held above zero-gamma 48.0.
+
+## Autopsy - ETHA (030e66904c1c)
+- entered 2026-07-09T16:32:33.625Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -52.6% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-53%, move 0.0%): no breakdown materialised; spot held above zero-gamma 13.5.
+
+## Autopsy - DKNG (4092120e253f)
+- entered 2026-07-09T18:11:59.272Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -99.3% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-99%, move 0.0%): no breakdown materialised; spot held above zero-gamma 27.5.
+
+## Autopsy - BULL (9a3c4ccabc13)
+- entered 2026-07-09T18:51:59.285Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -73.1% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-73%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 7.5 worked against it.
+
+## Autopsy - RUN (612589452550)
+- entered 2026-07-09T19:51:58.931Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -66.1% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-66%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 13.0 worked against it.
+

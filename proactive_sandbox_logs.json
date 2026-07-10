@@ -62075,7 +62075,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -35.4,
-        "mae_pct": -45.8,
+        "mae_pct": -47.9,
         "stage": "initial"
       }
     }
@@ -63222,7 +63222,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -4.9,
-        "mae_pct": -17.1,
+        "mae_pct": -19.5,
         "stage": "initial"
       }
     }
@@ -68275,7 +68275,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -10.2,
+        "mfe_pct": -9.1,
         "mae_pct": -10.2,
         "stage": "initial"
       }
@@ -68548,6 +68548,285 @@
       "min_contract_premium": 0.64,
       "flow_type": "call",
       "total_premium": 59008.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 16,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -10.7,
+        "mae_pct": -10.7,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "a0e9a08f100b",
+    "ticker": "LUV",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-10T19:32:24.709Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 58,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-10T19:32:24.709Z",
+      "macro": {
+        "spot": 48.57,
+        "sma20": 49.06,
+        "distance_to_sma20_pct": -1.004,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 57.8,
+        "iv_back": 48.3,
+        "iv_ratio": 1.197,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 413325.4,
+        "zero_gamma_strike": 49.0,
+        "distance_to_zero_gamma_pct": -0.885,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 100.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.74,
+        "atr_pct": 3.57,
+        "rvol_10min": 0.66,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Industrials",
+        "industry": "Airlines",
+        "market_cap": 23759290368,
+        "short_pct_float": 8.67,
+        "short_ratio": 5.07,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 80.21,
+        "vader_compound": 0.068,
+        "news_type": "Analyst",
+        "top_headline": "Susquehanna Maintains Neutral on Southwest Airlines, Raises Price Target to $55",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -1.004,
+        "market_spy_dist_pct": 1.495,
+        "sector_etf": "XLI",
+        "sector_dist_pct": 0.637,
+        "sector_vs_market_spread": -0.858,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 55.6,
+        "call_iv_25d": 71.4,
+        "skew_ratio": 0.779,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 3.27,
+        "ask_sweep_prem": 136648.0,
+        "total_flow_prem": 4181987.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 48.69,
+        "node_size": 66746.0,
+        "n_prints": 44,
+        "window_start": "2026-07-10T13:37:35Z",
+        "window_end": "2026-07-10T19:30:53Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 79,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 12,
+        "next_earnings_date": "2026-07-22",
+        "iv_rank_1y": 55.83,
+        "last_earnings_date": "2026-04-22",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 36.26,
+        "front_iv": 57.8,
+        "vrp": 21.54,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -288634.0,
+        "flow_persistence_pct": 36.14,
+        "flow_direction": "bearish",
+        "closing_accel": 247144.0,
+        "n_ticks": 287,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 949.72,
+        "vwma_20": 49.29,
+        "rsi_5": 27.99,
+        "rsi_15": 58.65,
+        "gap_pct": -0.406,
+        "day_range": 2.327,
+        "candle_body": 0.394,
+        "dist_sma50": 10.509,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 9.5,
+        "vix_level": 15.25,
+        "execution_hour": 19,
+        "day_of_week": 4,
+        "sector_vs_spy": -2.212,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 4584822.0,
+        "net_vanna": 4238023.0,
+        "net_charm": -10068103.0,
+        "delta_imbalance": 2.836,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.041,
+        "bid": 48.6,
+        "ask": 48.62,
+        "bid_size": 200.0,
+        "ask_size": 200.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.66,
+        "gap_pct": -0.406,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 8.67,
+        "float_shares": 483656252,
+        "shares_short": 32024477,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.068,
+      "sweep_aggression_pct": 3.27,
+      "distance_to_zero_gamma_pct": -0.885,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": 79,
+      "days_to_earnings": 12,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 36.14,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "LUV260807C00050000",
+        "expiry": "2026-08-07",
+        "strike": 50.0,
+        "dte": 35,
+        "entry_premium": 3.48,
+        "limit_price": 3.51,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "6",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.99,
+          "ask": 2.23,
+          "mid": 2.11,
+          "bid_ask_spread_pct": 11.374,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 6.0,
+          "oi_prev": 6.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "a9a8e9f9-27a7-4958-bd39-0a97a76eb85d",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.51,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "LUV",
+      "call_prem": 61648.0,
+      "put_prem": 0.0,
+      "underlying_price": 48.595,
+      "min_contract_premium": 1.23,
+      "flow_type": "call",
+      "total_premium": 61648.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 16

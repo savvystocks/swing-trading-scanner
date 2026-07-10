@@ -874,3 +874,12 @@
 
 **Determining factor:** Bearish put FAILED (-67%, move 0.0%): no breakdown materialised; spot held above zero-gamma 35.0.
 
+## Autopsy - KOLD (3b931dcdcf16)
+- entered 2026-07-10T15:02:04.551Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -53.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 27.0 worked against it.
+

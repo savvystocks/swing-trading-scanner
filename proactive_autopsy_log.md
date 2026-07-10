@@ -865,3 +865,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 19.0 fed the squeeze.
 
+## Autopsy - HAL (e966975bcb2e)
+- entered 2026-07-10T14:51:56.620Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -66.7% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-67%, move 0.0%): no breakdown materialised; spot held above zero-gamma 35.0.
+

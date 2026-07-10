@@ -901,3 +901,12 @@
 
 **Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 40.0.
 
+## Autopsy - CPNG (38bc566d735b)
+- entered 2026-07-10T14:01:49.505Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -71.9% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-72%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 16.0 worked against it.
+

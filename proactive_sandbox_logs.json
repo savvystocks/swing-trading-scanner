@@ -63153,7 +63153,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -4.9,
-        "mae_pct": -12.2,
+        "mae_pct": -14.6,
         "stage": "initial"
       }
     }
@@ -63431,7 +63431,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -2.2,
+        "mfe_pct": -1.1,
         "mae_pct": -10.1,
         "stage": "initial"
       }
@@ -63710,7 +63710,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -7.2,
+        "mfe_pct": -5.9,
         "mae_pct": -12.8,
         "stage": "initial"
       }
@@ -65671,7 +65671,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -26.6,
+        "mfe_pct": -25.9,
         "mae_pct": -26.6,
         "stage": "initial"
       }
@@ -65944,6 +65944,285 @@
       "min_contract_premium": 2.75,
       "flow_type": "put",
       "total_premium": 121275.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 14,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -3.0,
+        "mae_pct": -3.0,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "1abd10181bfb",
+    "ticker": "LYFT",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-10T18:02:03.659Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 52,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-10T18:02:03.659Z",
+      "macro": {
+        "spot": 15.65,
+        "sma20": 14.62,
+        "distance_to_sma20_pct": 7.057,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 45.9,
+        "iv_back": 65.6,
+        "iv_ratio": 0.7,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 1839650.1,
+        "zero_gamma_strike": 15.5,
+        "distance_to_zero_gamma_pct": 0.958,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.68,
+        "atr_pct": 4.32,
+        "rvol_10min": 0.63,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Software - Application",
+        "market_cap": 5938234880,
+        "short_pct_float": 24.58,
+        "short_ratio": 6.51,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 51.11,
+        "vader_compound": 0.1,
+        "news_type": "MnA",
+        "top_headline": "Lyft Plans To Acquire Serveo's Bikeshare Operations In Spain; Financial Terms Undisclosed",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 7.057,
+        "market_spy_dist_pct": 1.391,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 0.348,
+        "sector_vs_market_spread": -1.043,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 52.2,
+        "call_iv_25d": 67.1,
+        "skew_ratio": 0.778,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 12.07,
+        "ask_sweep_prem": 587561.0,
+        "total_flow_prem": 4867238.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -1.5,
+        "heaviest_node_price": 15.88,
+        "node_size": 74359.0,
+        "n_prints": 33,
+        "window_start": "2026-07-10T11:41:22Z",
+        "window_end": "2026-07-10T17:19:50Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 64,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 26,
+        "next_earnings_date": "2026-08-05",
+        "iv_rank_1y": 47.49,
+        "last_earnings_date": "2026-05-07",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 45.4,
+        "front_iv": 45.9,
+        "vrp": 0.5,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 293075.0,
+        "flow_persistence_pct": 29.61,
+        "flow_direction": "bullish",
+        "closing_accel": -112122.0,
+        "n_ticks": 270,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 851.58,
+        "vwma_20": 14.61,
+        "rsi_5": 63.68,
+        "rsi_15": 64.8,
+        "gap_pct": 0.889,
+        "day_range": 3.609,
+        "candle_body": 0.416,
+        "dist_sma50": 10.518,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -19.7,
+        "vix_level": 15.36,
+        "execution_hour": 18,
+        "day_of_week": 4,
+        "sector_vs_spy": 1.773,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 10753869.0,
+        "net_vanna": 11307147.0,
+        "net_charm": 410802.0,
+        "delta_imbalance": 3.163,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.064,
+        "bid": 15.64,
+        "ask": 15.65,
+        "bid_size": 1700.0,
+        "ask_size": 2000.0,
+        "obi": -0.0811,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.63,
+        "gap_pct": 0.889,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 24.58,
+        "float_shares": 341448501,
+        "shares_short": 92500542,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.1,
+      "sweep_aggression_pct": 12.07,
+      "distance_to_zero_gamma_pct": 0.958,
+      "distance_to_heaviest_dp_node_pct": -1.5,
+      "days_since_earnings": 64,
+      "days_to_earnings": 26,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 29.61,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "LYFT260807P00015000",
+        "expiry": "2026-08-07",
+        "strike": 15.0,
+        "dte": 35,
+        "entry_premium": 0.89,
+        "limit_price": 0.9,
+        "contracts": 8,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "722",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.58,
+          "ask": 0.93,
+          "mid": 0.755,
+          "bid_ask_spread_pct": 46.358,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 726.0,
+          "oi_prev": 722.0,
+          "oi_change": 4.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "40d0a403-285c-447b-83eb-3b3aabc47de3",
+        "error": null,
+        "submitted": true,
+        "limit_price": 0.9,
+        "contracts": 8
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "LYFT",
+      "call_prem": 0.0,
+      "put_prem": 132003.0,
+      "underlying_price": 15.595,
+      "min_contract_premium": 1.25,
+      "flow_type": "put",
+      "total_premium": 132003.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 14

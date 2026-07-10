@@ -54175,7 +54175,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 32.5,
+        "mfe_pct": 41.7,
         "mae_pct": -11.7,
         "stage": "initial"
       }
@@ -57634,7 +57634,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -4.1,
+        "mfe_pct": -2.7,
         "mae_pct": -20.3,
         "stage": "initial"
       }
@@ -59933,7 +59933,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -18.2,
+        "mfe_pct": -16.5,
         "mae_pct": -19.8,
         "stage": "initial"
       }
@@ -60478,6 +60478,300 @@
       "min_contract_premium": 1.43,
       "flow_type": "put",
       "total_premium": 110253.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 12,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -23.9,
+        "mae_pct": -23.9,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "AUDIT-b4b799a2",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-07-10T14:31:34.001Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "9e0c7c77-3f8b-49c9-b6d9-567e29c38c5a",
+        "symbol": "HTZ260807C00002000",
+        "age_min": 38.1,
+        "limit_price": "0.25"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "bfa41c83b05a",
+    "ticker": "RIVN",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-10T14:33:00.279Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 37,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-10T14:33:00.279Z",
+      "macro": {
+        "spot": 18.71,
+        "sma20": 16.64,
+        "distance_to_sma20_pct": 12.426,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 70.5,
+        "iv_back": 81.6,
+        "iv_ratio": 0.864,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 4017195.3,
+        "zero_gamma_strike": 18.0,
+        "distance_to_zero_gamma_pct": 3.795,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -69.2,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.4,
+        "atr_pct": 7.46,
+        "rvol_10min": 0.24,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Consumer Cyclical",
+        "industry": "Auto Manufacturers",
+        "market_cap": 26798028800,
+        "short_pct_float": 14.59,
+        "short_ratio": 4.43,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 19.26,
+        "vader_compound": 0.032,
+        "news_type": "Analyst",
+        "top_headline": "UBS Maintains Neutral on Rivian Automotive, Raises Price Target to $17",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 12.426,
+        "market_spy_dist_pct": 0.86,
+        "sector_etf": "XLY",
+        "sector_dist_pct": 0.379,
+        "sector_vs_market_spread": -0.481,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 82.4,
+        "call_iv_25d": 70.5,
+        "skew_ratio": 1.17,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 16.5,
+        "ask_sweep_prem": 706061.0,
+        "total_flow_prem": 4279853.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.25,
+        "heaviest_node_price": 18.66,
+        "node_size": 302792.0,
+        "n_prints": 108,
+        "window_start": "2026-07-10T11:11:29Z",
+        "window_end": "2026-07-10T14:32:41Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 71,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 20,
+        "next_earnings_date": "2026-07-30",
+        "iv_rank_1y": 71.17,
+        "last_earnings_date": "2026-04-30",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 106.82,
+        "front_iv": 70.5,
+        "vrp": -36.32,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 275007.0,
+        "flow_persistence_pct": 7.74,
+        "flow_direction": "bullish",
+        "closing_accel": -156668.0,
+        "n_ticks": 64,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1505.98,
+        "vwma_20": 16.88,
+        "rsi_5": 48.91,
+        "rsi_15": 58.13,
+        "gap_pct": 1.627,
+        "day_range": 2.87,
+        "candle_body": 0.075,
+        "dist_sma50": 17.482,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -11.1,
+        "vix_level": 15.5,
+        "execution_hour": 14,
+        "day_of_week": 4,
+        "sector_vs_spy": -0.882,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 46550971.0,
+        "net_vanna": 30131664.0,
+        "net_charm": 6208230.0,
+        "delta_imbalance": 4.723,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.054,
+        "bid": 18.44,
+        "ask": 18.45,
+        "bid_size": 500.0,
+        "ask_size": 1900.0,
+        "obi": -0.5833,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.24,
+        "gap_pct": 1.627,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 14.59,
+        "float_shares": 784395806,
+        "shares_short": 150288550,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.032,
+      "sweep_aggression_pct": 16.5,
+      "distance_to_zero_gamma_pct": 3.795,
+      "distance_to_heaviest_dp_node_pct": 0.25,
+      "days_since_earnings": 71,
+      "days_to_earnings": 20,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 7.74,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "RIVN260807C00019500",
+        "expiry": "2026-08-07",
+        "strike": 19.5,
+        "dte": 35,
+        "entry_premium": 1.63,
+        "limit_price": 1.65,
+        "contracts": 4,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "165",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.12,
+          "ask": 1.47,
+          "mid": 1.295,
+          "bid_ask_spread_pct": 27.027,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 163.0,
+          "oi_prev": 165.0,
+          "oi_change": -2.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "3b1d9f7e-ede1-4107-9cef-5bc673b6f0b2",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.65,
+        "contracts": 4
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "RIVN",
+      "call_prem": 50589.0,
+      "put_prem": 0.0,
+      "underlying_price": 18.71,
+      "min_contract_premium": 2.02,
+      "flow_type": "call",
+      "total_premium": 50589.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 12

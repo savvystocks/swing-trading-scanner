@@ -37873,14 +37873,45 @@
         "contracts": 7
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -64.7
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": -41.2,
+          "mae_pct": -64.7,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -41.2,
+      "mae_pct": -64.7,
+      "determining_factor": "Bullish call FAILED (-65%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 14.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "TRIP260807C00015000",
+        "closed_at": "2026-07-10T19:51:23.829Z",
+        "return_pct": -64.7,
+        "reason": "-64.7% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -41.2,
-        "mae_pct": -41.2,
-        "stage": "initial"
+        "mae_pct": -64.7,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -49824,7 +49855,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -17.2,
-        "mae_pct": -27.6,
+        "mae_pct": -43.1,
         "stage": "initial"
       }
     }
@@ -54511,7 +54542,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -6.8,
-        "mae_pct": -45.1,
+        "mae_pct": -47.8,
         "stage": "initial"
       }
     }
@@ -60848,8 +60879,29 @@
         "contracts": 4
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -57.9
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": -20.0,
+          "mae_pct": -57.9,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -20.0,
+      "mae_pct": -57.9,
+      "determining_factor": "Bullish call FAILED (-58%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 18.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "RIVN",
@@ -60862,12 +60914,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 12,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "RIVN260807C00019500",
+        "closed_at": "2026-07-10T19:51:24.892Z",
+        "return_pct": -57.9,
+        "reason": "-57.9% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -20.0,
-        "mae_pct": -43.4,
-        "stage": "initial"
+        "mae_pct": -57.9,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -62057,8 +62119,29 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -50.0
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -35.4,
+          "mae_pct": -50.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -35.4,
+      "mae_pct": -50.0,
+      "determining_factor": "Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 80.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "BBY",
@@ -62071,12 +62154,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 14,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "BBY260807P00079000",
+        "closed_at": "2026-07-10T19:51:25.755Z",
+        "return_pct": -50.0,
+        "reason": "-50.0% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -35.4,
-        "mae_pct": -47.9,
-        "stage": "initial"
+        "mae_pct": -50.0,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -62353,7 +62446,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -14.6,
+        "mfe_pct": -12.0,
         "mae_pct": -29.1,
         "stage": "initial"
       }
@@ -63222,7 +63315,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -4.9,
-        "mae_pct": -22.0,
+        "mae_pct": -24.4,
         "stage": "initial"
       }
     }
@@ -63780,7 +63873,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -4.6,
-        "mae_pct": -20.7,
+        "mae_pct": -34.4,
         "stage": "initial"
       }
     }
@@ -64871,8 +64964,29 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -62.5
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -20.8,
+          "mae_pct": -62.5,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -20.8,
+      "mae_pct": -62.5,
+      "determining_factor": "Bearish put FAILED (-62%, move 0.0%): no breakdown materialised; spot held above zero-gamma 50.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "IGV",
@@ -64885,12 +64999,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 14,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "IGV260807P00089000",
+        "closed_at": "2026-07-10T19:51:26.786Z",
+        "return_pct": -62.5,
+        "reason": "-62.5% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -20.8,
-        "mae_pct": -20.8,
-        "stage": "initial"
+        "mae_pct": -62.5,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -65741,7 +65865,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -17.3,
-        "mae_pct": -32.4,
+        "mae_pct": -46.8,
         "stage": "initial"
       }
     }
@@ -66571,7 +66695,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -10.2,
-        "mae_pct": -20.9,
+        "mae_pct": -28.0,
         "stage": "initial"
       }
     }
@@ -66858,7 +66982,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -16.8,
-        "mae_pct": -16.8,
+        "mae_pct": -35.5,
         "stage": "initial"
       }
     }
@@ -67137,7 +67261,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -19.6,
-        "mae_pct": -22.7,
+        "mae_pct": -46.4,
         "stage": "initial"
       }
     }
@@ -67718,7 +67842,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -9.3,
-        "mae_pct": -15.8,
+        "mae_pct": -25.7,
         "stage": "initial"
       }
     }
@@ -67997,8 +68121,9 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -41.2,
-        "mae_pct": -41.2,
-        "stage": "initial"
+        "mae_pct": -64.7,
+        "stage": "initial",
+        "close_fails": 1
       }
     }
   },
@@ -68834,7 +68959,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -8.2,
-        "mae_pct": -8.2,
+        "mae_pct": -11.4,
         "stage": "initial"
       }
     }
@@ -69108,6 +69233,309 @@
       "total_premium": 104832.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 16
+    "brake_stopouts_at_entry": 16,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -2.2,
+        "mae_pct": -2.2,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "type": "day_trade",
+    "ts_utc": "2026-07-10T19:51:25.232Z",
+    "ticker": "RIVN",
+    "occ": "RIVN260807C00019500",
+    "via": "CLOSE_STOP_LOSS",
+    "status": "LOGGED"
+  },
+  {
+    "type": "day_trade",
+    "ts_utc": "2026-07-10T19:51:26.140Z",
+    "ticker": "BBY",
+    "occ": "BBY260807P00079000",
+    "via": "CLOSE_STOP_LOSS",
+    "status": "LOGGED"
+  },
+  {
+    "type": "day_trade",
+    "ts_utc": "2026-07-10T19:51:27.130Z",
+    "ticker": "IGV",
+    "occ": "IGV260807P00089000",
+    "via": "CLOSE_STOP_LOSS",
+    "status": "LOGGED"
+  },
+  {
+    "trade_set_id": "974d74b57b80",
+    "ticker": "BMNR",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-10T19:51:54.405Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 56,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-10T19:51:54.405Z",
+      "macro": {
+        "spot": 14.97,
+        "sma20": 15.01,
+        "distance_to_sma20_pct": -0.203,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 80.3,
+        "iv_back": 84.7,
+        "iv_ratio": 0.948,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 5034171.8,
+        "zero_gamma_strike": 15.0,
+        "distance_to_zero_gamma_pct": -0.2,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.05,
+        "atr_pct": 7.0,
+        "rvol_10min": 0.66,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Capital Markets",
+        "market_cap": 8537956352,
+        "short_pct_float": 6.25,
+        "short_ratio": 0.94,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 40.64,
+        "vader_compound": 0.079,
+        "news_type": "Unknown",
+        "top_headline": "Will US Invade Iran Before 2027? Odds on Prediction Market Just Spiked After Trump Declares Peace Accord 'Over'",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -0.203,
+        "market_spy_dist_pct": 1.557,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 2.668,
+        "sector_vs_market_spread": 1.111,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 90.6,
+        "call_iv_25d": 84.9,
+        "skew_ratio": 1.067,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 14.89,
+        "ask_sweep_prem": 589181.0,
+        "total_flow_prem": 3956644.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.75,
+        "heaviest_node_price": 15.08,
+        "node_size": 511551.0,
+        "n_prints": 188,
+        "window_start": "2026-07-10T09:06:48Z",
+        "window_end": "2026-07-10T19:51:17Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 0,
+        "post_earnings_iv_crush_flag": true,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 14.08,
+        "last_earnings_date": "2026-07-10",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 71.1,
+        "front_iv": 80.3,
+        "vrp": 9.2,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 967471.0,
+        "flow_persistence_pct": 25.02,
+        "flow_direction": "bullish",
+        "closing_accel": -511930.0,
+        "n_ticks": 382,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 628.44,
+        "vwma_20": 14.97,
+        "rsi_5": 62.81,
+        "rsi_15": 45.37,
+        "gap_pct": 4.084,
+        "day_range": 3.907,
+        "candle_body": 0.538,
+        "dist_sma50": -16.111,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -4.4,
+        "vix_level": 15.21,
+        "execution_hour": 19,
+        "day_of_week": 4,
+        "sector_vs_spy": -1.176,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 15106699.0,
+        "net_vanna": 37685925.0,
+        "net_charm": -54030758.0,
+        "delta_imbalance": 1.851,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.067,
+        "bid": 14.99,
+        "ask": 15.0,
+        "bid_size": 1500.0,
+        "ask_size": 1600.0,
+        "obi": -0.0323,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.65,
+        "gap_pct": 4.084,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 6.25,
+        "float_shares": 529618150,
+        "shares_short": 35538821,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.079,
+      "sweep_aggression_pct": 14.89,
+      "distance_to_zero_gamma_pct": -0.2,
+      "distance_to_heaviest_dp_node_pct": -0.75,
+      "days_since_earnings": 0,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": true,
+      "flow_persistence_pct": 25.02,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "BMNR260807C00015500",
+        "expiry": "2026-08-07",
+        "strike": 15.5,
+        "dte": 35,
+        "entry_premium": 1.49,
+        "limit_price": 1.5,
+        "contracts": 5,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "162",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.1,
+          "ask": 1.22,
+          "mid": 1.16,
+          "bid_ask_spread_pct": 10.345,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 127.0,
+          "oi_prev": 162.0,
+          "oi_change": -35.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "51a41544-b594-4f5f-b02f-178adefba821",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.5,
+        "contracts": 5
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "BMNR",
+      "call_prem": 34580.0,
+      "put_prem": 0.0,
+      "underlying_price": 14.98,
+      "min_contract_premium": 1.3,
+      "flow_type": "call",
+      "total_premium": 34580.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 20
   }
 ]

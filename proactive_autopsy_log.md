@@ -847,3 +847,12 @@
 
 **Determining factor:** Bullish call FAILED (-66%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 13.0 worked against it.
 
+## Autopsy - PYPL (07adba2c028f)
+- entered 2026-07-09T18:31:32.595Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -99.4% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-99%, move 0.0%): no breakdown materialised; spot held above zero-gamma 47.5.
+

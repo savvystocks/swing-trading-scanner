@@ -40028,9 +40028,9 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 34.6,
+        "mfe_pct": 50.8,
         "mae_pct": -38.5,
-        "stage": "scaled",
+        "stage": "trailing",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-10T13:31:30.727Z",
@@ -40529,7 +40529,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -11.2,
-        "mae_pct": -40.0,
+        "mae_pct": -41.5,
         "stage": "initial"
       }
     }
@@ -49503,7 +49503,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 19.5,
+        "mfe_pct": 39.7,
         "mae_pct": -17.3,
         "stage": "initial"
       }
@@ -50652,7 +50652,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 20.0,
+        "mfe_pct": 64.0,
         "mae_pct": -40.0,
         "stage": "initial"
       }
@@ -52399,7 +52399,7 @@
         "mfe_pct": -20.0,
         "mae_pct": -100.0,
         "stage": "initial",
-        "close_fails": 1
+        "close_fails": 2
       }
     }
   },
@@ -56675,8 +56675,29 @@
         "contracts": 4
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -99.4
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -21.9,
+          "mae_pct": -100.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -21.9,
+      "mae_pct": -100.0,
+      "determining_factor": "Bearish put FAILED (-99%, move 0.0%): no breakdown materialised; spot held above zero-gamma 47.5.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "PYPL",
@@ -56689,13 +56710,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 10,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "PYPL260807P00043000",
+        "closed_at": "2026-07-10T13:41:20.451Z",
+        "return_pct": -99.4,
+        "reason": "-99.4% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -21.9,
         "mae_pct": -100.0,
-        "stage": "initial",
-        "close_fails": 1
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -57563,7 +57593,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -8.1,
+        "mfe_pct": -5.4,
         "mae_pct": -20.3,
         "stage": "initial"
       }
@@ -58432,7 +58462,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -18.2,
+        "mfe_pct": -9.1,
         "mae_pct": -18.2,
         "stage": "initial"
       }
@@ -59307,6 +59337,7 @@
       "total_premium": 190355.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 11
+    "brake_stopouts_at_entry": 11,
+    "leg_exits": {}
   }
 ]

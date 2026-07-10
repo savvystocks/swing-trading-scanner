@@ -60828,7 +60828,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -20.0,
-        "mae_pct": -37.9,
+        "mae_pct": -43.4,
         "stage": "initial"
       }
     }
@@ -65378,7 +65378,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -7.2,
-        "mae_pct": -7.2,
+        "mae_pct": -8.7,
         "stage": "initial"
       }
     }
@@ -65665,6 +65665,285 @@
       "min_contract_premium": 0.48,
       "flow_type": "call",
       "total_premium": 69072.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 14,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -26.6,
+        "mae_pct": -26.6,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "0be3d34e4bd2",
+    "ticker": "SOFI",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-10T17:52:18.562Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 51,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-10T17:52:18.562Z",
+      "macro": {
+        "spot": 18.79,
+        "sma20": 17.73,
+        "distance_to_sma20_pct": 5.992,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 58.4,
+        "iv_back": 67.6,
+        "iv_ratio": 0.864,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 13103148.8,
+        "zero_gamma_strike": 18.5,
+        "distance_to_zero_gamma_pct": 1.543,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -25.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.93,
+        "atr_pct": 4.96,
+        "rvol_10min": 1.45,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Credit Services",
+        "market_cap": 24096294912,
+        "short_pct_float": 15.48,
+        "short_ratio": 2.69,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 5.06,
+        "vader_compound": 0.595,
+        "news_type": "Analyst",
+        "top_headline": "SoFi Stock Is Trending Friday — Here's Why",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 5.992,
+        "market_spy_dist_pct": 1.42,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 2.459,
+        "sector_vs_market_spread": 1.039,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 72.6,
+        "call_iv_25d": 65.8,
+        "skew_ratio": 1.103,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 12.25,
+        "ask_sweep_prem": 396983.0,
+        "total_flow_prem": 3240491.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 18.79,
+        "node_size": 1013874.0,
+        "n_prints": 200,
+        "window_start": "2026-07-10T17:20:52Z",
+        "window_end": "2026-07-10T17:52:18Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 74,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 19,
+        "next_earnings_date": "2026-07-29",
+        "iv_rank_1y": 47.84,
+        "last_earnings_date": "2026-04-27",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 42.58,
+        "front_iv": 58.4,
+        "vrp": 15.82,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 2615042.0,
+        "flow_persistence_pct": 20.6,
+        "flow_direction": "bullish",
+        "closing_accel": -2911670.0,
+        "n_ticks": 263,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1011.21,
+        "vwma_20": 17.76,
+        "rsi_5": 61.88,
+        "rsi_15": 62.34,
+        "gap_pct": 2.903,
+        "day_range": 5.934,
+        "candle_body": 0.314,
+        "dist_sma50": 11.554,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -9.2,
+        "vix_level": 15.35,
+        "execution_hour": 17,
+        "day_of_week": 4,
+        "sector_vs_spy": -1.248,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 83377948.0,
+        "net_vanna": 78180188.0,
+        "net_charm": -11635907.0,
+        "delta_imbalance": 3.349,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.053,
+        "bid": 18.78,
+        "ask": 18.79,
+        "bid_size": 3500.0,
+        "ask_size": 3000.0,
+        "obi": 0.0769,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 1.48,
+        "gap_pct": 2.903,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 15.48,
+        "float_shares": 1262961331,
+        "shares_short": 195788409,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.595,
+      "sweep_aggression_pct": 12.25,
+      "distance_to_zero_gamma_pct": 1.543,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 74,
+      "days_to_earnings": 19,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 20.6,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "SOFI260807P00018000",
+        "expiry": "2026-08-07",
+        "strike": 18.0,
+        "dte": 35,
+        "entry_premium": 1.36,
+        "limit_price": 1.37,
+        "contracts": 5,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "483",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.99,
+          "ask": 1.03,
+          "mid": 1.01,
+          "bid_ask_spread_pct": 3.96,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 765.0,
+          "oi_prev": 483.0,
+          "oi_change": 282.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "51cf469f-3949-4cb0-a6f1-5e4cb1ed626b",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.37,
+        "contracts": 5
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "SOFI",
+      "call_prem": 0.0,
+      "put_prem": 121275.0,
+      "underlying_price": 18.7714,
+      "min_contract_premium": 2.75,
+      "flow_type": "put",
+      "total_premium": 121275.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 14

@@ -6,7 +6,14 @@ mkdir -p "$REPO/data"
 LOG="$REPO/data/poller.log"
 {
   echo "=== $(date -u +%FT%TZ) poller run ==="
-  git pull --ff-only origin main
+  # sync = mirror origin/main via fetch + hard-reset (NOT `git pull`). `git pull origin main` duplicated
+  # `main` in FETCH_HEAD (explicit arg + configured refspec) -> "Cannot fast-forward to multiple branches",
+  # and its ref update raced the engine's frequent pushes -> "cannot lock ref". reset --hard has NO merge
+  # step (both errors impossible) and targets FETCH_HEAD (written even if the origin/main ref update warns),
+  # so ingestion proceeds through the race. SAFE: harvest.db is gitignored + untracked and the checkout has
+  # no local commits, so this only refreshes engine-owned tracked files - the pile is never touched.
+  git fetch --no-tags origin main || true
+  git reset --hard FETCH_HEAD || true
   set -a
   [ -f "$REPO/.harvest_env" ] && . "$REPO/.harvest_env"
   set +a

@@ -729,7 +729,40 @@
     "QSR260821C00072500",
     "NFLX260717C00087000",
     "SPY260918C00780000",
-    "NBIS260821C00230000"
+    "NBIS260821C00230000",
+    "CCL260807P00026000",
+    "SPY260710P00753000",
+    "MS260731C00225000",
+    "NFLX260731C00079000",
+    "HCA260717P00395000",
+    "JNJ260821C00280000",
+    "GWW270319C01460000",
+    "NVDA260821P00210000",
+    "COST260821C00925000",
+    "QQQ260821C00750000",
+    "PANW260731P00325000",
+    "QQQ260710C00725000",
+    "MU260710C00990000",
+    "FRMI260814C00010000",
+    "MSTR260821C00100000",
+    "TSLA270319P00195000",
+    "MU260713P00970000",
+    "STZ260821P00125000",
+    "BIIB261016P00175000",
+    "CCL270115P00027000",
+    "XLE260717C00055500",
+    "ARM260717P00342500",
+    "SLV260918C00071000",
+    "TMUS261016C00175000",
+    "AMZN270617C00245000",
+    "FRMI280121C00012500",
+    "SAH260821P00100000",
+    "DIA260814C00525000",
+    "AMD260821P00620000",
+    "LITE260724C00780000",
+    "COHR260717C00330000",
+    "AVBP270115C00040000",
+    "SNDK260717C02200000"
   ],
   "tickers": {
     "DRAM": {
@@ -24251,10 +24284,170 @@
       "days_to_earnings": 48,
       "post_earnings_iv_crush_flag": false,
       "flow_persistence_pct": 3.62
+    },
+    "JNJ": {
+      "entry_ts_utc": "2026-07-10T16:32:59.060Z",
+      "macro": {
+        "spot": 256.03,
+        "sma20": 247.87,
+        "distance_to_sma20_pct": 3.293,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 31.2,
+        "iv_back": 26.7,
+        "iv_ratio": 1.169,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 55119.6,
+        "zero_gamma_strike": 260.0,
+        "distance_to_zero_gamma_pct": -1.551,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -50.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 6.42,
+        "atr_pct": 2.51,
+        "rvol_10min": 0.37,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Healthcare",
+        "industry": "Drug Manufacturers - General",
+        "market_cap": 616247525376,
+        "short_pct_float": 1.23,
+        "short_ratio": 3.43,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 22.97,
+        "vader_compound": 0.149,
+        "news_type": "Analyst",
+        "top_headline": "9 Health Care Stocks With Whale Alerts In Today\u2019s Session",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 3.293,
+        "market_spy_dist_pct": 1.322,
+        "sector_etf": "XLV",
+        "sector_dist_pct": 2.199,
+        "sector_vs_market_spread": 0.877,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 29.1,
+        "call_iv_25d": 26.3,
+        "skew_ratio": 1.106,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.0,
+        "ask_sweep_prem": 1320980.0,
+        "total_flow_prem": 21999841.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -1.0,
+        "heaviest_node_price": 258.59,
+        "node_size": 354959.0,
+        "n_prints": 200,
+        "window_start": "2026-07-10T15:06:44Z",
+        "window_end": "2026-07-10T16:29:53Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 87,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 5,
+        "next_earnings_date": "2026-07-15",
+        "iv_rank_1y": 85.69,
+        "last_earnings_date": "2026-04-14",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 31.48,
+        "front_iv": 31.2,
+        "vrp": -0.28,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 559626.0,
+        "flow_persistence_pct": 19.37,
+        "flow_direction": "bullish",
+        "closing_accel": -395836.0,
+        "n_ticks": 181,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 949.17,
+        "vwma_20": 247.88,
+        "rsi_5": 34.66,
+        "rsi_15": 65.4,
+        "gap_pct": 0.556,
+        "day_range": 2.052,
+        "candle_body": 0.842,
+        "dist_sma50": 8.463,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 4.5,
+        "vix_level": 15.37,
+        "execution_hour": 16,
+        "day_of_week": 4,
+        "sector_vs_spy": -3.202,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 10921177.0,
+        "net_vanna": -4796228.0,
+        "net_charm": 2557284.0,
+        "delta_imbalance": 5.669,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 5.892,
+        "bid": 256.03,
+        "ask": 272.06,
+        "bid_size": 200.0,
+        "ask_size": 200.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.36,
+        "gap_pct": 0.556,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 1.23,
+        "float_shares": 2403269135,
+        "shares_short": 26689694,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.149,
+      "sweep_aggression_pct": 6.0,
+      "distance_to_zero_gamma_pct": -1.551,
+      "distance_to_heaviest_dp_node_pct": -1.0,
+      "days_since_earnings": 87,
+      "days_to_earnings": 5,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 19.37
     }
   },
-  "payload_count": 147,
-  "topn_count": 243,
+  "payload_count": 148,
+  "topn_count": 254,
   "random_count": 3,
   "backoff_429": false,
   "cap_today": 300,

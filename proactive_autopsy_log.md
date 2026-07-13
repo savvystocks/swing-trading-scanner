@@ -1198,3 +1198,21 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 4.5 worked against it.
 
+## Autopsy - WEN (b2bc9269626a)
+- entered 2026-07-09T19:32:20.083Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -54.5% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 7.5 worked against it.
+
+## Autopsy - SOC (097014f64636)
+- entered 2026-07-10T19:22:11.179Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +42.9% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 4.0 fed the squeeze.
+

@@ -1153,3 +1153,12 @@
 
 **Determining factor:** Bearish put FAILED (-65%, move 0.0%): no breakdown materialised; spot held above zero-gamma 22.5.
 
+## Autopsy - HYG (6ede52ecbcb6)
+- entered 2026-07-13T13:32:14.425Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -81.8% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-82%, move 0.0%): no breakdown materialised; spot held above zero-gamma 79.5.
+

@@ -43463,7 +43463,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 10.3,
+        "mfe_pct": 12.8,
         "mae_pct": -48.7,
         "stage": "initial"
       }
@@ -66927,7 +66927,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 20.8,
+        "mfe_pct": 21.8,
         "mae_pct": -19.8,
         "stage": "initial"
       }
@@ -69494,9 +69494,9 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 39.3,
+        "mfe_pct": 53.6,
         "mae_pct": -16.1,
-        "stage": "scaled",
+        "stage": "trailing",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-13T15:11:30.481Z",
@@ -71550,7 +71550,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -3.0,
+        "mfe_pct": 7.5,
         "mae_pct": -31.3,
         "stage": "initial"
       }
@@ -74146,7 +74146,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -10.6,
+        "mfe_pct": -8.2,
         "mae_pct": -18.8,
         "stage": "initial"
       }
@@ -77797,7 +77797,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -6.7,
+        "mfe_pct": -5.2,
         "mae_pct": -7.8,
         "stage": "initial"
       }
@@ -78634,7 +78634,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -23.6,
+        "mfe_pct": -19.3,
         "mae_pct": -23.6,
         "stage": "initial"
       }
@@ -78907,6 +78907,285 @@
       "min_contract_premium": 2.0,
       "flow_type": "put",
       "total_premium": 58400.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 24,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -29.0,
+        "mae_pct": -29.0,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "b4c85de0ea0f",
+    "ticker": "LUNR",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-13T18:32:28.213Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 53,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-13T18:32:28.213Z",
+      "macro": {
+        "spot": 15.16,
+        "sma20": 20.3,
+        "distance_to_sma20_pct": -25.284,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 106.9,
+        "iv_back": 110.0,
+        "iv_ratio": 0.972,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -95675.3,
+        "zero_gamma_strike": 5.0,
+        "distance_to_zero_gamma_pct": 67.018,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 650.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.52,
+        "atr_pct": 10.0,
+        "rvol_10min": 0.37,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Industrials",
+        "industry": "Aerospace & Defense",
+        "market_cap": 2433852928,
+        "short_pct_float": 25.95,
+        "short_ratio": 2.46,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 73.55,
+        "vader_compound": 0.622,
+        "news_type": "Unknown",
+        "top_headline": "Intuitive Machines Stock Extends Slide Below 200-Day Moving Average: What's Driving the Move?",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -25.284,
+        "market_spy_dist_pct": 0.663,
+        "sector_etf": "XLI",
+        "sector_dist_pct": -0.739,
+        "sector_vs_market_spread": -1.402,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 117.1,
+        "call_iv_25d": 104.1,
+        "skew_ratio": 1.125,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 17.28,
+        "ask_sweep_prem": 703434.0,
+        "total_flow_prem": 4071355.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -3.75,
+        "heaviest_node_price": 15.73,
+        "node_size": 118509.0,
+        "n_prints": 39,
+        "window_start": "2026-07-13T08:23:52Z",
+        "window_end": "2026-07-13T18:31:46Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 60,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 24,
+        "next_earnings_date": "2026-08-06",
+        "iv_rank_1y": 62.64,
+        "last_earnings_date": "2026-05-14",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 75.35,
+        "front_iv": 106.9,
+        "vrp": 31.55,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -184217.0,
+        "flow_persistence_pct": 18.23,
+        "flow_direction": "bearish",
+        "closing_accel": -3785.0,
+        "n_ticks": 302,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 853.66,
+        "vwma_20": 21.37,
+        "rsi_5": 0.0,
+        "rsi_15": 20.55,
+        "gap_pct": -2.294,
+        "day_range": 5.605,
+        "candle_body": 0.7,
+        "dist_sma50": -45.169,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -3.1,
+        "vix_level": 17.06,
+        "execution_hour": 18,
+        "day_of_week": 0,
+        "sector_vs_spy": -2.688,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -1422610.0,
+        "net_vanna": 7287634.0,
+        "net_charm": -9475809.0,
+        "delta_imbalance": 0.797,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.263,
+        "bid": 15.15,
+        "ask": 15.19,
+        "bid_size": 200.0,
+        "ask_size": 300.0,
+        "obi": -0.2,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.35,
+        "gap_pct": -2.294,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 25.95,
+        "float_shares": 130335411,
+        "shares_short": 34036834,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.622,
+      "sweep_aggression_pct": 17.28,
+      "distance_to_zero_gamma_pct": 67.018,
+      "distance_to_heaviest_dp_node_pct": -3.75,
+      "days_since_earnings": 60,
+      "days_to_earnings": 24,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 18.23,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "LUNR260814P00014500",
+        "expiry": "2026-08-14",
+        "strike": 14.5,
+        "dte": 35,
+        "entry_premium": 2.01,
+        "limit_price": 2.03,
+        "contracts": 3,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "3",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.47,
+          "ask": 1.76,
+          "mid": 1.615,
+          "bid_ask_spread_pct": 17.957,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 3.0,
+          "oi_prev": 3.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "ef85d53e-c790-4ade-b3f6-912ee556624a",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.03,
+        "contracts": 3
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "LUNR",
+      "call_prem": 0.0,
+      "put_prem": 46872.0,
+      "underlying_price": 15.165,
+      "min_contract_premium": 2.17,
+      "flow_type": "put",
+      "total_premium": 46872.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 24

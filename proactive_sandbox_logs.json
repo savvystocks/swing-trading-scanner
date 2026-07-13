@@ -55276,7 +55276,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 25.1,
+        "mfe_pct": 26.8,
         "mae_pct": -25.1,
         "stage": "initial"
       }
@@ -56383,7 +56383,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 16.5,
+        "mfe_pct": 18.3,
         "mae_pct": -40.8,
         "stage": "initial"
       }
@@ -71550,7 +71550,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -15.9,
+        "mfe_pct": -14.4,
         "mae_pct": -31.3,
         "stage": "initial"
       }
@@ -77218,6 +77218,300 @@
       "min_contract_premium": 1.6,
       "flow_type": "put",
       "total_premium": 160483.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 24,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -9.4,
+        "mae_pct": -9.4,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "AUDIT-b3ad9dac",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-07-13T17:31:43.420Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "b13661a4-fc68-4cee-9045-807ff57eca20",
+        "symbol": "SMCI260814C00029000",
+        "age_min": 38.5,
+        "limit_price": "2.89"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "55a1b18439d8",
+    "ticker": "EEM",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-13T17:32:22.672Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 47,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-13T17:32:22.672Z",
+      "macro": {
+        "spot": 64.64,
+        "sma20": 67.62,
+        "distance_to_sma20_pct": -4.408,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 36.6,
+        "iv_back": 36.9,
+        "iv_ratio": 0.992,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -3655047.9,
+        "zero_gamma_strike": 64.5,
+        "distance_to_zero_gamma_pct": 0.217,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.78,
+        "atr_pct": 2.76,
+        "rvol_10min": 0.59,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 118.42,
+        "vader_compound": 0.14,
+        "news_type": "Earnings",
+        "top_headline": "ETF Inflows Hit Record $1 Trillion In H1 — But 800 Funds Missed The Party",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -4.408,
+        "market_spy_dist_pct": 0.736,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 37.6,
+        "call_iv_25d": 33.7,
+        "skew_ratio": 1.119,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 3.0,
+        "ask_sweep_prem": 193279.0,
+        "total_flow_prem": 6438351.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.75,
+        "heaviest_node_price": 65.12,
+        "node_size": 1718284.0,
+        "n_prints": 180,
+        "window_start": "2026-07-13T11:20:30Z",
+        "window_end": "2026-07-13T17:18:49Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 81.5,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 35.96,
+        "front_iv": 36.6,
+        "vrp": 0.64,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -704267.0,
+        "flow_persistence_pct": 14.09,
+        "flow_direction": "bearish",
+        "closing_accel": 1066945.0,
+        "n_ticks": 228,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1157.93,
+        "vwma_20": 67.73,
+        "rsi_5": 22.3,
+        "rsi_15": 32.17,
+        "gap_pct": -2.593,
+        "day_range": 1.215,
+        "candle_body": 0.694,
+        "dist_sma50": -3.652,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -0.3,
+        "vix_level": 16.64,
+        "execution_hour": 17,
+        "day_of_week": 0,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -14172158.0,
+        "net_vanna": 47809198.0,
+        "net_charm": -27088898.0,
+        "delta_imbalance": 0.803,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.031,
+        "bid": 64.64,
+        "ask": 64.66,
+        "bid_size": 3100.0,
+        "ask_size": 13700.0,
+        "obi": -0.631,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.58,
+        "gap_pct": -2.593,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.14,
+      "sweep_aggression_pct": 3.0,
+      "distance_to_zero_gamma_pct": 0.217,
+      "distance_to_heaviest_dp_node_pct": -0.75,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 14.09,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "EEM260814P00062000",
+        "expiry": "2026-08-14",
+        "strike": 62.0,
+        "dte": 35,
+        "entry_premium": 2.93,
+        "limit_price": 2.96,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "3",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.36,
+          "ask": 1.77,
+          "mid": 1.565,
+          "bid_ask_spread_pct": 26.198,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 3.0,
+          "oi_prev": 3.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "a8ac212c-8ba9-4f67-b701-f6aaeae3ef9c",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.96,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "EEM",
+      "call_prem": 0.0,
+      "put_prem": 104910.0,
+      "underlying_price": 64.675,
+      "min_contract_premium": 0.39,
+      "flow_type": "put",
+      "total_premium": 104910.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 24

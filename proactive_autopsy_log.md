@@ -1180,3 +1180,21 @@
 
 **Determining factor:** Bearish put FAILED (-83%, move 0.0%): no breakdown materialised; spot held above zero-gamma 30.0.
 
+## Autopsy - APLD (bbfccbe0ff47)
+- entered 2026-07-10T17:31:51.490Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 27.0 worked against it.
+
+## Autopsy - SPCE (4dfd1aaacb10)
+- entered 2026-07-13T13:41:53.795Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 4.5 worked against it.
+

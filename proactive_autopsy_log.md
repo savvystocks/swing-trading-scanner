@@ -1162,3 +1162,12 @@
 
 **Determining factor:** Bearish put FAILED (-82%, move 0.0%): no breakdown materialised; spot held above zero-gamma 79.5.
 
+## Autopsy - IBIT (5457e1189496)
+- entered 2026-07-06T19:21:40.469Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -52.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 10.0 worked against it.
+

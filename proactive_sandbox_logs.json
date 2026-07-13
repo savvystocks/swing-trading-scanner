@@ -36543,14 +36543,45 @@
         "contracts": 4
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -52.8
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 4.7,
+          "mae_pct": -52.8,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 4.7,
+      "mae_pct": -52.8,
+      "determining_factor": "Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 10.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "IBIT260807C00037500",
+        "closed_at": "2026-07-13T13:51:24.678Z",
+        "return_pct": -52.8,
+        "reason": "-52.8% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 4.7,
-        "mae_pct": -49.1,
-        "stage": "initial"
+        "mae_pct": -52.8,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -49803,7 +49834,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 39.7,
-        "mae_pct": -19.1,
+        "mae_pct": -22.8,
         "stage": "initial"
       }
     }
@@ -53126,7 +53157,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -15.4,
+        "mfe_pct": -8.8,
         "mae_pct": -30.9,
         "stage": "initial"
       }
@@ -55245,7 +55276,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -1.6,
+        "mfe_pct": 2.2,
         "mae_pct": -25.1,
         "stage": "initial"
       }
@@ -56951,7 +56982,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 38.3,
+        "mfe_pct": 44.7,
         "mae_pct": -14.9,
         "stage": "scaled",
         "close_fails": 0,
@@ -66860,7 +66891,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -3.0,
+        "mfe_pct": 3.0,
         "mae_pct": -19.8,
         "stage": "initial"
       }
@@ -67411,7 +67442,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -10.2,
+        "mfe_pct": 1.8,
         "mae_pct": -49.8,
         "stage": "initial"
       }
@@ -70288,7 +70319,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -34.2,
+        "mfe_pct": -32.5,
         "mae_pct": -34.2,
         "stage": "initial"
       }
@@ -70890,6 +70921,285 @@
       "total_premium": 25919.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 20
+    "brake_stopouts_at_entry": 20,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -31.5,
+        "mae_pct": -31.5,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "843b7ee97abc",
+    "ticker": "KLAR",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-13T13:51:56.732Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 34,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-13T13:51:56.732Z",
+      "macro": {
+        "spot": 19.24,
+        "sma20": 18.98,
+        "distance_to_sma20_pct": 1.361,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 82.8,
+        "iv_back": 85.4,
+        "iv_ratio": 0.97,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 215693.1,
+        "zero_gamma_strike": 20.0,
+        "distance_to_zero_gamma_pct": -3.95,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.07,
+        "atr_pct": 5.54,
+        "rvol_10min": 0.04,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Credit Services",
+        "market_cap": 7267340800,
+        "short_pct_float": 11.37,
+        "short_ratio": 6.33,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 91.63,
+        "vader_compound": 0.076,
+        "news_type": "Analyst",
+        "top_headline": "Goldman Sachs Maintains Buy on Klarna, Raises Price Target to $25",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 1.361,
+        "market_spy_dist_pct": 1.09,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 2.769,
+        "sector_vs_market_spread": 1.679,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 64.9,
+        "call_iv_25d": 75.5,
+        "skew_ratio": 0.86,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 3.69,
+        "ask_sweep_prem": 189676.0,
+        "total_flow_prem": 5144263.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": null,
+        "heaviest_node_price": null,
+        "node_size": null,
+        "n_prints": 0,
+        "window_start": null,
+        "window_end": null,
+        "source": "uw_empty"
+      },
+      "pemd": {
+        "days_since_earnings": 60,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 31,
+        "next_earnings_date": "2026-08-13",
+        "iv_rank_1y": 42.3,
+        "last_earnings_date": "2026-05-14",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 54.84,
+        "front_iv": 82.8,
+        "vrp": 27.96,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 60876.0,
+        "flow_persistence_pct": 77.92,
+        "flow_direction": "bullish",
+        "closing_accel": 60432.0,
+        "n_ticks": 20,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 932.58,
+        "vwma_20": 18.97,
+        "rsi_5": 37.13,
+        "rsi_15": 52.64,
+        "gap_pct": -0.79,
+        "day_range": 1.483,
+        "candle_body": 0.842,
+        "dist_sma50": 12.363,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -2.6,
+        "vix_level": 16.18,
+        "execution_hour": 13,
+        "day_of_week": 0,
+        "sector_vs_spy": -0.366,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 2389415.0,
+        "net_vanna": 2719323.0,
+        "net_charm": -862689.0,
+        "delta_imbalance": 2.473,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 13.625,
+        "bid": 16.61,
+        "ask": 19.23,
+        "bid_size": 200.0,
+        "ask_size": 200.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.04,
+        "gap_pct": -0.79,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 11.37,
+        "float_shares": 195832537,
+        "shares_short": 31353998,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.076,
+      "sweep_aggression_pct": 3.69,
+      "distance_to_zero_gamma_pct": -3.95,
+      "distance_to_heaviest_dp_node_pct": null,
+      "days_since_earnings": 60,
+      "days_to_earnings": 31,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 77.92,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "KLAR260814P00018500",
+        "expiry": "2026-08-14",
+        "strike": 18.5,
+        "dte": 35,
+        "entry_premium": 1.97,
+        "limit_price": 1.99,
+        "contracts": 4,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "3",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.67,
+          "ask": 2.27,
+          "mid": 1.47,
+          "bid_ask_spread_pct": 108.844,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 11.0,
+          "oi_prev": 3.0,
+          "oi_change": 8.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "706fe71a-c942-482b-9db2-98367bf9b758",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.99,
+        "contracts": 4
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "KLAR",
+      "call_prem": 0.0,
+      "put_prem": 43666.0,
+      "underlying_price": 19.24,
+      "min_contract_premium": 1.12,
+      "flow_type": "put",
+      "total_premium": 43666.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 21
   }
 ]

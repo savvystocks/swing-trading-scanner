@@ -55827,7 +55827,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 41.8,
+        "mfe_pct": 45.6,
         "mae_pct": -27.2,
         "stage": "scaled",
         "close_fails": 0,
@@ -56987,7 +56987,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 61.7,
+        "mfe_pct": 65.2,
         "mae_pct": -14.9,
         "stage": "trailing",
         "close_fails": 0,
@@ -64250,7 +64250,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -1.1,
-        "mae_pct": -19.1,
+        "mae_pct": -21.3,
         "stage": "initial"
       }
     }
@@ -71550,7 +71550,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -20.4,
+        "mfe_pct": -19.9,
         "mae_pct": -31.3,
         "stage": "initial"
       }
@@ -75534,7 +75534,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -27.3,
+        "mfe_pct": -24.2,
         "mae_pct": -27.3,
         "stage": "initial"
       }
@@ -75815,6 +75815,285 @@
       "min_contract_premium": 1.04,
       "flow_type": "put",
       "total_premium": 92976.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 24,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -30.3,
+        "mae_pct": -30.3,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "3540ec5d8424",
+    "ticker": "GTLB",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-13T16:43:17.892Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 43,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-13T16:43:17.892Z",
+      "macro": {
+        "spot": 33.79,
+        "sma20": 29.79,
+        "distance_to_sma20_pct": 13.428,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 73.0,
+        "iv_back": 64.3,
+        "iv_ratio": 1.135,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 259613.8,
+        "zero_gamma_strike": 32.5,
+        "distance_to_zero_gamma_pct": 3.818,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.79,
+        "atr_pct": 5.29,
+        "rvol_10min": 0.2,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Software - Infrastructure",
+        "market_cap": 5717264896,
+        "short_pct_float": 11.53,
+        "short_ratio": 2.59,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 70.89,
+        "vader_compound": 0.027,
+        "news_type": "Analyst",
+        "top_headline": "UBS Maintains Neutral on GitLab, Raises Price Target to $35",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 13.428,
+        "market_spy_dist_pct": 0.793,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -1.969,
+        "sector_vs_market_spread": -2.762,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 66.8,
+        "call_iv_25d": 69.6,
+        "skew_ratio": 0.961,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.55,
+        "ask_sweep_prem": 432214.0,
+        "total_flow_prem": 5055668.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 2.0,
+        "heaviest_node_price": 33.11,
+        "node_size": 30302.0,
+        "n_prints": 4,
+        "window_start": "2026-07-13T13:37:16Z",
+        "window_end": "2026-07-13T16:42:08Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 41,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 51,
+        "next_earnings_date": "2026-09-02",
+        "iv_rank_1y": 34.33,
+        "last_earnings_date": "2026-06-02",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 54.88,
+        "front_iv": 73.0,
+        "vrp": 18.12,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 281732.0,
+        "flow_persistence_pct": 66.99,
+        "flow_direction": "bullish",
+        "closing_accel": 11826.0,
+        "n_ticks": 144,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 944.09,
+        "vwma_20": 29.52,
+        "rsi_5": 57.62,
+        "rsi_15": 73.34,
+        "gap_pct": 2.16,
+        "day_range": 4.41,
+        "candle_body": 0.456,
+        "dist_sma50": 20.389,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 8.7,
+        "vix_level": 16.51,
+        "execution_hour": 16,
+        "day_of_week": 0,
+        "sector_vs_spy": -0.965,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 3491138.0,
+        "net_vanna": 6206546.0,
+        "net_charm": -3249147.0,
+        "delta_imbalance": 2.936,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.089,
+        "bid": 33.85,
+        "ask": 33.88,
+        "bid_size": 100.0,
+        "ask_size": 200.0,
+        "obi": -0.3333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.19,
+        "gap_pct": 2.16,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 11.53,
+        "float_shares": 140541690,
+        "shares_short": 19225065,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.027,
+      "sweep_aggression_pct": 8.55,
+      "distance_to_zero_gamma_pct": 3.818,
+      "distance_to_heaviest_dp_node_pct": 2.0,
+      "days_since_earnings": 41,
+      "days_to_earnings": 51,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 66.99,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "GTLB260814C00035000",
+        "expiry": "2026-08-14",
+        "strike": 35.0,
+        "dte": 35,
+        "entry_premium": 3.06,
+        "limit_price": 3.09,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "7",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.02,
+          "ask": 2.55,
+          "mid": 2.285,
+          "bid_ask_spread_pct": 23.195,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 7.0,
+          "oi_prev": 7.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "db127a28-9a1c-40f8-92fb-13d11aa862c9",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.09,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "GTLB",
+      "call_prem": 27930.0,
+      "put_prem": 0.0,
+      "underlying_price": 33.795,
+      "min_contract_premium": 2.85,
+      "flow_type": "call",
+      "total_premium": 27930.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 24

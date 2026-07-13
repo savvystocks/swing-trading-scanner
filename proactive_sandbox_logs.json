@@ -56987,7 +56987,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 56.7,
+        "mfe_pct": 61.0,
         "mae_pct": -14.9,
         "stage": "trailing",
         "close_fails": 0,
@@ -65119,7 +65119,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -5.3,
+        "mfe_pct": -2.4,
         "mae_pct": -36.1,
         "stage": "initial"
       }
@@ -68625,7 +68625,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 8.7,
+        "mfe_pct": 13.7,
         "mae_pct": -25.7,
         "stage": "initial"
       }
@@ -69463,9 +69463,14 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 12.5,
+        "mfe_pct": 32.1,
         "mae_pct": -16.1,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-07-13T15:11:30.481Z",
+          "return_pct": 32.1
+        }
       }
     }
   },
@@ -73162,8 +73167,29 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -83.0
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -83.0,
+          "mae_pct": -83.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -83.0,
+      "mae_pct": -83.0,
+      "determining_factor": "Bearish put FAILED (-83%, move 0.0%): no breakdown materialised; spot held above zero-gamma 30.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "FISV",
@@ -73175,6 +73201,318 @@
       "total_premium": 1615075.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 21
+    "brake_stopouts_at_entry": 21,
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "FISV260814P00050000",
+        "closed_at": "2026-07-13T15:11:31.236Z",
+        "return_pct": -83.0,
+        "reason": "-83.0% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -83.0,
+        "mae_pct": -83.0,
+        "stage": "closed",
+        "close_fails": 0
+      }
+    }
+  },
+  {
+    "trade_set_id": "AUDIT-f3fbdc1d",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-07-13T15:11:30.204Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "e1e19022-8ab0-4959-8204-77dcd9a41ef8",
+        "symbol": "RGTI260814C00016500",
+        "age_min": 39.0,
+        "limit_price": "1.87"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "type": "day_trade",
+    "ts_utc": "2026-07-13T15:11:31.583Z",
+    "ticker": "FISV",
+    "occ": "FISV260814P00050000",
+    "via": "CLOSE_STOP_LOSS",
+    "status": "LOGGED"
+  },
+  {
+    "trade_set_id": "4ff05a092d39",
+    "ticker": "ARKG",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-13T15:12:23.343Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 37,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-13T15:12:23.343Z",
+      "macro": {
+        "spot": 41.33,
+        "sma20": 39.58,
+        "distance_to_sma20_pct": 4.413,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 58.3,
+        "iv_back": 48.8,
+        "iv_ratio": 1.195,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 90738.6,
+        "zero_gamma_strike": 40.0,
+        "distance_to_zero_gamma_pct": 3.218,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.85,
+        "atr_pct": 4.47,
+        "rvol_10min": 0.22,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 478.21,
+        "vader_compound": 0.297,
+        "news_type": "Product",
+        "top_headline": "Why Is Natera Stock Gaining Tuesday?",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 4.413,
+        "market_spy_dist_pct": 1.06,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 63.9,
+        "call_iv_25d": 53.1,
+        "skew_ratio": 1.203,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.36,
+        "ask_sweep_prem": 438112.0,
+        "total_flow_prem": 6893514.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.5,
+        "heaviest_node_price": 41.12,
+        "node_size": 215509.0,
+        "n_prints": 15,
+        "window_start": "2026-07-13T13:30:00Z",
+        "window_end": "2026-07-13T15:09:32Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 80.41,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 44.16,
+        "front_iv": 58.3,
+        "vrp": 14.14,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 168152.0,
+        "flow_persistence_pct": 60.62,
+        "flow_direction": "bullish",
+        "closing_accel": 124251.0,
+        "n_ticks": 77,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1240.26,
+        "vwma_20": 39.58,
+        "rsi_5": 25.87,
+        "rsi_15": 66.24,
+        "gap_pct": -1.162,
+        "day_range": 2.976,
+        "candle_body": 0.415,
+        "dist_sma50": 19.081,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 9.5,
+        "vix_level": 16.28,
+        "execution_hour": 15,
+        "day_of_week": 0,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 4692154.0,
+        "net_vanna": 1178211.0,
+        "net_charm": 1360138.0,
+        "delta_imbalance": 2.657,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.024,
+        "bid": 41.3,
+        "ask": 41.31,
+        "bid_size": 100.0,
+        "ask_size": 200.0,
+        "obi": -0.3333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.22,
+        "gap_pct": -1.162,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.297,
+      "sweep_aggression_pct": 6.36,
+      "distance_to_zero_gamma_pct": 3.218,
+      "distance_to_heaviest_dp_node_pct": 0.5,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 60.62,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "ARKG260814P00039500",
+        "expiry": "2026-08-14",
+        "strike": 39.5,
+        "dte": 35,
+        "entry_premium": 2.98,
+        "limit_price": 3.01,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": null,
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.67,
+          "ask": 2.37,
+          "mid": 2.02,
+          "bid_ask_spread_pct": 34.653,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 0.0,
+          "oi_prev": 0.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "88f73b9f-5e69-4320-96d5-a6db1d87152f",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.01,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "ARKG",
+      "call_prem": 0.0,
+      "put_prem": 58910.0,
+      "underlying_price": 41.3,
+      "min_contract_premium": 0.95,
+      "flow_type": "put",
+      "total_premium": 58910.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 22
   }
 ]

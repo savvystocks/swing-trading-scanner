@@ -1171,3 +1171,12 @@
 
 **Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 10.0 worked against it.
 
+## Autopsy - FISV (94e5d114d878)
+- entered 2026-07-13T15:01:47.566Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -83.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-83%, move 0.0%): no breakdown materialised; spot held above zero-gamma 30.0.
+

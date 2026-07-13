@@ -56987,7 +56987,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 67.4,
+        "mfe_pct": 68.1,
         "mae_pct": -14.9,
         "stage": "trailing",
         "close_fails": 0,
@@ -73868,7 +73868,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -7.2,
-        "mae_pct": -7.2,
+        "mae_pct": -12.0,
         "stage": "initial"
       }
     }
@@ -76100,7 +76100,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -20.0,
+        "mfe_pct": -18.0,
         "mae_pct": -22.0,
         "stage": "initial"
       }
@@ -76660,6 +76660,285 @@
       "min_contract_premium": 2.77,
       "flow_type": "put",
       "total_premium": 139331.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 24,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -20.9,
+        "mae_pct": -20.9,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "00b076dc4eb5",
+    "ticker": "RIOT",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-13T17:11:26.613Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 45,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-13T17:11:26.613Z",
+      "macro": {
+        "spot": 19.73,
+        "sma20": 25.32,
+        "distance_to_sma20_pct": -22.089,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 91.4,
+        "iv_back": 94.5,
+        "iv_ratio": 0.967,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": null,
+        "zero_gamma_strike": null,
+        "distance_to_zero_gamma_pct": null,
+        "regime": null,
+        "source": "unavailable"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 2.2,
+        "atr_pct": 11.15,
+        "rvol_10min": 0.5,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Capital Markets",
+        "market_cap": 7462814720,
+        "short_pct_float": 15.52,
+        "short_ratio": 3.4,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 75.84,
+        "vader_compound": -0.358,
+        "news_type": "Analyst",
+        "top_headline": "Bitcoin, Ethereum, XRP Got Clobbered in Q2: Here's What Will Decide Their Fate in Q3",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -22.089,
+        "market_spy_dist_pct": 0.805,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 2.656,
+        "sector_vs_market_spread": 1.851,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 96.5,
+        "call_iv_25d": 95.1,
+        "skew_ratio": 1.014,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 14.56,
+        "ask_sweep_prem": 1112256.0,
+        "total_flow_prem": 7637298.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 19.73,
+        "node_size": 37222.0,
+        "n_prints": 26,
+        "window_start": "2026-07-13T11:41:45Z",
+        "window_end": "2026-07-13T16:48:02Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 74,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 17,
+        "next_earnings_date": "2026-07-30",
+        "iv_rank_1y": 59.19,
+        "last_earnings_date": "2026-04-30",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 70.62,
+        "front_iv": 91.4,
+        "vrp": 20.78,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -1119809.0,
+        "flow_persistence_pct": 74.14,
+        "flow_direction": "bearish",
+        "closing_accel": -448940.0,
+        "n_ticks": 222,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1139.38,
+        "vwma_20": 25.28,
+        "rsi_5": 11.17,
+        "rsi_15": 19.64,
+        "gap_pct": -1.335,
+        "day_range": 7.275,
+        "candle_body": 0.672,
+        "dist_sma50": -20.376,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -3.1,
+        "vix_level": 16.76,
+        "execution_hour": 17,
+        "day_of_week": 0,
+        "sector_vs_spy": -0.319,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 4353000.0,
+        "net_vanna": 15408999.0,
+        "net_charm": -23549357.0,
+        "delta_imbalance": 1.399,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.101,
+        "bid": 19.71,
+        "ask": 19.73,
+        "bid_size": 1200.0,
+        "ask_size": 800.0,
+        "obi": 0.2,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.48,
+        "gap_pct": -1.335,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 15.52,
+        "float_shares": 348765098,
+        "shares_short": 54086307,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.358,
+      "sweep_aggression_pct": 14.56,
+      "distance_to_zero_gamma_pct": null,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 74,
+      "days_to_earnings": 17,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 74.14,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "RIOT260814P00019000",
+        "expiry": "2026-08-14",
+        "strike": 19.0,
+        "dte": 35,
+        "entry_premium": 2.23,
+        "limit_price": 2.25,
+        "contracts": 3,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "5",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.63,
+          "ask": 1.91,
+          "mid": 1.77,
+          "bid_ask_spread_pct": 15.819,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 12.0,
+          "oi_prev": 5.0,
+          "oi_change": 7.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "8c71c481-d10a-41ea-9e66-6d5de02d0e51",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.25,
+        "contracts": 3
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "RIOT",
+      "call_prem": 0.0,
+      "put_prem": 521554.0,
+      "underlying_price": 19.78,
+      "min_contract_premium": 1.57,
+      "flow_type": "put",
+      "total_premium": 521554.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 24

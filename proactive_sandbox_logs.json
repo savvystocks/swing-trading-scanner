@@ -58341,8 +58341,33 @@
         "contracts": 3
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -1.4
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 43.2,
+          "mae_pct": -40.5,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-14T14:31:30.022Z",
+            "return_pct": 39.2
+          }
+        }
+      },
+      "mfe_pct": 43.2,
+      "mae_pct": -40.5,
+      "determining_factor": "Bullish call FAILED (-1%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 59.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "BAC",
@@ -58355,12 +58380,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 10,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "BAC260807C00062000",
+        "closed_at": "2026-07-14T17:51:28.620Z",
+        "return_pct": -1.4,
+        "reason": "runner gave back to break-even (-1.4% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 43.2,
         "mae_pct": -40.5,
-        "stage": "scaled",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-14T14:31:30.022Z",
@@ -81549,7 +81583,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 0.0,
+        "mfe_pct": 3.7,
         "mae_pct": -36.6,
         "stage": "initial"
       }
@@ -88101,7 +88135,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -3.6,
+        "mfe_pct": -1.8,
         "mae_pct": -16.1,
         "stage": "initial"
       }
@@ -88653,6 +88687,285 @@
       "min_contract_premium": 1.47,
       "flow_type": "call",
       "total_premium": 458493.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 18,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -26.6,
+        "mae_pct": -26.6,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "2b4985875bd3",
+    "ticker": "NOK",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-14T17:52:03.510Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 56,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-14T17:52:03.510Z",
+      "macro": {
+        "spot": 11.54,
+        "sma20": 13.05,
+        "distance_to_sma20_pct": -11.555,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 96.9,
+        "iv_back": 79.5,
+        "iv_ratio": 1.219,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 5018955.4,
+        "zero_gamma_strike": 8.0,
+        "distance_to_zero_gamma_pct": 30.676,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.74,
+        "atr_pct": 6.41,
+        "rvol_10min": 0.76,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Communication Equipment",
+        "market_cap": 64450355200,
+        "short_pct_float": 1.07,
+        "short_ratio": 0.5,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 4.26,
+        "vader_compound": 0.246,
+        "news_type": "Unknown",
+        "top_headline": "Nokia Stock Climbs as AI-Powered 5G Deal Expands in Taiwan",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -11.555,
+        "market_spy_dist_pct": 0.992,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -0.484,
+        "sector_vs_market_spread": -1.476,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 81.0,
+        "call_iv_25d": 83.2,
+        "skew_ratio": 0.973,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 17.16,
+        "ask_sweep_prem": 2881427.0,
+        "total_flow_prem": 16791700.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -1.0,
+        "heaviest_node_price": 11.66,
+        "node_size": 2047750.0,
+        "n_prints": 200,
+        "window_start": "2026-07-14T13:38:03Z",
+        "window_end": "2026-07-14T17:50:24Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 82,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 9,
+        "next_earnings_date": "2026-07-23",
+        "iv_rank_1y": 73.48,
+        "last_earnings_date": "2026-04-23",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 69.33,
+        "front_iv": 96.9,
+        "vrp": 27.57,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 413092.0,
+        "flow_persistence_pct": 13.35,
+        "flow_direction": "bullish",
+        "closing_accel": -936938.0,
+        "n_ticks": 262,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1080.68,
+        "vwma_20": 13.15,
+        "rsi_5": 43.94,
+        "rsi_15": 29.21,
+        "gap_pct": 1.371,
+        "day_range": 3.854,
+        "candle_body": 0.64,
+        "dist_sma50": -16.807,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 17.4,
+        "vix_level": 16.49,
+        "execution_hour": 17,
+        "day_of_week": 1,
+        "sector_vs_spy": 2.225,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 47160524.0,
+        "net_vanna": 95735677.0,
+        "net_charm": -76617597.0,
+        "delta_imbalance": 2.265,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.087,
+        "bid": 11.54,
+        "ask": 11.55,
+        "bid_size": 34400.0,
+        "ask_size": 20900.0,
+        "obi": 0.2441,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.74,
+        "gap_pct": 1.371,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 1.07,
+        "float_shares": 4441396370,
+        "shares_short": 59694241,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.246,
+      "sweep_aggression_pct": 17.16,
+      "distance_to_zero_gamma_pct": 30.676,
+      "distance_to_heaviest_dp_node_pct": -1.0,
+      "days_since_earnings": 82,
+      "days_to_earnings": 9,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 13.35,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "NOK260814P00011000",
+        "expiry": "2026-08-14",
+        "strike": 11.0,
+        "dte": 35,
+        "entry_premium": 1.39,
+        "limit_price": 1.4,
+        "contracts": 5,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "71",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.79,
+          "ask": 0.8,
+          "mid": 0.795,
+          "bid_ask_spread_pct": 1.258,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 82.0,
+          "oi_prev": 71.0,
+          "oi_change": 11.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "270e22aa-616b-4a26-bef0-1f986cd9f9a9",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.4,
+        "contracts": 5
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "NOK",
+      "call_prem": 0.0,
+      "put_prem": 90000.0,
+      "underlying_price": 11.52,
+      "min_contract_premium": 0.3,
+      "flow_type": "put",
+      "total_premium": 90000.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 18

@@ -1414,3 +1414,12 @@
 
 **Determining factor:** Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 85.0 worked against it.
 
+## Autopsy - BAC (8fe28898f451)
+- entered 2026-07-09T19:02:14.523Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -1.4% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-1%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 59.0 worked against it.
+

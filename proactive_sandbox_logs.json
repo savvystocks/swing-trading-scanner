@@ -79890,7 +79890,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -12.1,
+        "mfe_pct": -11.5,
         "mae_pct": -36.2,
         "stage": "initial"
       }
@@ -90671,6 +90671,293 @@
       "min_contract_premium": 1.1,
       "flow_type": "call",
       "total_premium": 44000.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 19,
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "AUDIT-33837557",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-07-14T19:01:36.963Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "8486ef43-8989-4569-9bb2-dd4a0069d805",
+        "symbol": "ONDS260814C00007500",
+        "age_min": 39.3,
+        "limit_price": "0.77"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "42d28c691fed",
+    "ticker": "SVIX",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-14T19:02:41.004Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 57,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-14T19:02:41.004Z",
+      "macro": {
+        "spot": 24.48,
+        "sma20": 23.53,
+        "distance_to_sma20_pct": 4.026,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 43.2,
+        "iv_back": 55.6,
+        "iv_ratio": 0.777,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 52055.5,
+        "zero_gamma_strike": 22.0,
+        "distance_to_zero_gamma_pct": 10.131,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.82,
+        "atr_pct": 3.34,
+        "rvol_10min": 0.59,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 4,
+        "latest_age_hours": 2691.8,
+        "vader_compound": 0.69,
+        "news_type": "Unknown",
+        "top_headline": "'Trump Is Playing Markets Like A Fiddle,' Expert Says: Here's How You Can Too",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 4.026,
+        "market_spy_dist_pct": 0.971,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 56.7,
+        "call_iv_25d": 45.5,
+        "skew_ratio": 1.246,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 20.26,
+        "ask_sweep_prem": 629036.0,
+        "total_flow_prem": 3105113.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 24.48,
+        "node_size": 81354.0,
+        "n_prints": 27,
+        "window_start": "2026-07-14T13:31:22Z",
+        "window_end": "2026-07-14T18:47:40Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 23.59,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 44.16,
+        "front_iv": 43.2,
+        "vrp": -0.96,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 126712.0,
+        "flow_persistence_pct": 53.12,
+        "flow_direction": "bullish",
+        "closing_accel": 42212.0,
+        "n_ticks": 94,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1347.87,
+        "vwma_20": 23.38,
+        "rsi_5": 54.12,
+        "rsi_15": 58.19,
+        "gap_pct": 1.039,
+        "day_range": 1.593,
+        "candle_body": 0.41,
+        "dist_sma50": 12.297,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -12.4,
+        "vix_level": 16.41,
+        "execution_hour": 19,
+        "day_of_week": 1,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 1902764.0,
+        "net_vanna": 734585.0,
+        "net_charm": 291586.0,
+        "delta_imbalance": 2.661,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.041,
+        "bid": 24.47,
+        "ask": 24.48,
+        "bid_size": 200.0,
+        "ask_size": 300.0,
+        "obi": -0.2,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.58,
+        "gap_pct": 1.039,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.69,
+      "sweep_aggression_pct": 20.26,
+      "distance_to_zero_gamma_pct": 10.131,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 53.12,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "SVIX260814P00023500",
+        "expiry": "2026-08-14",
+        "strike": 23.5,
+        "dte": 35,
+        "entry_premium": 1.31,
+        "limit_price": 1.32,
+        "contracts": 6,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "200",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.23,
+          "ask": 1.93,
+          "mid": 1.08,
+          "bid_ask_spread_pct": 157.407,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 200.0,
+          "oi_prev": 200.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "dc9e781d-7fb2-4f62-9a1f-92d7cffee032",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.32,
+        "contracts": 6
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "SVIX",
+      "call_prem": 0.0,
+      "put_prem": 64002.0,
+      "underlying_price": 24.475,
+      "min_contract_premium": 1.6,
+      "flow_type": "put",
+      "total_premium": 64002.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 19

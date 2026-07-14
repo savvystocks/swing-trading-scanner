@@ -74307,7 +74307,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 12.0,
+        "mfe_pct": 21.7,
         "mae_pct": -39.8,
         "stage": "initial"
       }
@@ -82738,7 +82738,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -3.6,
-        "mae_pct": -18.6,
+        "mae_pct": -19.1,
         "stage": "initial"
       }
     }
@@ -82999,8 +82999,29 @@
         "contracts": 10
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -66.2
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": -40.0,
+          "mae_pct": -66.2,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -40.0,
+      "mae_pct": -66.2,
+      "determining_factor": "Bullish call FAILED (-66%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 13.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "NU",
@@ -83013,12 +83034,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 14,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "NU260814C00015000",
+        "closed_at": "2026-07-14T18:41:25.539Z",
+        "return_pct": -66.2,
+        "reason": "-66.2% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -40.0,
-        "mae_pct": -49.2,
-        "stage": "initial"
+        "mae_pct": -66.2,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -86730,7 +86761,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -19.7,
+        "mfe_pct": -14.2,
         "mae_pct": -26.8,
         "stage": "initial"
       }
@@ -90068,6 +90099,293 @@
       "total_premium": 59500.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 18
+    "brake_stopouts_at_entry": 18,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -30.6,
+        "mae_pct": -30.6,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "type": "day_trade",
+    "ts_utc": "2026-07-14T18:41:26.008Z",
+    "ticker": "NU",
+    "occ": "NU260814C00015000",
+    "via": "CLOSE_STOP_LOSS",
+    "status": "LOGGED"
+  },
+  {
+    "trade_set_id": "ea8cda9e7fc1",
+    "ticker": "SLS",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-14T18:42:03.454Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 57,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-14T18:42:03.454Z",
+      "macro": {
+        "spot": 13.53,
+        "sma20": 11.64,
+        "distance_to_sma20_pct": 16.262,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 188.9,
+        "iv_back": 212.9,
+        "iv_ratio": 0.887,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 704319.4,
+        "zero_gamma_strike": 2.5,
+        "distance_to_zero_gamma_pct": 81.523,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -80.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.72,
+        "atr_pct": 12.74,
+        "rvol_10min": 0.47,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Healthcare",
+        "industry": "Biotechnology",
+        "market_cap": 2661421824,
+        "short_pct_float": 32.33,
+        "short_ratio": 6.31,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 147.54,
+        "vader_compound": 0.646,
+        "news_type": "Unknown",
+        "top_headline": "SELLAS Life Sciences Shares Slip Wednesday as Price Tests $16 Resistance Wall",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 16.262,
+        "market_spy_dist_pct": 0.96,
+        "sector_etf": "XLV",
+        "sector_dist_pct": 0.43,
+        "sector_vs_market_spread": -0.53,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 244.2,
+        "call_iv_25d": 188.3,
+        "skew_ratio": 1.297,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 12.69,
+        "ask_sweep_prem": 1003596.0,
+        "total_flow_prem": 7909790.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 5.75,
+        "heaviest_node_price": 12.75,
+        "node_size": 48835.0,
+        "n_prints": 43,
+        "window_start": "2026-07-14T13:33:01Z",
+        "window_end": "2026-07-14T18:41:56Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 117,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 28,
+        "next_earnings_date": "2026-08-11",
+        "iv_rank_1y": 93.68,
+        "last_earnings_date": "2026-03-19",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 132.28,
+        "front_iv": 188.9,
+        "vrp": 56.62,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 625528.0,
+        "flow_persistence_pct": 12.7,
+        "flow_direction": "bullish",
+        "closing_accel": -494428.0,
+        "n_ticks": 303,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 901.58,
+        "vwma_20": 12.72,
+        "rsi_5": 50.88,
+        "rsi_15": 67.19,
+        "gap_pct": 0.0,
+        "day_range": 7.021,
+        "candle_body": 0.937,
+        "dist_sma50": 50.429,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -24.0,
+        "vix_level": 16.37,
+        "execution_hour": 18,
+        "day_of_week": 1,
+        "sector_vs_spy": -4.359,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 50160346.0,
+        "net_vanna": 1842939.0,
+        "net_charm": -2109067.0,
+        "delta_imbalance": 18.4,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.221,
+        "bid": 13.52,
+        "ask": 13.55,
+        "bid_size": 500.0,
+        "ask_size": 600.0,
+        "obi": -0.0909,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.47,
+        "gap_pct": 0.0,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 32.33,
+        "float_shares": 185277282,
+        "shares_short": 63307462,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.646,
+      "sweep_aggression_pct": 12.69,
+      "distance_to_zero_gamma_pct": 81.523,
+      "distance_to_heaviest_dp_node_pct": 5.75,
+      "days_since_earnings": 117,
+      "days_to_earnings": 28,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 12.7,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "SLS260814P00013000",
+        "expiry": "2026-08-14",
+        "strike": 13.0,
+        "dte": 35,
+        "entry_premium": 3.17,
+        "limit_price": 3.2,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "8",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.69,
+          "ask": 4.019,
+          "mid": 3.3545,
+          "bid_ask_spread_pct": 39.618,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 8.0,
+          "oi_prev": 8.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "aa307831-bc6d-4264-8812-87b73c42c0b2",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.2,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "SLS",
+      "call_prem": 0.0,
+      "put_prem": 89870.0,
+      "underlying_price": 13.4648,
+      "min_contract_premium": 0.95,
+      "flow_type": "put",
+      "total_premium": 89870.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 19
   }
 ]

@@ -1423,3 +1423,12 @@
 
 **Determining factor:** Bullish call FAILED (-1%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 59.0 worked against it.
 
+## Autopsy - NU (82d095482779)
+- entered 2026-07-14T14:02:35.022Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -66.2% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-66%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 13.0 worked against it.
+

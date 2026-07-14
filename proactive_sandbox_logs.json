@@ -82699,7 +82699,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -3.6,
-        "mae_pct": -17.0,
+        "mae_pct": -18.6,
         "stage": "initial"
       }
     }
@@ -86971,7 +86971,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -22.9,
-        "mae_pct": -23.4,
+        "mae_pct": -25.1,
         "stage": "initial"
       }
     }
@@ -87537,6 +87537,285 @@
       "min_contract_premium": 2.0,
       "flow_type": "call",
       "total_premium": 176099.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 18,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -8.8,
+        "mae_pct": -8.8,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "c0dc1c9809e6",
+    "ticker": "XLV",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-14T17:12:50.181Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 53,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-14T17:12:50.181Z",
+      "macro": {
+        "spot": 158.53,
+        "sma20": 157.6,
+        "distance_to_sma20_pct": 0.587,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 14.2,
+        "iv_back": 16.6,
+        "iv_ratio": 0.855,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 417165.8,
+        "zero_gamma_strike": 153.0,
+        "distance_to_zero_gamma_pct": 3.488,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 100.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 2.9,
+        "atr_pct": 1.83,
+        "rvol_10min": 0.73,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.29,
+        "vader_compound": 0.037,
+        "news_type": "Unknown",
+        "top_headline": "Johnson & Johnson Q2 Preview: Stock Near All-Time Highs, Market Expert Sees Rally to $282 – ‘Continue Their Winning Ways’",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 0.587,
+        "market_spy_dist_pct": 0.981,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 16.5,
+        "call_iv_25d": 16.2,
+        "skew_ratio": 1.017,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 9.12,
+        "ask_sweep_prem": 409637.0,
+        "total_flow_prem": 4490744.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.25,
+        "heaviest_node_price": 158.13,
+        "node_size": 534601.0,
+        "n_prints": 200,
+        "window_start": "2026-07-14T13:59:20Z",
+        "window_end": "2026-07-14T17:12:54Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 40.45,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 21.25,
+        "front_iv": 14.2,
+        "vrp": -7.05,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -806241.0,
+        "flow_persistence_pct": 46.06,
+        "flow_direction": "bearish",
+        "closing_accel": 718073.0,
+        "n_ticks": 216,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1000.03,
+        "vwma_20": 157.41,
+        "rsi_5": 7.16,
+        "rsi_15": 64.59,
+        "gap_pct": -0.967,
+        "day_range": 1.312,
+        "candle_body": 0.62,
+        "dist_sma50": 4.312,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -2.4,
+        "vix_level": 16.49,
+        "execution_hour": 17,
+        "day_of_week": 1,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 9611333.0,
+        "net_vanna": -18652255.0,
+        "net_charm": -128592.0,
+        "delta_imbalance": 3.638,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.013,
+        "bid": 158.52,
+        "ask": 158.54,
+        "bid_size": 1100.0,
+        "ask_size": 1100.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.73,
+        "gap_pct": -0.967,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.037,
+      "sweep_aggression_pct": 9.12,
+      "distance_to_zero_gamma_pct": 3.488,
+      "distance_to_heaviest_dp_node_pct": 0.25,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 46.06,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "XLV260814C00165000",
+        "expiry": "2026-08-14",
+        "strike": 165.0,
+        "dte": 35,
+        "entry_premium": 2.79,
+        "limit_price": 2.82,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "15",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.57,
+          "ask": 1.04,
+          "mid": 0.805,
+          "bid_ask_spread_pct": 58.385,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 15.0,
+          "oi_prev": 15.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "9c766a09-9246-499c-8d14-7f2077c67ff8",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.82,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "XLV",
+      "call_prem": 47952.0,
+      "put_prem": 0.0,
+      "underlying_price": 158.36,
+      "min_contract_premium": 1.48,
+      "flow_type": "call",
+      "total_premium": 47952.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 18

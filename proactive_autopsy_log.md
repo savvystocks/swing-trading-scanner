@@ -1369,3 +1369,12 @@
 
 **Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 13.5 worked against it.
 
+## Autopsy - LI (e5f7f601880d)
+- entered 2026-07-14T14:11:27.674Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -53.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-54%, move 0.0%): no breakdown materialised; spot held above zero-gamma 12.5.
+

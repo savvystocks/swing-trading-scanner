@@ -81868,7 +81868,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -9.3,
-        "mae_pct": -20.9,
+        "mae_pct": -25.6,
         "stage": "initial"
       }
     }
@@ -88171,7 +88171,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 0.0,
+        "mfe_pct": 1.8,
         "mae_pct": -16.1,
         "stage": "initial"
       }
@@ -90958,6 +90958,278 @@
       "min_contract_premium": 1.6,
       "flow_type": "put",
       "total_premium": 64002.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 19,
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "7ab722fb1ec9",
+    "ticker": "WULF",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-14T19:12:48.308Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 57,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-14T19:12:48.308Z",
+      "macro": {
+        "spot": 19.18,
+        "sma20": 24.72,
+        "distance_to_sma20_pct": -22.442,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 110.2,
+        "iv_back": 111.0,
+        "iv_ratio": 0.993,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 2654582.2,
+        "zero_gamma_strike": 17.0,
+        "distance_to_zero_gamma_pct": 11.366,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 100.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 2.5,
+        "atr_pct": 13.03,
+        "rvol_10min": 1.71,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Capital Markets",
+        "market_cap": 9501838336,
+        "short_pct_float": 24.87,
+        "short_ratio": 3.72,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.37,
+        "vader_compound": 0.267,
+        "news_type": "Unknown",
+        "top_headline": "Why Is TeraWulf Stock Falling on Tuesday?",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -22.442,
+        "market_spy_dist_pct": 0.94,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 2.836,
+        "sector_vs_market_spread": 1.896,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 105.2,
+        "call_iv_25d": 107.2,
+        "skew_ratio": 0.981,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 77.82,
+        "ask_sweep_prem": 15017960.0,
+        "total_flow_prem": 19299543.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.25,
+        "heaviest_node_price": 19.13,
+        "node_size": 1884590.0,
+        "n_prints": 200,
+        "window_start": "2026-07-14T14:40:29Z",
+        "window_end": "2026-07-14T19:10:26Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 67,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 23,
+        "next_earnings_date": "2026-08-06",
+        "iv_rank_1y": 53.62,
+        "last_earnings_date": "2026-05-08",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 91.23,
+        "front_iv": 110.2,
+        "vrp": 18.97,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 1198780.0,
+        "flow_persistence_pct": 6.94,
+        "flow_direction": "bullish",
+        "closing_accel": 942544.0,
+        "n_ticks": 343,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1030.81,
+        "vwma_20": 23.9,
+        "rsi_5": 42.5,
+        "rsi_15": 24.72,
+        "gap_pct": -0.526,
+        "day_range": 11.943,
+        "candle_body": 0.705,
+        "dist_sma50": -21.318,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -0.8,
+        "vix_level": 16.41,
+        "execution_hour": 19,
+        "day_of_week": 1,
+        "sector_vs_spy": -0.339,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 31479188.0,
+        "net_vanna": 46194096.0,
+        "net_charm": -103199568.0,
+        "delta_imbalance": 2.164,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.052,
+        "bid": 19.17,
+        "ask": 19.18,
+        "bid_size": 2400.0,
+        "ask_size": 3600.0,
+        "obi": -0.2,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 1.8,
+        "gap_pct": -0.526,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 24.87,
+        "float_shares": 382055669,
+        "shares_short": 104663534,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.267,
+      "sweep_aggression_pct": 77.82,
+      "distance_to_zero_gamma_pct": 11.366,
+      "distance_to_heaviest_dp_node_pct": 0.25,
+      "days_since_earnings": 67,
+      "days_to_earnings": 23,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 6.94,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "WULF260814C00020000",
+        "expiry": "2026-08-14",
+        "strike": 20.0,
+        "dte": 35,
+        "entry_premium": 2.62,
+        "limit_price": 2.65,
+        "contracts": 3,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "20",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.08,
+          "ask": 2.27,
+          "mid": 2.175,
+          "bid_ask_spread_pct": 8.736,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 17.0,
+          "oi_prev": 20.0,
+          "oi_change": -3.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "26af525a-6927-48ac-bcc6-023f060592a6",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.65,
+        "contracts": 3
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "WULF",
+      "call_prem": 63158.0,
+      "put_prem": 0.0,
+      "underlying_price": 19.195,
+      "min_contract_premium": 0.94,
+      "flow_type": "call",
+      "total_premium": 63158.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 19

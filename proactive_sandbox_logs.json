@@ -58291,9 +58291,14 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 28.4,
+        "mfe_pct": 39.2,
         "mae_pct": -40.5,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-07-14T14:31:30.022Z",
+          "return_pct": 39.2
+        }
       }
     }
   },
@@ -81438,7 +81443,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -17.9,
+        "mfe_pct": -14.9,
         "mae_pct": -36.6,
         "stage": "initial"
       }
@@ -82866,7 +82871,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -46.2,
+        "mfe_pct": -44.6,
         "mae_pct": -47.7,
         "stage": "initial"
       }
@@ -83465,6 +83470,285 @@
       "min_contract_premium": 0.47,
       "flow_type": "put",
       "total_premium": 94000.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 16,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -31.6,
+        "mae_pct": -31.6,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "6a26bc88d0f8",
+    "ticker": "EWZ",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-14T14:32:24.923Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 45,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-14T14:32:24.923Z",
+      "macro": {
+        "spot": 36.05,
+        "sma20": 34.6,
+        "distance_to_sma20_pct": 4.191,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 28.3,
+        "iv_back": 27.5,
+        "iv_ratio": 1.029,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 14248639.7,
+        "zero_gamma_strike": 36.0,
+        "distance_to_zero_gamma_pct": 0.139,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.64,
+        "atr_pct": 1.77,
+        "rvol_10min": 0.35,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 962.61,
+        "vader_compound": -0.021,
+        "news_type": "Unknown",
+        "top_headline": "Chinese, Brazilian ETFs And More On CNBC's 'Final Trades'",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 4.191,
+        "market_spy_dist_pct": 0.798,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 29.0,
+        "call_iv_25d": 29.1,
+        "skew_ratio": 0.995,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 22.02,
+        "ask_sweep_prem": 1242019.0,
+        "total_flow_prem": 5641613.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 36.14,
+        "node_size": 393981.0,
+        "n_prints": 70,
+        "window_start": "2026-07-14T12:11:13Z",
+        "window_end": "2026-07-14T14:30:07Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 44.71,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 20.19,
+        "front_iv": 28.3,
+        "vrp": 8.11,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -1768021.0,
+        "flow_persistence_pct": 55.92,
+        "flow_direction": "bearish",
+        "closing_accel": 332025.0,
+        "n_ticks": 63,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1007.93,
+        "vwma_20": 34.59,
+        "rsi_5": 73.74,
+        "rsi_15": 65.56,
+        "gap_pct": 1.512,
+        "day_range": 0.902,
+        "candle_body": 0.385,
+        "dist_sma50": 0.779,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 0.8,
+        "vix_level": 16.89,
+        "execution_hour": 14,
+        "day_of_week": 1,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 69002855.0,
+        "net_vanna": 268780981.0,
+        "net_charm": -67974462.0,
+        "delta_imbalance": 3.215,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.028,
+        "bid": 36.07,
+        "ask": 36.08,
+        "bid_size": 4800.0,
+        "ask_size": 5400.0,
+        "obi": -0.0588,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.33,
+        "gap_pct": 1.512,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.021,
+      "sweep_aggression_pct": 22.02,
+      "distance_to_zero_gamma_pct": 0.139,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 55.92,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "EWZ260814C00037500",
+        "expiry": "2026-08-14",
+        "strike": 37.5,
+        "dte": 35,
+        "entry_premium": 1.26,
+        "limit_price": 1.27,
+        "contracts": 6,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "5",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.58,
+          "ask": 0.63,
+          "mid": 0.605,
+          "bid_ask_spread_pct": 8.264,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 5.0,
+          "oi_prev": 5.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "19b97646-37a3-488b-867b-be96a956c205",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.27,
+        "contracts": 6
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "EWZ",
+      "call_prem": 84000.0,
+      "put_prem": 0.0,
+      "underlying_price": 36.06,
+      "min_contract_premium": 0.42,
+      "flow_type": "call",
+      "total_premium": 84000.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 16

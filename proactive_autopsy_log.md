@@ -1378,3 +1378,21 @@
 
 **Determining factor:** Bearish put FAILED (-54%, move 0.0%): no breakdown materialised; spot held above zero-gamma 12.5.
 
+## Autopsy - WULF (d91947723eb9)
+- entered 2026-07-09T17:42:06.508Z | trigger regime_BEARISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +57.1% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 22.0 -> negative-gamma slide, no positive catalyst.
+
+## Autopsy - HYG (8961bce51ece)
+- entered 2026-07-14T15:02:26.674Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -77.8% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-78%, move 0.0%): no breakdown materialised; spot held above zero-gamma 79.5.
+

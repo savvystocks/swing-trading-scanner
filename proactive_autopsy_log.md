@@ -1441,3 +1441,21 @@
 
 **Determining factor:** Bearish put FAILED (-75%, move 0.0%): no breakdown materialised; spot held above zero-gamma 79.5.
 
+## Autopsy - VFC (4595e585509c)
+- entered 2026-07-10T18:22:24.067Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.5% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 7.5 worked against it.
+
+## Autopsy - BSX (9ed7ad7e8e90)
+- entered 2026-07-14T15:51:58.120Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -53.8% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-54%, move 0.0%): no breakdown materialised; spot held above zero-gamma 42.5.
+

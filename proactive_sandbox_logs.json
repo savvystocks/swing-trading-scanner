@@ -42113,14 +42113,47 @@
         "contracts": 8
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -54.5
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 0.0,
+          "mae_pct": -54.5,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 0.0,
+      "mae_pct": -54.5,
+      "determining_factor": "Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 85.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "TLT260807C00088000",
+        "closed_at": "2026-07-14T16:51:27.820Z",
+        "return_pct": -54.5,
+        "reason": "-54.5% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 0.0,
-        "mae_pct": -45.5,
-        "stage": "initial"
+        "mae_pct": -54.5,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -82666,7 +82699,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -3.6,
-        "mae_pct": -15.5,
+        "mae_pct": -17.0,
         "stage": "initial"
       }
     }
@@ -86658,7 +86691,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -26.8,
+        "mfe_pct": -24.4,
         "mae_pct": -26.8,
         "stage": "initial"
       }
@@ -86933,6 +86966,300 @@
       "total_premium": 72000.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 17
+    "brake_stopouts_at_entry": 17,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -22.9,
+        "mae_pct": -22.9,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "AUDIT-524078fe",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-07-14T16:51:26.952Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "ad8f8d11-df9e-4d6d-aaaa-b8078ca89648",
+        "symbol": "PCT260814C00007000",
+        "age_min": 39.1,
+        "limit_price": "0.85"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "ee8e73c9fb2e",
+    "ticker": "APLD",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-14T16:52:14.308Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 51,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-14T16:52:14.308Z",
+      "macro": {
+        "spot": 28.09,
+        "sma20": 37.86,
+        "distance_to_sma20_pct": -25.812,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 100.8,
+        "iv_back": 106.0,
+        "iv_ratio": 0.951,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 236646.1,
+        "zero_gamma_strike": 25.0,
+        "distance_to_zero_gamma_pct": 11.0,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 2.97,
+        "atr_pct": 10.59,
+        "rvol_10min": 0.32,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Information Technology Services",
+        "market_cap": 8030124032,
+        "short_pct_float": 26.97,
+        "short_ratio": 3.41,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 287.28,
+        "vader_compound": 0.292,
+        "news_type": "Unknown",
+        "top_headline": "10 Information Technology Stocks With Whale Alerts In Today’s Session",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -25.812,
+        "market_spy_dist_pct": 0.893,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -0.689,
+        "sector_vs_market_spread": -1.582,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 105.0,
+        "call_iv_25d": 115.7,
+        "skew_ratio": 0.907,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 31.28,
+        "ask_sweep_prem": 1670948.0,
+        "total_flow_prem": 5341249.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -1.25,
+        "heaviest_node_price": 28.44,
+        "node_size": 177174.0,
+        "n_prints": 141,
+        "window_start": "2026-07-14T11:00:17Z",
+        "window_end": "2026-07-14T16:48:16Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 97,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 15,
+        "next_earnings_date": "2026-07-29",
+        "iv_rank_1y": 50.34,
+        "last_earnings_date": "2026-04-08",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 67.1,
+        "front_iv": 100.8,
+        "vrp": 33.7,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -1091156.0,
+        "flow_persistence_pct": 37.0,
+        "flow_direction": "bearish",
+        "closing_accel": -288098.0,
+        "n_ticks": 203,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 820.4,
+        "vwma_20": 37.55,
+        "rsi_5": 27.21,
+        "rsi_15": 9.63,
+        "gap_pct": 2.652,
+        "day_range": 8.099,
+        "candle_body": 0.668,
+        "dist_sma50": -31.393,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -5.2,
+        "vix_level": 16.56,
+        "execution_hour": 16,
+        "day_of_week": 1,
+        "sector_vs_spy": 2.106,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 17019689.0,
+        "net_vanna": 11891047.0,
+        "net_charm": -18881661.0,
+        "delta_imbalance": 3.141,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.071,
+        "bid": 28.08,
+        "ask": 28.1,
+        "bid_size": 200.0,
+        "ask_size": 200.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.31,
+        "gap_pct": 2.652,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 26.97,
+        "float_shares": 261739178,
+        "shares_short": 70993690,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.292,
+      "sweep_aggression_pct": 31.28,
+      "distance_to_zero_gamma_pct": 11.0,
+      "distance_to_heaviest_dp_node_pct": -1.25,
+      "days_since_earnings": 97,
+      "days_to_earnings": 15,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 37.0,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "APLD260814C00029000",
+        "expiry": "2026-08-14",
+        "strike": 29.0,
+        "dte": 35,
+        "entry_premium": 3.51,
+        "limit_price": 3.55,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "1",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.99,
+          "ask": 3.4,
+          "mid": 3.195,
+          "bid_ask_spread_pct": 12.833,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 8.0,
+          "oi_prev": 1.0,
+          "oi_change": 7.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "467d2c08-8a0c-4ef6-bf0b-8e0179f07806",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.55,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "APLD",
+      "call_prem": 51678.0,
+      "put_prem": 0.0,
+      "underlying_price": 28.1,
+      "min_contract_premium": 1.74,
+      "flow_type": "call",
+      "total_premium": 51678.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 18
   }
 ]

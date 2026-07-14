@@ -1405,3 +1405,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 15.0 fed the squeeze.
 
+## Autopsy - TLT (870d36e104ca)
+- entered 2026-07-07T16:11:59.815Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -54.5% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 85.0 worked against it.
+

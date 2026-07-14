@@ -1432,3 +1432,12 @@
 
 **Determining factor:** Bullish call FAILED (-66%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 13.0 worked against it.
 
+## Autopsy - HYG (8c03ee559f9e)
+- entered 2026-07-14T19:32:23.331Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -75.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-75%, move 0.0%): no breakdown materialised; spot held above zero-gamma 79.5.
+

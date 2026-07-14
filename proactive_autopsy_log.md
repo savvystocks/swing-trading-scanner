@@ -1396,3 +1396,12 @@
 
 **Determining factor:** Bearish put FAILED (-78%, move 0.0%): no breakdown materialised; spot held above zero-gamma 79.5.
 
+## Autopsy - BMNR (974d74b57b80)
+- entered 2026-07-10T19:51:54.405Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +36.7% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 15.0 fed the squeeze.
+

@@ -1459,3 +1459,66 @@
 
 **Determining factor:** Bearish put FAILED (-54%, move 0.0%): no breakdown materialised; spot held above zero-gamma 42.5.
 
+## Autopsy - QUBT (095b57ed1576)
+- entered 2026-07-13T15:31:41.335Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -52.9% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-53%, move 0.0%): no breakdown materialised; spot held above zero-gamma 2.0.
+
+## Autopsy - PATH (5065a8166fab)
+- entered 2026-07-13T16:32:38.489Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -71.9% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-72%, move 0.0%): no breakdown materialised; spot held above zero-gamma 12.0.
+
+## Autopsy - QXO (aba900c4c330)
+- entered 2026-07-14T14:21:49.407Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -57.9% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-58%, move 0.0%): no breakdown materialised; spot held above zero-gamma 12.0.
+
+## Autopsy - EWZ (6a26bc88d0f8)
+- entered 2026-07-14T14:32:24.923Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -61.5% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-62%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 36.0 worked against it.
+
+## Autopsy - BP (ac435d296e57)
+- entered 2026-07-14T14:52:03.732Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -66.4% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-66%, move 0.0%): no breakdown materialised; spot held above zero-gamma 40.0.
+
+## Autopsy - KRE (6b2961c8ff1f)
+- entered 2026-07-14T15:12:48.434Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -51.4% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 78.0 worked against it.
+
+## Autopsy - KWEB (1357d13fd38f)
+- entered 2026-07-14T19:22:50.539Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -98.3% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-98%, move 0.0%): no breakdown materialised; spot held above zero-gamma 28.0.
+

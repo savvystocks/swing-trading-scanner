@@ -64543,8 +64543,35 @@
         "contracts": 7
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -1.1
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 32.6,
+          "mae_pct": -34.8,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-15T15:11:19.561Z",
+            "return_pct": 32.6
+          }
+        }
+      },
+      "mfe_pct": 32.6,
+      "mae_pct": -34.8,
+      "determining_factor": "Bullish call FAILED (-1%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 15.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "RKT",
@@ -64557,12 +64584,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 14,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "RKT260807C00015000",
+        "closed_at": "2026-07-15T18:01:40.573Z",
+        "return_pct": -1.1,
+        "reason": "runner gave back to break-even (-1.1% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 32.6,
         "mae_pct": -34.8,
-        "stage": "scaled",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-15T15:11:19.561Z",
@@ -87739,7 +87775,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -1.4,
+        "mfe_pct": 1.4,
         "mae_pct": -21.7,
         "stage": "initial"
       }
@@ -88576,7 +88612,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 2.7,
+        "mfe_pct": 5.4,
         "mae_pct": -21.4,
         "stage": "initial"
       }
@@ -90508,7 +90544,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 1.9,
+        "mfe_pct": 3.8,
         "mae_pct": -46.5,
         "stage": "initial"
       }

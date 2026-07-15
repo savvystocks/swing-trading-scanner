@@ -56472,8 +56472,33 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -1.4
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 32.6,
+          "mae_pct": -40.8,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-15T16:11:25.955Z",
+            "return_pct": 31.2
+          }
+        }
+      },
+      "mfe_pct": 32.6,
+      "mae_pct": -40.8,
+      "determining_factor": "Bearish put FAILED (-1%, move 0.0%): no breakdown materialised; spot held above zero-gamma 28.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "CORZ",
@@ -56486,12 +56511,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 9,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "CORZ260807P00023000",
+        "closed_at": "2026-07-15T17:51:29.410Z",
+        "return_pct": -1.4,
+        "reason": "runner gave back to break-even (-1.4% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 32.6,
         "mae_pct": -40.8,
-        "stage": "scaled",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-15T16:11:25.955Z",
@@ -70194,7 +70228,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 5.0,
+        "mfe_pct": 6.8,
         "mae_pct": -44.1,
         "stage": "initial"
       }
@@ -85977,7 +86011,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 5.0,
+        "mfe_pct": 7.5,
         "mae_pct": -45.0,
         "stage": "initial"
       }
@@ -87705,7 +87739,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -5.8,
+        "mfe_pct": -1.4,
         "mae_pct": -21.7,
         "stage": "initial"
       }
@@ -90474,7 +90508,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -1.9,
+        "mfe_pct": 1.9,
         "mae_pct": -46.5,
         "stage": "initial"
       }
@@ -91607,7 +91641,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 5.8,
+        "mfe_pct": 7.1,
         "mae_pct": -29.9,
         "stage": "initial"
       }

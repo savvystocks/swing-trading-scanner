@@ -1549,3 +1549,12 @@
 
 **Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; negative_gamma amplified the breakout.
 
+## Autopsy - CORZ (d592f84f4313)
+- entered 2026-07-09T18:02:25.336Z | trigger regime_BEARISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -1.4% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-1%, move 0.0%): no breakdown materialised; spot held above zero-gamma 28.0.
+

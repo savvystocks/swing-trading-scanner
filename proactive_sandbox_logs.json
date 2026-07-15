@@ -53190,7 +53190,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 1.1,
+        "mfe_pct": 3.2,
         "mae_pct": -31.6,
         "stage": "initial"
       }
@@ -67240,9 +67240,14 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 24.8,
+        "mfe_pct": 30.7,
         "mae_pct": -19.8,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-07-15T16:41:26.785Z",
+          "return_pct": 30.7
+        }
       }
     }
   },
@@ -68704,8 +68709,31 @@
         "contracts": 6
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -52.4
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": -8.7,
+          "mae_pct": -52.4,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -8.7,
+      "mae_pct": -52.4,
+      "determining_factor": "Bullish call FAILED (-52%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 17.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "HL",
@@ -68718,12 +68746,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 16,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "HL260807C00016500",
+        "closed_at": "2026-07-15T16:41:27.660Z",
+        "return_pct": -52.4,
+        "reason": "-52.4% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -8.7,
-        "mae_pct": -49.5,
-        "stage": "initial"
+        "mae_pct": -52.4,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -77961,7 +77999,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 1.9,
+        "mfe_pct": 3.1,
         "mae_pct": -46.9,
         "stage": "initial"
       }
@@ -78566,7 +78604,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 28.5,
-        "mae_pct": -20.2,
+        "mae_pct": -23.3,
         "stage": "initial"
       }
     }
@@ -79137,8 +79175,33 @@
         "contracts": 4
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 60.8
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 80.4,
+          "mae_pct": -3.9,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-14T18:11:29.434Z",
+            "return_pct": 60.8
+          }
+        }
+      },
+      "mfe_pct": 80.4,
+      "mae_pct": -3.9,
+      "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; negative_gamma amplified the breakout.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "IBIT",
@@ -79151,12 +79214,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 24,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "IBIT260814C00036500",
+        "closed_at": "2026-07-15T16:41:28.990Z",
+        "return_pct": 60.8,
+        "reason": "60.8% <= trail 64.3% (20% off peak MFE 80.4%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 80.4,
         "mae_pct": -3.9,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-14T18:11:29.434Z",
@@ -80896,7 +80968,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 4.7,
-        "mae_pct": -27.9,
+        "mae_pct": -48.8,
         "stage": "initial"
       }
     }
@@ -82880,7 +82952,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -3.6,
-        "mae_pct": -42.8,
+        "mae_pct": -45.4,
         "stage": "initial"
       }
     }
@@ -89307,7 +89379,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 25.6,
+        "mfe_pct": 30.5,
         "mae_pct": -23.2,
         "stage": "initial"
       }

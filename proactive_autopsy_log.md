@@ -1567,3 +1567,12 @@
 
 **Determining factor:** Bullish call FAILED (-1%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 15.0 worked against it.
 
+## Autopsy - ARKG (4ff05a092d39)
+- entered 2026-07-13T15:12:23.343Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -56.2% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-56%, move 0.0%): no breakdown materialised; spot held above zero-gamma 40.0.
+

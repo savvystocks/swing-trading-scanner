@@ -67310,7 +67310,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 30.7,
+        "mfe_pct": 31.7,
         "mae_pct": -19.8,
         "stage": "scaled",
         "close_fails": 0,
@@ -74160,8 +74160,29 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -56.2
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -27.1,
+          "mae_pct": -56.2,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -27.1,
+      "mae_pct": -56.2,
+      "determining_factor": "Bearish put FAILED (-56%, move 0.0%): no breakdown materialised; spot held above zero-gamma 40.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "ARKG",
@@ -74174,12 +74195,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 22,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "ARKG260814P00039500",
+        "closed_at": "2026-07-15T19:51:27.393Z",
+        "return_pct": -56.2,
+        "reason": "-56.2% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -27.1,
-        "mae_pct": -37.5,
-        "stage": "initial"
+        "mae_pct": -56.2,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -74456,7 +74487,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 42.2,
+        "mfe_pct": 43.4,
         "mae_pct": -39.8,
         "stage": "scaled",
         "close_fails": 0,
@@ -92893,7 +92924,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -10.0,
-        "mae_pct": -20.0,
+        "mae_pct": -30.0,
         "stage": "initial"
       }
     }
@@ -93181,7 +93212,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -10.0,
-        "mae_pct": -20.0,
+        "mae_pct": -30.0,
         "stage": "initial"
       }
     }

@@ -1006,3 +1006,9 @@ trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - FCEL (ad52b92aec01) - 2026-07-15T14:21:28.334Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

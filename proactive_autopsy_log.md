@@ -1522,3 +1522,12 @@
 
 **Determining factor:** Bearish put FAILED (-98%, move 0.0%): no breakdown materialised; spot held above zero-gamma 28.0.
 
+## Autopsy - FCEL (ad52b92aec01)
+- entered 2026-07-13T15:52:02.891Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -3.1% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-3%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 13.0 worked against it.
+

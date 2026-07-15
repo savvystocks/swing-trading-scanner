@@ -50145,7 +50145,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 10.3,
+        "mfe_pct": 17.2,
         "mae_pct": -43.1,
         "stage": "initial"
       }
@@ -67781,7 +67781,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 12.4,
+        "mfe_pct": 17.3,
         "mae_pct": -49.8,
         "stage": "initial"
       }
@@ -74060,7 +74060,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -27.1,
-        "mae_pct": -31.2,
+        "mae_pct": -33.3,
         "stage": "initial"
       }
     }
@@ -75220,8 +75220,33 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -3.1
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 40.6,
+          "mae_pct": -20.3,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-14T16:11:25.857Z",
+            "return_pct": 31.2
+          }
+        }
+      },
+      "mfe_pct": 40.6,
+      "mae_pct": -20.3,
+      "determining_factor": "Bullish call FAILED (-3%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 13.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "FCEL",
@@ -75234,12 +75259,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 22,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "FCEL260814C00020000",
+        "closed_at": "2026-07-15T14:21:27.672Z",
+        "return_pct": -3.1,
+        "reason": "runner gave back to break-even (-3.1% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 40.6,
         "mae_pct": -20.3,
-        "stage": "scaled",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-14T16:11:25.857Z",
@@ -79395,7 +79429,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -18.6,
-        "mae_pct": -43.5,
+        "mae_pct": -46.6,
         "stage": "initial"
       }
     }
@@ -80852,7 +80886,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 4.7,
-        "mae_pct": -18.6,
+        "mae_pct": -23.3,
         "stage": "initial"
       }
     }
@@ -81130,7 +81164,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 36.2,
+        "mfe_pct": 40.4,
         "mae_pct": -26.6,
         "stage": "scaled",
         "close_fails": 0,
@@ -84370,7 +84404,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 8.5,
+        "mfe_pct": 14.9,
         "mae_pct": -25.5,
         "stage": "initial"
       }
@@ -85861,7 +85895,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -22.5,
+        "mfe_pct": -21.7,
         "mae_pct": -45.0,
         "stage": "initial"
       }
@@ -87296,7 +87330,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -21.7,
-        "mae_pct": -33.1,
+        "mae_pct": -33.7,
         "stage": "initial"
       }
     }
@@ -87590,7 +87624,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -5.8,
-        "mae_pct": -14.5,
+        "mae_pct": -21.7,
         "stage": "initial"
       }
     }
@@ -87868,7 +87902,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 13.2,
+        "mfe_pct": 16.2,
         "mae_pct": -8.8,
         "stage": "initial"
       }
@@ -89263,7 +89297,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 1.2,
+        "mfe_pct": 6.1,
         "mae_pct": -23.2,
         "stage": "initial"
       }

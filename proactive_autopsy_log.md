@@ -1747,3 +1747,12 @@
 
 **Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
 
+## Autopsy - CXW (89ae293ac100)
+- entered 2026-07-07T15:41:20.749Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +0.0% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 20.0 fed the squeeze.
+

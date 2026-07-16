@@ -1756,3 +1756,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 20.0 fed the squeeze.
 
+## Autopsy - URA (d41c9dbed7fc)
+- entered 2026-07-13T19:02:06.011Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -51.2% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 24.0 worked against it.
+

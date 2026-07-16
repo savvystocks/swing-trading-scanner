@@ -78220,7 +78220,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 27.5,
+        "mfe_pct": 28.7,
         "mae_pct": -46.9,
         "stage": "initial"
       }
@@ -81176,8 +81176,29 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -51.2
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 4.7,
+          "mae_pct": -51.2,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 4.7,
+      "mae_pct": -51.2,
+      "determining_factor": "Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 24.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "URA",
@@ -81190,12 +81211,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 25,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "URA260814C00042000",
+        "closed_at": "2026-07-16T18:01:30.367Z",
+        "return_pct": -51.2,
+        "reason": "-51.2% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 4.7,
-        "mae_pct": -48.8,
-        "stage": "initial"
+        "mae_pct": -51.2,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -89083,7 +89114,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 16.1,
-        "mae_pct": -31.2,
+        "mae_pct": -32.1,
         "stage": "initial"
       }
     }
@@ -98704,7 +98735,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -4.4,
+        "mfe_pct": 0.0,
         "mae_pct": -13.3,
         "stage": "initial"
       }
@@ -100657,7 +100688,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -15.0,
+        "mfe_pct": -10.0,
         "mae_pct": -15.0,
         "stage": "initial"
       }
@@ -100932,6 +100963,14 @@
       "total_premium": 114023.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 14
+    "brake_stopouts_at_entry": 14,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -49.2,
+        "mae_pct": -49.2,
+        "stage": "initial"
+      }
+    }
   }
 ]

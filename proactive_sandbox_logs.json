@@ -67322,7 +67322,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 37.6,
+        "mfe_pct": 38.6,
         "mae_pct": -19.8,
         "stage": "scaled",
         "close_fails": 0,
@@ -67878,7 +67878,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 42.2,
+        "mfe_pct": 48.9,
         "mae_pct": -49.8,
         "stage": "scaled",
         "close_fails": 0,
@@ -72709,7 +72709,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -1.6,
+        "mfe_pct": 0.0,
         "mae_pct": -27.3,
         "stage": "initial"
       }
@@ -75790,7 +75790,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -1.6,
+        "mfe_pct": 0.0,
         "mae_pct": -27.3,
         "stage": "initial"
       }
@@ -86892,8 +86892,33 @@
         "contracts": 5
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 45.5
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 59.1,
+          "mae_pct": -36.4,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-16T14:31:30.796Z",
+            "return_pct": 40.9
+          }
+        }
+      },
+      "mfe_pct": 59.1,
+      "mae_pct": -36.4,
+      "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "BBWI",
@@ -86906,12 +86931,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 17,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "BBWI260814C00021000",
+        "closed_at": "2026-07-16T15:51:10.515Z",
+        "return_pct": 45.5,
+        "reason": "45.5% <= trail 47.3% (20% off peak MFE 59.1%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 59.1,
         "mae_pct": -36.4,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-16T14:31:30.796Z",
@@ -88103,7 +88137,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 4.3,
-        "mae_pct": -31.6,
+        "mae_pct": -35.4,
         "stage": "initial"
       }
     }
@@ -97516,7 +97550,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -6.7,
-        "mae_pct": -6.7,
+        "mae_pct": -8.7,
         "stage": "initial"
       }
     }
@@ -97790,6 +97824,14 @@
       "total_premium": 143362.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 14
+    "brake_stopouts_at_entry": 14,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -16.7,
+        "mae_pct": -16.7,
+        "stage": "initial"
+      }
+    }
   }
 ]

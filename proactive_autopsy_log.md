@@ -1738,3 +1738,12 @@
 
 **Determining factor:** Bearish put FAILED (-72%, move 0.0%): no breakdown materialised; spot held above zero-gamma 22.5.
 
+## Autopsy - BBWI (611505b4381c)
+- entered 2026-07-14T16:02:15.546Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +45.5% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+

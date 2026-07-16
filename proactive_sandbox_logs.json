@@ -67322,7 +67322,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 38.6,
+        "mfe_pct": 40.6,
         "mae_pct": -19.8,
         "stage": "scaled",
         "close_fails": 0,
@@ -95224,7 +95224,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -10.2,
-        "mae_pct": -22.0,
+        "mae_pct": -24.4,
         "stage": "initial"
       }
     }
@@ -98101,6 +98101,285 @@
       "min_contract_premium": 0.52,
       "flow_type": "put",
       "total_premium": 143728.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 14,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -20.0,
+        "mae_pct": -20.0,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "3c4e2510b7da",
+    "ticker": "RKT",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-16T16:12:16.151Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 39,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-16T16:12:16.151Z",
+      "macro": {
+        "spot": 14.73,
+        "sma20": 14.63,
+        "distance_to_sma20_pct": 0.707,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 67.4,
+        "iv_back": 65.5,
+        "iv_ratio": 1.029,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 2921852.3,
+        "zero_gamma_strike": 15.0,
+        "distance_to_zero_gamma_pct": -1.833,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 100.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.76,
+        "atr_pct": 5.15,
+        "rvol_10min": 0.37,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Mortgage Finance",
+        "market_cap": 41691648000,
+        "short_pct_float": 10.74,
+        "short_ratio": 2.99,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.79,
+        "vader_compound": 0.111,
+        "news_type": "Analyst",
+        "top_headline": "This Cintas Analyst Turns Bullish; Here Are Top 4 Upgrades For Thursday",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 0.707,
+        "market_spy_dist_pct": 0.997,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 3.268,
+        "sector_vs_market_spread": 2.271,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 69.4,
+        "call_iv_25d": 72.7,
+        "skew_ratio": 0.955,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 22.2,
+        "ask_sweep_prem": 1056073.0,
+        "total_flow_prem": 4757899.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -1.25,
+        "heaviest_node_price": 14.91,
+        "node_size": 601924.0,
+        "n_prints": 159,
+        "window_start": "2026-07-16T12:30:11Z",
+        "window_end": "2026-07-16T16:12:10Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 71,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 14,
+        "next_earnings_date": "2026-07-30",
+        "iv_rank_1y": 54.25,
+        "last_earnings_date": "2026-05-06",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 67.58,
+        "front_iv": 67.4,
+        "vrp": -0.18,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -1926921.0,
+        "flow_persistence_pct": 66.96,
+        "flow_direction": "bearish",
+        "closing_accel": -25931.0,
+        "n_ticks": 159,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 826.92,
+        "vwma_20": 14.68,
+        "rsi_5": 55.74,
+        "rsi_15": 50.16,
+        "gap_pct": 2.806,
+        "day_range": 4.106,
+        "candle_body": 0.471,
+        "dist_sma50": 4.356,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 1.9,
+        "vix_level": 16.01,
+        "execution_hour": 16,
+        "day_of_week": 3,
+        "sector_vs_spy": 1.926,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 12139826.0,
+        "net_vanna": 14743937.0,
+        "net_charm": 34695.0,
+        "delta_imbalance": 3.06,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.068,
+        "bid": 14.73,
+        "ask": 14.74,
+        "bid_size": 1400.0,
+        "ask_size": 4000.0,
+        "obi": -0.4815,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.35,
+        "gap_pct": 2.806,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 10.74,
+        "float_shares": 967806436,
+        "shares_short": 104019972,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.111,
+      "sweep_aggression_pct": 22.2,
+      "distance_to_zero_gamma_pct": -1.833,
+      "distance_to_heaviest_dp_node_pct": -1.25,
+      "days_since_earnings": 71,
+      "days_to_earnings": 14,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 66.96,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "RKT260814C00015500",
+        "expiry": "2026-08-14",
+        "strike": 15.5,
+        "dte": 35,
+        "entry_premium": 1.23,
+        "limit_price": 1.24,
+        "contracts": 6,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "41",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.82,
+          "ask": 0.95,
+          "mid": 0.885,
+          "bid_ask_spread_pct": 14.689,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 36.0,
+          "oi_prev": 41.0,
+          "oi_change": -5.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "5472a15d-7043-45e7-afc1-c3996fe08d7a",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.24,
+        "contracts": 6
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "RKT",
+      "call_prem": 51129.0,
+      "put_prem": 0.0,
+      "underlying_price": 14.77,
+      "min_contract_premium": 1.17,
+      "flow_type": "call",
+      "total_premium": 51129.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 14

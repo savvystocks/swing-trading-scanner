@@ -1684,3 +1684,12 @@
 
 **Determining factor:** Bullish call FAILED (-94%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 36.0 worked against it.
 
+## Autopsy - XRT (2081e0d2396e)
+- entered 2026-07-16T14:03:14.974Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -60.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-60%, move 0.0%): no breakdown materialised; spot held above zero-gamma 91.0.
+

@@ -1711,3 +1711,12 @@
 
 **Determining factor:** Bullish call FAILED (-69%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 76.5 worked against it.
 
+## Autopsy - XLV (c0dc1c9809e6)
+- entered 2026-07-14T17:12:50.181Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +39.2% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 153.0 fed the squeeze.
+

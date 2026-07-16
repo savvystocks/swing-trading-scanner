@@ -1666,3 +1666,21 @@
 
 **Determining factor:** Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 17.0 worked against it.
 
+## Autopsy - NNE (2efc3a9cc964)
+- entered 2026-07-13T19:44:07.661Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -55.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-56%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 47.0 worked against it.
+
+## Autopsy - EWZ (5103295eef4f)
+- entered 2026-07-16T13:52:17.443Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -93.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-94%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 36.0 worked against it.
+

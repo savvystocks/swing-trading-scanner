@@ -1693,3 +1693,21 @@
 
 **Determining factor:** Bearish put FAILED (-60%, move 0.0%): no breakdown materialised; spot held above zero-gamma 91.0.
 
+## Autopsy - TLT (1964d0015b5e)
+- entered 2026-07-15T13:45:25.905Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 84.0 worked against it.
+
+## Autopsy - KRE (200f8966443b)
+- entered 2026-07-16T14:22:57.115Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -68.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-69%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 76.5 worked against it.
+

@@ -1720,3 +1720,21 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 153.0 fed the squeeze.
 
+## Autopsy - WFC (9fc5b5d85d4c)
+- entered 2026-07-14T17:41:27.273Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +46.1% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 90.0 fed the squeeze.
+
+## Autopsy - NASA (49c17aaba0d7)
+- entered 2026-07-16T15:11:47.545Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -72.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-72%, move 0.0%): no breakdown materialised; spot held above zero-gamma 22.5.
+

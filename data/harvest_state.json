@@ -895,7 +895,46 @@
     "SLV260724P00050500",
     "MSFT260821P00385000",
     "ULTA260814P00445000",
-    "NBIS260724P00130000"
+    "NBIS260724P00130000",
+    "PATH260814P00011500",
+    "SKHY260724C00200000",
+    "HOOD260918C00115000",
+    "USO260717C00119000",
+    "SPY260731P00754000",
+    "KLAC260918C00220000",
+    "FCNCA260918C02010000",
+    "INTC270319P00095000",
+    "GS260918C01200000",
+    "MRVL260724C00225000",
+    "NBIS260918P00130000",
+    "IREN261120P00033000",
+    "ADBE270617C00320000",
+    "MU270319C01860000",
+    "VFC260918P00015000",
+    "QQQ260731C00720000",
+    "NVDA260821C00200000",
+    "MPC261016P00290000",
+    "FCX270617C00060000",
+    "MSFT260821C00480000",
+    "ORCL261016P00135000",
+    "FTNT261016C00190000",
+    "MU281215C01200000",
+    "EWZ261016C00040000",
+    "RH261120C00240000",
+    "QQQ270115P00620000",
+    "GLD261231C00377000",
+    "GLD260717P00356000",
+    "MTUM260821P00315000",
+    "PATH270115P00009000",
+    "NFLX260717P00069000",
+    "FISV260807P00053000",
+    "PATH270115P00010000",
+    "EFX261016C00210000",
+    "TXN260918C00330000",
+    "AIT261120C00340000",
+    "MRVL260724C00187500",
+    "IBM260828C00215000",
+    "MTUM260821P00300000"
   ],
   "tickers": {
     "SPY": {
@@ -31457,10 +31496,170 @@
       "days_to_earnings": 7,
       "post_earnings_iv_crush_flag": false,
       "flow_persistence_pct": 82.35
+    },
+    "VFC": {
+      "entry_ts_utc": "2026-07-16T17:11:35.335Z",
+      "macro": {
+        "spot": 17.36,
+        "sma20": 16.82,
+        "distance_to_sma20_pct": 3.172,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 79.3,
+        "iv_back": 59.6,
+        "iv_ratio": 1.331,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -78646.2,
+        "zero_gamma_strike": 7.5,
+        "distance_to_zero_gamma_pct": 56.797,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.63,
+        "atr_pct": 3.65,
+        "rvol_10min": 0.48,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Consumer Cyclical",
+        "industry": "Apparel Manufacturing",
+        "market_cap": 6807221248,
+        "short_pct_float": 8.39,
+        "short_ratio": 4.58,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 362.76,
+        "vader_compound": -0.117,
+        "news_type": "Earnings",
+        "top_headline": "VF Option Alert: Jul 17 $18 Calls Sweep (7) near the Ask: 3300 @ $0.315 vs 1028 OI; Earnings 7/29 Before Open [est] Ref=$16.87",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 3.172,
+        "market_spy_dist_pct": 1.041,
+        "sector_etf": "XLY",
+        "sector_dist_pct": 1.187,
+        "sector_vs_market_spread": 0.146,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 61.4,
+        "call_iv_25d": 61.0,
+        "skew_ratio": 1.008,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 7.15,
+        "ask_sweep_prem": 373115.0,
+        "total_flow_prem": 5220886.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": null,
+        "heaviest_node_price": null,
+        "node_size": null,
+        "n_prints": 0,
+        "window_start": null,
+        "window_end": null,
+        "source": "uw_empty"
+      },
+      "pemd": {
+        "days_since_earnings": 57,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 13,
+        "next_earnings_date": "2026-07-29",
+        "iv_rank_1y": 57.51,
+        "last_earnings_date": "2026-05-20",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 40.37,
+        "front_iv": 79.3,
+        "vrp": 38.93,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 20188.0,
+        "flow_persistence_pct": 8.03,
+        "flow_direction": "bullish",
+        "closing_accel": 69527.0,
+        "n_ticks": 112,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1054.53,
+        "vwma_20": 16.83,
+        "rsi_5": 83.54,
+        "rsi_15": 51.53,
+        "gap_pct": -0.551,
+        "day_range": 1.901,
+        "candle_body": 0.621,
+        "dist_sma50": 1.547,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 19.7,
+        "vix_level": 16.12,
+        "execution_hour": 17,
+        "day_of_week": 3,
+        "sector_vs_spy": 0.509,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 979483.0,
+        "net_vanna": 17352714.0,
+        "net_charm": -3476318.0,
+        "delta_imbalance": 1.161,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.058,
+        "bid": 17.34,
+        "ask": 17.35,
+        "bid_size": 1000.0,
+        "ask_size": 700.0,
+        "obi": 0.1765,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.46,
+        "gap_pct": -0.551,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 8.39,
+        "float_shares": 391559569,
+        "shares_short": 32650452,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.117,
+      "sweep_aggression_pct": 7.15,
+      "distance_to_zero_gamma_pct": 56.797,
+      "distance_to_heaviest_dp_node_pct": null,
+      "days_since_earnings": 57,
+      "days_to_earnings": 13,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 8.03
     }
   },
-  "payload_count": 191,
-  "topn_count": 311,
+  "payload_count": 192,
+  "topn_count": 321,
   "random_count": 7,
   "backoff_429": false,
   "cap_today": 300,

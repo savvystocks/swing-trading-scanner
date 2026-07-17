@@ -1927,3 +1927,39 @@
 
 **Determining factor:** Bullish call FAILED (-69%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 76.5 worked against it.
 
+## Autopsy - SQQQ (3e81e56bf745)
+- entered 2026-07-09T16:11:42.846Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +57.9% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 38.0 fed the squeeze.
+
+## Autopsy - SOFI (0be3d34e4bd2)
+- entered 2026-07-10T17:52:18.562Z | trigger regime_BEARISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +79.2% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 18.5 -> negative-gamma slide, no positive catalyst.
+
+## Autopsy - GDX (fab86c6868b4)
+- entered 2026-07-17T13:32:31.079Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -60.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-60%, move 0.0%): no breakdown materialised; spot held above zero-gamma 20.0.
+
+## Autopsy - VXX (bd5c5bb8d4d8)
+- entered 2026-07-17T13:51:09.437Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -59.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-59%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 22.0 worked against it.
+

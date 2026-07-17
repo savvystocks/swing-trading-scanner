@@ -1276,3 +1276,27 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - SQQQ (3e81e56bf745) - 2026-07-17T14:01:28.956Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - SOFI (0be3d34e4bd2) - 2026-07-17T14:01:29.788Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - GDX (fab86c6868b4) - 2026-07-17T14:01:30.780Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - VXX (bd5c5bb8d4d8) - 2026-07-17T14:01:31.609Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

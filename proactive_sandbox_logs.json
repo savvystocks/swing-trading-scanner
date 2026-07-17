@@ -83322,7 +83322,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -8.7,
+        "mfe_pct": -7.8,
         "mae_pct": -8.7,
         "stage": "initial"
       }
@@ -102555,7 +102555,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 9.1,
+        "mfe_pct": 11.0,
         "mae_pct": -32.7,
         "stage": "initial"
       }
@@ -109555,7 +109555,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -12.3,
-        "mae_pct": -35.8,
+        "mae_pct": -36.8,
         "stage": "initial"
       }
     }
@@ -111229,7 +111229,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -8.7,
+        "mfe_pct": -7.8,
         "mae_pct": -8.7,
         "stage": "initial"
       }
@@ -111517,6 +111517,285 @@
       "min_contract_premium": 0.45,
       "flow_type": "call",
       "total_premium": 60707.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 22,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -20.0,
+        "mae_pct": -20.0,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "67ee3eea6bca",
+    "ticker": "AA",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-17T18:01:38.083Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 49,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-17T18:01:38.083Z",
+      "macro": {
+        "spot": 45.42,
+        "sma20": 50.86,
+        "distance_to_sma20_pct": -10.693,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 58.4,
+        "iv_back": 54.9,
+        "iv_ratio": 1.064,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 39579.9,
+        "zero_gamma_strike": 60.0,
+        "distance_to_zero_gamma_pct": -32.1,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -66.7,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 2.48,
+        "atr_pct": 5.46,
+        "rvol_10min": 0.85,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Basic Materials",
+        "industry": "Aluminum",
+        "market_cap": 11989933056,
+        "short_pct_float": 3.2,
+        "short_ratio": 1.44,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 2.88,
+        "vader_compound": -0.108,
+        "news_type": "Analyst",
+        "top_headline": "JP Morgan Maintains Neutral on Alcoa, Lowers Price Target to $52",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -10.693,
+        "market_spy_dist_pct": -0.078,
+        "sector_etf": "XLB",
+        "sector_dist_pct": -1.112,
+        "sector_vs_market_spread": -1.034,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 63.6,
+        "call_iv_25d": 52.3,
+        "skew_ratio": 1.215,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 10.84,
+        "ask_sweep_prem": 446750.0,
+        "total_flow_prem": 4123083.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 1.0,
+        "heaviest_node_price": 44.97,
+        "node_size": 120193.0,
+        "n_prints": 66,
+        "window_start": "2026-07-17T08:40:50Z",
+        "window_end": "2026-07-17T17:58:32Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 1,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 90,
+        "next_earnings_date": "2026-10-15",
+        "iv_rank_1y": 36.25,
+        "last_earnings_date": "2026-07-16",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 47.91,
+        "front_iv": 58.4,
+        "vrp": 10.49,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -1962685.0,
+        "flow_persistence_pct": 61.07,
+        "flow_direction": "bearish",
+        "closing_accel": -1769303.0,
+        "n_ticks": 269,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1021.83,
+        "vwma_20": 50.67,
+        "rsi_5": 9.3,
+        "rsi_15": 25.81,
+        "gap_pct": -0.758,
+        "day_range": 5.262,
+        "candle_body": 0.439,
+        "dist_sma50": -26.639,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 3.5,
+        "vix_level": 18.02,
+        "execution_hour": 18,
+        "day_of_week": 4,
+        "sector_vs_spy": 0.643,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -828720.0,
+        "net_vanna": 6686737.0,
+        "net_charm": -72941187.0,
+        "delta_imbalance": 0.811,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 4.75,
+        "bid": 43.31,
+        "ask": 45.47,
+        "bid_size": 100.0,
+        "ask_size": 100.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.85,
+        "gap_pct": -0.758,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 3.2,
+        "float_shares": 262806264,
+        "shares_short": 8425769,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.108,
+      "sweep_aggression_pct": 10.84,
+      "distance_to_zero_gamma_pct": -32.1,
+      "distance_to_heaviest_dp_node_pct": 1.0,
+      "days_since_earnings": 1,
+      "days_to_earnings": 90,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 61.07,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "AA260814P00044000",
+        "expiry": "2026-08-14",
+        "strike": 44.0,
+        "dte": 35,
+        "entry_premium": 3.29,
+        "limit_price": 3.32,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "8",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.0,
+          "ask": 2.23,
+          "mid": 2.115,
+          "bid_ask_spread_pct": 10.875,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 16.0,
+          "oi_prev": 8.0,
+          "oi_change": 8.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "55000a8a-e717-42e3-a67b-4e1aa105b0ab",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.32,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "AA",
+      "call_prem": 0.0,
+      "put_prem": 65192.0,
+      "underlying_price": 45.505,
+      "min_contract_premium": 2.81,
+      "flow_type": "put",
+      "total_premium": 65192.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 22

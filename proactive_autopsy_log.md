@@ -2026,3 +2026,12 @@
 
 **Determining factor:** Bullish call FAILED (-71%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 152.0 worked against it.
 
+## Autopsy - QSR (11e490dcb9c2)
+- entered 2026-07-07T17:02:31.197Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +0.0% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 75.0 fed the squeeze.
+

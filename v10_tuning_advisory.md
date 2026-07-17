@@ -1342,3 +1342,9 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - QSR (11e490dcb9c2) - 2026-07-17T16:51:14.655Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

@@ -83322,7 +83322,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -1.9,
+        "mfe_pct": 0.0,
         "mae_pct": -8.7,
         "stage": "initial"
       }
@@ -111229,7 +111229,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -1.9,
+        "mfe_pct": 0.0,
         "mae_pct": -8.7,
         "stage": "initial"
       }
@@ -111802,7 +111802,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -4.1,
+        "mfe_pct": -3.2,
         "mae_pct": -9.1,
         "stage": "initial"
       }
@@ -112082,9 +112082,280 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -25.0,
-        "mae_pct": -25.0,
+        "mae_pct": -28.6,
         "stage": "initial"
       }
     }
+  },
+  {
+    "trade_set_id": "0d17c4917330",
+    "ticker": "CLSK",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-17T18:41:49.602Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 51,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-17T18:41:49.602Z",
+      "macro": {
+        "spot": 12.79,
+        "sma20": 14.31,
+        "distance_to_sma20_pct": -10.565,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 98.0,
+        "iv_back": 105.7,
+        "iv_ratio": 0.927,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 969914.9,
+        "zero_gamma_strike": 16.0,
+        "distance_to_zero_gamma_pct": -25.098,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.32,
+        "atr_pct": 10.33,
+        "rvol_10min": 0.79,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Capital Markets",
+        "market_cap": 3280741120,
+        "short_pct_float": 42.88,
+        "short_ratio": 3.59,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 51.52,
+        "vader_compound": 0.14,
+        "news_type": "Analyst",
+        "top_headline": "Cantor Fitzgerald Maintains Overweight on Cleanspark, Raises Price Target to $26",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -10.565,
+        "market_spy_dist_pct": -0.206,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 2.256,
+        "sector_vs_market_spread": 2.462,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 99.0,
+        "call_iv_25d": 105.3,
+        "skew_ratio": 0.94,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 12.42,
+        "ask_sweep_prem": 540619.0,
+        "total_flow_prem": 4353279.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 12.82,
+        "node_size": 557000.0,
+        "n_prints": 83,
+        "window_start": "2026-07-17T13:37:31Z",
+        "window_end": "2026-07-17T18:37:22Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 67,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 20,
+        "next_earnings_date": "2026-08-06",
+        "iv_rank_1y": 55.25,
+        "last_earnings_date": "2026-05-11",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 81.06,
+        "front_iv": 98.0,
+        "vrp": 16.94,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 123820.0,
+        "flow_persistence_pct": 6.54,
+        "flow_direction": "bullish",
+        "closing_accel": 59691.0,
+        "n_ticks": 312,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 670.55,
+        "vwma_20": 14.33,
+        "rsi_5": 49.16,
+        "rsi_15": 34.81,
+        "gap_pct": -4.563,
+        "day_range": 8.056,
+        "candle_body": 0.432,
+        "dist_sma50": -16.042,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -7.7,
+        "vix_level": 18.68,
+        "execution_hour": 18,
+        "day_of_week": 4,
+        "sector_vs_spy": 2.455,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 7077230.0,
+        "net_vanna": 14603631.0,
+        "net_charm": -141205092.0,
+        "delta_imbalance": 1.809,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.156,
+        "bid": 12.79,
+        "ask": 12.81,
+        "bid_size": 2600.0,
+        "ask_size": 2200.0,
+        "obi": 0.0833,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.79,
+        "gap_pct": -4.563,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 42.88,
+        "float_shares": 247704287,
+        "shares_short": 78632173,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.14,
+      "sweep_aggression_pct": 12.42,
+      "distance_to_zero_gamma_pct": -25.098,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": 67,
+      "days_to_earnings": 20,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 6.54,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "CLSK260814C00013500",
+        "expiry": "2026-08-14",
+        "strike": 13.5,
+        "dte": 35,
+        "entry_premium": 1.55,
+        "limit_price": 1.57,
+        "contracts": 5,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "56",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.1,
+          "ask": 1.31,
+          "mid": 1.205,
+          "bid_ask_spread_pct": 17.427,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 65.0,
+          "oi_prev": 56.0,
+          "oi_change": 9.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "d5db6a88-338f-488d-9274-61bed4f5d935",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.57,
+        "contracts": 5
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "CLSK",
+      "call_prem": 117158.0,
+      "put_prem": 0.0,
+      "underlying_price": 12.78,
+      "min_contract_premium": 1.16,
+      "flow_type": "call",
+      "total_premium": 117158.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 22
   }
 ]

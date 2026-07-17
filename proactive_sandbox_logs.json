@@ -106949,7 +106949,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -14.7,
-        "mae_pct": -14.7,
+        "mae_pct": -23.2,
         "stage": "initial"
       }
     }
@@ -107547,7 +107547,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 6.5,
+        "mfe_pct": 7.5,
         "mae_pct": -14.0,
         "stage": "initial"
       }
@@ -110922,6 +110922,300 @@
       "min_contract_premium": 1.66,
       "flow_type": "call",
       "total_premium": 58929.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 22,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -12.2,
+        "mae_pct": -12.2,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "AUDIT-ca273d9b",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-07-17T17:41:06.954Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "d9e59f64-29f9-4d42-a45f-9bc6d87fd88f",
+        "symbol": "NN260814C00013500",
+        "age_min": 39.0,
+        "limit_price": "1.44"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "d00ca22dc408",
+    "ticker": "BMNR",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-17T17:42:04.137Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 47,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-17T17:42:04.137Z",
+      "macro": {
+        "spot": 15.71,
+        "sma20": 14.82,
+        "distance_to_sma20_pct": 5.984,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 80.3,
+        "iv_back": 79.5,
+        "iv_ratio": 1.01,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 3447850.1,
+        "zero_gamma_strike": 15.0,
+        "distance_to_zero_gamma_pct": 4.519,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -50.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.05,
+        "atr_pct": 6.69,
+        "rvol_10min": 0.57,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Capital Markets",
+        "market_cap": 9479702528,
+        "short_pct_float": 8.14,
+        "short_ratio": 1.1,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.11,
+        "vader_compound": 0.071,
+        "news_type": "Unknown",
+        "top_headline": "10 Information Technology Stocks Whale Activity In Today’s Session",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 5.984,
+        "market_spy_dist_pct": 0.091,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 2.575,
+        "sector_vs_market_spread": 2.484,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 82.3,
+        "call_iv_25d": 84.3,
+        "skew_ratio": 0.976,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.74,
+        "ask_sweep_prem": 678453.0,
+        "total_flow_prem": 7759516.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 15.75,
+        "node_size": 172726.0,
+        "n_prints": 138,
+        "window_start": "2026-07-17T08:00:21Z",
+        "window_end": "2026-07-17T17:40:45Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 3,
+        "post_earnings_iv_crush_flag": true,
+        "days_to_earnings": 126,
+        "next_earnings_date": "2026-11-20",
+        "iv_rank_1y": 13.12,
+        "last_earnings_date": "2026-07-14",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 73.35,
+        "front_iv": 80.3,
+        "vrp": 6.95,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -734804.0,
+        "flow_persistence_pct": 13.72,
+        "flow_direction": "bearish",
+        "closing_accel": -1639447.0,
+        "n_ticks": 253,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 616.53,
+        "vwma_20": 14.71,
+        "rsi_5": 62.04,
+        "rsi_15": 65.82,
+        "gap_pct": -3.784,
+        "day_range": 7.514,
+        "candle_body": 0.703,
+        "dist_sma50": -8.762,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 0.8,
+        "vix_level": 17.73,
+        "execution_hour": 17,
+        "day_of_week": 4,
+        "sector_vs_spy": 2.479,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 8638656.0,
+        "net_vanna": 37452871.0,
+        "net_charm": -235432446.0,
+        "delta_imbalance": 1.441,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.064,
+        "bid": 15.71,
+        "ask": 15.72,
+        "bid_size": 700.0,
+        "ask_size": 3400.0,
+        "obi": -0.6585,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.55,
+        "gap_pct": -3.784,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 8.14,
+        "float_shares": 529618150,
+        "shares_short": 46313753,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.071,
+      "sweep_aggression_pct": 8.74,
+      "distance_to_zero_gamma_pct": 4.519,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": 3,
+      "days_to_earnings": 126,
+      "post_earnings_iv_crush_flag": true,
+      "flow_persistence_pct": 13.72,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "BMNR260814P00015000",
+        "expiry": "2026-08-14",
+        "strike": 15.0,
+        "dte": 35,
+        "entry_premium": 1.56,
+        "limit_price": 1.58,
+        "contracts": 5,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "40",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.0,
+          "ask": 1.02,
+          "mid": 1.01,
+          "bid_ask_spread_pct": 1.98,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 70.0,
+          "oi_prev": 40.0,
+          "oi_change": 30.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "cf970b07-5551-46b6-9dab-bad24a97b795",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.58,
+        "contracts": 5
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "BMNR",
+      "call_prem": 0.0,
+      "put_prem": 26784.0,
+      "underlying_price": 15.745,
+      "min_contract_premium": 2.79,
+      "flow_type": "put",
+      "total_premium": 26784.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 22

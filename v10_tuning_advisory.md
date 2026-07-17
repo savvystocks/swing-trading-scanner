@@ -1174,3 +1174,105 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - FXI (d762088cfe77) - 2026-07-17T13:31:19.373Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---
+## Tuning Advisory - ZETA (b2e72ad89c82) - 2026-07-17T13:31:20.605Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - CLF (fb9b21ee83b9) - 2026-07-17T13:31:21.609Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---
+## Tuning Advisory - DVN (94fb9b4c81be) - 2026-07-17T13:31:22.951Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - APLD (ee8e73c9fb2e) - 2026-07-17T13:31:23.767Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - MARA (782fdf7aac39) - 2026-07-17T13:31:24.530Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---
+## Tuning Advisory - NOK (2b4985875bd3) - 2026-07-17T13:31:25.363Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - CLSK (cb00235545f9) - 2026-07-17T13:31:26.244Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - BMNR (9651045c6e9f) - 2026-07-17T13:31:27.007Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - RIVN (9340e44f3fa1) - 2026-07-17T13:31:27.781Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---
+## Tuning Advisory - BSX (ee2b42ee45df) - 2026-07-17T13:31:28.657Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - T (9360cc178660) - 2026-07-17T13:31:29.357Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - XLP (41afd065f907) - 2026-07-17T13:31:30.191Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - PATH (f2f450589aa1) - 2026-07-17T13:31:30.922Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - XLF (bc6d9f6d2114) - 2026-07-17T13:31:31.670Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - JD (b9f108a6e37a) - 2026-07-17T13:31:32.425Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---
+## Tuning Advisory - KRE (468521d366e2) - 2026-07-17T13:31:33.243Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

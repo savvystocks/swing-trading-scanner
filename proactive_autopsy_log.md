@@ -2170,3 +2170,12 @@
 
 **Determining factor:** Bullish call FAILED (-59%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 15.0 worked against it.
 
+## Autopsy - GLXY (068348b6bccd)
+- entered 2026-07-17T15:21:29.424Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -57.4% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-57%, move 0.0%): no breakdown materialised; spot held above zero-gamma 15.0.
+

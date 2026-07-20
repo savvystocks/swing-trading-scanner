@@ -2197,3 +2197,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 16.0 fed the squeeze.
 
+## Autopsy - BMY (9eddb9b436fd)
+- entered 2026-07-17T16:31:38.226Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -62.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-63%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 60.0 worked against it.
+

@@ -2179,3 +2179,12 @@
 
 **Determining factor:** Bearish put FAILED (-57%, move 0.0%): no breakdown materialised; spot held above zero-gamma 15.0.
 
+## Autopsy - NN (7c319bfb46ec)
+- entered 2026-07-17T17:01:58.524Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -73.3% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-73%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 11.0 worked against it.
+

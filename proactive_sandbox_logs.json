@@ -83458,7 +83458,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 0.0,
-        "mae_pct": -23.3,
+        "mae_pct": -32.0,
         "stage": "initial"
       }
     }
@@ -98395,8 +98395,31 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -52.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 16.0,
+          "mae_pct": -52.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 16.0,
+      "mae_pct": -52.0,
+      "determining_factor": "Bullish call FAILED (-52%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 38.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "CMG",
@@ -98409,12 +98432,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 14,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "CMG260814C00036000",
+        "closed_at": "2026-07-20T13:43:48.302Z",
+        "return_pct": -52.0,
+        "reason": "-52.0% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 16.0,
-        "mae_pct": -26.0,
-        "stage": "initial"
+        "mae_pct": -52.0,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -109003,7 +109036,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 8.6,
+        "mfe_pct": 12.9,
         "mae_pct": -12.9,
         "stage": "initial"
       }
@@ -111570,7 +111603,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 0.0,
-        "mae_pct": -23.3,
+        "mae_pct": -32.0,
         "stage": "initial"
       }
     }
@@ -112733,7 +112766,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -10.1,
+        "mfe_pct": 24.0,
         "mae_pct": -27.1,
         "stage": "initial"
       }
@@ -114439,7 +114472,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -49.5,
+        "mfe_pct": -46.7,
         "mae_pct": -49.5,
         "stage": "initial"
       }
@@ -114453,5 +114486,276 @@
     "stopouts": 7,
     "realized_loss_usd": 4118.4,
     "status": "SHADOW"
+  },
+  {
+    "trade_set_id": "31a00d84eb6a",
+    "ticker": "RDW",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-20T13:44:05.731Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 43,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-20T13:44:05.731Z",
+      "macro": {
+        "spot": 8.6,
+        "sma20": 10.63,
+        "distance_to_sma20_pct": -19.112,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 105.2,
+        "iv_back": 109.3,
+        "iv_ratio": 0.962,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -388072.6,
+        "zero_gamma_strike": 3.0,
+        "distance_to_zero_gamma_pct": 65.116,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.79,
+        "atr_pct": 9.19,
+        "rvol_10min": 0.03,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Industrials",
+        "industry": "Aerospace & Defense",
+        "market_cap": 2056286080,
+        "short_pct_float": 21.08,
+        "short_ratio": 0.99,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 2.52,
+        "vader_compound": 0.492,
+        "news_type": "Unknown",
+        "top_headline": "Redwire Expands Huntsville Engineering And Production Facility By 164K Square Feet",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -19.112,
+        "market_spy_dist_pct": 0.467,
+        "sector_etf": "XLI",
+        "sector_dist_pct": -0.659,
+        "sector_vs_market_spread": -1.126,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 101.3,
+        "call_iv_25d": 118.0,
+        "skew_ratio": 0.859,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 11.89,
+        "ask_sweep_prem": 508861.0,
+        "total_flow_prem": 4279931.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": null,
+        "heaviest_node_price": null,
+        "node_size": null,
+        "n_prints": 0,
+        "window_start": null,
+        "window_end": null,
+        "source": "uw_empty"
+      },
+      "pemd": {
+        "days_since_earnings": 75,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 16,
+        "next_earnings_date": "2026-08-05",
+        "iv_rank_1y": 41.68,
+        "last_earnings_date": "2026-05-06",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 80.25,
+        "front_iv": 105.2,
+        "vrp": 24.95,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 188606.0,
+        "flow_persistence_pct": 91.99,
+        "flow_direction": "bullish",
+        "closing_accel": 147555.0,
+        "n_ticks": 15,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 428.38,
+        "vwma_20": 10.94,
+        "rsi_5": 18.5,
+        "rsi_15": 31.95,
+        "gap_pct": 0.118,
+        "day_range": 3.374,
+        "candle_body": 0.5,
+        "dist_sma50": -39.121,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -4.1,
+        "vix_level": 18.06,
+        "execution_hour": 13,
+        "day_of_week": 0,
+        "sector_vs_spy": 0.151,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 2253555.0,
+        "net_vanna": 7352214.0,
+        "net_charm": -4803985.0,
+        "delta_imbalance": 1.453,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.231,
+        "bid": 8.62,
+        "ask": 8.64,
+        "bid_size": 100.0,
+        "ask_size": 600.0,
+        "obi": -0.7143,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.03,
+        "gap_pct": 0.118,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 21.08,
+        "float_shares": 195575125,
+        "shares_short": 43053521,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.492,
+      "sweep_aggression_pct": 11.89,
+      "distance_to_zero_gamma_pct": 65.116,
+      "distance_to_heaviest_dp_node_pct": null,
+      "days_since_earnings": 75,
+      "days_to_earnings": 16,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 91.99,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "RDW260821C00009000",
+        "expiry": "2026-08-21",
+        "strike": 9.0,
+        "dte": 35,
+        "entry_premium": 1.12,
+        "limit_price": 1.13,
+        "contracts": 7,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "1442",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.92,
+          "ask": 1.07,
+          "mid": 0.995,
+          "bid_ask_spread_pct": 15.075,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 1496.0,
+          "oi_prev": 1442.0,
+          "oi_change": 54.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "59a9c5f3-1450-4954-b7cc-f9268e37257b",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.13,
+        "contracts": 7
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "RDW",
+      "call_prem": 157500.0,
+      "put_prem": 0.0,
+      "underlying_price": 8.614,
+      "min_contract_premium": 2.1,
+      "flow_type": "call",
+      "total_premium": 157500.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 8
   }
 ]

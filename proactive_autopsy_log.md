@@ -2143,3 +2143,12 @@
 
 **Determining factor:** Bearish put FAILED (-72%, move 0.0%): no breakdown materialised; spot held above zero-gamma 30.0.
 
+## Autopsy - CMG (a9d846581863)
+- entered 2026-07-16T15:32:36.380Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -52.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-52%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 38.0 worked against it.
+

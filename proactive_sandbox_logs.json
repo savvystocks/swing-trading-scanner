@@ -107321,7 +107321,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 7.4,
+        "mfe_pct": 8.4,
         "mae_pct": -23.2,
         "stage": "initial"
       }
@@ -111344,7 +111344,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 8.1,
+        "mfe_pct": 11.7,
         "mae_pct": -29.7,
         "stage": "initial"
       }
@@ -115359,7 +115359,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -14.0,
+        "mfe_pct": -12.4,
         "mae_pct": -18.6,
         "stage": "initial"
       }
@@ -115639,7 +115639,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -3.6,
-        "mae_pct": -10.8,
+        "mae_pct": -12.6,
         "stage": "initial"
       }
     }
@@ -117027,6 +117027,285 @@
       "min_contract_premium": 1.34,
       "flow_type": "call",
       "total_premium": 64252.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 9,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -34.4,
+        "mae_pct": -34.4,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "9fd005462d06",
+    "ticker": "ONDS",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-20T15:12:00.715Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 51,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-20T15:12:00.715Z",
+      "macro": {
+        "spot": 6.85,
+        "sma20": 7.56,
+        "distance_to_sma20_pct": -9.392,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 94.6,
+        "iv_back": 102.2,
+        "iv_ratio": 0.926,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 2485846.5,
+        "zero_gamma_strike": 4.0,
+        "distance_to_zero_gamma_pct": 41.606,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -22.2,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.55,
+        "atr_pct": 7.98,
+        "rvol_10min": 0.24,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Communication Equipment",
+        "market_cap": 3900545024,
+        "short_pct_float": 37.54,
+        "short_ratio": 3.04,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 2.59,
+        "vader_compound": 0.399,
+        "news_type": "Unknown",
+        "top_headline": "Ondas Receives $6.9M Order From The Australian Department Of Defence For Its DTIM Single Operator Counter-sUAS Kits",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -9.392,
+        "market_spy_dist_pct": -0.015,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -3.561,
+        "sector_vs_market_spread": -3.546,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 100.8,
+        "call_iv_25d": 98.7,
+        "skew_ratio": 1.021,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 9.48,
+        "ask_sweep_prem": 292542.0,
+        "total_flow_prem": 3085651.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 1.501,
+        "heaviest_node_price": 6.75,
+        "node_size": 154106.0,
+        "n_prints": 35,
+        "window_start": "2026-07-20T12:22:13Z",
+        "window_end": "2026-07-20T15:08:21Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 66,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 23,
+        "next_earnings_date": "2026-08-12",
+        "iv_rank_1y": 18.23,
+        "last_earnings_date": "2026-05-15",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 73.48,
+        "front_iv": 94.6,
+        "vrp": 21.12,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 392550.0,
+        "flow_persistence_pct": 37.08,
+        "flow_direction": "bullish",
+        "closing_accel": 57625.0,
+        "n_ticks": 103,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 796.44,
+        "vwma_20": 7.53,
+        "rsi_5": 45.7,
+        "rsi_15": 40.26,
+        "gap_pct": 0.842,
+        "day_range": 4.456,
+        "candle_body": 0.852,
+        "dist_sma50": -25.343,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -7.6,
+        "vix_level": 18.42,
+        "execution_hour": 15,
+        "day_of_week": 0,
+        "sector_vs_spy": -2.114,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 6577086.0,
+        "net_vanna": 31349149.0,
+        "net_charm": -14022846.0,
+        "delta_imbalance": 1.327,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.146,
+        "bid": 6.85,
+        "ask": 6.86,
+        "bid_size": 3100.0,
+        "ask_size": 6200.0,
+        "obi": -0.3333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.25,
+        "gap_pct": 0.842,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 37.54,
+        "float_shares": 463473629,
+        "shares_short": 197582796,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.399,
+      "sweep_aggression_pct": 9.48,
+      "distance_to_zero_gamma_pct": 41.606,
+      "distance_to_heaviest_dp_node_pct": 1.501,
+      "days_since_earnings": 66,
+      "days_to_earnings": 23,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 37.08,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "ONDS260821C00007000",
+        "expiry": "2026-08-21",
+        "strike": 7.0,
+        "dte": 35,
+        "entry_premium": 0.8,
+        "limit_price": 0.81,
+        "contracts": 10,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "3165",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.78,
+          "ask": 0.82,
+          "mid": 0.8,
+          "bid_ask_spread_pct": 5.0,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 4426.0,
+          "oi_prev": 3165.0,
+          "oi_change": 1261.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "20576f46-4d2e-42ad-8675-5be77ba4e4c0",
+        "error": null,
+        "submitted": true,
+        "limit_price": 0.81,
+        "contracts": 10
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "ONDS",
+      "call_prem": 102600.0,
+      "put_prem": 0.0,
+      "underlying_price": 6.86,
+      "min_contract_premium": 2.28,
+      "flow_type": "call",
+      "total_premium": 102600.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 9

@@ -102888,7 +102888,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 11.0,
+        "mfe_pct": 16.0,
         "mae_pct": -32.7,
         "stage": "initial"
       }
@@ -119044,6 +119044,285 @@
       "min_contract_premium": 1.9,
       "flow_type": "call",
       "total_premium": 52250.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 11,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -5.0,
+        "mae_pct": -5.0,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "6a9c522f14bf",
+    "ticker": "AMPG",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-20T16:22:47.788Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 56,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-20T16:22:47.788Z",
+      "macro": {
+        "spot": 6.01,
+        "sma20": 6.75,
+        "distance_to_sma20_pct": -10.946,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 168.3,
+        "iv_back": 140.1,
+        "iv_ratio": 1.201,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 485680.3,
+        "zero_gamma_strike": 6.0,
+        "distance_to_zero_gamma_pct": 0.166,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.83,
+        "atr_pct": 13.82,
+        "rvol_10min": 1.53,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Communication Equipment",
+        "market_cap": 151016704,
+        "short_pct_float": 27.92,
+        "short_ratio": 0.92,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 71.29,
+        "vader_compound": 0.296,
+        "news_type": "Analyst",
+        "top_headline": "12 Information Technology Stocks Moving In Friday's Intraday Session",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -10.946,
+        "market_spy_dist_pct": 0.23,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -2.802,
+        "sector_vs_market_spread": -3.032,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 140.2,
+        "call_iv_25d": 142.9,
+        "skew_ratio": 0.981,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 31.39,
+        "ask_sweep_prem": 1001823.0,
+        "total_flow_prem": 3191894.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 4.499,
+        "heaviest_node_price": 5.74,
+        "node_size": 22378.0,
+        "n_prints": 1,
+        "window_start": "2026-07-20T15:28:37Z",
+        "window_end": "2026-07-20T15:28:37Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 68,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 23,
+        "next_earnings_date": "2026-08-12",
+        "iv_rank_1y": 48.8,
+        "last_earnings_date": "2026-05-13",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 106.2,
+        "front_iv": 168.3,
+        "vrp": 62.1,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -35057.0,
+        "flow_persistence_pct": 12.42,
+        "flow_direction": "bearish",
+        "closing_accel": 52493.0,
+        "n_ticks": 122,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 850.34,
+        "vwma_20": 6.75,
+        "rsi_5": 41.2,
+        "rsi_15": 44.73,
+        "gap_pct": -3.087,
+        "day_range": 16.972,
+        "candle_body": 0.417,
+        "dist_sma50": 2.101,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 28.2,
+        "vix_level": 17.54,
+        "execution_hour": 16,
+        "day_of_week": 0,
+        "sector_vs_spy": -1.565,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 2896769.0,
+        "net_vanna": 1083166.0,
+        "net_charm": -434651.0,
+        "delta_imbalance": 19.508,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 13.088,
+        "bid": 5.91,
+        "ask": 6.8,
+        "bid_size": 100.0,
+        "ask_size": 100.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 1.57,
+        "gap_pct": -3.087,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 27.92,
+        "float_shares": 22204136,
+        "shares_short": 6099175,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.296,
+      "sweep_aggression_pct": 31.39,
+      "distance_to_zero_gamma_pct": 0.166,
+      "distance_to_heaviest_dp_node_pct": 4.499,
+      "days_since_earnings": 68,
+      "days_to_earnings": 23,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 12.42,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "AMPG260821C00006500",
+        "expiry": "2026-08-21",
+        "strike": 6.5,
+        "dte": 35,
+        "entry_premium": 1.25,
+        "limit_price": 1.26,
+        "contracts": 6,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": null,
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.47,
+          "ask": 1.33,
+          "mid": 0.9,
+          "bid_ask_spread_pct": 95.556,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": null,
+          "oi_prev": null,
+          "oi_change": null,
+          "source": "unavailable"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "f8cec243-369b-4750-9564-c433a52563e0",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.26,
+        "contracts": 6
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "AMPG",
+      "call_prem": 44190.0,
+      "put_prem": 0.0,
+      "underlying_price": 6.14,
+      "min_contract_premium": 0.45,
+      "flow_type": "call",
+      "total_premium": 44190.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 11

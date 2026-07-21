@@ -106306,7 +106306,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 33.3,
+        "mfe_pct": 46.7,
         "mae_pct": -46.7,
         "stage": "scaled",
         "close_fails": 0,
@@ -116753,7 +116753,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 4.9,
-        "mae_pct": -24.6,
+        "mae_pct": -30.3,
         "stage": "initial"
       }
     }
@@ -119020,7 +119020,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -17.0,
+        "mfe_pct": -15.1,
         "mae_pct": -35.8,
         "stage": "initial"
       }
@@ -125207,7 +125207,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 14.4,
-        "mae_pct": -6.7,
+        "mae_pct": -12.5,
         "stage": "initial"
       }
     }
@@ -127495,6 +127495,285 @@
       "min_contract_premium": 0.67,
       "flow_type": "call",
       "total_premium": 134000.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 9,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -4.4,
+        "mae_pct": -4.4,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "c41e22cfe497",
+    "ticker": "SLS",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-21T16:01:19.436Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 68,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-21T16:01:19.436Z",
+      "macro": {
+        "spot": 12.55,
+        "sma20": 12.79,
+        "distance_to_sma20_pct": -1.85,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 166.7,
+        "iv_back": 247.6,
+        "iv_ratio": 0.673,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 889402.0,
+        "zero_gamma_strike": 12.5,
+        "distance_to_zero_gamma_pct": 0.398,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 75.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.46,
+        "atr_pct": 11.66,
+        "rvol_10min": 0.17,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Healthcare",
+        "industry": "Biotechnology",
+        "market_cap": 2463806208,
+        "short_pct_float": 32.33,
+        "short_ratio": 6.31,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 94.93,
+        "vader_compound": 0.561,
+        "news_type": "Earnings",
+        "top_headline": "12 Health Care Stocks Moving In Friday's Intraday Session",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -1.85,
+        "market_spy_dist_pct": 0.376,
+        "sector_etf": "XLV",
+        "sector_dist_pct": -0.314,
+        "sector_vs_market_spread": -0.69,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 243.8,
+        "call_iv_25d": 189.7,
+        "skew_ratio": 1.285,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 10.95,
+        "ask_sweep_prem": 925146.0,
+        "total_flow_prem": 8450643.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.75,
+        "heaviest_node_price": 12.64,
+        "node_size": 28141.0,
+        "n_prints": 10,
+        "window_start": "2026-07-21T13:30:54Z",
+        "window_end": "2026-07-21T16:00:54Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 124,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 21,
+        "next_earnings_date": "2026-08-11",
+        "iv_rank_1y": 94.51,
+        "last_earnings_date": "2026-03-19",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 144.59,
+        "front_iv": 166.7,
+        "vrp": 22.11,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 1079283.0,
+        "flow_persistence_pct": 35.67,
+        "flow_direction": "bullish",
+        "closing_accel": 1427901.0,
+        "n_ticks": 149,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 782.14,
+        "vwma_20": 13.3,
+        "rsi_5": 39.04,
+        "rsi_15": 37.43,
+        "gap_pct": 0.922,
+        "day_range": 3.347,
+        "candle_body": 0.095,
+        "dist_sma50": 28.746,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -80.9,
+        "vix_level": 17.21,
+        "execution_hour": 16,
+        "day_of_week": 1,
+        "sector_vs_spy": 1.193,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 45508111.0,
+        "net_vanna": 2471123.0,
+        "net_charm": -7473676.0,
+        "delta_imbalance": 14.338,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.08,
+        "bid": 12.53,
+        "ask": 12.54,
+        "bid_size": 200.0,
+        "ask_size": 200.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.16,
+        "gap_pct": 0.922,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 32.33,
+        "float_shares": 185277282,
+        "shares_short": 63307462,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.561,
+      "sweep_aggression_pct": 10.95,
+      "distance_to_zero_gamma_pct": 0.398,
+      "distance_to_heaviest_dp_node_pct": -0.75,
+      "days_since_earnings": 124,
+      "days_to_earnings": 21,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 35.67,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "SLS260821P00012000",
+        "expiry": "2026-08-21",
+        "strike": 12.0,
+        "dte": 35,
+        "entry_premium": 2.59,
+        "limit_price": 2.62,
+        "contracts": 3,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "442",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.94,
+          "ask": 3.32,
+          "mid": 3.13,
+          "bid_ask_spread_pct": 12.141,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 443.0,
+          "oi_prev": 442.0,
+          "oi_change": 1.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "8cac1f63-f4f1-4085-8712-ae3520c5cd12",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.62,
+        "contracts": 3
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "SLS",
+      "call_prem": 0.0,
+      "put_prem": 666544.0,
+      "underlying_price": 12.58,
+      "min_contract_premium": 2.1,
+      "flow_type": "put",
+      "total_premium": 666544.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 9

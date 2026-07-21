@@ -98755,7 +98755,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -11.9,
+        "mfe_pct": -9.5,
         "mae_pct": -45.2,
         "stage": "initial"
       }
@@ -106272,7 +106272,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 13.3,
+        "mfe_pct": 26.7,
         "mae_pct": -46.7,
         "stage": "initial"
       }
@@ -108053,7 +108053,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 8.6,
+        "mfe_pct": 12.9,
         "mae_pct": -31.2,
         "stage": "initial"
       }
@@ -112271,8 +112271,33 @@
         "contracts": 7
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 0.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 30.0,
+          "mae_pct": -25.0,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-20T17:50:58.822Z",
+            "return_pct": 30.0
+          }
+        }
+      },
+      "mfe_pct": 30.0,
+      "mae_pct": -25.0,
+      "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "VG",
@@ -112285,12 +112310,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 22,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "VG260814C00014500",
+        "closed_at": "2026-07-21T14:50:58.427Z",
+        "return_pct": 0.0,
+        "reason": "runner gave back to break-even (0.0% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 30.0,
         "mae_pct": -25.0,
-        "stage": "scaled",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-20T17:50:58.822Z",
@@ -114981,7 +115015,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -20.6,
+        "mfe_pct": -19.6,
         "mae_pct": -49.5,
         "stage": "initial"
       }
@@ -115548,7 +115582,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -7.0,
+        "mfe_pct": -6.6,
         "mae_pct": -33.1,
         "stage": "initial"
       }
@@ -116385,7 +116419,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -10.4,
+        "mfe_pct": -9.9,
         "mae_pct": -31.2,
         "stage": "initial"
       }
@@ -117780,7 +117814,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 51.2,
+        "mfe_pct": 53.8,
         "mae_pct": -8.8,
         "stage": "initial"
       }
@@ -118339,7 +118373,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -5.2,
-        "mae_pct": -29.6,
+        "mae_pct": -31.0,
         "stage": "initial"
       }
     }
@@ -118618,7 +118652,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -16.8,
-        "mae_pct": -42.8,
+        "mae_pct": -44.1,
         "stage": "initial"
       }
     }
@@ -121695,7 +121729,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -1.3,
-        "mae_pct": -28.0,
+        "mae_pct": -31.0,
         "stage": "initial"
       }
     }
@@ -122531,7 +122565,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 4.2,
+        "mfe_pct": 5.4,
         "mae_pct": -30.4,
         "stage": "initial"
       }
@@ -125913,6 +125947,285 @@
       "min_contract_premium": 1.0,
       "flow_type": "put",
       "total_premium": 28200.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 8,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -6.7,
+        "mae_pct": -6.7,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "a7a3a2d68aef",
+    "ticker": "LQD",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-21T14:51:00.931Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 64,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-21T14:51:00.931Z",
+      "macro": {
+        "spot": 106.92,
+        "sma20": 108.17,
+        "distance_to_sma20_pct": -1.155,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 6.6,
+        "iv_back": 4.4,
+        "iv_ratio": 1.5,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -4105455.1,
+        "zero_gamma_strike": 107.0,
+        "distance_to_zero_gamma_pct": -0.075,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.44,
+        "atr_pct": 0.41,
+        "rvol_10min": 0.18,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 4.52,
+        "vader_compound": 0.298,
+        "news_type": "Macro",
+        "top_headline": "Why Fund Managers Now Fear AI Capex More Than Iran, Tariffs, or a Recession",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -1.155,
+        "market_spy_dist_pct": 0.277,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 7.8,
+        "call_iv_25d": 3.9,
+        "skew_ratio": 1.997,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 1.44,
+        "ask_sweep_prem": 184354.0,
+        "total_flow_prem": 12820024.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 106.92,
+        "node_size": 1727096.0,
+        "n_prints": 200,
+        "window_start": "2026-07-21T13:59:57Z",
+        "window_end": "2026-07-21T14:50:58Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 23.3,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 5.16,
+        "front_iv": 6.6,
+        "vrp": 1.44,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -4177183.0,
+        "flow_persistence_pct": 95.5,
+        "flow_direction": "bearish",
+        "closing_accel": -3940530.0,
+        "n_ticks": 41,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 977.55,
+        "vwma_20": 108.25,
+        "rsi_5": 37.5,
+        "rsi_15": 19.67,
+        "gap_pct": -0.117,
+        "day_range": 0.234,
+        "candle_body": 0.4,
+        "dist_sma50": -1.395,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 2.2,
+        "vix_level": 17.39,
+        "execution_hour": 14,
+        "day_of_week": 1,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -22409520.0,
+        "net_vanna": 20176826.0,
+        "net_charm": -32073649.0,
+        "delta_imbalance": 0.206,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.019,
+        "bid": 106.91,
+        "ask": 106.93,
+        "bid_size": 3800.0,
+        "ask_size": 10900.0,
+        "obi": -0.483,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.18,
+        "gap_pct": -0.117,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.298,
+      "sweep_aggression_pct": 1.44,
+      "distance_to_zero_gamma_pct": -0.075,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 95.5,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "LQD260821C00111000",
+        "expiry": "2026-08-21",
+        "strike": 111.0,
+        "dte": 35,
+        "entry_premium": 0.87,
+        "limit_price": 0.88,
+        "contracts": 9,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "15711",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.0,
+          "ask": 0.04,
+          "mid": 0.02,
+          "bid_ask_spread_pct": 200.0,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 15711.0,
+          "oi_prev": 15711.0,
+          "oi_change": 0.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "17caebca-5258-43df-8d31-95f30b2c0d2b",
+        "error": null,
+        "submitted": true,
+        "limit_price": 0.88,
+        "contracts": 9
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "LQD",
+      "call_prem": 2010000.0,
+      "put_prem": 0.0,
+      "underlying_price": 106.935,
+      "min_contract_premium": 2.01,
+      "flow_type": "call",
+      "total_premium": 2010000.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8

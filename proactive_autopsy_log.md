@@ -2359,3 +2359,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 7.5 fed the squeeze.
 
+## Autopsy - FRMI (581029bd4c2e)
+- entered 2026-07-17T14:02:13.853Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +40.0% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+

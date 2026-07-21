@@ -1564,3 +1564,9 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - FRMI (581029bd4c2e) - 2026-07-21T18:20:55.049Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

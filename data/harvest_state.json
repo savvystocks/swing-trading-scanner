@@ -978,7 +978,48 @@
     "META261120C00725000",
     "BROS260731C00067000",
     "SNA260918C00430000",
-    "ORCL280121C00125000"
+    "ORCL280121C00125000",
+    "B260821C00038000",
+    "QQQ260723P00695000",
+    "SPY261016C00685000",
+    "ONTO260821P00340000",
+    "CAVA260731P00064000",
+    "WSM260918P00210000",
+    "NFLX270617P00056000",
+    "IWM260731P00285000",
+    "MU260729C01100000",
+    "CEG260807C00267500",
+    "CAT261120P00800000",
+    "NBIS260724P00190000",
+    "SPY260731P00695000",
+    "MU260729C01090000",
+    "TSLA260821C00435000",
+    "FCX260814C00062000",
+    "SPY260731P00715000",
+    "UCTT260821C00105000",
+    "ORCL270115P00110000",
+    "TSLA260828P00310000",
+    "OKLO260821P00045000",
+    "CMI260918P00690000",
+    "BHE260821C00080000",
+    "UNH270617C00450000",
+    "AMD260722C00542500",
+    "MU270115P00350000",
+    "TSLA260724C00380000",
+    "PLTR260724C00133000",
+    "TSM270617P00290000",
+    "NBIS260821P00160000",
+    "SPCX260724C00130000",
+    "B260918C00040000",
+    "DRAM260724C00060000",
+    "MU270115P00330000",
+    "MAGS260918C00070000",
+    "SMH261016P00575000",
+    "COIN270115C00200000",
+    "NBIS260814P00110000",
+    "TSM270617P00200000",
+    "MARA271015C00020000",
+    "AYI260918P00340000"
   ],
   "tickers": {
     "SPCX": {
@@ -27540,10 +27581,170 @@
       "days_to_earnings": 15,
       "post_earnings_iv_crush_flag": false,
       "flow_persistence_pct": 67.94
+    },
+    "B": {
+      "entry_ts_utc": "2026-07-21T17:22:45.024Z",
+      "macro": {
+        "spot": 36.3,
+        "sma20": 36.52,
+        "distance_to_sma20_pct": -0.602,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 46.2,
+        "iv_back": 58.4,
+        "iv_ratio": 0.791,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 247046.0,
+        "zero_gamma_strike": 37.0,
+        "distance_to_zero_gamma_pct": -1.928,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.33,
+        "atr_pct": 3.66,
+        "rvol_10min": 0.65,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Basic Materials",
+        "industry": "Gold",
+        "market_cap": 60987908096,
+        "short_pct_float": null,
+        "short_ratio": 1.0,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.6,
+        "vader_compound": -0.102,
+        "news_type": "Analyst",
+        "top_headline": "JP Morgan Maintains Overweight on Barrick Mining, Lowers Price Target to $50",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -0.602,
+        "market_spy_dist_pct": 0.449,
+        "sector_etf": "XLB",
+        "sector_dist_pct": -1.14,
+        "sector_vs_market_spread": -1.589,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 47.0,
+        "call_iv_25d": 46.3,
+        "skew_ratio": 1.016,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 1.16,
+        "ask_sweep_prem": 140230.0,
+        "total_flow_prem": 12037658.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 2.25,
+        "heaviest_node_price": 35.48,
+        "node_size": 108685.0,
+        "n_prints": 70,
+        "window_start": "2026-07-21T12:09:47Z",
+        "window_end": "2026-07-21T17:14:44Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 71,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 20,
+        "next_earnings_date": "2026-08-10",
+        "iv_rank_1y": 56.88,
+        "last_earnings_date": "2026-05-11",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 42.42,
+        "front_iv": 46.2,
+        "vrp": 3.78,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -319344.0,
+        "flow_persistence_pct": 29.54,
+        "flow_direction": "bearish",
+        "closing_accel": 93785.0,
+        "n_ticks": 221,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1022.68,
+        "vwma_20": 36.53,
+        "rsi_5": 47.35,
+        "rsi_15": 47.05,
+        "gap_pct": 1.948,
+        "day_range": 2.824,
+        "candle_body": 0.702,
+        "dist_sma50": -8.176,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -12.2,
+        "vix_level": 17.11,
+        "execution_hour": 17,
+        "day_of_week": 1,
+        "sector_vs_spy": -0.176,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 8855752.0,
+        "net_vanna": 17957646.0,
+        "net_charm": -3098093.0,
+        "delta_imbalance": 1.889,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.028,
+        "bid": 36.31,
+        "ask": 36.32,
+        "bid_size": 700.0,
+        "ask_size": 1300.0,
+        "obi": -0.3,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.64,
+        "gap_pct": 1.948,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": 1669543550,
+        "shares_short": 16951050,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.102,
+      "sweep_aggression_pct": 1.16,
+      "distance_to_zero_gamma_pct": -1.928,
+      "distance_to_heaviest_dp_node_pct": 2.25,
+      "days_since_earnings": 71,
+      "days_to_earnings": 20,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 29.54
     }
   },
-  "payload_count": 166,
-  "topn_count": 287,
+  "payload_count": 167,
+  "topn_count": 301,
   "random_count": 10,
   "backoff_429": false,
   "cap_today": 300,

@@ -3,6 +3,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from src.brain import weights as W, harness as H, calibration as C, ev as EV, foundry, loader, run_weekly
+from src.brain import discovery as D, convergence as CV
 
 DAY = 24 * 3600 * 1000
 fails = []
@@ -311,6 +312,88 @@ def test_end_to_end_synthetic():
     shutil.rmtree(d, ignore_errors=True)
 
 
+# ---------------------------------------------------------------- discovery rig honesty
+def _discovery_df(n, seed, leak_signal=False):
+    import pandas as pd
+    rng = np.random.default_rng(seed)
+    day = DAY // 24
+    start = np.arange(n) * day * 6.0
+    f1 = rng.random(n)
+    f2 = rng.random(n)
+    y = (rng.random(n) < 0.25).astype(float)
+    half = n // 2
+    y[:half] = np.where(f1[:half] > 0.67, 1.0, (rng.random(half) < 0.25).astype(float))
+    both = f2 > 0.67
+    y[both] = (rng.random(both.sum()) < 0.85).astype(float)
+    if leak_signal:
+        y[half:] = np.where(f1[half:] > 0.67, 1.0, y[half:])
+    df = pd.DataFrame({
+        "candidate_id": [f"d{i}" for i in range(n)], "ticker": [f"T{i % 40}" for i in range(n)],
+        "occ_symbol": "OCC", "signal_ts": start, "window_start": start, "window_end": start + day,
+        "y_up": y, "weight": 1.0, "w_raw": 1.0, "outcome": np.where(y > 0, "up", "down"),
+        "realized_return": np.where(y > 0, 0.4, -0.4), "cost_base": 0.02,
+        "net_ret": np.where(y > 0, 0.38, -0.42), "executed": 0, "sample_tier": "topn"})
+    X = pd.DataFrame({"f.a.one": f1, "f.a.two": f2})
+    return df, X, ["f.a.one", "f.a.two"]
+
+
+def test_discovery_oos_only():
+    # a rule that is perfect ONLY in the discovery half must NOT come back confirmed; a rule real in
+    # BOTH halves must. Grading never touches discovery data.
+    df, X, kept = _discovery_df(1200, seed=3)
+    tr = D.Trials()
+    cfg = {**CV.BASE_CFG, "slice": "first_to_second", "learner": "rules"}
+    res = CV.run_variant(df, X, kept, cfg, tr)
+    sig_fake = "a.one:HIGH"
+    sig_real = "a.two:HIGH"
+    fake = res.get(sig_fake, {"status": "absent"})["status"]
+    real = res.get(sig_real, {"status": "absent"})["status"]
+    chk("discovery: train-only pattern is NOT confirmed OOS", fake != "confirmed", f"fake={fake}")
+    chk("discovery: genuine pattern IS confirmed OOS", real == "confirmed", f"real={real}")
+    chk("discovery: every candidate rule was counted", tr.counts.get("rules_evaluated", 0) >= 6,
+        f"trials={tr.as_dict()}")
+
+
+def test_discovery_walkforward_purge():
+    # a candidate whose label window crosses the test week's open must be EXCLUDED from training
+    df, X, kept = _discovery_df(900, seed=5)
+    wk = D.week_key(df["signal_ts"])
+    weeks = sorted(np.unique(wk))
+    test_week = weeks[-1]
+    t_open = float(df.loc[wk == test_week, "window_start"].min())
+    leak = (wk < test_week) & (df["window_end"].to_numpy() > t_open - D.EMBARGO_MS)
+    eligible = int(((df["window_end"].to_numpy() <= t_open - D.EMBARGO_MS) & (wk < test_week)).sum())
+    tr = D.Trials()
+    cfg = {**CV.BASE_CFG, "learner": "rules"}
+    wf = D.walk_forward(df, X, kept, cfg, tr)
+    last = [w for w in wf["windows"] if w["week"].endswith(str(test_week)[4:])]
+    chk("discovery: walk-forward train excludes window-crossing rows",
+        bool(last) and last[0]["n_train"] == eligible,
+        f"n_train={last[0]['n_train'] if last else None} eligible={eligible} leaky={int(leak.sum())}")
+    chk("discovery: ledger only contains test-week rows with decisions",
+        wf["ledger"].empty or set(wf["ledger"]["decision"].unique()) <= {"TAKE", "skip"})
+
+
+def test_convergence_classify_accrete():
+    angle_names = [a for a, _ in CV.ANGLES]
+    m = {"surv": {a: "confirmed" for a in angle_names[:8]} | {a: "absent" for a in angle_names[8:]},
+         "flick": {a: "confirmed" for a in angle_names[:5]} | {a: "absent" for a in angle_names[5:]},
+         "mirage": {a: "confirmed" for a in angle_names[:2]} | {a: "absent" for a in angle_names[2:]}}
+    s, f, g = CV.classify(m)
+    chk("convergence: 8/10 -> survivor, 5 -> flicker, 2 -> mirage",
+        [x[0] for x in s] == ["surv"] and [x[0] for x in f] == ["flick"] and [x[0] for x in g] == ["mirage"])
+    d = tempfile.mkdtemp(prefix="conv_")
+    sp = os.path.join(d, "state.json")
+    CV.accrete(sp, "snapA", m, s)
+    st1 = CV.accrete(sp, "snapB", m, s)
+    chk("convergence: survivor persists across runs in accretion state",
+        st1.get("surv", "").startswith("SURVIVOR x2"), st1.get("surv"))
+    st2 = CV.accrete(sp, "snapC", m, [])
+    chk("convergence: a survivor that stops surviving LAPSES", st2.get("surv", "").startswith("LAPSED"),
+        st2.get("surv"))
+    shutil.rmtree(d, ignore_errors=True)
+
+
 if __name__ == "__main__":
     test_gate1_overlap_weights()
     test_weight_cache_equality()
@@ -320,7 +403,10 @@ if __name__ == "__main__":
     test_isolation()
     test_foundry_pools_across_params_hash()
     test_end_to_end_synthetic()
-    total = 8 * 3
+    test_discovery_oos_only()
+    test_discovery_walkforward_purge()
+    test_convergence_classify_accrete()
+    total = 11 * 3
     print(f"\nTOTAL: brain suite - {len(fails)} failure(s)")
     if fails:
         raise SystemExit("FAILS: " + ", ".join(fails))

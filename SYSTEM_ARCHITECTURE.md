@@ -187,13 +187,38 @@ Proves the logger cannot alter or crash live execution: `run_scheduled_cycle` is
 
 ---
 
+## 8. THE V12 BRAIN (isolated analytical layer, `src/brain/`)
+
+Reads ONLY the nightly gzipped snapshots from the private `harvest-snapshots` repo; never opens the
+live `harvest.db` or imports any execution module (two-way isolation asserted by
+`test_brain.py::test_isolation`). Dependencies: numpy, pandas, pyarrow, scikit-learn
+(`requirements-brain.txt`). Runs on GitHub's machines via `brain_weekly.yml` (Sunday 22:00 UTC +
+dispatch), which commits reports only.
+
+- **Stage 0 Foundry** (`foundry.py` + `loader.py` + `weights.py`): snapshot -> integrity check ->
+  candidates-labels join -> feature expansion -> overlap weights (per-underlying average uniqueness,
+  incremental cache) -> versioned parquet + dataset card. `params_hash` is provenance ONLY - the
+  Foundry pools across all hashes and never segments by them (locked by
+  `test_foundry_pools_across_params_hash`).
+- **Stage 1 Truth Harness** (`harness.py` + `ev.py` + `calibration.py` + `report.py`): PurgedKFold +
+  embargo, CPCV/PBO/Deflated-Sharpe machinery, empirical EV engine with bootstrap CIs, adaptive
+  calibration, weekly edge report with hard UNDERPOWERED minimums, pinned-parameter SPRT.
+- **Discovery rig** (`discovery.py` + `convergence.py` + `run_discovery.py`, weekly `discovery` job):
+  per-feature verdict table (fill rate first; uniqueness-weighted band stats; EV at executable
+  prices), gradient-boosted meta-labeler + depth-<=3 readable-rule mining evaluated only under
+  purged/embargoed splits, walk-forward dated replay with a trade-by-trade ledger, and the ten-angle
+  Convergence Protocol (SURVIVORS >= 8/10 / FLICKERS / MIRAGES, accreting in
+  `reports/discovery/convergence_state.json`). Every configuration, rule, and threshold is counted
+  into a global trials total that feeds PBO/DSR; no winner renders without it. Promotion is by the
+  ROADMAP 8b rule (SHADOW candidate for the Student only); nothing deploys live from this rig.
+
 ## KNOWN GAPS (open)
 
 An honest anchor names what is broken. Full history in `reports/harvest_audit_2026-07-02.md`.
 
 **Resolved 2026-07-02/03 (removed from this list):** the Friday-hardcoded vertical barrier (now XNYS-calendar-aware, Section 6); orphaned positions not being exit-evaluated — all 72 broker positions were reconciled and now carry OPEN tracking records, so the exit engine manages every one; and, on **2026-07-03**, three gaps closed at once by moving the poller off the laptop onto an always-on **Vultr VPS** (Ubuntu 24.04):
 
-- *Poller does not `git pull`* → the VPS cron runs `git pull --ff-only` as its first action every cycle, so GHA-harvested candidates reach the DB with no manual pull.
+- *Poller does not `git pull`* → the VPS cron syncs as its first action every cycle (since 2026-07-10: `git fetch` + `git reset --hard FETCH_HEAD` — a mirror sync immune to the ff/ref-lock failures `git pull` hit under the engine's push load; `harvest.db` is gitignored so the reset can never touch it), so GHA-harvested candidates reach the DB with no manual pull.
 - *Scheduled poller reliability / laptop dependence* → the poller runs from the VPS crontab (`*/15 13-21 * * 1-5` UTC, XNYS-session-gated), independent of whether the laptop is awake; the laptop is out of the pipeline and its DB was renamed `harvest.db.migrated-*`. The VPS DB was rebuilt from the committed inbox (1687 candidates, `integrity_check ok`, row-count parity).
 - *Random sample yields 0* → refactored to a whole-pool Bernoulli draw (`harvest_random_p`) with a near-session-close top-up guaranteeing ≥5 (Section 4); 14/14 harvester tests + passivity green.
 

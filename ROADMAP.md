@@ -169,6 +169,22 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
    labeled rows. Accept: trained, calibrated, and evaluated only through items 5–7 (OOS Wilson lower bound
    on the calibrated hit rate exceeds the empirical hurdle; PBO below threshold; Deflated Sharpe positive
    with trials counted; beats the rules engine on the same purged splits).
+8b. **Discovery rig (pre-Student search)** — SHIPPED 2026-07-21 (`src/brain/discovery.py`,
+   `src/brain/convergence.py`, `src/brain/run_discovery.py`; weekly via `brain_weekly.yml` discovery
+   job → `reports/discovery/`). A systematic, re-runnable search over the graded snapshot: per-feature
+   verdict table (fill rate first, uniqueness-weighted band stats, EV at executable prices), a
+   gradient-boosted meta-labeler + shallow readable-rule mining evaluated ONLY under purged/embargoed
+   splits, a walk-forward dated replay with a trade-by-trade ledger, and the ten-angle Convergence
+   Protocol (seeds / time slices / bands / learner / weighting / costs / labels / population / target
+   / regime) judged by intersection — SURVIVORS >= 8/10, FLICKERS 4-7, MIRAGES <= 3, accreting across
+   weeks in `convergence_state.json`. Every configuration, rule, and threshold is counted; the global
+   trials count feeds PBO and the Deflated Sharpe; no winner is reported without its trials count.
+   **Promotion rule (owner decision, on the record): a SURVIVOR whose out-of-sample lower confidence
+   bound clears the cost-inclusive hurdle with PBO <= 0.20 across consecutive weekly runs becomes a
+   SHADOW candidate for the Student pipeline (item 8) — never a live deployment from this rig.**
+   scikit-learn added to `requirements-brain.txt` (brain-only dependency; isolation unchanged).
+   Accept: weekly dated reports append; leakage caught by `test_brain.py` discovery tests; zero
+   live-path changes.
 9. **Ensemble abstention — Council (Stage 3)** — QUEUED. ~5 seed/window variants; disagreement above a set
    band = no trade regardless of mean probability. Accept: abstention rate and its P&L effect measured on
    paper.

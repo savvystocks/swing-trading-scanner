@@ -2368,3 +2368,12 @@
 
 **Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
 
+## Autopsy - IBRX (c1950fd65285)
+- entered 2026-07-21T18:31:52.054Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -68.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-69%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 8.0 worked against it.
+

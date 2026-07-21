@@ -2323,3 +2323,12 @@
 
 **Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
 
+## Autopsy - ONDS (9fd005462d06)
+- entered 2026-07-20T15:12:00.715Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +52.5% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 4.0 fed the squeeze.
+

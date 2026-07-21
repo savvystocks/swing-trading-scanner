@@ -1528,3 +1528,9 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - CIFR (121dc08859d1) - 2026-07-21T15:11:03.027Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

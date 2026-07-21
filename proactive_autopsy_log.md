@@ -2305,3 +2305,12 @@
 
 **Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
 
+## Autopsy - CIFR (121dc08859d1)
+- entered 2026-07-20T15:41:21.985Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -51.2% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 23.0.
+

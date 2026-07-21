@@ -80079,7 +80079,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -5.6,
+        "mfe_pct": -3.1,
         "mae_pct": -49.1,
         "stage": "initial"
       }
@@ -108092,7 +108092,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 32.3,
+        "mfe_pct": 33.3,
         "mae_pct": -31.2,
         "stage": "scaled",
         "close_fails": 0,
@@ -118432,7 +118432,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -5.2,
-        "mae_pct": -34.3,
+        "mae_pct": -35.7,
         "stage": "initial"
       }
     }
@@ -119020,7 +119020,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -18.9,
+        "mfe_pct": -17.0,
         "mae_pct": -35.8,
         "stage": "initial"
       }
@@ -122376,7 +122376,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 23.9,
+        "mfe_pct": 26.1,
         "mae_pct": -8.7,
         "stage": "initial"
       }
@@ -123213,7 +123213,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -7.8,
+        "mfe_pct": -7.1,
         "mae_pct": -23.4,
         "stage": "initial"
       }
@@ -126043,7 +126043,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -6.7,
+        "mfe_pct": -6.1,
         "mae_pct": -8.6,
         "stage": "initial"
       }
@@ -126306,7 +126306,7 @@
       }
     },
     "exit": null,
-    "status": "OPEN",
+    "status": "PARKED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "LQD",
@@ -126325,8 +126325,15 @@
         "mfe_pct": -100.0,
         "mae_pct": -100.0,
         "stage": "initial",
-        "close_fails": 4
+        "close_fails": 5
       }
+    },
+    "parked": {
+      "at": "2026-07-21T15:41:03.254Z",
+      "leg": "bullish_call",
+      "occ": "LQD260821C00111000",
+      "close_fails": 5,
+      "reason": "no bid after 5 rejected closes - zero-bid corpse"
     }
   },
   {
@@ -126941,5 +126948,276 @@
         "stage": "initial"
       }
     }
+  },
+  {
+    "trade_set_id": "91afb893b790",
+    "ticker": "JETS",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-21T15:41:04.793Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 66,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-21T15:41:04.793Z",
+      "macro": {
+        "spot": 30.6,
+        "sma20": 32.05,
+        "distance_to_sma20_pct": -4.518,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 38.6,
+        "iv_back": 36.3,
+        "iv_ratio": 1.063,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -343831.7,
+        "zero_gamma_strike": 30.5,
+        "distance_to_zero_gamma_pct": 0.327,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.78,
+        "atr_pct": 2.55,
+        "rvol_10min": 0.2,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 95.11,
+        "vader_compound": 0.0,
+        "news_type": "Unknown",
+        "top_headline": "Tech Rout Deepens on China's AI Shock, Crude Rises to $81: Stock Market Today",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -4.518,
+        "market_spy_dist_pct": 0.369,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 40.1,
+        "call_iv_25d": 37.7,
+        "skew_ratio": 1.063,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 5.58,
+        "ask_sweep_prem": 442573.0,
+        "total_flow_prem": 7933037.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 30.6,
+        "node_size": 11500.0,
+        "n_prints": 3,
+        "window_start": "2026-07-21T14:49:58Z",
+        "window_end": "2026-07-21T14:58:51Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 37.01,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 26.84,
+        "front_iv": 38.6,
+        "vrp": 11.76,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 111715.0,
+        "flow_persistence_pct": 56.69,
+        "flow_direction": "bullish",
+        "closing_accel": 163837.0,
+        "n_ticks": 62,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 972.61,
+        "vwma_20": 32.07,
+        "rsi_5": 40.73,
+        "rsi_15": 26.69,
+        "gap_pct": 0.164,
+        "day_range": 1.046,
+        "candle_body": 0.094,
+        "dist_sma50": 3.203,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 2.3,
+        "vix_level": 17.16,
+        "execution_hour": 15,
+        "day_of_week": 1,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -762967.0,
+        "net_vanna": -236378.0,
+        "net_charm": -422959.0,
+        "delta_imbalance": 0.741,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.033,
+        "bid": 30.6,
+        "ask": 30.61,
+        "bid_size": 300.0,
+        "ask_size": 600.0,
+        "obi": -0.3333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.19,
+        "gap_pct": 0.164,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.0,
+      "sweep_aggression_pct": 5.58,
+      "distance_to_zero_gamma_pct": 0.327,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 56.69,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "JETS260821P00029500",
+        "expiry": "2026-08-21",
+        "strike": 29.5,
+        "dte": 35,
+        "entry_premium": 1.46,
+        "limit_price": 1.47,
+        "contracts": 5,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": null,
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.72,
+          "ask": 0.91,
+          "mid": 0.815,
+          "bid_ask_spread_pct": 23.313,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 1.0,
+          "oi_prev": 0.0,
+          "oi_change": 1.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "a604b99d-88c1-4571-832e-339a8f158fbd",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.47,
+        "contracts": 5
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "JETS",
+      "call_prem": 0.0,
+      "put_prem": 154142.0,
+      "underlying_price": 30.6,
+      "min_contract_premium": 0.74,
+      "flow_type": "put",
+      "total_premium": 154142.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 9
   }
 ]

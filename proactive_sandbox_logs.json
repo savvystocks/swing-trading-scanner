@@ -98755,7 +98755,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 4.8,
+        "mfe_pct": 7.1,
         "mae_pct": -45.2,
         "stage": "initial"
       }
@@ -107493,7 +107493,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 12.6,
+        "mfe_pct": 13.7,
         "mae_pct": -41.1,
         "stage": "initial"
       }
@@ -115357,9 +115357,14 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 28.6,
+        "mfe_pct": 33.3,
         "mae_pct": -23.8,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-07-21T17:40:53.947Z",
+          "return_pct": 33.3
+        }
       }
     }
   },
@@ -120479,7 +120484,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 1.5,
-        "mae_pct": -27.1,
+        "mae_pct": -27.4,
         "stage": "initial"
       }
     }
@@ -128193,7 +128198,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -9.1,
-        "mae_pct": -12.1,
+        "mae_pct": -15.2,
         "stage": "initial"
       }
     }
@@ -128765,7 +128770,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -7.0,
+        "mfe_pct": -3.2,
         "mae_pct": -7.0,
         "stage": "initial"
       }
@@ -129045,7 +129050,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -3.6,
-        "mae_pct": -6.3,
+        "mae_pct": -7.2,
         "stage": "initial"
       }
     }
@@ -129882,7 +129887,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -5.0,
-        "mae_pct": -5.0,
+        "mae_pct": -6.4,
         "stage": "initial"
       }
     }
@@ -130154,6 +130159,300 @@
       "min_contract_premium": 0.85,
       "flow_type": "call",
       "total_premium": 102685.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 11,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -34.7,
+        "mae_pct": -34.7,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "AUDIT-3aae247f",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-07-21T17:40:53.611Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "17059565-8208-40df-9d9a-7cb770354ed7",
+        "symbol": "AMPG260821C00006500",
+        "age_min": 37.3,
+        "limit_price": "1.28"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "b0422a136a77",
+    "ticker": "KWEB",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-21T17:41:37.106Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 72,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-21T17:41:37.106Z",
+      "macro": {
+        "spot": 27.02,
+        "sma20": 25.69,
+        "distance_to_sma20_pct": 5.168,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 36.0,
+        "iv_back": 35.0,
+        "iv_ratio": 1.029,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 5971796.8,
+        "zero_gamma_strike": 28.0,
+        "distance_to_zero_gamma_pct": -3.627,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.65,
+        "atr_pct": 2.42,
+        "rvol_10min": 0.39,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 119.39,
+        "vader_compound": 0.284,
+        "news_type": "Earnings",
+        "top_headline": "Korea Drives Semi Stocks Lower Despite Solid Taiwan Semi Earnings; Apple Boosts China AI Models",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 5.168,
+        "market_spy_dist_pct": 0.491,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 36.5,
+        "call_iv_25d": 36.0,
+        "skew_ratio": 1.013,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 2.88,
+        "ask_sweep_prem": 160602.0,
+        "total_flow_prem": 5574318.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 27.09,
+        "node_size": 465337.0,
+        "n_prints": 70,
+        "window_start": "2026-07-21T09:03:11Z",
+        "window_end": "2026-07-21T17:39:59Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 61.81,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 29.64,
+        "front_iv": 36.0,
+        "vrp": 6.36,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -305900.0,
+        "flow_persistence_pct": 44.06,
+        "flow_direction": "bearish",
+        "closing_accel": 188151.0,
+        "n_ticks": 230,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 860.15,
+        "vwma_20": 25.73,
+        "rsi_5": 63.76,
+        "rsi_15": 73.11,
+        "gap_pct": -0.565,
+        "day_range": 1.185,
+        "candle_body": 0.844,
+        "dist_sma50": 1.316,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 1.0,
+        "vix_level": 17.1,
+        "execution_hour": 17,
+        "day_of_week": 1,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 20432152.0,
+        "net_vanna": 88383272.0,
+        "net_charm": -16739160.0,
+        "delta_imbalance": 1.731,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.037,
+        "bid": 27.02,
+        "ask": 27.03,
+        "bid_size": 6900.0,
+        "ask_size": 15500.0,
+        "obi": -0.3839,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.37,
+        "gap_pct": -0.565,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.284,
+      "sweep_aggression_pct": 2.88,
+      "distance_to_zero_gamma_pct": -3.627,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 44.06,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "KWEB260821P00026000",
+        "expiry": "2026-08-21",
+        "strike": 26.0,
+        "dte": 35,
+        "entry_premium": 1.2,
+        "limit_price": 1.21,
+        "contracts": 6,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "28376",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.59,
+          "ask": 0.64,
+          "mid": 0.615,
+          "bid_ask_spread_pct": 8.13,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 28371.0,
+          "oi_prev": 28376.0,
+          "oi_change": -5.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "8615e45f-2d8a-4185-8acc-9d8729e1a83e",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.21,
+        "contracts": 6
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "KWEB",
+      "call_prem": 29500.0,
+      "put_prem": 50500.0,
+      "underlying_price": 27.025,
+      "min_contract_premium": 0.59,
+      "flow_type": "put",
+      "total_premium": 80000.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 11

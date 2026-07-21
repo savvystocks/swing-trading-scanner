@@ -2386,3 +2386,21 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 13.0 fed the squeeze.
 
+## Autopsy - ARKG (1cb41ef6c6e7)
+- entered 2026-07-20T14:52:25.995Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -56.2% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-56%, move 0.0%): no breakdown materialised; spot held above zero-gamma 23.0.
+
+## Autopsy - CART (9e2ced5036df)
+- entered 2026-07-21T17:11:23.321Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 50.0 worked against it.
+

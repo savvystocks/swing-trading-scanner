@@ -101526,7 +101526,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 56.0,
+        "mfe_pct": 64.3,
         "mae_pct": -38.1,
         "stage": "trailing",
         "close_fails": 0,
@@ -109214,8 +109214,33 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -0.7
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 40.0,
+          "mae_pct": -12.9,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-20T14:01:19.236Z",
+            "return_pct": 40.0
+          }
+        }
+      },
+      "mfe_pct": 40.0,
+      "mae_pct": -12.9,
+      "determining_factor": "Bearish put FAILED (-1%, move 0.0%): no breakdown materialised; spot held above zero-gamma 58.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "NFLX",
@@ -109228,12 +109253,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 18,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "NFLX260814P00066000",
+        "closed_at": "2026-07-21T14:01:14.334Z",
+        "return_pct": -0.7,
+        "reason": "runner gave back to break-even (-0.7% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 40.0,
         "mae_pct": -12.9,
-        "stage": "scaled",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-20T14:01:19.236Z",
@@ -115235,7 +115269,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 0.0,
+        "mfe_pct": 9.5,
         "mae_pct": -23.8,
         "stage": "initial"
       }
@@ -116351,7 +116385,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -16.7,
+        "mfe_pct": -11.5,
         "mae_pct": -31.2,
         "stage": "initial"
       }
@@ -117746,7 +117780,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 21.2,
+        "mfe_pct": 25.0,
         "mae_pct": -8.8,
         "stage": "initial"
       }
@@ -118305,7 +118339,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -5.2,
-        "mae_pct": -28.2,
+        "mae_pct": -29.6,
         "stage": "initial"
       }
     }
@@ -118584,7 +118618,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -16.8,
-        "mae_pct": -39.1,
+        "mae_pct": -42.1,
         "stage": "initial"
       }
     }
@@ -119420,7 +119454,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 5.0,
+        "mfe_pct": 8.0,
         "mae_pct": -20.0,
         "stage": "initial"
       }
@@ -120529,7 +120563,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 30.0,
+        "mfe_pct": 34.0,
         "mae_pct": -8.0,
         "stage": "initial"
       }
@@ -121102,7 +121136,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -7.7,
+        "mfe_pct": 0.0,
         "mae_pct": -19.2,
         "stage": "initial"
       }
@@ -122776,7 +122810,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -4.4,
+        "mfe_pct": -1.5,
         "mae_pct": -12.6,
         "stage": "initial"
       }
@@ -125044,6 +125078,14 @@
       "total_premium": 25700.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 8
+    "brake_stopouts_at_entry": 8,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -6.7,
+        "mae_pct": -6.7,
+        "stage": "initial"
+      }
+    }
   }
 ]

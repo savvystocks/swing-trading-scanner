@@ -2287,3 +2287,12 @@
 
 **Determining factor:** Bearish put FAILED (-71%, move 0.0%): no breakdown materialised; spot held above zero-gamma 3.0.
 
+## Autopsy - NFLX (8ca026bd0f0f)
+- entered 2026-07-17T16:11:10.661Z | trigger regime_BEARISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -0.7% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-1%, move 0.0%): no breakdown materialised; spot held above zero-gamma 58.0.
+

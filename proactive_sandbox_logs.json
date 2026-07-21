@@ -34076,7 +34076,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 24.2,
-        "mae_pct": -44.2,
+        "mae_pct": -44.5,
         "stage": "initial"
       }
     }
@@ -106306,9 +106306,9 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 46.7,
+        "mfe_pct": 53.3,
         "mae_pct": -46.7,
-        "stage": "scaled",
+        "stage": "trailing",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-21T15:11:01.252Z",
@@ -115636,7 +115636,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -1.2,
+        "mfe_pct": 0.8,
         "mae_pct": -33.1,
         "stage": "initial"
       }
@@ -118432,7 +118432,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -5.2,
-        "mae_pct": -36.1,
+        "mae_pct": -38.5,
         "stage": "initial"
       }
     }
@@ -119020,7 +119020,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -15.1,
+        "mfe_pct": -13.2,
         "mae_pct": -35.8,
         "stage": "initial"
       }
@@ -123772,7 +123772,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -7.3,
-        "mae_pct": -18.8,
+        "mae_pct": -20.8,
         "stage": "initial"
       }
     }
@@ -124050,7 +124050,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 0.7,
+        "mfe_pct": 1.5,
         "mae_pct": -10.6,
         "stage": "initial"
       }
@@ -124330,7 +124330,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -2.1,
-        "mae_pct": -41.7,
+        "mae_pct": -45.8,
         "stage": "initial"
       }
     }
@@ -127501,7 +127501,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -4.4,
+        "mfe_pct": -2.9,
         "mae_pct": -4.4,
         "stage": "initial"
       }
@@ -127774,6 +127774,278 @@
       "min_contract_premium": 2.1,
       "flow_type": "put",
       "total_premium": 666544.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 9,
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "2abdef828b8d",
+    "ticker": "KLAR",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-21T16:11:45.310Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 68,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-21T16:11:45.310Z",
+      "macro": {
+        "spot": 19.21,
+        "sma20": 19.42,
+        "distance_to_sma20_pct": -1.106,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 70.4,
+        "iv_back": 81.6,
+        "iv_ratio": 0.863,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 200950.7,
+        "zero_gamma_strike": 20.0,
+        "distance_to_zero_gamma_pct": -4.112,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 100.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.01,
+        "atr_pct": 5.26,
+        "rvol_10min": 1.08,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Credit Services",
+        "market_cap": 7255997952,
+        "short_pct_float": 11.37,
+        "short_ratio": 6.33,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.95,
+        "vader_compound": 0.123,
+        "news_type": "Analyst",
+        "top_headline": "Apple To Launch Upgrade Device Leasing Program To Spur Sales; Apple Plans To Launch Device Leasing Program On July 28 In U.S.; Apple Is Part",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -1.106,
+        "market_spy_dist_pct": 0.436,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 1.667,
+        "sector_vs_market_spread": 1.231,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 65.5,
+        "call_iv_25d": 84.9,
+        "skew_ratio": 0.772,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 3.62,
+        "ask_sweep_prem": 173546.0,
+        "total_flow_prem": 4793748.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -1.5,
+        "heaviest_node_price": 19.5,
+        "node_size": 510100.0,
+        "n_prints": 39,
+        "window_start": "2026-07-21T15:10:15Z",
+        "window_end": "2026-07-21T16:06:50Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 68,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 28,
+        "next_earnings_date": "2026-08-18",
+        "iv_rank_1y": 45.92,
+        "last_earnings_date": "2026-05-14",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 42.11,
+        "front_iv": 70.4,
+        "vrp": 28.29,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 441937.0,
+        "flow_persistence_pct": 68.02,
+        "flow_direction": "bullish",
+        "closing_accel": 79403.0,
+        "n_ticks": 111,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 896.72,
+        "vwma_20": 19.56,
+        "rsi_5": 34.33,
+        "rsi_15": 40.3,
+        "gap_pct": -0.107,
+        "day_range": 10.567,
+        "candle_body": 0.227,
+        "dist_sma50": 8.682,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -11.2,
+        "vix_level": 17.21,
+        "execution_hour": 16,
+        "day_of_week": 1,
+        "sector_vs_spy": 0.454,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 1894470.0,
+        "net_vanna": 2948848.0,
+        "net_charm": -1076714.0,
+        "delta_imbalance": 2.026,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.156,
+        "bid": 19.17,
+        "ask": 19.2,
+        "bid_size": 300.0,
+        "ask_size": 300.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 1.09,
+        "gap_pct": -0.107,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 11.37,
+        "float_shares": 195927065,
+        "shares_short": 31353998,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.123,
+      "sweep_aggression_pct": 3.62,
+      "distance_to_zero_gamma_pct": -4.112,
+      "distance_to_heaviest_dp_node_pct": -1.5,
+      "days_since_earnings": 68,
+      "days_to_earnings": 28,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 68.02,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "KLAR260821C00020000",
+        "expiry": "2026-08-21",
+        "strike": 20.0,
+        "dte": 35,
+        "entry_premium": 1.68,
+        "limit_price": 1.7,
+        "contracts": 4,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "10496",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.52,
+          "ask": 1.63,
+          "mid": 1.575,
+          "bid_ask_spread_pct": 6.984,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 10498.0,
+          "oi_prev": 10496.0,
+          "oi_change": 2.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "11209e9a-3aba-434f-a4c3-fbf01f0133f9",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.7,
+        "contracts": 4
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "KLAR",
+      "call_prem": 72000.0,
+      "put_prem": 0.0,
+      "underlying_price": 19.25,
+      "min_contract_premium": 3.6,
+      "flow_type": "call",
+      "total_premium": 72000.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 9

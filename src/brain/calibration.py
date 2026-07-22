@@ -51,7 +51,11 @@ def isotonic_fit(scores, labels):
     for i in range(len(ys)):
         sums.append(ys[i]); counts.append(1.0); right.append(xs[i])
         while len(sums) > 1 and sums[-2] / counts[-2] > sums[-1] / counts[-1]:
-            sums[-2] += sums.pop(); counts[-2] += counts.pop(); right[-2] = right.pop()
+            # pop FIRST, then merge into the (new) last block: `sums[-2] += sums.pop()` re-resolves
+            # the -2 index against the already-shrunk list - it stored the merge one slot left and
+            # crashed outright on a length-2 merge (bug found 2026-07-22 by the Stage-2 OOF fit)
+            s_last, c_last, r_last = sums.pop(), counts.pop(), right.pop()
+            sums[-1] += s_last; counts[-1] += c_last; right[-1] = r_last
     vals = np.array([sm / c for sm, c in zip(sums, counts)])
     edges = np.array(right)                                   # right edge (score) of each block
     return {"x": edges, "y": vals, "xmin": float(xs[0]), "xmax": float(xs[-1])}

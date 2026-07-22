@@ -203,6 +203,16 @@ dispatch), which commits reports only.
 - **Stage 1 Truth Harness** (`harness.py` + `ev.py` + `calibration.py` + `report.py`): PurgedKFold +
   embargo, CPCV/PBO/Deflated-Sharpe machinery, empirical EV engine with bootstrap CIs, adaptive
   calibration, weekly edge report with hard UNDERPOWERED minimums, pinned-parameter SPRT.
+- **Stage 2 Student** (`student.py` + `run_student.py`, weekly `student` job): gradient-boosted
+  meta-labeler ("is this signal real?") on the feature-bearing graded rows. Correlation clustering
+  (|spearman| >= 0.85) kills redundant features; weights = uniqueness x time-decay (half-life 21d,
+  pinned); OOF under PurgedKFold + adaptive calibration; selection = calibrated p >= the empirical
+  cost-inclusive hurdle. Four mechanical acceptance gates (OOS Wilson lower bound > hurdle; CPCV
+  config-grid PBO <= 0.20; Deflated Sharpe > 0.5 with trials counted; beats the engine on the same
+  purged splits). Below 8,000 feature-bearing rows a run is PROVISIONAL and the official verdict is
+  withheld. Outputs: model card + shadow table (what it WOULD have taken/vetoed) to
+  `reports/student/`; the model artifact stays in the workdir, uncommitted. Reporting only - the
+  engine never reads it.
 - **Discovery rig** (`discovery.py` + `convergence.py` + `run_discovery.py`, weekly `discovery` job):
   per-feature verdict table (fill rate first; uniqueness-weighted band stats; EV at executable
   prices), gradient-boosted meta-labeler + depth-<=3 readable-rule mining evaluated only under

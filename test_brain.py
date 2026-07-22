@@ -3,7 +3,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from src.brain import weights as W, harness as H, calibration as C, ev as EV, foundry, loader, run_weekly
-from src.brain import discovery as D, convergence as CV
+from src.brain import discovery as D, convergence as CV, student as S
 
 DAY = 24 * 3600 * 1000
 fails = []
@@ -374,6 +374,37 @@ def test_discovery_walkforward_purge():
         wf["ledger"].empty or set(wf["ledger"]["decision"].unique()) <= {"TAKE", "skip"})
 
 
+def test_student_stage2():
+    import pandas as pd
+    # decay: exactly half at one half-life
+    ts = np.array([0.0, S.HALF_LIFE_DAYS * S.DAY_MS], dtype=np.float64)
+    dec = S.time_decay(ts, S.HALF_LIFE_DAYS, now_ts=ts[1])
+    chk("student: time-decay halves at one half-life", abs(dec[0] - 0.5) < 1e-9 and dec[1] == 1.0,
+        str(dec))
+    # clustering kills a planted duplicate feature
+    rng = np.random.default_rng(2)
+    f1 = rng.random(400)
+    Xc = pd.DataFrame({"f.a.one": f1, "f.a.dup": f1 * 2 + 1e-9 * rng.random(400),
+                       "f.b.other": rng.random(400)})
+    reduced, dropped = S.cluster_features(Xc, list(Xc.columns))
+    chk("student: correlation clustering drops the duplicate",
+        len(reduced) == 2 and ("f.a.dup" in dropped or "f.a.one" in dropped), f"{reduced} {dropped}")
+    # end-to-end provisional train on synthetic data + the gate honesty
+    df, X, kept = _discovery_df(1200, seed=9)
+    tr = D.Trials()
+    trained = S.train_student(df, X, kept, tr)
+    chk("student: OOF produced under purged folds", trained["n_oof"] > 600,
+        f"n_oof={trained['n_oof']}")
+    pbo_stub = {"pbo": 0.1, "pbo_note": "", "dsr": 0.9, "dsr_benchmark": 0.0, "dsr_note": "",
+                "n_splits": 15, "n_paths": 5, "grid_size": 12, "hurdle": 0.5}
+    acc = S.acceptance(trained, pbo_stub, n_fb=1200, trials=tr)
+    chk("student: below-gate run is PROVISIONAL with verdict withheld",
+        acc["provisional"] and acc["verdict"].startswith("WITHHELD"), acc["verdict"])
+    acc2 = S.acceptance(trained, pbo_stub, n_fb=S.GATE_FB, trials=tr)
+    chk("student: at-gate run issues an official verdict", not acc2["provisional"]
+        and not acc2["verdict"].startswith("WITHHELD"), acc2["verdict"])
+
+
 def test_convergence_classify_accrete():
     angle_names = [a for a, _ in CV.ANGLES]
     m = {"surv": {a: "confirmed" for a in angle_names[:8]} | {a: "absent" for a in angle_names[8:]},
@@ -405,8 +436,9 @@ if __name__ == "__main__":
     test_end_to_end_synthetic()
     test_discovery_oos_only()
     test_discovery_walkforward_purge()
+    test_student_stage2()
     test_convergence_classify_accrete()
-    total = 11 * 3
+    total = 12 * 3
     print(f"\nTOTAL: brain suite - {len(fails)} failure(s)")
     if fails:
         raise SystemExit("FAILS: " + ", ".join(fails))

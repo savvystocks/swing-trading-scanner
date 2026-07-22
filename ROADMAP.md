@@ -162,13 +162,20 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
    - **Stratified view is reporting only:** the pinned SPRT object is the POOLED executed stream; the
      report's hit rate by source premium (>=50k vs 25-50k) is insight, never a driver of the decision.
    - Reported weekly as CONTINUE / REJECT (no edge) / ACCEPT (edge).
-8. **Meta-labeling model — Student (Stage 2)** — QUEUED. The V10 rules engine stays primary; a
-   gradient-boosted binary filter answers only "is this signal real?" on the harvested features. Feature
-   clustering to kill redundancy, MDA importance under purged CV, SHAP on every prediction. Trained on
-   full history with time-decay weights + regime features (no rolling-window amnesia). Gate: ~10–15k
-   labeled rows. Accept: trained, calibrated, and evaluated only through items 5–7 (OOS Wilson lower bound
-   on the calibrated hit rate exceeds the empirical hurdle; PBO below threshold; Deflated Sharpe positive
-   with trials counted; beats the rules engine on the same purged splits).
+8. **Meta-labeling model — Student (Stage 2)** — IN-FLIGHT (pipeline SHIPPED 2026-07-22:
+   `src/brain/student.py` + `src/brain/run_student.py`; weekly `student` job in `brain_weekly.yml` →
+   `reports/student/`). The V10 rules engine stays primary; a gradient-boosted binary filter answers
+   only "is this signal real?" on the harvested features. Built as specified: correlation clustering
+   kills redundancy; MDA under purged CV ranks features (per-prediction reasons are median-substitution
+   attribution, honestly labeled — not SHAP, no free SHAP lib); trained on full history with time-decay
+   (half-life 21d, pinned) × uniqueness weights + regime features. Selection policy: calibrated
+   win-probability ≥ the empirical cost-inclusive hurdle. The four acceptance gates are mechanical in
+   `student.acceptance` (OOS Wilson lower bound > hurdle; PBO ≤ 0.20 from the Student's own CPCV config
+   grid — the "pending" path-performance PBO now computes; Deflated Sharpe > 0.5 with trials counted;
+   beats the engine on the same purged splits). **Gate: 8,000 feature-bearing graded rows** (the
+   effective-training-set refinement of the original ~10–15k labeled gate, per the 2026-07-16 readiness
+   assessment) — below it every run renders PROVISIONAL and withholds the official verdict. Remaining
+   to close this item: the first at-gate OFFICIAL run (expected ~2026-07-24) and its verdict.
 8b. **Discovery rig (pre-Student search)** — SHIPPED 2026-07-21 (`src/brain/discovery.py`,
    `src/brain/convergence.py`, `src/brain/run_discovery.py`; weekly via `brain_weekly.yml` discovery
    job → `reports/discovery/`). A systematic, re-runnable search over the graded snapshot: per-feature

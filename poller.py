@@ -128,7 +128,9 @@ def run_once():
     con = db.init_db()
     new, skipped = db.ingest_inbox(con)
     print(f"ingest: {new} new candidates, {skipped} already present")
-    db.backup(keep=14)
+    # keep=2: local backups are a same-day crash cushion only - the real archive is the nightly
+    # off-box snapshot repo. keep=14 held ~14 full DB copies and filled the VPS disk (2026-07-22).
+    db.backup(keep=2)
 
     now = _now_ms()
     creds = _paper_creds()

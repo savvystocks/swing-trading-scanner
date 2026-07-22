@@ -2575,3 +2575,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 3.0 fed the squeeze.
 
+## Autopsy - USB (fb9c92871e82)
+- entered 2026-07-20T19:11:26.165Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 60.0.
+

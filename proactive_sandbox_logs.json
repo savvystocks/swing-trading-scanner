@@ -119620,7 +119620,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 0.0,
+        "mfe_pct": 1.9,
         "mae_pct": -35.8,
         "stage": "initial"
       }
@@ -121048,7 +121048,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 1.5,
-        "mae_pct": -32.3,
+        "mae_pct": -36.3,
         "stage": "initial"
       }
     }
@@ -124502,8 +124502,29 @@
         "contracts": 3
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -50.0
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -7.3,
+          "mae_pct": -50.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -7.3,
+      "mae_pct": -50.0,
+      "determining_factor": "Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 60.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "USB",
@@ -124516,12 +124537,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 13,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "USB260821P00061000",
+        "closed_at": "2026-07-22T19:50:55.797Z",
+        "return_pct": -50.0,
+        "reason": "-50.0% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -7.3,
-        "mae_pct": -45.8,
-        "stage": "initial"
+        "mae_pct": -50.0,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -131159,7 +131190,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 16.7,
-        "mae_pct": -13.6,
+        "mae_pct": -18.2,
         "stage": "initial"
       }
     }

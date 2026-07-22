@@ -115707,8 +115707,33 @@
         "contracts": 7
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 0.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 33.3,
+          "mae_pct": -23.8,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-21T17:40:53.947Z",
+            "return_pct": 33.3
+          }
+        }
+      },
+      "mfe_pct": 33.3,
+      "mae_pct": -23.8,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 3.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "RDW",
@@ -115721,12 +115746,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "RDW260821C00009000",
+        "closed_at": "2026-07-22T18:40:58.290Z",
+        "return_pct": 0.0,
+        "reason": "runner gave back to break-even (0.0% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 33.3,
         "mae_pct": -23.8,
-        "stage": "scaled",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-21T17:40:53.947Z",

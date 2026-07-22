@@ -107162,7 +107162,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 42.4,
+        "mfe_pct": 43.5,
         "mae_pct": -30.4,
         "stage": "scaled",
         "close_fails": 0,
@@ -120093,8 +120093,33 @@
         "contracts": 7
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -1.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 34.0,
+          "mae_pct": -20.0,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-21T16:21:00.469Z",
+            "return_pct": 30.0
+          }
+        }
+      },
+      "mfe_pct": 34.0,
+      "mae_pct": -20.0,
+      "determining_factor": "Bullish call FAILED (-1%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 7.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "POET",
@@ -120107,12 +120132,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 11,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "POET260821C00008000",
+        "closed_at": "2026-07-22T18:01:16.702Z",
+        "return_pct": -1.0,
+        "reason": "runner gave back to break-even (-1.0% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 34.0,
         "mae_pct": -20.0,
-        "stage": "scaled",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-21T16:21:00.469Z",
@@ -122116,7 +122150,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -3.2,
-        "mae_pct": -42.3,
+        "mae_pct": -43.2,
         "stage": "initial"
       }
     }
@@ -126441,7 +126475,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 8.3,
+        "mfe_pct": 12.5,
         "mae_pct": -18.8,
         "stage": "initial"
       }

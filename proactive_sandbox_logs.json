@@ -40758,14 +40758,47 @@
         "contracts": 3
       }
     },
-    "exit": null,
-    "status": "OPEN",
-    "leg_exits": {},
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -50.2
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 13.2,
+          "mae_pct": -50.2,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 13.2,
+      "mae_pct": -50.2,
+      "determining_factor": "Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 50.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "NVO260807C00052000",
+        "closed_at": "2026-07-22T13:40:55.741Z",
+        "return_pct": -50.2,
+        "reason": "-50.2% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 13.2,
-        "mae_pct": -48.3,
-        "stage": "initial"
+        "mae_pct": -50.2,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -80145,7 +80178,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -2.5,
+        "mfe_pct": 10.6,
         "mae_pct": -49.1,
         "stage": "initial"
       }
@@ -98215,9 +98248,9 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 66.7,
+        "mfe_pct": 112.6,
         "mae_pct": -45.2,
-        "stage": "scaled",
+        "stage": "trailing",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-22T13:31:06.162Z",
@@ -103076,8 +103109,31 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -50.2
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 17.9,
+          "mae_pct": -50.2,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 17.9,
+      "mae_pct": -50.2,
+      "determining_factor": "Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 25.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "FIG",
@@ -103090,12 +103146,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 15,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "FIG260814C00024500",
+        "closed_at": "2026-07-22T13:40:57.061Z",
+        "return_pct": -50.2,
+        "reason": "-50.2% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 17.9,
-        "mae_pct": -47.9,
-        "stage": "initial"
+        "mae_pct": -50.2,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -107007,7 +107073,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 15.2,
+        "mfe_pct": 21.7,
         "mae_pct": -30.4,
         "stage": "initial"
       }
@@ -117206,7 +117272,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 26.8,
+        "mfe_pct": 29.3,
         "mae_pct": -14.6,
         "stage": "initial"
       }
@@ -120437,7 +120503,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 19.6,
-        "mae_pct": -15.7,
+        "mae_pct": -21.6,
         "stage": "initial"
       }
     }
@@ -122724,7 +122790,7 @@
       "bullish_call": {
         "mfe_pct": 56.5,
         "mae_pct": -8.7,
-        "stage": "scaled",
+        "stage": "trailing",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-22T13:31:08.617Z",
@@ -123564,7 +123630,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -6.5,
+        "mfe_pct": 7.1,
         "mae_pct": -23.4,
         "stage": "initial"
       }
@@ -123844,7 +123910,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 0.0,
-        "mae_pct": -28.8,
+        "mae_pct": -42.3,
         "stage": "initial"
       }
     }
@@ -125588,7 +125654,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 16.3,
+        "mfe_pct": 18.3,
         "mae_pct": -12.5,
         "stage": "initial"
       }
@@ -128466,7 +128532,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -9.1,
-        "mae_pct": -24.2,
+        "mae_pct": -27.3,
         "stage": "initial"
       }
     }
@@ -129317,7 +129383,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 13.5,
+        "mfe_pct": 27.0,
         "mae_pct": -9.0,
         "stage": "initial"
       }
@@ -129596,7 +129662,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -13.0,
+        "mfe_pct": -8.7,
         "mae_pct": -21.7,
         "stage": "initial"
       }
@@ -130187,7 +130253,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -3.5,
+        "mfe_pct": 19.1,
         "mae_pct": -13.5,
         "stage": "initial"
       }
@@ -130760,7 +130826,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 3.0,
+        "mfe_pct": 13.6,
         "mae_pct": -13.6,
         "stage": "initial"
       }
@@ -131319,7 +131385,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 6.2,
-        "mae_pct": -3.5,
+        "mae_pct": -7.1,
         "stage": "initial"
       }
     }
@@ -132536,7 +132602,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -1.8,
-        "mae_pct": -20.7,
+        "mae_pct": -25.2,
         "stage": "initial"
       }
     }
@@ -133124,7 +133190,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 10.7,
+        "mfe_pct": 24.6,
         "mae_pct": -9.0,
         "stage": "initial"
       }
@@ -133404,7 +133470,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -2.3,
-        "mae_pct": -2.3,
+        "mae_pct": -29.1,
         "stage": "initial"
       }
     }

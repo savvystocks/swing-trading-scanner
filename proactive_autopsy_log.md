@@ -2476,3 +2476,21 @@
 
 **Determining factor:** Bearish put FAILED (-86%, move 0.0%): no breakdown materialised; spot held above zero-gamma 79.5.
 
+## Autopsy - NVO (c5d5338277a2)
+- entered 2026-07-07T15:21:24.029Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.2% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 50.0 worked against it.
+
+## Autopsy - FIG (4e9a9dda9802)
+- entered 2026-07-16T18:32:42.759Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.2% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 25.0 worked against it.
+

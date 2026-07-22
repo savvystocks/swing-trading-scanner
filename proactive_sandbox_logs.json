@@ -107162,7 +107162,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 38.0,
+        "mfe_pct": 41.3,
         "mae_pct": -30.4,
         "stage": "scaled",
         "close_fails": 0,
@@ -108340,8 +108340,33 @@
         "contracts": 6
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 74.2
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 93.5,
+          "mae_pct": -31.2,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-21T15:31:15.542Z",
+            "return_pct": 32.3
+          }
+        }
+      },
+      "mfe_pct": 93.5,
+      "mae_pct": -31.2,
+      "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "HL",
@@ -108354,12 +108379,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 18,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "HL260814C00015000",
+        "closed_at": "2026-07-22T16:51:00.329Z",
+        "return_pct": 74.2,
+        "reason": "74.2% <= trail 74.8% (20% off peak MFE 93.5%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 93.5,
         "mae_pct": -31.2,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-21T15:31:15.542Z",

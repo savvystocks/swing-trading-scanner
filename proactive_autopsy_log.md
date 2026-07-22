@@ -2539,3 +2539,12 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 92.5 worked against it.
 
+## Autopsy - HL (d6b863af824c)
+- entered 2026-07-17T15:11:53.893Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +74.2% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+

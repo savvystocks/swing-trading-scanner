@@ -79254,8 +79254,33 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 38.9
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 52.3,
+          "mae_pct": -49.2,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-22T13:51:00.608Z",
+            "return_pct": 32.6
+          }
+        }
+      },
+      "mfe_pct": 52.3,
+      "mae_pct": -49.2,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 105.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "SLV",
@@ -79268,12 +79293,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 24,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "SLV260814C00054000",
+        "closed_at": "2026-07-22T14:31:23.477Z",
+        "return_pct": 38.9,
+        "reason": "38.9% <= trail 41.8% (20% off peak MFE 52.3%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 52.3,
         "mae_pct": -49.2,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-22T13:51:00.608Z",
@@ -80183,7 +80217,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 17.4,
+        "mfe_pct": 25.5,
         "mae_pct": -49.1,
         "stage": "initial"
       }
@@ -107083,7 +107117,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 33.7,
+        "mfe_pct": 35.9,
         "mae_pct": -30.4,
         "stage": "scaled",
         "close_fails": 0,
@@ -107679,7 +107713,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 13.7,
+        "mfe_pct": 21.1,
         "mae_pct": -41.1,
         "stage": "initial"
       }
@@ -108278,7 +108312,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 57.0,
+        "mfe_pct": 79.6,
         "mae_pct": -31.2,
         "stage": "trailing",
         "close_fails": 0,
@@ -121445,7 +121479,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -1.6,
-        "mae_pct": -39.8,
+        "mae_pct": -47.7,
         "stage": "initial"
       }
     }
@@ -123681,7 +123715,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 16.2,
+        "mfe_pct": 17.5,
         "mae_pct": -23.4,
         "stage": "initial"
       }
@@ -125984,7 +126018,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -8.7,
+        "mfe_pct": -7.6,
         "mae_pct": -17.4,
         "stage": "initial"
       }
@@ -129434,7 +129468,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 32.4,
+        "mfe_pct": 34.2,
         "mae_pct": -9.0,
         "stage": "initial"
       }
@@ -130583,7 +130617,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -22.4,
+        "mfe_pct": 2.0,
         "mae_pct": -42.9,
         "stage": "initial"
       }

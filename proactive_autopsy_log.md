@@ -2494,3 +2494,12 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 25.0 worked against it.
 
+## Autopsy - RIOT (4b30b2058603)
+- entered 2026-07-20T15:32:34.972Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -52.1% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 25.0.
+

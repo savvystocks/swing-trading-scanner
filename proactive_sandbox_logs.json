@@ -80228,7 +80228,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 37.3,
+        "mfe_pct": 43.5,
         "mae_pct": -49.1,
         "stage": "scaled",
         "close_fails": 0,
@@ -107239,7 +107239,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 68.5,
+        "mfe_pct": 69.6,
         "mae_pct": -30.4,
         "stage": "trailing",
         "close_fails": 0,
@@ -123893,7 +123893,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 8.9,
-        "mae_pct": -25.9,
+        "mae_pct": -29.6,
         "stage": "initial"
       }
     }
@@ -127714,7 +127714,7 @@
     "leg_path": {
       "adopted_leg": {
         "mfe_pct": 3.0,
-        "mae_pct": -18.1,
+        "mae_pct": -19.9,
         "stage": "initial"
       }
     },
@@ -131750,7 +131750,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 8.3,
-        "mae_pct": -16.7,
+        "mae_pct": -25.0,
         "stage": "initial"
       }
     }
@@ -134711,8 +134711,29 @@
         "contracts": 4
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -64.4
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -64.4,
+          "mae_pct": -64.4,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -64.4,
+      "mae_pct": -64.4,
+      "determining_factor": "Bearish put FAILED (-64%, move 0.0%): no breakdown materialised; spot held above zero-gamma 83.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "XLP",
@@ -134724,6 +134745,32 @@
       "total_premium": 31048.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 7
+    "brake_stopouts_at_entry": 7,
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "XLP260821P00080000",
+        "closed_at": "2026-07-23T13:41:03.039Z",
+        "return_pct": -64.4,
+        "reason": "-64.4% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -64.4,
+        "mae_pct": -64.4,
+        "stage": "closed",
+        "close_fails": 0
+      }
+    }
+  },
+  {
+    "type": "day_trade",
+    "ts_utc": "2026-07-23T13:41:03.741Z",
+    "ticker": "XLP",
+    "occ": "XLP260821P00080000",
+    "via": "CLOSE_STOP_LOSS",
+    "status": "LOGGED"
   }
 ]

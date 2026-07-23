@@ -76284,7 +76284,7 @@
         "mfe_pct": 58.7,
         "mae_pct": -27.3,
         "stage": "initial",
-        "close_fails": 1
+        "close_fails": 2
       }
     }
   },
@@ -107942,9 +107942,14 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 29.5,
+        "mfe_pct": 35.8,
         "mae_pct": -41.1,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-07-23T18:31:12.278Z",
+          "return_pct": 35.8
+        }
       }
     }
   },
@@ -135761,7 +135766,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 5.7,
-        "mae_pct": -15.1,
+        "mae_pct": -17.0,
         "stage": "initial"
       }
     }
@@ -137488,7 +137493,7 @@
     "leg_path": {
       "adopted_leg": {
         "mfe_pct": 16.2,
-        "mae_pct": -7.1,
+        "mae_pct": -10.1,
         "stage": "initial"
       }
     },
@@ -141678,6 +141683,69 @@
       "total_premium": 52500.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 8
+    "brake_stopouts_at_entry": 8,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -16.7,
+        "mae_pct": -16.7,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "ADOPT-5ef8a51546",
+    "ticker": "KEEL",
+    "status": "OPEN",
+    "entry_ts_utc": "2026-07-23T18:31:10.535Z",
+    "adopted": true,
+    "adopted_from": {
+      "occ": "KEEL260821C00005000",
+      "qty": 10,
+      "avg_entry_price": 0.63,
+      "at": "2026-07-23T18:31:10.535Z"
+    },
+    "regime": "ADOPTED",
+    "trigger": "orphan_reconcile",
+    "execution_mode": "ADOPTED",
+    "occ_resolution": "adopted",
+    "leg_budget_usd": 630.0,
+    "metadata": {
+      "macro": {
+        "spot": 0.63,
+        "source": "adopted"
+      },
+      "gex": {
+        "zero_gamma_strike": null,
+        "regime": null
+      },
+      "iv_term": {
+        "iv_ratio": null,
+        "structure": null
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": null,
+        "insider_10d_buy_usd": null,
+        "insider_cluster_flag": false
+      }
+    },
+    "legs": {
+      "adopted_leg": {
+        "structure": "ADOPTED",
+        "occ_symbol": "KEEL260821C00005000",
+        "expiry": "2026-08-21",
+        "entry_premium": 0.63,
+        "contracts": 10
+      }
+    },
+    "leg_path": {
+      "adopted_leg": {
+        "mfe_pct": 0.0,
+        "mae_pct": -7.9,
+        "stage": "initial"
+      }
+    },
+    "leg_exits": {},
+    "exit": null
   }
 ]

@@ -2674,3 +2674,21 @@
 
 **Determining factor:** Bearish put FAILED (-64%, move 0.0%): no breakdown materialised; spot held above zero-gamma 83.0.
 
+## Autopsy - APA (0603ff10c696)
+- entered 2026-07-13T18:11:41.481Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +44.1% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+
+## Autopsy - XLE (e51d6c18e366)
+- entered 2026-07-17T14:31:23.850Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +77.2% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 58.0 fed the squeeze.
+

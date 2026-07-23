@@ -73122,7 +73122,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 30.2,
+        "mfe_pct": 34.9,
         "mae_pct": -27.3,
         "stage": "scaled",
         "close_fails": 0,
@@ -76242,10 +76242,10 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 30.2,
+        "mfe_pct": 34.9,
         "mae_pct": -27.3,
         "stage": "initial",
-        "close_fails": 4
+        "close_fails": 0
       }
     }
   },
@@ -80228,9 +80228,9 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 47.8,
+        "mfe_pct": 55.3,
         "mae_pct": -49.1,
-        "stage": "scaled",
+        "stage": "trailing",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-23T13:31:10.957Z",
@@ -107239,7 +107239,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 80.4,
+        "mfe_pct": 84.8,
         "mae_pct": -30.4,
         "stage": "trailing",
         "close_fails": 0,
@@ -115513,7 +115513,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 2.8,
+        "mfe_pct": 7.5,
         "mae_pct": -49.5,
         "stage": "initial"
       }
@@ -117299,7 +117299,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 4.9,
+        "mfe_pct": 5.6,
         "mae_pct": -38.7,
         "stage": "initial"
       }
@@ -124171,7 +124171,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 26.6,
+        "mfe_pct": 28.6,
         "mae_pct": -23.4,
         "stage": "initial"
       }
@@ -132029,7 +132029,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 6.2,
-        "mae_pct": -24.8,
+        "mae_pct": -25.7,
         "stage": "initial"
       }
     }
@@ -134772,5 +134772,276 @@
     "occ": "XLP260821P00080000",
     "via": "CLOSE_STOP_LOSS",
     "status": "LOGGED"
+  },
+  {
+    "trade_set_id": "7c56ea3c4b17",
+    "ticker": "SMCI",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-23T14:02:06.276Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 49,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-23T14:02:06.276Z",
+      "macro": {
+        "spot": 31.95,
+        "sma20": 27.78,
+        "distance_to_sma20_pct": 14.991,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 99.0,
+        "iv_back": 100.9,
+        "iv_ratio": 0.981,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 2296568.2,
+        "zero_gamma_strike": 31.0,
+        "distance_to_zero_gamma_pct": 2.973,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -66.4,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.86,
+        "atr_pct": 5.82,
+        "rvol_10min": 0.28,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Computer Hardware",
+        "market_cap": 20654655488,
+        "short_pct_float": 20.83,
+        "short_ratio": 1.38,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.58,
+        "vader_compound": 0.514,
+        "news_type": "Unknown",
+        "top_headline": "Super Micro Just Doubled Its Margins — and That Could Rewrite the AI Infrastructure Playbook",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 14.991,
+        "market_spy_dist_pct": -0.815,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -1.38,
+        "sector_vs_market_spread": -0.565,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 106.5,
+        "call_iv_25d": 114.4,
+        "skew_ratio": 0.931,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 15.51,
+        "ask_sweep_prem": 631737.0,
+        "total_flow_prem": 4071913.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 2.5,
+        "heaviest_node_price": 31.15,
+        "node_size": 200600.0,
+        "n_prints": 200,
+        "window_start": "2026-07-23T13:35:14Z",
+        "window_end": "2026-07-23T14:02:07Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 79,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 19,
+        "next_earnings_date": "2026-08-11",
+        "iv_rank_1y": 98.19,
+        "last_earnings_date": "2026-05-05",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 95.83,
+        "front_iv": 99.0,
+        "vrp": 3.17,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -354775.0,
+        "flow_persistence_pct": 18.28,
+        "flow_direction": "bearish",
+        "closing_accel": -574481.0,
+        "n_ticks": 33,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 884.29,
+        "vwma_20": 28.03,
+        "rsi_5": 90.43,
+        "rsi_15": 63.34,
+        "gap_pct": -0.72,
+        "day_range": 5.54,
+        "candle_body": 0.915,
+        "dist_sma50": -2.605,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -1.9,
+        "vix_level": 18.74,
+        "execution_hour": 14,
+        "day_of_week": 3,
+        "sector_vs_spy": 2.543,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 32133281.0,
+        "net_vanna": 37672879.0,
+        "net_charm": -7934277.0,
+        "delta_imbalance": 2.32,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.063,
+        "bid": 31.87,
+        "ask": 31.89,
+        "bid_size": 200.0,
+        "ask_size": 400.0,
+        "obi": -0.3333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.27,
+        "gap_pct": -0.72,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 20.83,
+        "float_shares": 508968433,
+        "shares_short": 103192503,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.514,
+      "sweep_aggression_pct": 15.51,
+      "distance_to_zero_gamma_pct": 2.973,
+      "distance_to_heaviest_dp_node_pct": 2.5,
+      "days_since_earnings": 79,
+      "days_to_earnings": 19,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 18.28,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "SMCI260821P00031000",
+        "expiry": "2026-08-21",
+        "strike": 31.0,
+        "dte": 35,
+        "entry_premium": 3.92,
+        "limit_price": 3.96,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "1675",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 3.22,
+          "ask": 3.66,
+          "mid": 3.44,
+          "bid_ask_spread_pct": 12.791,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 1852.0,
+          "oi_prev": 1675.0,
+          "oi_change": 177.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "6f5a5404-c48d-4a5f-be0c-b29e75d7162a",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.96,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "SMCI",
+      "call_prem": 110600.0,
+      "put_prem": 136245.0,
+      "underlying_price": 31.91,
+      "min_contract_premium": 1.4,
+      "flow_type": "put",
+      "total_premium": 246845.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 8
   }
 ]

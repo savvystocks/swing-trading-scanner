@@ -3,12 +3,14 @@ os.environ["GITHUB_ACTIONS"] = "true"
 sys.path.insert(0, r"C:\Users\savva\OneDrive\Documents\Swing Trading")
 import harvest_db as db
 import harvest_logger as hl
+import fill_ledger as fl
 import sandbox_proactive_lab as lab
 
 tmp = tempfile.mkdtemp()
 db.DATA_DIR = tmp
 db.DB_PATH = os.path.join(tmp, "harvest.db")
 db.INBOX_DIR = os.path.join(tmp, "inbox")
+fl.INBOX_DIR = db.INBOX_DIR
 hl.STATE_PATH = os.path.join(tmp, "state.json")
 # isolate the engine's committed-state files - the Tier B daily brake / scoreboard read LOG_PATH,
 # so a run against the real log would trip the brake and skip the entry this test asserts on.
@@ -47,7 +49,8 @@ def make_enter():
                 "legs": {"bullish_call": {"structure": "LONG_CALL", "occ_symbol": "AAA260717C00021000",
                                           "expiry": "2026-07-17", "strike": 21.0, "entry_premium": 1.5,
                                           "limit_price": 1.52, "contracts": 5}},
-                "orders": {"bullish_call": {"status": "accepted", "order_id": "OID-DETERMINISTIC"}},
+                "orders": {"bullish_call": {"status": "accepted", "order_id": "OID-DETERMINISTIC",
+                                            "submitted": True}},
                 "status": "OPEN", "skipped": False}
     return stub
 lab.enter_proactive_set = make_enter()
@@ -75,6 +78,14 @@ hl.harvest_scan = boom
 orders_crash = run_capture()
 hl.harvest_scan = _real
 
+print("--- run D: FILL LEDGER crashes (school 1c fail-open) ---")
+_real_log = fl.log_event
+def ledger_boom(*a, **k):
+    raise RuntimeError("intentional ledger crash")
+fl.log_event = ledger_boom
+orders_ledger_crash = run_capture()
+fl.log_event = _real_log
+
 fails = []
 def chk(n, c, d=""):
     print(f"  [{'PASS' if c else 'FAIL'}] {n}  {d}")
@@ -88,8 +99,16 @@ chk("executed row OCC matches the placed order leg", executed_rows and executed_
 chk("executed row carries full features (not null)", executed_rows[0]["features"] is not None)
 chk("counterfactual rows also logged (DDD prefilter/quota + AAA flow-dup skipped)", len(recs) >= 2, f"total rows={len(recs)}")
 chk("returned record is clean (_scan_candidate popped)", "_scan_candidate" not in (lab.run_scheduled_cycle(mock=True) or {}))
+chk("orders identical when the FILL LEDGER crashes (school 1c fail-open)", orders_on == orders_ledger_crash)
+import glob as _glob
+_fill_files = _glob.glob(os.path.join(db.INBOX_DIR, "fills_*.jsonl"))
+_fill_events = [json.loads(l) for f in _fill_files for l in open(f, encoding="utf-8") if l.strip()]
+_subs = [e for e in _fill_events if e["kind"] == "entry_submit"]
+chk("fill ledger logged entry_submit for the placed order (signal quote attached)",
+    any(e.get("order_id") == "OID-DETERMINISTIC" and e.get("occ") == "AAA260717C00021000" for e in _subs),
+    f"entry_submit events={len(_subs)}")
 
-print(f"\nTOTAL: {8 - len(fails)}/8 passed")
+print(f"\nTOTAL: {10 - len(fails)}/10 passed")
 if fails:
     raise SystemExit("FAILS: " + ", ".join(fails))
 print("PASSIVITY PROVEN: logging never alters or crashes the trade path")

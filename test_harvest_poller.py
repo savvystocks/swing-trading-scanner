@@ -100,7 +100,25 @@ chk("n_missing=1 counted APART from n_stale=2 (no-answer never becomes stale-mar
     lab is not None and lab["n_missing"] == 1 and lab["n_stale"] == 2,
     f"n_missing={lab['n_missing'] if lab else None} n_stale={lab['n_stale'] if lab else None}")
 
-print(f"\nTOTAL: {13 - len(fails)}/13 passed")
+print("--- round 5 (school 1c: fill-ledger events ingest, idempotent) ---")
+with open(os.path.join(db.INBOX_DIR, "fills_test.jsonl"), "w") as fh:
+    fh.write(json.dumps({"event_id": "ev1", "kind": "entry_submit", "ts_utc": 5000, "ticker": "AAA",
+                         "occ": "AAA261218C00010000", "order_id": "o1", "ordered_qty": 2}) + "\n")
+    fh.write(json.dumps({"event_id": "ev2", "kind": "entry_fill", "ts_utc": 5100, "ticker": "AAA",
+                         "occ": "AAA261218C00010000", "order_id": "o1", "filled_qty": 2,
+                         "filled_avg_price": 1.05, "terminal_state": "filled"}) + "\n")
+_clock["t"] = 5000
+poller.run_once()
+poller.run_once()
+con5 = db.connect()
+nf = con5.execute("SELECT COUNT(*) FROM fills").fetchone()[0]
+fk = {r["event_id"]: r["kind"] for r in con5.execute("SELECT event_id, kind FROM fills")}
+chk("fill events ingested once (idempotent across re-runs)", nf == 2 and fk == {"ev1": "entry_submit", "ev2": "entry_fill"},
+    f"fills rows={nf} kinds={fk}")
+chk("fills jsonl excluded from candidate ingest (no cross-contamination)",
+    con5.execute("SELECT COUNT(*) FROM candidates").fetchone()[0] == 3)
+
+print(f"\nTOTAL: {15 - len(fails)}/15 passed")
 if fails:
     raise SystemExit("FAILS: " + ", ".join(fails))
 print("POLLER OK")

@@ -780,6 +780,12 @@ def _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs):
         if str(f["at"])[:10] == str(rec.get("entry_ts_utc", ""))[:10]:
             log.append({"type": "day_trade", "ts_utc": _now_iso_ms(), "ticker": rec["ticker"],
                         "occ": occ, "via": "CLOSE_BACKSTOP", "status": "LOGGED"})
+        try:                                          # school 1c: gap-through measurement (fail-open)
+            import fill_ledger
+            fill_ledger.backstop_fill_event(rec, occ, bs.get("stop_price"), f["price"], f["qty"],
+                                            f["at"], entry_px)
+        except Exception:
+            pass
     return booked_full
 
 
@@ -1124,7 +1130,13 @@ def _close_position(occ, creds, percentage=100):
                                  headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec})
     try:
         with urllib.request.urlopen(req, timeout=20) as r:
-            return r.status in (200, 207)
+            ok = r.status in (200, 207)
+            try:                                       # school 1c: stash the close ORDER (fail-open,
+                import fill_ledger                     # response body was previously discarded)
+                fill_ledger.stash_close_order(occ, json.loads(r.read().decode()))
+            except Exception:
+                pass
+            return ok
     except Exception:
         return False
 
@@ -1647,6 +1659,12 @@ def run_scheduled_cycle(mock=False):
         print(f"harvest: {summary}")
     except Exception as e:
         print(f"harvest skipped (fail-open): {type(e).__name__}: {str(e)[:90]}")
+    try:                                                     # FILL LEDGER (school 1c: observational, fail-open)
+        import fill_ledger
+        fill_ledger.entry_submits(entered)
+        fill_ledger.sweep(_load_log_list(), _order_state, creds, _save_log_list)
+    except Exception as e:
+        print(f"fill ledger skipped (fail-open): {type(e).__name__}: {str(e)[:90]}")
     if entered is not None:
         entered.pop("_scan_candidate", None)
         print("\nGHA scheduled cycle complete: 1 cluster entered + logged.")

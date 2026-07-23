@@ -49,6 +49,14 @@ CREATE TABLE IF NOT EXISTS labels (
     poll_cadence_min REAL, censored_reason TEXT
 );
 
+CREATE TABLE IF NOT EXISTS fills (
+    event_id TEXT PRIMARY KEY NOT NULL,
+    kind TEXT, ts_utc INTEGER, ticker TEXT, occ_symbol TEXT, order_id TEXT,
+    ordered_qty REAL, filled_qty REAL, filled_avg_price REAL, terminal_state TEXT,
+    payload TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_fills_occ ON fills(occ_symbol);
+
 CREATE TABLE IF NOT EXISTS api_telemetry (
     day TEXT NOT NULL, provider TEXT NOT NULL, status TEXT NOT NULL, n INTEGER DEFAULT 0,
     PRIMARY KEY (day, provider, status)
@@ -126,10 +134,39 @@ def ingest_inbox(con):
     new = 0
     skipped = 0
     for f in sorted(glob.glob(os.path.join(INBOX_DIR, "*.jsonl"))):
+        if os.path.basename(f).startswith("fills_"):
+            continue                                   # fill-ledger events have their own ingest
         n, s = ingest_jsonl(con, f)
         new += n
         skipped += s
     return new, skipped
+
+
+def ingest_fills(con):
+    """School 1c: ingest fill-ledger events, idempotent on event_id. Core metrics to columns, the
+    full event kept verbatim in payload."""
+    new = 0
+    for f in sorted(glob.glob(os.path.join(INBOX_DIR, "fills_*.jsonl"))):
+        with open(f, "r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    e = json.loads(line)
+                    cur = con.execute(
+                        "INSERT OR IGNORE INTO fills (event_id, kind, ts_utc, ticker, occ_symbol, "
+                        "order_id, ordered_qty, filled_qty, filled_avg_price, terminal_state, payload) "
+                        "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                        (e.get("event_id"), e.get("kind"), e.get("ts_utc"), e.get("ticker"),
+                         e.get("occ") or e.get("occ_symbol"), e.get("order_id"),
+                         e.get("ordered_qty"), e.get("filled_qty"), e.get("filled_avg_price"),
+                         e.get("terminal_state"), json.dumps(e)))
+                    new += cur.rowcount
+                except Exception:
+                    pass
+    con.commit()
+    return new
 
 
 def append_bid_path(con, candidate_id, poll_ts, bid, ask, quote_ts, stale, fetch_status="OK"):

@@ -73127,7 +73127,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 57.1,
+        "mfe_pct": 58.7,
         "mae_pct": -27.3,
         "stage": "trailing",
         "close_fails": 0,
@@ -76247,10 +76247,10 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 57.1,
+        "mfe_pct": 58.7,
         "mae_pct": -27.3,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -136183,7 +136183,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -4.2,
-        "mae_pct": -15.8,
+        "mae_pct": -18.8,
         "stage": "initial"
       }
     }
@@ -136741,7 +136741,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -10.5,
-        "mae_pct": -14.7,
+        "mae_pct": -22.1,
         "stage": "initial"
       }
     }
@@ -137019,7 +137019,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 3.0,
+        "mfe_pct": 4.0,
         "mae_pct": -1.0,
         "stage": "initial"
       }
@@ -137299,7 +137299,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -2.9,
-        "mae_pct": -5.3,
+        "mae_pct": -5.8,
         "stage": "initial"
       }
     }
@@ -137633,9 +137633,280 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -7.0,
-        "mae_pct": -7.0,
+        "mae_pct": -9.3,
         "stage": "initial"
       }
     }
+  },
+  {
+    "trade_set_id": "35cf53eccd5f",
+    "ticker": "HYG",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-23T15:52:11.680Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 60,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-23T15:52:11.680Z",
+      "macro": {
+        "spot": 79.19,
+        "sma20": 79.72,
+        "distance_to_sma20_pct": -0.666,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 4.1,
+        "iv_back": 2.2,
+        "iv_ratio": 1.864,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -21185554.6,
+        "zero_gamma_strike": 79.0,
+        "distance_to_zero_gamma_pct": 0.24,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.18,
+        "atr_pct": 0.23,
+        "rvol_10min": 0.55,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 53.54,
+        "vader_compound": 0.013,
+        "news_type": "Macro",
+        "top_headline": "Why Fund Managers Now Fear AI Capex More Than Iran, Tariffs, or a Recession",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -0.666,
+        "market_spy_dist_pct": -1.215,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 8.6,
+        "call_iv_25d": 2.9,
+        "skew_ratio": 2.973,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 14.46,
+        "ask_sweep_prem": 810822.0,
+        "total_flow_prem": 5605725.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 79.19,
+        "node_size": 2857385.0,
+        "n_prints": 200,
+        "window_start": "2026-07-23T15:29:13Z",
+        "window_end": "2026-07-23T15:52:14Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 31.47,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 2.94,
+        "front_iv": 4.1,
+        "vrp": 1.16,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 405297.0,
+        "flow_persistence_pct": 23.3,
+        "flow_direction": "bullish",
+        "closing_accel": 384667.0,
+        "n_ticks": 118,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1003.67,
+        "vwma_20": 79.74,
+        "rsi_5": 3.15,
+        "rsi_15": 37.09,
+        "gap_pct": -0.289,
+        "day_range": 0.272,
+        "candle_body": 0.442,
+        "dist_sma50": -0.759,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 1.9,
+        "vix_level": 19.94,
+        "execution_hour": 15,
+        "day_of_week": 3,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -99657687.0,
+        "net_vanna": 988330544.0,
+        "net_charm": -136453210.0,
+        "delta_imbalance": 0.275,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.013,
+        "bid": 79.18,
+        "ask": 79.19,
+        "bid_size": 14200.0,
+        "ask_size": 8100.0,
+        "obi": 0.2735,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.53,
+        "gap_pct": -0.289,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.013,
+      "sweep_aggression_pct": 14.46,
+      "distance_to_zero_gamma_pct": 0.24,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 23.3,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "HYG260821P00076000",
+        "expiry": "2026-08-21",
+        "strike": 76.0,
+        "dte": 35,
+        "entry_premium": 0.4,
+        "limit_price": 0.4,
+        "contracts": 20,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "168431",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.06,
+          "ask": 0.09,
+          "mid": 0.075,
+          "bid_ask_spread_pct": 40.0,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 168430.0,
+          "oi_prev": 168431.0,
+          "oi_change": -1.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "19fb015b-f5e5-4c36-89ac-05f10ba0ae90",
+        "error": null,
+        "submitted": true,
+        "limit_price": 0.4,
+        "contracts": 20
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "HYG",
+      "call_prem": 0.0,
+      "put_prem": 90000.0,
+      "underlying_price": 79.185,
+      "min_contract_premium": 0.45,
+      "flow_type": "put",
+      "total_premium": 90000.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 8
   }
 ]

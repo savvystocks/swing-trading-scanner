@@ -925,7 +925,47 @@
     "ARM260821C00300000",
     "NVDA261016C00205000",
     "RACE281215P00390000",
-    "SPY260723C00738000"
+    "SPY260723C00738000",
+    "XPEV260821P00012000",
+    "ABBV270617P00220000",
+    "WDC261120P00360000",
+    "GOOG270617C00320000",
+    "BE260724P00232500",
+    "MU260724P00985000",
+    "BE260724C00217500",
+    "HIMS260724P00033000",
+    "QQQ260831P00675000",
+    "TSLA270115C00420000",
+    "DRAM260821C00065000",
+    "MU260807C01300000",
+    "DVA270115C00280000",
+    "HYG260918C00079000",
+    "INTC261218P00110000",
+    "MU260724P01000000",
+    "TSLA270617C00350000",
+    "KHC260918C00025000",
+    "TSLA270319C00385000",
+    "SMCI260814C00030000",
+    "THC260821C00190000",
+    "NBIS260807C00257500",
+    "SPY260728P00745000",
+    "EWY261016P00170000",
+    "MSCI260918P00510000",
+    "TSLA270319C00440000",
+    "DRAM260821C00062000",
+    "SPGI261120P00430000",
+    "XLY260918P00111000",
+    "AMD260724P00520000",
+    "HCA260821P00365000",
+    "SIMO260821C00300000",
+    "DIS260918C00095000",
+    "MTSI260918C00380000",
+    "EQIX260821P00970000",
+    "XPEV280121P00010000",
+    "MU261218P00900000",
+    "NBIS260731C00240000",
+    "SNDK260731C01950000",
+    "MDB260821C00420000"
   ],
   "tickers": {
     "SPY": {
@@ -29407,10 +29447,170 @@
       "days_to_earnings": 48,
       "post_earnings_iv_crush_flag": false,
       "flow_persistence_pct": 9.88
+    },
+    "MDB": {
+      "entry_ts_utc": "2026-07-23T17:21:33.359Z",
+      "macro": {
+        "spot": 299.6,
+        "sma20": 333.59,
+        "distance_to_sma20_pct": -10.189,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 76.9,
+        "iv_back": 76.2,
+        "iv_ratio": 1.009,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 9802.9,
+        "zero_gamma_strike": 400.0,
+        "distance_to_zero_gamma_pct": -33.511,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 18.59,
+        "atr_pct": 6.21,
+        "rvol_10min": 0.34,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Software - Infrastructure",
+        "market_cap": 24084938752,
+        "short_pct_float": 4.96,
+        "short_ratio": 1.96,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 317.81,
+        "vader_compound": 0.281,
+        "news_type": "Analyst",
+        "top_headline": "Needham Maintains Buy on MongoDB, Raises Price Target to $430",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -10.189,
+        "market_spy_dist_pct": -0.965,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -1.694,
+        "sector_vs_market_spread": -0.729,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 73.8,
+        "call_iv_25d": 71.5,
+        "skew_ratio": 1.032,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 19.61,
+        "ask_sweep_prem": 1795059.0,
+        "total_flow_prem": 9153249.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.25,
+        "heaviest_node_price": 298.85,
+        "node_size": 5657.0,
+        "n_prints": 59,
+        "window_start": "2026-07-23T11:16:39Z",
+        "window_end": "2026-07-23T17:13:36Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 56,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 34,
+        "next_earnings_date": "2026-08-26",
+        "iv_rank_1y": 61.53,
+        "last_earnings_date": "2026-05-28",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 60.2,
+        "front_iv": 76.9,
+        "vrp": 16.7,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -1505793.0,
+        "flow_persistence_pct": 35.55,
+        "flow_direction": "bearish",
+        "closing_accel": -469450.0,
+        "n_ticks": 208,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1079.05,
+        "vwma_20": 333.21,
+        "rsi_5": 21.68,
+        "rsi_15": 23.73,
+        "gap_pct": 1.716,
+        "day_range": 4.486,
+        "candle_body": 0.778,
+        "dist_sma50": -10.57,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 0.7,
+        "vix_level": 19.58,
+        "execution_hour": 17,
+        "day_of_week": 3,
+        "sector_vs_spy": 2.362,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 3464333.0,
+        "net_vanna": 3529203.0,
+        "net_charm": -3332912.0,
+        "delta_imbalance": 2.802,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 5.707,
+        "bid": 282.53,
+        "ask": 299.63,
+        "bid_size": 40.0,
+        "ask_size": 40.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.33,
+        "gap_pct": 1.716,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 4.96,
+        "float_shares": 78323002,
+        "shares_short": 3884826,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.281,
+      "sweep_aggression_pct": 19.61,
+      "distance_to_zero_gamma_pct": -33.511,
+      "distance_to_heaviest_dp_node_pct": 0.25,
+      "days_since_earnings": 56,
+      "days_to_earnings": 34,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 35.55
     }
   },
-  "payload_count": 178,
-  "topn_count": 293,
+  "payload_count": 179,
+  "topn_count": 298,
   "random_count": 4,
   "backoff_429": false,
   "cap_today": 300,

@@ -2710,3 +2710,30 @@
 
 **Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
 
+## Autopsy - CPNG (182c818a2051)
+- entered 2026-07-17T14:51:49.964Z | trigger regime_BEARISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -12.6% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-13%, move 0.0%): no breakdown materialised; spot held above zero-gamma 16.0.
+
+## Autopsy - ACHR (79d0c04c9ef5)
+- entered 2026-07-20T16:31:42.084Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -60.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-61%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 5.0 worked against it.
+
+## Autopsy - PYPL (c6a416ef99ea)
+- entered 2026-07-23T16:02:05.023Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -69.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-69%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 58.0 worked against it.
+

@@ -76284,7 +76284,7 @@
         "mfe_pct": 58.7,
         "mae_pct": -27.3,
         "stage": "initial",
-        "close_fails": 4
+        "close_fails": 0
       }
     }
   },
@@ -135203,7 +135203,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 0.0,
-        "mae_pct": -12.5,
+        "mae_pct": -13.9,
         "stage": "initial"
       }
     }
@@ -135481,7 +135481,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 1.8,
+        "mfe_pct": 3.6,
         "mae_pct": -10.7,
         "stage": "initial"
       }
@@ -136877,7 +136877,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -10.5,
-        "mae_pct": -27.4,
+        "mae_pct": -28.4,
         "stage": "initial"
       }
     }
@@ -137435,7 +137435,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -2.9,
-        "mae_pct": -8.8,
+        "mae_pct": -9.4,
         "stage": "initial"
       }
     }
@@ -138605,7 +138605,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -38.5,
+        "mfe_pct": -37.6,
         "mae_pct": -38.5,
         "stage": "initial"
       }
@@ -138878,6 +138878,278 @@
       "min_contract_premium": 3.5,
       "flow_type": "call",
       "total_premium": 140000.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 8,
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "6020a826f565",
+    "ticker": "HPQ",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-23T16:32:16.325Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 59,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-23T16:32:16.325Z",
+      "macro": {
+        "spot": 24.82,
+        "sma20": 23.65,
+        "distance_to_sma20_pct": 4.959,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 43.2,
+        "iv_back": 59.3,
+        "iv_ratio": 0.728,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 244273.5,
+        "zero_gamma_strike": 30.0,
+        "distance_to_zero_gamma_pct": -20.87,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.89,
+        "atr_pct": 3.58,
+        "rvol_10min": 0.22,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Computer Hardware",
+        "market_cap": 22689306624,
+        "short_pct_float": 11.2,
+        "short_ratio": 4.51,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 58.51,
+        "vader_compound": 0.227,
+        "news_type": "Macro",
+        "top_headline": "AAPL, HPQ, SNDK, WDC: Gene Munster Says 'Memory Hog' AI Will Trigger a Massive 2027 Upgrade Cycle",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 4.959,
+        "market_spy_dist_pct": -0.882,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -1.526,
+        "sector_vs_market_spread": -0.644,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 44.9,
+        "call_iv_25d": 44.6,
+        "skew_ratio": 1.005,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 22.82,
+        "ask_sweep_prem": 678664.0,
+        "total_flow_prem": 2973382.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -1.0,
+        "heaviest_node_price": 25.07,
+        "node_size": 69625.0,
+        "n_prints": 27,
+        "window_start": "2026-07-23T13:41:46Z",
+        "window_end": "2026-07-23T16:16:56Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 57,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 34,
+        "next_earnings_date": "2026-08-26",
+        "iv_rank_1y": 55.17,
+        "last_earnings_date": "2026-05-27",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 32.79,
+        "front_iv": 43.2,
+        "vrp": 10.41,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 58663.0,
+        "flow_persistence_pct": 22.48,
+        "flow_direction": "bullish",
+        "closing_accel": 18258.0,
+        "n_ticks": 158,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 775.52,
+        "vwma_20": 23.58,
+        "rsi_5": 63.95,
+        "rsi_15": 70.76,
+        "gap_pct": 0.239,
+        "day_range": 3.505,
+        "candle_body": 0.385,
+        "dist_sma50": 3.897,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -16.1,
+        "vix_level": 19.23,
+        "execution_hour": 16,
+        "day_of_week": 3,
+        "sector_vs_spy": 2.455,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 4459151.0,
+        "net_vanna": 9126587.0,
+        "net_charm": -2006189.0,
+        "delta_imbalance": 2.254,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.04,
+        "bid": 24.81,
+        "ask": 24.82,
+        "bid_size": 400.0,
+        "ask_size": 1000.0,
+        "obi": -0.4286,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.21,
+        "gap_pct": 0.239,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 11.2,
+        "float_shares": 911212118,
+        "shares_short": 87882591,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.227,
+      "sweep_aggression_pct": 22.82,
+      "distance_to_zero_gamma_pct": -20.87,
+      "distance_to_heaviest_dp_node_pct": -1.0,
+      "days_since_earnings": 57,
+      "days_to_earnings": 34,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 22.48,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "HPQ260821P00024000",
+        "expiry": "2026-08-21",
+        "strike": 24.0,
+        "dte": 35,
+        "entry_premium": 1.33,
+        "limit_price": 1.34,
+        "contracts": 6,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "4175",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.83,
+          "ask": 0.87,
+          "mid": 0.85,
+          "bid_ask_spread_pct": 4.706,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 4162.0,
+          "oi_prev": 4175.0,
+          "oi_change": -13.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "1428bb66-24de-4f9d-b20a-c4337b3454ee",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.34,
+        "contracts": 6
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "HPQ",
+      "call_prem": 0.0,
+      "put_prem": 32364.0,
+      "underlying_price": 24.835,
+      "min_contract_premium": 0.93,
+      "flow_type": "put",
+      "total_premium": 32364.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8

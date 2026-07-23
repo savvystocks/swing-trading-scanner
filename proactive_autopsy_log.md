@@ -2737,3 +2737,39 @@
 
 **Determining factor:** Bullish call FAILED (-69%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 58.0 worked against it.
 
+## Autopsy - UPST (9254e51ccb1d)
+- entered 2026-07-13T14:22:00.917Z | trigger regime_BEARISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +33.3% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 41.0 -> negative-gamma slide, no positive catalyst.
+
+## Autopsy - IGV (58f7525709ff)
+- entered 2026-07-16T18:41:31.638Z | trigger regime_BEARISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +65.4% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 50.0 -> negative-gamma slide, no positive catalyst.
+
+## Autopsy - JD (548aee6362e4)
+- entered 2026-07-21T14:11:22.849Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -68.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-68%, move 0.0%): no breakdown materialised; spot held above zero-gamma 33.0.
+
+## Autopsy - SPXS (c686fa282191)
+- entered 2026-07-23T16:11:11.228Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -59.6% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-60%, move 0.0%): no breakdown materialised; spot held above zero-gamma 27.0.
+

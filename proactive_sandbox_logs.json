@@ -76284,7 +76284,7 @@
         "mfe_pct": 58.7,
         "mae_pct": -27.3,
         "stage": "initial",
-        "close_fails": 2
+        "close_fails": 3
       }
     }
   },
@@ -136319,7 +136319,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -4.2,
-        "mae_pct": -24.8,
+        "mae_pct": -34.5,
         "stage": "initial"
       }
     }
@@ -138326,7 +138326,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -22.0,
+        "mfe_pct": -21.5,
         "mae_pct": -22.0,
         "stage": "initial"
       }
@@ -140560,6 +140560,285 @@
       "min_contract_premium": 2.65,
       "flow_type": "call",
       "total_premium": 115315.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 8,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -26.7,
+        "mae_pct": -26.7,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "f88e47c47627",
+    "ticker": "SMR",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-23T17:51:21.251Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 65,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-23T17:51:21.251Z",
+      "macro": {
+        "spot": 8.77,
+        "sma20": 9.02,
+        "distance_to_sma20_pct": -2.873,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 111.5,
+        "iv_back": 107.3,
+        "iv_ratio": 1.039,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 862233.9,
+        "zero_gamma_strike": 9.5,
+        "distance_to_zero_gamma_pct": -8.324,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 100.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.61,
+        "atr_pct": 6.99,
+        "rvol_10min": 0.68,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Industrials",
+        "industry": "Specialty Industrial Machinery",
+        "market_cap": 3033617408,
+        "short_pct_float": 23.74,
+        "short_ratio": 1.91,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 3.42,
+        "vader_compound": 0.277,
+        "news_type": "Analyst",
+        "top_headline": "Barclays Maintains Equal-Weight on NuScale Power, Lowers Price Target to $11",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -2.873,
+        "market_spy_dist_pct": -1.035,
+        "sector_etf": "XLI",
+        "sector_dist_pct": -0.143,
+        "sector_vs_market_spread": 0.892,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 106.9,
+        "call_iv_25d": 114.6,
+        "skew_ratio": 0.933,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.82,
+        "ask_sweep_prem": 183767.0,
+        "total_flow_prem": 2692920.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.75,
+        "heaviest_node_price": 8.7,
+        "node_size": 111100.0,
+        "n_prints": 20,
+        "window_start": "2026-07-23T11:08:36Z",
+        "window_end": "2026-07-23T17:27:52Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 77,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 13,
+        "next_earnings_date": "2026-08-05",
+        "iv_rank_1y": 42.31,
+        "last_earnings_date": "2026-05-07",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 65.83,
+        "front_iv": 111.5,
+        "vrp": 45.67,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -92496.0,
+        "flow_persistence_pct": 13.4,
+        "flow_direction": "bearish",
+        "closing_accel": -152951.0,
+        "n_ticks": 254,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 520.38,
+        "vwma_20": 9.04,
+        "rsi_5": 97.87,
+        "rsi_15": 35.21,
+        "gap_pct": -2.017,
+        "day_range": 5.705,
+        "candle_body": 0.53,
+        "dist_sma50": -15.163,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 4.2,
+        "vix_level": 19.53,
+        "execution_hour": 17,
+        "day_of_week": 3,
+        "sector_vs_spy": 2.268,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 1406817.0,
+        "net_vanna": 10980743.0,
+        "net_charm": -11812779.0,
+        "delta_imbalance": 1.172,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.114,
+        "bid": 8.76,
+        "ask": 8.77,
+        "bid_size": 1800.0,
+        "ask_size": 4900.0,
+        "obi": -0.4627,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.66,
+        "gap_pct": -2.017,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 23.74,
+        "float_shares": 339311728,
+        "shares_short": 72269016,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.277,
+      "sweep_aggression_pct": 6.82,
+      "distance_to_zero_gamma_pct": -8.324,
+      "distance_to_heaviest_dp_node_pct": 0.75,
+      "days_since_earnings": 77,
+      "days_to_earnings": 13,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 13.4,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "SMR260821C00009000",
+        "expiry": "2026-08-21",
+        "strike": 9.0,
+        "dte": 35,
+        "entry_premium": 1.21,
+        "limit_price": 1.22,
+        "contracts": 6,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "3740",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.89,
+          "ask": 0.98,
+          "mid": 0.935,
+          "bid_ask_spread_pct": 9.626,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 3799.0,
+          "oi_prev": 3740.0,
+          "oi_change": 59.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "57fa64a7-146c-4c86-a94e-aa4cf4c3eeb8",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.22,
+        "contracts": 6
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "SMR",
+      "call_prem": 141868.0,
+      "put_prem": 0.0,
+      "underlying_price": 8.765,
+      "min_contract_premium": 1.16,
+      "flow_type": "call",
+      "total_premium": 141868.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8

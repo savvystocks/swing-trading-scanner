@@ -99103,8 +99103,31 @@
         "contracts": 19
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -50.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 7.1,
+          "mae_pct": -50.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 7.1,
+      "mae_pct": -50.0,
+      "determining_factor": "Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 4.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "TMC",
@@ -99117,12 +99140,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 14,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "TMC260814C00004000",
+        "closed_at": "2026-07-24T18:40:48.195Z",
+        "return_pct": -50.0,
+        "reason": "-50.0% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 7.1,
-        "mae_pct": -45.2,
-        "stage": "initial"
+        "mae_pct": -50.0,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -116461,7 +116494,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 7.0,
-        "mae_pct": -35.5,
+        "mae_pct": -40.9,
         "stage": "initial"
       }
     }
@@ -121627,9 +121660,14 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 27.7,
+        "mfe_pct": 30.8,
         "mae_pct": -36.3,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-07-24T18:40:49.713Z",
+          "return_pct": 30.8
+        }
       }
     }
   },
@@ -128295,7 +128333,7 @@
     },
     "leg_path": {
       "adopted_leg": {
-        "mfe_pct": 4.2,
+        "mfe_pct": 4.8,
         "mae_pct": -30.1,
         "stage": "initial"
       }
@@ -142663,7 +142701,7 @@
     "leg_path": {
       "adopted_leg": {
         "mfe_pct": 0.0,
-        "mae_pct": -46.0,
+        "mae_pct": -47.6,
         "stage": "initial"
       }
     },
@@ -142943,7 +142981,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 27.9,
+        "mfe_pct": 37.0,
         "mae_pct": -22.1,
         "stage": "initial"
       }
@@ -145816,7 +145854,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -4.5,
-        "mae_pct": -15.2,
+        "mae_pct": -19.7,
         "stage": "initial"
       }
     }
@@ -146095,7 +146133,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -4.0,
-        "mae_pct": -25.3,
+        "mae_pct": -26.3,
         "stage": "initial"
       }
     }
@@ -146374,7 +146412,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -12.2,
-        "mae_pct": -18.4,
+        "mae_pct": -20.4,
         "stage": "initial"
       }
     }
@@ -148614,7 +148652,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -3.4,
-        "mae_pct": -10.8,
+        "mae_pct": -11.9,
         "stage": "initial"
       }
     }
@@ -149172,7 +149210,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -15.6,
-        "mae_pct": -21.1,
+        "mae_pct": -24.8,
         "stage": "initial"
       }
     }
@@ -150845,7 +150883,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 12.7,
+        "mfe_pct": 18.2,
         "mae_pct": -7.3,
         "stage": "initial"
       }
@@ -151125,7 +151163,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -15.2,
-        "mae_pct": -17.3,
+        "mae_pct": -24.9,
         "stage": "initial"
       }
     }
@@ -151683,7 +151721,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -8.3,
-        "mae_pct": -12.5,
+        "mae_pct": -16.7,
         "stage": "initial"
       }
     }
@@ -151962,7 +152000,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -4.2,
-        "mae_pct": -7.0,
+        "mae_pct": -8.5,
         "stage": "initial"
       }
     }
@@ -152512,7 +152550,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -23.1,
+        "mfe_pct": -15.4,
         "mae_pct": -23.1,
         "stage": "initial"
       }
@@ -152787,6 +152825,278 @@
       "total_premium": 952880.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 19
+    "brake_stopouts_at_entry": 19,
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "83eed80a8462",
+    "ticker": "MARA",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "entry_ts_utc": "2026-07-24T18:41:58.639Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 71,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-24T18:41:58.639Z",
+      "macro": {
+        "spot": 12.24,
+        "sma20": 12.55,
+        "distance_to_sma20_pct": -2.466,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 101.5,
+        "iv_back": 96.9,
+        "iv_ratio": 1.047,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 6995523.6,
+        "zero_gamma_strike": 12.0,
+        "distance_to_zero_gamma_pct": 1.961,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.07,
+        "atr_pct": 8.76,
+        "rvol_10min": 0.69,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Capital Markets",
+        "market_cap": 4664844288,
+        "short_pct_float": 32.14,
+        "short_ratio": 2.53,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 106.36,
+        "vader_compound": 0.111,
+        "news_type": "Macro",
+        "top_headline": "Coinbase CEO Brian Armstrong Says Bitcoin Will 'Mostly' Be a Measure of Inflation Fears in the Long Term",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -2.466,
+        "market_spy_dist_pct": -1.118,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 0.946,
+        "sector_vs_market_spread": 2.064,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 97.1,
+        "call_iv_25d": 95.3,
+        "skew_ratio": 1.019,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.39,
+        "ask_sweep_prem": 306162.0,
+        "total_flow_prem": 3651109.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -2.75,
+        "heaviest_node_price": 12.58,
+        "node_size": 536355.0,
+        "n_prints": 200,
+        "window_start": "2026-07-24T17:35:58Z",
+        "window_end": "2026-07-24T18:41:11Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 74,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 13,
+        "next_earnings_date": "2026-08-06",
+        "iv_rank_1y": 50.54,
+        "last_earnings_date": "2026-05-11",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 81.85,
+        "front_iv": 101.5,
+        "vrp": 19.65,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -618557.0,
+        "flow_persistence_pct": 19.57,
+        "flow_direction": "bearish",
+        "closing_accel": 907486.0,
+        "n_ticks": 313,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 787.73,
+        "vwma_20": 12.61,
+        "rsi_5": 79.69,
+        "rsi_15": 49.09,
+        "gap_pct": -1.724,
+        "day_range": 4.618,
+        "candle_body": 0.54,
+        "dist_sma50": -7.727,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 4.6,
+        "vix_level": 18.36,
+        "execution_hour": 18,
+        "day_of_week": 4,
+        "sector_vs_spy": 0.486,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 21650355.0,
+        "net_vanna": 28034732.0,
+        "net_charm": -82556107.0,
+        "delta_imbalance": 2.493,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.082,
+        "bid": 12.24,
+        "ask": 12.25,
+        "bid_size": 3900.0,
+        "ask_size": 2500.0,
+        "obi": 0.2188,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.68,
+        "gap_pct": -1.724,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 32.14,
+        "float_shares": 373042686,
+        "shares_short": 106931027,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.111,
+      "sweep_aggression_pct": 8.39,
+      "distance_to_zero_gamma_pct": 1.961,
+      "distance_to_heaviest_dp_node_pct": -2.75,
+      "days_since_earnings": 74,
+      "days_to_earnings": 13,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 19.57,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "MARA260821P00012000",
+        "expiry": "2026-08-21",
+        "strike": 12.0,
+        "dte": 35,
+        "entry_premium": 1.54,
+        "limit_price": 1.56,
+        "contracts": 5,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "3205",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.13,
+          "ask": 1.17,
+          "mid": 1.15,
+          "bid_ask_spread_pct": 3.478,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 3253.0,
+          "oi_prev": 3205.0,
+          "oi_change": 48.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "c7a75f1c-318e-4d99-b6e7-d4516aa6c6e9",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.56,
+        "contracts": 5
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "MARA",
+      "call_prem": 0.0,
+      "put_prem": 84132.0,
+      "underlying_price": 12.0,
+      "min_contract_premium": 1.64,
+      "flow_type": "put",
+      "total_premium": 84132.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 20
   }
 ]

@@ -2953,3 +2953,21 @@
 
 **Determining factor:** Bearish put FAILED (-1%, move 0.0%): no breakdown materialised; spot held above zero-gamma 30.5.
 
+## Autopsy - SO (ffb5d526252b)
+- entered 2026-07-21T17:31:37.185Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +63.3% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 99.0 fed the squeeze.
+
+## Autopsy - AAL (e884790f9bd0)
+- entered 2026-07-23T14:21:26.399Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -54.7% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-55%, move 0.0%): no breakdown materialised; spot held above zero-gamma 2.0.
+

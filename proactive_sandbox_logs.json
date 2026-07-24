@@ -131806,8 +131806,33 @@
         "contracts": 2
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 63.3
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 87.8,
+          "mae_pct": -42.9,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-23T14:21:03.095Z",
+            "return_pct": 30.6
+          }
+        }
+      },
+      "mfe_pct": 87.8,
+      "mae_pct": -42.9,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 99.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "SO",
@@ -131820,12 +131845,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 11,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "SO260821C00097500",
+        "closed_at": "2026-07-24T15:21:05.309Z",
+        "return_pct": 63.3,
+        "reason": "63.3% <= trail 70.2% (20% off peak MFE 87.8%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 87.8,
         "mae_pct": -42.9,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-23T14:21:03.095Z",
@@ -136277,8 +136311,29 @@
         "contracts": 8
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -54.7
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 5.7,
+          "mae_pct": -54.7,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 5.7,
+      "mae_pct": -54.7,
+      "determining_factor": "Bearish put FAILED (-55%, move 0.0%): no breakdown materialised; spot held above zero-gamma 2.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "AAL",
@@ -136291,12 +136346,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "AAL260821P00013000",
+        "closed_at": "2026-07-24T15:21:06.840Z",
+        "return_pct": -54.7,
+        "reason": "-54.7% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 5.7,
-        "mae_pct": -43.4,
-        "stage": "initial"
+        "mae_pct": -54.7,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -137444,7 +137509,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -10.5,
-        "mae_pct": -37.9,
+        "mae_pct": -41.1,
         "stage": "initial"
       }
     }
@@ -138002,7 +138067,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -2.9,
-        "mae_pct": -28.1,
+        "mae_pct": -31.0,
         "stage": "initial"
       }
     }
@@ -139819,7 +139884,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 16.5,
-        "mae_pct": -34.1,
+        "mae_pct": -40.0,
         "stage": "initial"
       }
     }
@@ -143430,7 +143495,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 0.0,
+        "mfe_pct": 13.0,
         "mae_pct": -20.8,
         "stage": "initial"
       }
@@ -145990,7 +146055,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -7.1,
+        "mfe_pct": -6.1,
         "mae_pct": -12.1,
         "stage": "initial"
       }
@@ -146269,7 +146334,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -18.4,
+        "mfe_pct": -14.3,
         "mae_pct": -18.4,
         "stage": "initial"
       }
@@ -146549,7 +146614,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -19.4,
-        "mae_pct": -22.2,
+        "mae_pct": -27.8,
         "stage": "initial"
       }
     }
@@ -147106,7 +147171,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -9.7,
+        "mfe_pct": -3.2,
         "mae_pct": -9.7,
         "stage": "initial"
       }
@@ -147381,6 +147446,278 @@
       "total_premium": 62500.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 18
+    "brake_stopouts_at_entry": 18,
+    "leg_exits": {}
+  },
+  {
+    "trade_set_id": "7ea07047f960",
+    "ticker": "PYPL",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-24T15:21:45.648Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 56,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-24T15:21:45.648Z",
+      "macro": {
+        "spot": 56.17,
+        "sma20": 49.62,
+        "distance_to_sma20_pct": 13.191,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 52.3,
+        "iv_back": 47.2,
+        "iv_ratio": 1.108,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 1412550.0,
+        "zero_gamma_strike": 57.0,
+        "distance_to_zero_gamma_pct": -1.478,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.99,
+        "atr_pct": 3.54,
+        "rvol_10min": 0.26,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Credit Services",
+        "market_cap": 49552273408,
+        "short_pct_float": 6.94,
+        "short_ratio": 3.17,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 3.51,
+        "vader_compound": 0.382,
+        "news_type": "Analyst",
+        "top_headline": "Dell To Rally More Than 17%? Here Are 10 Top Analyst Forecasts For Friday",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 13.191,
+        "market_spy_dist_pct": -0.564,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 1.237,
+        "sector_vs_market_spread": 1.801,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 62.5,
+        "call_iv_25d": 60.8,
+        "skew_ratio": 1.028,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 9.3,
+        "ask_sweep_prem": 610754.0,
+        "total_flow_prem": 6570200.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 1.25,
+        "heaviest_node_price": 55.47,
+        "node_size": 145571.0,
+        "n_prints": 100,
+        "window_start": "2026-07-24T08:09:35Z",
+        "window_end": "2026-07-24T15:20:47Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 80,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 4,
+        "next_earnings_date": "2026-07-28",
+        "iv_rank_1y": 63.11,
+        "last_earnings_date": "2026-05-05",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 61.72,
+        "front_iv": 52.3,
+        "vrp": -9.42,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 1210572.0,
+        "flow_persistence_pct": 36.66,
+        "flow_direction": "bullish",
+        "closing_accel": 1286429.0,
+        "n_ticks": 112,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 970.64,
+        "vwma_20": 51.66,
+        "rsi_5": 41.02,
+        "rsi_15": 81.04,
+        "gap_pct": 0.5,
+        "day_range": 2.181,
+        "candle_body": 0.098,
+        "dist_sma50": 22.776,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 5.1,
+        "vix_level": 18.14,
+        "execution_hour": 15,
+        "day_of_week": 4,
+        "sector_vs_spy": 0.203,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 25855580.0,
+        "net_vanna": 38130747.0,
+        "net_charm": -14540616.0,
+        "delta_imbalance": 3.407,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.036,
+        "bid": 56.17,
+        "ask": 56.19,
+        "bid_size": 400.0,
+        "ask_size": 400.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.26,
+        "gap_pct": 0.5,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 6.94,
+        "float_shares": 880006082,
+        "shares_short": 54915943,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.382,
+      "sweep_aggression_pct": 9.3,
+      "distance_to_zero_gamma_pct": -1.478,
+      "distance_to_heaviest_dp_node_pct": 1.25,
+      "days_since_earnings": 80,
+      "days_to_earnings": 4,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 36.66,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "PYPL260821C00058000",
+        "expiry": "2026-08-21",
+        "strike": 58.0,
+        "dte": 35,
+        "entry_premium": 3.64,
+        "limit_price": 3.68,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "82",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.41,
+          "ask": 2.27,
+          "mid": 1.84,
+          "bid_ask_spread_pct": 46.739,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 89.0,
+          "oi_prev": 82.0,
+          "oi_change": 7.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "ccfcba28-e6be-4277-ae0f-3fd5c620cd31",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.68,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "PYPL",
+      "call_prem": 118332.0,
+      "put_prem": 89602.0,
+      "underlying_price": 56.12,
+      "min_contract_premium": 0.3,
+      "flow_type": "call",
+      "total_premium": 207934.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 19
   }
 ]

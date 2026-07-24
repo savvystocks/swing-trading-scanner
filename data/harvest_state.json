@@ -1204,7 +1204,43 @@
     "SMH260821P00525000",
     "KRE260918P00068000",
     "XOM261218C00175000",
-    "TSLA281215P00210000"
+    "TSLA281215P00210000",
+    "FEZ260821P00065000",
+    "ALAB261016P00270000",
+    "NOW260731P00100000",
+    "OKLO260918P00040000",
+    "VRT260807P00255000",
+    "MKSI260821C00420000",
+    "MRVL260731C00195000",
+    "SNDK260724P01450000",
+    "SNDK260731C01490000",
+    "OII270115C00050000",
+    "AAOI260821C00115000",
+    "SNDK260731C01455000",
+    "M260918C00024000",
+    "WULF260807P00018000",
+    "TSLA280616C00750000",
+    "SPY260807C00744000",
+    "SPY260727C00740000",
+    "FEZ260918P00069000",
+    "SNDK260807C01455000",
+    "SNDK260731C01465000",
+    "SOXX260918C00550000",
+    "SNDK260731C01460000",
+    "INTC260918C00100000",
+    "NBIS260807P00135000",
+    "MU260918C01500000",
+    "SNDK260731P01100000",
+    "S260918C00018000",
+    "SQQQ260918C00040000",
+    "MU261016C01000000",
+    "TSLA260918C00330000",
+    "EWY260821P00159000",
+    "INTC260918C00110000",
+    "PWR260918P00600000",
+    "NUGT260821C00099000",
+    "QQQ260805C00700000",
+    "BE260807P00190000"
   ],
   "tickers": {
     "GOOGL": {
@@ -32726,10 +32762,170 @@
       "days_to_earnings": 19,
       "post_earnings_iv_crush_flag": false,
       "flow_persistence_pct": 54.38
+    },
+    "FEZ": {
+      "entry_ts_utc": "2026-07-24T18:21:47.689Z",
+      "macro": {
+        "spot": 67.78,
+        "sma20": 68.05,
+        "distance_to_sma20_pct": -0.393,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 16.7,
+        "iv_back": 16.4,
+        "iv_ratio": 1.018,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -115700.4,
+        "zero_gamma_strike": 53.0,
+        "distance_to_zero_gamma_pct": 21.806,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 0.86,
+        "atr_pct": 1.27,
+        "rvol_10min": 0.93,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 363.51,
+        "vader_compound": 0.317,
+        "news_type": "Unknown",
+        "top_headline": "TotalEnergies Ships First ECA LNG Cargo, Exits European Solar Assets",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -0.393,
+        "market_spy_dist_pct": -0.835,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 21.7,
+        "call_iv_25d": 16.6,
+        "skew_ratio": 1.309,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 5.21,
+        "ask_sweep_prem": 309756.0,
+        "total_flow_prem": 5943187.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 67.78,
+        "node_size": 6500.0,
+        "n_prints": 6,
+        "window_start": "2026-07-24T15:44:04Z",
+        "window_end": "2026-07-24T18:20:26Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 27.68,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 16.5,
+        "front_iv": 16.7,
+        "vrp": 0.2,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -79911.0,
+        "flow_persistence_pct": 65.96,
+        "flow_direction": "bearish",
+        "closing_accel": -39855.0,
+        "n_ticks": 32,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1015.71,
+        "vwma_20": 68.06,
+        "rsi_5": 50.96,
+        "rsi_15": 42.83,
+        "gap_pct": 0.595,
+        "day_range": 0.87,
+        "candle_body": 0.339,
+        "dist_sma50": -0.08,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 0.3,
+        "vix_level": 18.02,
+        "execution_hour": 18,
+        "day_of_week": 4,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 479337.0,
+        "net_vanna": -1423148.0,
+        "net_charm": -505064.0,
+        "delta_imbalance": 1.309,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.015,
+        "bid": 67.77,
+        "ask": 67.78,
+        "bid_size": 100.0,
+        "ask_size": 300.0,
+        "obi": -0.5,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.93,
+        "gap_pct": 0.595,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.317,
+      "sweep_aggression_pct": 5.21,
+      "distance_to_zero_gamma_pct": 21.806,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 65.96
     }
   },
-  "payload_count": 197,
-  "topn_count": 395,
+  "payload_count": 198,
+  "topn_count": 400,
   "random_count": 7,
   "backoff_429": false,
   "cap_today": 300,

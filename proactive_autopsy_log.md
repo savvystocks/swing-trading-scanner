@@ -2926,3 +2926,12 @@
 
 **Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 15.0 worked against it.
 
+## Autopsy - LUV (54eec2983f47)
+- entered 2026-07-23T14:41:51.064Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -83.6% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-84%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 51.0 worked against it.
+

@@ -2989,3 +2989,12 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 4.0 worked against it.
 
+## Autopsy - KEEL (ADOPT-5ef8a51546)
+- entered 2026-07-23T18:31:10.535Z | trigger orphan_reconcile | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -50.8% | WINNER |
+
+**Determining factor:** Calendar FAILED (-51%): the range broke; IV term None (ratio None) hurt the spread.
+

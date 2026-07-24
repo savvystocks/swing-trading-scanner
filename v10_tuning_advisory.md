@@ -1936,3 +1936,9 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
 ---
+## Tuning Advisory - PL (dcd962cb9f78) - 2026-07-24T14:01:12.906Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

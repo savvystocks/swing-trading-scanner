@@ -138121,7 +138121,7 @@
       "adopted_leg": {
         "mfe_pct": 68.7,
         "mae_pct": -10.1,
-        "stage": "scaled",
+        "stage": "trailing",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-24T15:41:00.843Z",
@@ -145224,7 +145224,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -3.3,
-        "mae_pct": -18.3,
+        "mae_pct": -21.7,
         "stage": "initial"
       }
     }
@@ -146061,7 +146061,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -4.0,
-        "mae_pct": -12.1,
+        "mae_pct": -25.3,
         "stage": "initial"
       }
     }
@@ -147176,7 +147176,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -3.2,
+        "mfe_pct": 0.0,
         "mae_pct": -9.7,
         "stage": "initial"
       }
@@ -148279,6 +148279,300 @@
       "min_contract_premium": 0.65,
       "flow_type": "call",
       "total_premium": 171815.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 19,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -16.7,
+        "mae_pct": -16.7,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "AUDIT-41020aec",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-07-24T15:50:59.934Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "2c767e49-2add-4239-9a46-79ecd358c6e7",
+        "symbol": "ZIM260821C00026500",
+        "age_min": 39.0,
+        "limit_price": "1.9"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "1f1ab556b4ff",
+    "ticker": "NVO",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-24T15:52:06.554Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 59,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-24T15:52:06.554Z",
+      "macro": {
+        "spot": 48.95,
+        "sma20": 49.23,
+        "distance_to_sma20_pct": -0.58,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 53.8,
+        "iv_back": 42.5,
+        "iv_ratio": 1.266,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 678079.9,
+        "zero_gamma_strike": 50.0,
+        "distance_to_zero_gamma_pct": -2.145,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -66.7,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.12,
+        "atr_pct": 2.28,
+        "rvol_10min": 0.38,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Healthcare",
+        "industry": "Drug Manufacturers - General",
+        "market_cap": 216543002624,
+        "short_pct_float": 0.88,
+        "short_ratio": 2.05,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 5.73,
+        "vader_compound": 0.012,
+        "news_type": "Unknown",
+        "top_headline": "The Wall Street Journal Reported Earlier, Novo Nordisk Filed Preliminary Injunction Request In U.S. Court To Halt Eli Lilly GLP-1 Weight-Los",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -0.58,
+        "market_spy_dist_pct": -0.506,
+        "sector_etf": "XLV",
+        "sector_dist_pct": 1.183,
+        "sector_vs_market_spread": 1.689,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 48.2,
+        "call_iv_25d": 46.7,
+        "skew_ratio": 1.033,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 18.56,
+        "ask_sweep_prem": 3296402.0,
+        "total_flow_prem": 17758712.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.5,
+        "heaviest_node_price": 49.19,
+        "node_size": 106169.0,
+        "n_prints": 71,
+        "window_start": "2026-07-24T10:02:46Z",
+        "window_end": "2026-07-24T15:43:22Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 80,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 12,
+        "next_earnings_date": "2026-08-05",
+        "iv_rank_1y": 40.54,
+        "last_earnings_date": "2026-05-05",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 26.58,
+        "front_iv": 53.8,
+        "vrp": 27.22,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -342703.0,
+        "flow_persistence_pct": 16.03,
+        "flow_direction": "bearish",
+        "closing_accel": 7065.0,
+        "n_ticks": 143,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1150.73,
+        "vwma_20": 49.18,
+        "rsi_5": 26.34,
+        "rsi_15": 42.38,
+        "gap_pct": 1.484,
+        "day_range": 1.553,
+        "candle_body": 0.053,
+        "dist_sma50": 5.622,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 11.3,
+        "vix_level": 17.58,
+        "execution_hour": 15,
+        "day_of_week": 4,
+        "sector_vs_spy": 1.19,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 16440313.0,
+        "net_vanna": 38655889.0,
+        "net_charm": -17273381.0,
+        "delta_imbalance": 2.218,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.041,
+        "bid": 48.95,
+        "ask": 48.97,
+        "bid_size": 700.0,
+        "ask_size": 300.0,
+        "obi": 0.4,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.36,
+        "gap_pct": 1.484,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 0.88,
+        "float_shares": 3183393366,
+        "shares_short": 27780646,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.012,
+      "sweep_aggression_pct": 18.56,
+      "distance_to_zero_gamma_pct": -2.145,
+      "distance_to_heaviest_dp_node_pct": -0.5,
+      "days_since_earnings": 80,
+      "days_to_earnings": 12,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 16.03,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "NVO260821C00051000",
+        "expiry": "2026-08-21",
+        "strike": 51.0,
+        "dte": 35,
+        "entry_premium": 3.26,
+        "limit_price": 3.29,
+        "contracts": 2,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "26",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.63,
+          "ask": 1.74,
+          "mid": 1.685,
+          "bid_ask_spread_pct": 6.528,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 147.0,
+          "oi_prev": 26.0,
+          "oi_change": 121.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "55d185b1-d218-4009-bf57-c24fbb8bcb20",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.29,
+        "contracts": 2
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "NVO",
+      "call_prem": 91908.0,
+      "put_prem": 0.0,
+      "underlying_price": 48.97,
+      "min_contract_premium": 2.07,
+      "flow_type": "call",
+      "total_premium": 91908.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 19

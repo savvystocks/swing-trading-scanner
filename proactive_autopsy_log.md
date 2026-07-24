@@ -2998,3 +2998,21 @@
 
 **Determining factor:** Calendar FAILED (-51%): the range broke; IV term None (ratio None) hurt the spread.
 
+## Autopsy - DVN (63a88c6b0b3d)
+- entered 2026-07-20T18:32:25.312Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -5.2% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-5%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 45.0 worked against it.
+
+## Autopsy - GEHC (7718897f354f)
+- entered 2026-07-24T14:51:56.103Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -52.8% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-53%, move 0.0%): no breakdown materialised; spot held above zero-gamma 61.0.
+

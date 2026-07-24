@@ -2971,3 +2971,12 @@
 
 **Determining factor:** Bearish put FAILED (-55%, move 0.0%): no breakdown materialised; spot held above zero-gamma 2.0.
 
+## Autopsy - DOW (ADOPT-772bc68e75)
+- entered 2026-07-23T15:31:26.811Z | trigger orphan_reconcile | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | +53.5% | WINNER |
+
+**Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
+

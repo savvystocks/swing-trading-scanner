@@ -144979,7 +144979,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -3.0,
-        "mae_pct": -41.6,
+        "mae_pct": -43.6,
         "stage": "initial"
       }
     }
@@ -147211,7 +147211,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 0.0,
-        "mae_pct": -16.1,
+        "mae_pct": -19.4,
         "stage": "initial"
       }
     }
@@ -147762,7 +147762,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -17.3,
-        "mae_pct": -17.3,
+        "mae_pct": -26.2,
         "stage": "initial"
       }
     }
@@ -150845,7 +150845,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 3.6,
+        "mfe_pct": 12.7,
         "mae_pct": -7.3,
         "stage": "initial"
       }
@@ -151955,6 +151955,285 @@
       "min_contract_premium": 2.8,
       "flow_type": "call",
       "total_premium": 112000.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 19,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -4.2,
+        "mae_pct": -4.2,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "64be5afe3eac",
+    "ticker": "ENVX",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-24T18:11:11.968Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 71,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-24T18:11:11.968Z",
+      "macro": {
+        "spot": 4.0,
+        "sma20": 5.13,
+        "distance_to_sma20_pct": -22.012,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 101.0,
+        "iv_back": 118.4,
+        "iv_ratio": 0.853,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 1371251.1,
+        "zero_gamma_strike": 2.0,
+        "distance_to_zero_gamma_pct": 50.0,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 100.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.36,
+        "atr_pct": 9.01,
+        "rvol_10min": 1.0,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Industrials",
+        "industry": "Electrical Equipment & Parts",
+        "market_cap": 871522944,
+        "short_pct_float": 26.09,
+        "short_ratio": 8.31,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.32,
+        "vader_compound": 0.296,
+        "news_type": "Analyst",
+        "top_headline": "TD Cowen Maintains Hold on Enovix, Lowers Price Target to $5.5",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -22.012,
+        "market_spy_dist_pct": -0.725,
+        "sector_etf": "XLI",
+        "sector_dist_pct": 0.973,
+        "sector_vs_market_spread": 1.698,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 123.9,
+        "call_iv_25d": 117.7,
+        "skew_ratio": 1.052,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.78,
+        "ask_sweep_prem": 358810.0,
+        "total_flow_prem": 4086135.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.5,
+        "heaviest_node_price": 4.02,
+        "node_size": 117200.0,
+        "n_prints": 4,
+        "window_start": "2026-07-24T14:23:35Z",
+        "window_end": "2026-07-24T17:57:56Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 72,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 19,
+        "next_earnings_date": "2026-08-12",
+        "iv_rank_1y": 84.8,
+        "last_earnings_date": "2026-05-13",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 81.29,
+        "front_iv": 101.0,
+        "vrp": 19.71,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 554799.0,
+        "flow_persistence_pct": 54.38,
+        "flow_direction": "bullish",
+        "closing_accel": 562675.0,
+        "n_ticks": 231,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 892.45,
+        "vwma_20": 5.13,
+        "rsi_5": 20.97,
+        "rsi_15": 31.06,
+        "gap_pct": -0.462,
+        "day_range": 8.5,
+        "candle_body": 0.912,
+        "dist_sma50": -35.68,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -17.4,
+        "vix_level": 18.04,
+        "execution_hour": 18,
+        "day_of_week": 4,
+        "sector_vs_spy": 2.447,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 2461822.0,
+        "net_vanna": 7081824.0,
+        "net_charm": -23409322.0,
+        "delta_imbalance": 1.695,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.25,
+        "bid": 3.99,
+        "ask": 4.0,
+        "bid_size": 3600.0,
+        "ask_size": 5200.0,
+        "obi": -0.1818,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 1.01,
+        "gap_pct": -0.462,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 26.09,
+        "float_shares": 188353534,
+        "shares_short": 50762402,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.296,
+      "sweep_aggression_pct": 8.78,
+      "distance_to_zero_gamma_pct": 50.0,
+      "distance_to_heaviest_dp_node_pct": -0.5,
+      "days_since_earnings": 72,
+      "days_to_earnings": 19,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 54.38,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "ENVX260821C00004000",
+        "expiry": "2026-08-21",
+        "strike": 4.0,
+        "dte": 35,
+        "entry_premium": 0.5,
+        "limit_price": 0.51,
+        "contracts": 16,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "632",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.51,
+          "ask": 0.59,
+          "mid": 0.55,
+          "bid_ask_spread_pct": 14.545,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 654.0,
+          "oi_prev": 632.0,
+          "oi_change": 22.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "95486090-05d1-429a-87be-89ef498373b0",
+        "error": null,
+        "submitted": true,
+        "limit_price": 0.51,
+        "contracts": 16
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "ENVX",
+      "call_prem": 740000.0,
+      "put_prem": 0.0,
+      "underlying_price": 4.0,
+      "min_contract_premium": 0.74,
+      "flow_type": "call",
+      "total_premium": 740000.0
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 19

@@ -142981,9 +142981,10 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 37.0,
+        "mfe_pct": 37.7,
         "mae_pct": -22.1,
-        "stage": "initial"
+        "stage": "initial",
+        "close_fails": 1
       }
     }
   },
@@ -150325,7 +150326,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -9.3,
+        "mfe_pct": -8.0,
         "mae_pct": -12.0,
         "stage": "initial"
       }
@@ -153097,6 +153098,69 @@
       "total_premium": 84132.0
     },
     "brake_shadow_blocked": true,
-    "brake_stopouts_at_entry": 20
+    "brake_stopouts_at_entry": 20,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -4.2,
+        "mae_pct": -4.2,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "ADOPT-26def20256",
+    "ticker": "RIG",
+    "status": "OPEN",
+    "entry_ts_utc": "2026-07-24T18:51:00.188Z",
+    "adopted": true,
+    "adopted_from": {
+      "occ": "RIG260821C00005500",
+      "qty": 18,
+      "avg_entry_price": 0.26,
+      "at": "2026-07-24T18:51:00.188Z"
+    },
+    "regime": "ADOPTED",
+    "trigger": "orphan_reconcile",
+    "execution_mode": "ADOPTED",
+    "occ_resolution": "adopted",
+    "leg_budget_usd": 468.0,
+    "metadata": {
+      "macro": {
+        "spot": 0.26,
+        "source": "adopted"
+      },
+      "gex": {
+        "zero_gamma_strike": null,
+        "regime": null
+      },
+      "iv_term": {
+        "iv_ratio": null,
+        "structure": null
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": null,
+        "insider_10d_buy_usd": null,
+        "insider_cluster_flag": false
+      }
+    },
+    "legs": {
+      "adopted_leg": {
+        "structure": "ADOPTED",
+        "occ_symbol": "RIG260821C00005500",
+        "expiry": "2026-08-21",
+        "entry_premium": 0.26,
+        "contracts": 18
+      }
+    },
+    "leg_path": {
+      "adopted_leg": {
+        "mfe_pct": 0.0,
+        "mae_pct": -7.7,
+        "stage": "initial"
+      }
+    },
+    "leg_exits": {},
+    "exit": null
   }
 ]

@@ -134,6 +134,17 @@ def run(reports_dir, snapshot=None):
     open(path, "w", encoding="utf-8").write(md)
     print(md)
     print("registry ->", G.REGISTRY_PATH)
+
+    # standing 'Strategy this week' one-pager (report-only; recorded evidence + 'no evidence yet')
+    try:
+        from . import strategy_state
+        sdir = os.path.join("reports", "strategy")
+        os.makedirs(sdir, exist_ok=True)
+        open(os.path.join(sdir, "strategy_this_week.md"), "w", encoding="utf-8").write(
+            strategy_state.strategy_section("."))
+        print("strategy section -> reports/strategy/strategy_this_week.md")
+    except Exception as e:
+        print(f"strategy section skipped: {type(e).__name__}: {e}")
     return {"report": path, "registry": reg}
 
 

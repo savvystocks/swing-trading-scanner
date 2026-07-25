@@ -149,7 +149,7 @@ jobs:
       - name: Run the Council (5 members, disagreement, fail-closed) + Governor scoreboard
         run: |
           python -m src.brain.run_council --snapshot snapshots --out brain_work_council --reports reports/council
-          python -m src.brain.run_governor --reports reports/governor || echo "governor scoreboard skipped"
+          python -m src.brain.run_governor --reports reports/governor --snapshot snapshots || echo "governor scoreboard skipped"
       - name: Commit council + governor reports
         if: always()
         run: |

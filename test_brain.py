@@ -470,6 +470,43 @@ def test_council_stage2():
         TTL.apply_ttl(Xt, list(Xt.columns), sig)["quotes_and_spreads.bid"].notna().all())
 
 
+def test_governor_stage3():
+    from src.brain import governor as GV
+    d = tempfile.mkdtemp(prefix="gov_")
+    reg = {"organs": {}, "history": []}
+    # six consecutive GREEN weeks promote CANDIDATE -> SHADOW_PROVEN (evidence, not drift)
+    for wk in range(GV.PROMOTE_WEEKS):
+        GV.evaluate_organ(reg, "student", f"W{wk}", "GREEN", metric=0.05 + 0.01 * wk)
+    chk("governor: 6 GREEN weeks climb a rung",
+        reg["organs"]["student"]["rung"] == "SHADOW_PROVEN", reg["organs"]["student"]["rung"])
+    chk("governor: promotion never reaches LIVE without owner flag",
+        reg["organs"]["student"]["rung"] != "LIVE")
+    # a single RED demotes within one cycle and zeroes the streak
+    GV.evaluate_organ(reg, "student", "W6", "RED", metric=-0.1)
+    chk("governor: one RED demotes a rung immediately",
+        reg["organs"]["student"]["rung"] == "CANDIDATE" and reg["organs"]["student"]["green_streak"] == 0,
+        reg["organs"]["student"]["rung"])
+    # PERFORMANCE drift: a falling metric series flags concept drift and knocks GREEN to AMBER
+    reg2 = {"organs": {}, "history": []}
+    for wk, m in enumerate([0.20, 0.14, 0.08, 0.02]):
+        o = GV.evaluate_organ(reg2, "council", f"W{wk}", "GREEN", metric=m)
+    chk("governor: falling metric raises performance-drift and caps state at AMBER",
+        o["drift"]["perf_drift"] and o["state"] == "AMBER",
+        f"slope={o['drift']['slope']} state={o['state']}")
+    # POPULATION drift: a shifted signature vs the prior week flags data drift
+    reg3 = {"organs": {}, "history": []}
+    GV.evaluate_organ(reg3, "student", "W0", "GREEN", metric=0.1,
+                      signature={"base_up": 0.19, "wide_share": 0.10, "tight_share": 0.40})
+    o3 = GV.evaluate_organ(reg3, "student", "W1", "GREEN", metric=0.1,
+                           signature={"base_up": 0.19, "wide_share": 0.55, "tight_share": 0.10})
+    chk("governor: shifted population signature raises data-drift",
+        o3["drift"]["data_drift"] and o3["state"] == "AMBER", str(o3["drift"]))
+    # scoreboard renders and surfaces eligibility
+    md = GV.scoreboard_md(reg2, "W-test")
+    chk("governor: scoreboard renders a table", "| organ | rung | state |" in md)
+    shutil.rmtree(d, ignore_errors=True)
+
+
 def test_convergence_classify_accrete():
     angle_names = [a for a, _ in CV.ANGLES]
     m = {"surv": {a: "confirmed" for a in angle_names[:8]} | {a: "absent" for a in angle_names[8:]},
@@ -503,8 +540,9 @@ if __name__ == "__main__":
     test_discovery_walkforward_purge()
     test_student_stage2()
     test_council_stage2()
+    test_governor_stage3()
     test_convergence_classify_accrete()
-    total = 13 * 3
+    total = 14 * 3
     print(f"\nTOTAL: brain suite - {len(fails)} failure(s)")
     if fails:
         raise SystemExit("FAILS: " + ", ".join(fails))

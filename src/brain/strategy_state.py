@@ -89,10 +89,21 @@ def strategy_section(root="."):
     else:
         L.append("**4. Trade today.** no evidence yet (no council shadow committed).")
 
-    # 5. next intended change - static queue, evidence-referenced
+    # 5. next intended change - queue + live measurement-lane trigger status
+    lane = _latest(os.path.join(R, "governor", "measurement_lane_*.md"))
+    lane_txt = ""
+    if lane:
+        try:
+            body = open(lane, encoding="utf-8").read()
+            for ln in body.splitlines():
+                if "trigger:" in ln.lower():
+                    lane_txt = " Measurement-lane " + ln.split("Measurement-lane", 1)[-1].strip()
+                    break
+        except Exception:
+            lane_txt = ""
     L.append("**5. Next governed change.** Poller extension (make fixed-hold answerable; resolution "
-             "stat 2026-07-25), then the conditional measurement lane (LIVE_GATE.md). Both await a "
-             "Sunday boundary + owner go. Nothing else (spec freeze).")
+             "stat 2026-07-25), then the conditional measurement lane (owner-gated)." + lane_txt
+             + " Both await a Sunday boundary + owner go. Nothing else (spec freeze).")
 
     # 6. pivot clock
     streak, first = _pivot_clock(os.path.join(R, "student"))

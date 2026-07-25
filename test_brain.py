@@ -546,6 +546,49 @@ def test_treasurer_stage4():
     chk("treasurer: macro brake fail-open on missing VIX", T.macro_brake_state(None, None)["state"] == "CLEAR")
 
 
+def test_measurement_lane_trigger():
+    from src.brain import measurement_lane as ML
+    d = tempfile.mkdtemp(prefix="ml_")
+    db = os.path.join(d, "h.db")
+    con = sqlite3.connect(db)
+    con.executescript("""
+      CREATE TABLE candidates (candidate_id TEXT PRIMARY KEY, occ_symbol TEXT, spread_pct REAL);
+      CREATE TABLE fills (event_id TEXT PRIMARY KEY, kind TEXT, occ_symbol TEXT, terminal_state TEXT);
+    """)
+    con.commit()
+    ccsv = os.path.join(d, "council_shadow_x.csv")
+    import csv as _csv
+    with open(ccsv, "w", newline="") as fh:
+        w = _csv.writer(fh); w.writerow(["candidate_id", "decision", "council_blend"])
+        for i in range(10):  # school selects mostly TIGHT
+            cid = f"c{i}"
+            con.execute("INSERT INTO candidates VALUES (?,?,?)", (cid, f"O{i}", 1.0 if i < 8 else 12.0))
+            w.writerow([cid, "TAKE", "0.7"])
+    con.commit()
+    # (a) empty fills -> NOT YET EVALUABLE (this is exactly today's state)
+    chk0 = ML.trigger_check(db, ccsv)
+    chk("measurement lane: empty fills -> NOT YET EVALUABLE",
+        (not chk0["met"]) and "NOT YET EVALUABLE" in chk0["reason"], chk0["reason"])
+    # (b) 25 fills, all WIDE, school tight -> MET (the gap the lane exists to fill)
+    for i in range(25):
+        con.execute("INSERT INTO candidates VALUES (?,?,?)", (f"w{i}", f"W{i}", 25.0))
+        con.execute("INSERT INTO fills VALUES (?,?,?,?)", (f"f{i}", "entry_fill", f"W{i}", "filled"))
+    con.commit()
+    chk1 = ML.trigger_check(db, ccsv)
+    chk("measurement lane: fills all wide + school tight -> MET", chk1["met"], chk1["reason"])
+    # (c) add plenty of tight fills -> NOT MET (organic coverage now spans tight)
+    for i in range(15):
+        con.execute("INSERT INTO candidates VALUES (?,?,?)", (f"t{i}", f"T{i}", 1.0))
+        con.execute("INSERT INTO fills VALUES (?,?,?,?)", (f"ft{i}", "entry_fill", f"T{i}", "filled"))
+    con.commit()
+    chk2 = ML.trigger_check(db, ccsv)
+    chk("measurement lane: tight coverage filled -> NOT MET", not chk2["met"], chk2["reason"])
+    con.close()
+    chk("measurement lane: never returns an activation - report-only",
+        "met" in chk2 and "activate" not in str(chk2.get("reason", "")).lower())
+    shutil.rmtree(d, ignore_errors=True)
+
+
 def test_convergence_classify_accrete():
     angle_names = [a for a, _ in CV.ANGLES]
     m = {"surv": {a: "confirmed" for a in angle_names[:8]} | {a: "absent" for a in angle_names[8:]},
@@ -581,8 +624,9 @@ if __name__ == "__main__":
     test_council_stage2()
     test_governor_stage3()
     test_treasurer_stage4()
+    test_measurement_lane_trigger()
     test_convergence_classify_accrete()
-    total = 15 * 3
+    total = 16 * 3
     print(f"\nTOTAL: brain suite - {len(fails)} failure(s)")
     if fails:
         raise SystemExit("FAILS: " + ", ".join(fails))

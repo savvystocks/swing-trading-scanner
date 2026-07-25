@@ -128,8 +128,27 @@ def run(reports_dir, snapshot=None):
 
     reg["history"].append({"week": week, "signature": sig})
     reg["history"] = reg["history"][-52:]
+    # measurement-lane trigger check (report-only; never activates) - needs the snapshot + council csv
+    lane_line = None
+    if snapshot:
+        try:
+            from . import loader, measurement_lane as ML
+            snap2 = loader.load_snapshot(snapshot, workdir="gov_work/snap")
+            council_csv = _latest("reports/council/council_shadow_*.csv")
+            chk = ML.trigger_check(snap2["db_path"], council_csv)
+            lane_line = ML.render_line(chk)
+            print(lane_line)
+            os.makedirs(reports_dir, exist_ok=True)
+            open(os.path.join(reports_dir, f"measurement_lane_{week}.md"), "w", encoding="utf-8").write(
+                f"# Measurement-lane trigger - {week}\n\n{lane_line}\n\n"
+                f"pre-registered constants: {chk['constants']}\n")
+        except Exception as e:
+            print(f"measurement-lane trigger skipped: {type(e).__name__}: {e}")
+
     G.save_registry(reg)
     md = G.scoreboard_md(reg, week)
+    if lane_line:
+        md += "\n\n## Measurement-lane trigger (report-only)\n\n- " + lane_line
     path = os.path.join(reports_dir, f"governor_{week}.md")
     open(path, "w", encoding="utf-8").write(md)
     print(md)

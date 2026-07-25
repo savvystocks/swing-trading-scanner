@@ -51,7 +51,7 @@ FROZEN → CANDIDATE → SHADOW_PROVEN → ELIGIBLE_FOR_OWNER → LIVE
 `school_mode = sourcing` (school takes engine-SKIPPED candidates) is **HARD-BLOCKED** until:
 
 - The fill ledger shows executed fills spanning the spread spectrum (tight / medium / wide buckets
-  all populated), i.e. the Phase-1f coverage line reports no gap; AND
+  all populated), i.e. the measurement-lane trigger below reports no gap; AND
 - Flip 1 has run live for its own evidence period (a separate trial in the counter, six consecutive
   GREEN); AND
 - Owner promotion, as above.
@@ -85,6 +85,23 @@ FROZEN → CANDIDATE → SHADOW_PROVEN → ELIGIBLE_FOR_OWNER → LIVE
 | P(halt) review | computed before any live sizing | if uncomfortably high, sizing comes down first |
 | macro brake | VIX ≥ 32 or +20% spike, or index ≤ −4% vs 20d SMA | market-wide veto |
 | false-veto threshold | > 5% of cycles, sustained | triggers a governed veto-loosening review |
+
+## Measurement-lane trigger (addendum Section 3, pre-registered 2026-07-25)
+
+Checked every Sunday against the REAL fill ledger by `src/brain/measurement_lane.py`; report-only,
+never self-activating. The trigger is MET only when ALL hold:
+
+- at least **20** real entry fills exist (else NOT YET EVALUABLE);
+- the school concentrates **≥ 25%** of its selections in the tight (<2%) bucket (selections = Council
+  TAKEs, or the top-quintile-by-blend proxy when there are none);
+- fewer than **10** real tight-bucket fills exist (organic fills materially fail to cover where the
+  school trades).
+
+MET tells the owner, with numbers; activating the lane (1–2 tagged paper trades/day, one contract,
+tight buckets first, FIREWALLED from Gate 1–4 evidence) is the owner's decision. As of 2026-07-25 the
+fill ledger is empty (live since the Phase-1 merge; first data Monday) → NOT YET EVALUABLE. The spread
+cap (now live) is expected to shift organic fills tighter, which may shrink the gap before the lane is
+ever needed — a reason to measure first, not activate.
 
 ## The pivot rule (draft — see ROADMAP)
 

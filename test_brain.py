@@ -507,6 +507,42 @@ def test_governor_stage3():
     shutil.rmtree(d, ignore_errors=True)
 
 
+def test_treasurer_stage4():
+    from src.brain import treasurer as T
+    # Kelly: positive edge sizes > 0 and is capped; non-positive edge sizes 0
+    f_edge = T.kelly_fraction(0.65, 0.40, -0.50)
+    chk("treasurer: positive edge -> positive fractional Kelly, capped at hard cap",
+        0 < f_edge <= T.KELLY_HARD_CAP, f"f={f_edge}")
+    chk("treasurer: no edge -> zero Kelly", T.kelly_fraction(0.40, 0.40, -0.50) == 0.0)
+    chk("treasurer: coin-flip below breakeven -> zero", T.kelly_fraction(0.50, 0.30, -0.50) == 0.0)
+    # liquidity cap: never exceeds 10% of resting size, nor the budget
+    cap = T.liquidity_cap(price=1.00, top_size=50, budget=800.0)      # budget allows 8; liquidity allows 5
+    chk("treasurer: liquidity cap binds below budget", cap == 5, f"cap={cap}")
+    cap2 = T.liquidity_cap(price=1.00, top_size=None, budget=800.0)   # no liquidity info -> budget only
+    chk("treasurer: budget cap when liquidity unknown", cap2 == 8, f"cap2={cap2}")
+    # ratchet only reduces, and zeroes at the halt
+    chk("treasurer: ratchet is 1.0 when flat", T.drawdown_ratchet(0.0) == 1.0)
+    chk("treasurer: ratchet reduces at 15% dd", T.drawdown_ratchet(0.15) == 0.5)
+    chk("treasurer: ratchet zeroes at the 30% halt", T.drawdown_ratchet(0.30) == 0.0)
+    # a deep drawdown forces zero contracts regardless of a strong edge
+    rec = T.recommend_size(0.80, 0.40, -0.50, price=0.50, top_size=1000, drawdown=0.30)
+    chk("treasurer: at the halt, recommended size is 0 even with a strong edge", rec["contracts"] == 0,
+        str(rec))
+    # P(halt): a losing distribution is far more likely to halt than a winning one, at equal sizing
+    rng = np.random.default_rng(1)
+    winners = np.where(rng.random(400) < 0.6, 0.4, -0.5)
+    losers = np.where(rng.random(400) < 0.3, 0.4, -0.5)
+    w = np.ones(400)
+    ph_win = T.estimate_p_halt(winners, w, fraction=0.2, n_paths=300)["p_halt"]
+    ph_lose = T.estimate_p_halt(losers, w, fraction=0.2, n_paths=300)["p_halt"]
+    chk("treasurer: P(halt) higher for a losing distribution", ph_lose > ph_win, f"{ph_lose} vs {ph_win}")
+    # macro brake: fires on a VIX spike / absolute level, fail-open on missing data
+    chk("treasurer: macro brake fires on absolute VIX", T.macro_brake_state(35.0, 18.0)["state"] == "BRAKE")
+    chk("treasurer: macro brake fires on a VIX spike", T.macro_brake_state(24.0, 18.0)["state"] == "BRAKE")
+    chk("treasurer: macro brake CLEAR in calm tape", T.macro_brake_state(16.0, 17.0)["state"] == "CLEAR")
+    chk("treasurer: macro brake fail-open on missing VIX", T.macro_brake_state(None, None)["state"] == "CLEAR")
+
+
 def test_convergence_classify_accrete():
     angle_names = [a for a, _ in CV.ANGLES]
     m = {"surv": {a: "confirmed" for a in angle_names[:8]} | {a: "absent" for a in angle_names[8:]},
@@ -541,8 +577,9 @@ if __name__ == "__main__":
     test_student_stage2()
     test_council_stage2()
     test_governor_stage3()
+    test_treasurer_stage4()
     test_convergence_classify_accrete()
-    total = 14 * 3
+    total = 15 * 3
     print(f"\nTOTAL: brain suite - {len(fails)} failure(s)")
     if fails:
         raise SystemExit("FAILS: " + ", ".join(fails))

@@ -169,7 +169,10 @@ def test_isolation():
         if ".git" in dp or "worktrees" in dp or os.path.join("src", "brain") in dp:
             continue
         for fn in fns:
-            if not fn.endswith(".py") or fn == "test_brain.py":
+            # test + MOT harnesses are NOT execution modules (never on the trade path); they may import
+            # the brain to assert its behavior, exactly as test_brain.py does.
+            if not fn.endswith(".py") or fn.startswith("test_") or fn.endswith("_mot.py") \
+                    or fn.endswith("_mot_harness.py"):
                 continue
             for m in _imports(os.path.join(dp, fn)):
                 if m == "brain" or m.startswith("src.brain") or m.endswith(".brain"):

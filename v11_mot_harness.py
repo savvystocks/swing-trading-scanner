@@ -984,6 +984,36 @@ check(6, "adaptive cap: floats into (budget - poller reserve) / calls-per-payloa
 check(6, "adaptive cap: any 429 halves the day's cap", cap2 == 137, f"cap={cap2}")
 check(6, "adaptive cap: harvest_daily_cap stays the hard ceiling", cap3 == 300, f"cap={cap3}")
 
+# 6.16 SPREAD CAP (governed change 2026-07-25): the real Alpaca spread at OCC resolution now GATES
+#      entry; a dead sensor (spread None) never blocks (fail-open)
+_wipe()
+_ocm, _ocr, _obl, _otb = lab.collect_metadata, lab.classify_regime, lab.build_legs, lab.ticker_blocked
+_onp16 = lab._notify; lab._notify = lambda text: True
+lab.collect_metadata = lambda t, mock=False: {"macro": {"spot": 100.0, "source": "mock"},
+                                              "iv_term": {"iv_front": 0.5, "source": "mock"},
+                                              "pemd": {}, "entry_ts_utc": _now_iso}
+lab.classify_regime = lambda md, c=None: "BULL_TREND"
+lab.ticker_blocked = lambda t, p, prm, open_orders=None, log=None: (False, "")
+def _legs_with_spread(sp):
+    return {"bullish_call": {"structure": "LONG_CALL", "occ_symbol": "SC260821C00010000",
+                             "expiry": "2026-08-21", "strike": 10.0, "entry_premium": 1.0,
+                             "limit_price": 1.02, "contracts": 2,
+                             "execution_cost": {"bid": 0.9, "ask": 1.02, "bid_ask_spread_pct": sp}}}
+lab.build_legs = lambda t, md, r, illiquid=None: _legs_with_spread(12.0)
+_r16a = lab.enter_proactive_set("SC", None, mock=True, dry_run=True, resolve_real=False)
+lab.build_legs = lambda t, md, r, illiquid=None: _legs_with_spread(3.0)
+_r16b = lab.enter_proactive_set("SC", None, mock=True, dry_run=True, resolve_real=False)
+lab.build_legs = lambda t, md, r, illiquid=None: _legs_with_spread(None)
+_r16c = lab.enter_proactive_set("SC", None, mock=True, dry_run=True, resolve_real=False)
+lab.collect_metadata, lab.classify_regime, lab.build_legs, lab.ticker_blocked = _ocm, _ocr, _obl, _otb
+lab._notify = _onp16
+check(6, "spread cap: real spread 12% > 5% cap -> SKIPPED with spread_cap reason",
+      _r16a.get("skipped") and "spread_cap" in _r16a.get("reason", ""), str(_r16a.get("reason"))[:70])
+check(6, "spread cap: 3% spread passes the 5% cap (entry proceeds)", not _r16b.get("skipped"))
+check(6, "spread cap: missing spread NEVER blocks (fail-open)", not _r16c.get("skipped"))
+check(6, "spread cap: skip reason maps to harvest code 'spread_cap'",
+      lab._skip_code(_r16a.get("reason", "")) == "spread_cap")
+
 # 6.11 digest renders the scoreboard + alert-reconciliation lines
 _dg6 = lab.daily_digest()
 check(6, "digest: scoreboard + alert reconciliation lines render",

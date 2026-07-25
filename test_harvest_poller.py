@@ -15,8 +15,13 @@ poller._market_open_now = lambda: True
 _clock = {"t": 1000}
 poller._now_ms = lambda: _clock["t"]
 
-_quotes = {"t": {}}
-poller._fetch_alpaca = lambda symbols, creds: dict(_quotes["t"])
+_quotes = {"t": {}, "force_status": None}
+def _mock_fetch(symbols, creds):
+    if _quotes["force_status"]:
+        return {}, {s: _quotes["force_status"] for s in symbols}
+    qs = dict(_quotes["t"])
+    return qs, {s: ("OK" if s in qs else "EMPTY") for s in symbols}
+poller._fetch_alpaca = _mock_fetch
 poller._fetch_uw = lambda symbols: {}
 poller._paper_creds = lambda: ("k", "s")
 
@@ -70,7 +75,50 @@ con2 = db.connect()
 tot = con2.execute("SELECT COUNT(*) FROM bid_path").fetchone()[0]
 chk("no duplicate path rows on re-run (idempotent)", tot == 6, f"total bid_path rows={tot} (C_up 2 + C_down 2 + C_stale 2)")
 
-print(f"\nTOTAL: {8 - len(fails)}/8 passed")
+print("--- round 3 (school 1b: simulated 429 - no answer is NOT a market fact) ---")
+_clock["t"] = 3000
+_quotes["force_status"] = "RATE_LIMITED"
+poller.run_once()
+_quotes["force_status"] = None
+con3 = db.connect()
+r3 = con3.execute("SELECT bid, stale, fetch_status FROM bid_path WHERE candidate_id='C_stale' AND poll_ts_utc=3000").fetchone()
+chk("429 poll writes MISSING_RATE_LIMITED, bid NULL", r3 is not None and r3["bid"] is None
+    and r3["fetch_status"] == "MISSING_RATE_LIMITED", f"row={dict(r3) if r3 else None}")
+chk("C_stale STILL unlabeled after 429 round (missing row excluded from barriers)",
+    con3.execute("SELECT COUNT(*) FROM labels WHERE candidate_id='C_stale'").fetchone()[0] == 0)
+tele = {r["status"]: r["n"] for r in con3.execute("SELECT status, SUM(n) n FROM api_telemetry GROUP BY status")}
+chk("telemetry counted the RATE_LIMITED call", tele.get("RATE_LIMITED", 0) >= 1, f"telemetry={tele}")
+
+print("--- round 4 (C_stale finally gets a real quote through the up barrier) ---")
+_clock["t"] = 4000
+_quotes["t"] = {"CCC261218C00010000": {"bid": 1.40, "ask": 1.45, "quote_ts": 4000, "stale": False}}
+poller.run_once()
+con4 = db.connect()
+lab = con4.execute("SELECT * FROM labels WHERE candidate_id='C_stale'").fetchone()
+chk("C_stale labeled up on the real quote", lab is not None and lab["outcome"] == "up")
+chk("n_missing=1 counted APART from n_stale=2 (no-answer never becomes stale-market)",
+    lab is not None and lab["n_missing"] == 1 and lab["n_stale"] == 2,
+    f"n_missing={lab['n_missing'] if lab else None} n_stale={lab['n_stale'] if lab else None}")
+
+print("--- round 5 (school 1c: fill-ledger events ingest, idempotent) ---")
+with open(os.path.join(db.INBOX_DIR, "fills_test.jsonl"), "w") as fh:
+    fh.write(json.dumps({"event_id": "ev1", "kind": "entry_submit", "ts_utc": 5000, "ticker": "AAA",
+                         "occ": "AAA261218C00010000", "order_id": "o1", "ordered_qty": 2}) + "\n")
+    fh.write(json.dumps({"event_id": "ev2", "kind": "entry_fill", "ts_utc": 5100, "ticker": "AAA",
+                         "occ": "AAA261218C00010000", "order_id": "o1", "filled_qty": 2,
+                         "filled_avg_price": 1.05, "terminal_state": "filled"}) + "\n")
+_clock["t"] = 5000
+poller.run_once()
+poller.run_once()
+con5 = db.connect()
+nf = con5.execute("SELECT COUNT(*) FROM fills").fetchone()[0]
+fk = {r["event_id"]: r["kind"] for r in con5.execute("SELECT event_id, kind FROM fills")}
+chk("fill events ingested once (idempotent across re-runs)", nf == 2 and fk == {"ev1": "entry_submit", "ev2": "entry_fill"},
+    f"fills rows={nf} kinds={fk}")
+chk("fills jsonl excluded from candidate ingest (no cross-contamination)",
+    con5.execute("SELECT COUNT(*) FROM candidates").fetchone()[0] == 3)
+
+print(f"\nTOTAL: {15 - len(fails)}/15 passed")
 if fails:
     raise SystemExit("FAILS: " + ", ".join(fails))
 print("POLLER OK")

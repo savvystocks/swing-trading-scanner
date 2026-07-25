@@ -263,6 +263,9 @@ def _build_row(flow, params, signal_ts, run_id, sha, executed, skip_reason, samp
         "barrier_up_pct": params.get("scanner_barrier_up", 0.30),
         "barrier_down_pct": params.get("scanner_barrier_down", -0.50),
         "poll_tier": poll_tier, "sample_tier": sample_tier,
+        # school 1d: zero-bid / crossed-market at signal time - graded and trained on EXPLICITLY
+        "untradeable": 1 if (q["bid"] is not None and q["ask"] is not None
+                             and (q["bid"] <= 0 or q["bid"] > q["ask"])) else 0,
     }
 
 
@@ -297,7 +300,7 @@ def _payload_for(ticker, state, mock):
     return md, True
 
 
-def harvest_scan(params, executed_record=None, mock=False):
+def harvest_scan(params, executed_record=None, mock=False, engine_skips=None):
     signal_ts = _now_ms()
     run_id = _run_id()
     sha = _git_sha()
@@ -374,6 +377,12 @@ def harvest_scan(params, executed_record=None, mock=False):
             random.shuffle(extra)
             rand_slice.extend(extra[:shortfall])
 
+    # school 1d: when the ENGINE evaluated a ticker this cycle and skipped it for a concrete reason
+    # (one-per-underlying, earnings blackout, spread_cap, ...), that code beats the generic tier reason.
+    engine_skips = engine_skips or {}
+    def _reason(flow, default):
+        return engine_skips.get(str(flow.get("ticker") or "").upper(), default)
+
     done = set()
     for flow, occ, _ in top_slice:
         if occ in done:
@@ -383,7 +392,8 @@ def harvest_scan(params, executed_record=None, mock=False):
         md, computed = _payload_for(flow.get("ticker"), state, mock)
         if computed:
             state["payload_count"] += 1
-        _write_row(_build_row(flow, params, signal_ts, run_id, sha, False, "score_below_threshold", "topn", md))
+        _write_row(_build_row(flow, params, signal_ts, run_id, sha, False,
+                              _reason(flow, "score_below_threshold"), "topn", md))
         done.add(occ)
         state["topn_count"] += 1
         written["topn"] += 1
@@ -394,7 +404,8 @@ def harvest_scan(params, executed_record=None, mock=False):
         md, computed = _payload_for(flow.get("ticker"), state, mock)
         if computed:
             state["payload_count"] += 1
-        _write_row(_build_row(flow, params, signal_ts, run_id, sha, False, "score_below_threshold", "random", md))
+        _write_row(_build_row(flow, params, signal_ts, run_id, sha, False,
+                              _reason(flow, "score_below_threshold"), "random", md))
         done.add(occ)
         state["random_count"] += 1
         written["random"] += 1
@@ -402,7 +413,7 @@ def harvest_scan(params, executed_record=None, mock=False):
     for flow, occ, in_band in scored:
         if occ in done:
             continue
-        skip = "quota_cap" if in_band else "prefilter"
+        skip = _reason(flow, "quota_cap" if in_band else "prefilter")
         _write_row(_build_row(flow, params, signal_ts, run_id, sha, False, skip, "none", None))
         done.add(occ)
         written["quota_cap" if in_band else "prefilter"] += 1

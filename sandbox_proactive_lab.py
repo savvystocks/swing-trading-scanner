@@ -780,6 +780,12 @@ def _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs):
         if str(f["at"])[:10] == str(rec.get("entry_ts_utc", ""))[:10]:
             log.append({"type": "day_trade", "ts_utc": _now_iso_ms(), "ticker": rec["ticker"],
                         "occ": occ, "via": "CLOSE_BACKSTOP", "status": "LOGGED"})
+        try:                                          # school 1c: gap-through measurement (fail-open)
+            import fill_ledger
+            fill_ledger.backstop_fill_event(rec, occ, bs.get("stop_price"), f["price"], f["qty"],
+                                            f["at"], entry_px)
+        except Exception:
+            pass
     return booked_full
 
 
@@ -1065,6 +1071,19 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         resolve_real = all(creds)
     if resolve_real:
         _resolve_legs_occ(ticker, legs, creds)                 # real OCCs; unresolved -> fail-open skip
+    # SPREAD CAP (governed change 2026-07-25, owner-approved at the Sunday boundary; supersedes
+    # decision 33's advisory-only status): the existing max_bid_ask_spread_pct now GATES on the REAL
+    # Alpaca quote at OCC resolution. Evidence: monotone spread-bucket decay on 24k graded rows
+    # (tight -0.04 -> wide>=20% -0.59 mean net) with 49% of real fills previously landing >=20%.
+    # FAIL-OPEN on missing data: no quote -> no block (a dead sensor never halts the engine).
+    cap = params.get("max_bid_ask_spread_pct")
+    if cap:
+        for name, leg in legs.items():
+            sp = (leg.get("execution_cost") or {}).get("bid_ask_spread_pct")
+            if isinstance(sp, (int, float)) and sp > cap:
+                return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
+                        "reason": f"spread_cap: real spread {sp:.1f}% > {cap:.1f}% cap ({name})",
+                        "status": "SKIPPED"}
     orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run)
     record = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
               "entry_ts_utc": md["entry_ts_utc"], "leg_budget_usd": LEG_BUDGET,
@@ -1077,6 +1096,26 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         record["buy_alert_delivered"] = _notify(_buy_msg(record))   # honesty flag - reconciled in the digest
     _append_log(record)
     return record
+
+
+def _skip_code(reason):
+    """School 1d: map the entry loop's human skip reasons to stable harvest codes."""
+    r = reason.lower()
+    if "spread_cap" in r:
+        return "spread_cap"
+    if "one-per-underlying" in r or "max contracts" in r:
+        return "one_per_underlying"
+    if "cool-off" in r:
+        return "cooloff"
+    if "earnings blackout" in r:
+        return "earnings_blackout"
+    if "metadata unavailable" in r:
+        return "metadata_unavailable"
+    if "premium too rich" in r:
+        return "premium_too_rich"
+    if "neutral" in r:
+        return "neutral_disabled"
+    return "other_engine_skip"
 
 
 def _append_log(record):
@@ -1124,7 +1163,13 @@ def _close_position(occ, creds, percentage=100):
                                  headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec})
     try:
         with urllib.request.urlopen(req, timeout=20) as r:
-            return r.status in (200, 207)
+            ok = r.status in (200, 207)
+            try:                                       # school 1c: stash the close ORDER (fail-open,
+                import fill_ledger                     # response body was previously discarded)
+                fill_ledger.stash_close_order(occ, json.loads(r.read().decode()))
+            except Exception:
+                pass
+            return ok
     except Exception:
         return False
 
@@ -1568,6 +1613,34 @@ def run_scheduled_cycle(mock=False):
     print(f"portfolio: {len(positions)} positions, {len(open_orders)} open orders")
     _maybe_send_digest()                                     # EOD digest (once/day at/after 20:00 UTC, fail-open)
 
+    # school 1e: DAILY broker-state reconciliation marker (records-vs-broker two-way diff). One marker
+    # per day; Telegram fires only when the divergence COUNT CHANGES (the standing 2c drift would
+    # otherwise ring red every day - the alert is for NEW divergence).
+    try:
+        today_r = datetime.now(timezone.utc).date().isoformat()
+        log_r = _load_log_list()
+        if not any(r.get("type") == "reconcile" and str(r.get("ts_utc", "")).startswith(today_r) for r in log_r):
+            pos_occs = {(p.get("symbol") or "").upper() for p in positions}
+            rec_occs = {}
+            for r in log_r:
+                if r.get("status") == "OPEN" and isinstance(r.get("legs"), dict):
+                    for l in r["legs"].values():
+                        if l.get("occ_symbol"):
+                            rec_occs[l["occ_symbol"].upper()] = r.get("ticker")
+            open_no_pos = sorted(o for o in rec_occs if o not in pos_occs)
+            pos_no_rec = sorted(o for o in pos_occs if o not in rec_occs)
+            prev = next((r for r in reversed(log_r) if r.get("type") == "reconcile"), {})
+            marker = {"type": "reconcile", "ts_utc": _now_iso_ms(),
+                      "open_records_no_position": len(open_no_pos), "positions_no_record": len(pos_no_rec),
+                      "sample_stale": open_no_pos[:5], "sample_orphan": pos_no_rec[:5]}
+            _append_log(marker)
+            if (marker["open_records_no_position"] != prev.get("open_records_no_position")
+                    or marker["positions_no_record"] != prev.get("positions_no_record")):
+                _notify(f"<b>RECONCILE</b> records-without-position {marker['open_records_no_position']} | "
+                        f"positions-without-record {marker['positions_no_record']} (changed vs last)")
+    except Exception as e:
+        print(f"reconcile marker skipped (fail-open): {type(e).__name__}")
+
     # 3b. ratchet backstops (owner decision 20): re-arm resting broker stops to current stage levels
     bs_actions = manage_backstops(creds, params, positions=positions)
     if bs_actions:
@@ -1607,16 +1680,32 @@ def run_scheduled_cycle(mock=False):
         print(f"\nno UW flow candidates this cycle ({'scanner UNREACHABLE' if not reachable else 'quiet market'}).")
         return None
     entered = None
-    for c in ([] if brake_active else candidates):           # ONLY 'active' suppresses; shadow lets entries fire
+    # school 1e: owner HALT (authenticated Telegram command -> snapshots-repo flag -> workflow env,
+    # or a local data/HALT file). Pauses NEW ENTRIES only - exits, backstops, and harvest continue.
+    halt_active = os.environ.get("SCHOOL_HALT") == "1" or os.path.exists("data/HALT")
+    if halt_active:
+        print("OWNER HALT ACTIVE: new entries paused this cycle (exits/backstops/harvest continue)")
+        _notify("<b>OWNER HALT</b> active - new entries paused this cycle")
+    if os.environ.get("SCHOOL_FLATTEN") == "1" and not os.path.exists(FLUSH_SENTINEL):
+        try:                                       # owner /flatten -> arm the existing one-time flush
+            os.makedirs(os.path.dirname(FLUSH_SENTINEL), exist_ok=True)
+            open(FLUSH_SENTINEL, "w").write("armed by owner /flatten " + _now_iso_ms())
+            print("OWNER FLATTEN: flush sentinel armed - positions close at the next open-market cycle")
+        except Exception:
+            pass
+    engine_skips = {}                                        # school 1d: ticker -> skip-reason code, harvested
+    for c in ([] if (brake_active or halt_active) else candidates):   # ONLY 'active'/HALT suppress; shadow lets entries fire
         t = c["ticker"]
         try:
             rec = enter_proactive_set(t, None, mock=mock, candidate=c, dry_run=not live,
                                       positions=positions, open_orders=open_orders)
         except Exception as e:
             print(f"  skip {t}: entry error {type(e).__name__}: {str(e)[:80]}")     # whole-market fail-open
+            engine_skips[t] = "entry_error"
             continue
         if rec.get("skipped"):
             print(f"  skip {t}: {rec['reason']}")
+            engine_skips[t] = _skip_code(rec.get("reason") or "")
             continue
         md, legs, orders = rec["metadata"], rec["legs"], rec["orders"]
         print(f"\nENTERED {t} [{rec['regime']}] | {rec['execution_mode']} | OCC {rec['occ_resolution']}")
@@ -1643,10 +1732,17 @@ def run_scheduled_cycle(mock=False):
         break
     try:                                                     # COUNTERFACTUAL HARVEST (observational, fail-open, post-trade)
         import harvest_logger
-        summary = harvest_logger.harvest_scan(params, executed_record=entered, mock=mock)
+        summary = harvest_logger.harvest_scan(params, executed_record=entered, mock=mock,
+                                              engine_skips=engine_skips)
         print(f"harvest: {summary}")
     except Exception as e:
         print(f"harvest skipped (fail-open): {type(e).__name__}: {str(e)[:90]}")
+    try:                                                     # FILL LEDGER (school 1c: observational, fail-open)
+        import fill_ledger
+        fill_ledger.entry_submits(entered)
+        fill_ledger.sweep(_load_log_list(), _order_state, creds, _save_log_list)
+    except Exception as e:
+        print(f"fill ledger skipped (fail-open): {type(e).__name__}: {str(e)[:90]}")
     if entered is not None:
         entered.pop("_scan_candidate", None)
         print("\nGHA scheduled cycle complete: 1 cluster entered + logged.")

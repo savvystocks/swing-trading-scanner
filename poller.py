@@ -55,18 +55,23 @@ def _stale_watch_eligible(open_grace_min=30):
 
 
 def _fetch_alpaca(symbols, creds):
+    """Returns (quotes, status). School 1b: every symbol's call outcome is classified
+    OK / EMPTY / RATE_LIMITED / ERROR. 'The market showed nothing' (EMPTY) and 'we didn't get an
+    answer' (RATE_LIMITED/ERROR) are different facts and stay different rows forever."""
     out = {}
+    status = {}
     if not all(creds) or not symbols:
-        return out
+        return out, {s: "ERROR" for s in symbols}
     try:
         from alpaca.data.historical.option import OptionHistoricalDataClient
         from alpaca.data.requests import OptionLatestQuoteRequest
         cli = OptionHistoricalDataClient(creds[0], creds[1])
     except Exception:
-        return out
+        return out, {s: "ERROR" for s in symbols}
     now = _now_ms()
     for i in range(0, len(symbols), CHUNK):
         chunk = symbols[i:i + CHUNK]
+        chunk_status = None
         for attempt in range(3):
             try:
                 q = cli.get_option_latest_quote(OptionLatestQuoteRequest(symbol_or_symbols=chunk))
@@ -75,13 +80,25 @@ def _fetch_alpaca(symbols, creds):
                     qms = int(ts.timestamp() * 1000) if ts else now
                     out[sym] = {"bid": getattr(quote, "bid_price", None), "ask": getattr(quote, "ask_price", None),
                                 "quote_ts": qms, "stale": (now - qms) > STALE_MS}
+                chunk_status = "OK"
                 break
             except Exception as e:
-                if "429" in str(e) and attempt < 2:
-                    time.sleep(2 * (attempt + 1))
-                    continue
+                if "429" in str(e):
+                    chunk_status = "RATE_LIMITED"
+                    if attempt < 2:
+                        time.sleep(2 * (attempt + 1))
+                        continue
+                else:
+                    chunk_status = "ERROR"
                 break
-    return out
+        for sym in chunk:
+            if sym in out:
+                status[sym] = "OK"
+            elif chunk_status == "OK":
+                status[sym] = "EMPTY"                  # the API answered; this contract had no quote
+            else:
+                status[sym] = chunk_status or "ERROR"  # no answer - never a market fact
+    return out, status
 
 
 def _fetch_uw(symbols):
@@ -127,7 +144,9 @@ def run_once():
         return
     con = db.init_db()
     new, skipped = db.ingest_inbox(con)
-    print(f"ingest: {new} new candidates, {skipped} already present")
+    n_fills = db.ingest_fills(con)
+    print(f"ingest: {new} new candidates, {skipped} already present"
+          + (f", {n_fills} fill events" if n_fills else ""))
     # keep=2: local backups are a same-day crash cushion only - the real archive is the nightly
     # off-box snapshot repo. keep=14 held ~14 full DB copies and filled the VPS disk (2026-07-22).
     db.backup(keep=2)
@@ -142,32 +161,48 @@ def run_once():
         return
 
     symbols = sorted({c["occ_symbol"] for c in due})
-    quotes = _fetch_alpaca(symbols, creds)
+    quotes, status = _fetch_alpaca(symbols, creds)
     missing = [s for s in symbols if s not in quotes]
     if missing:
-        quotes.update(_fetch_uw(missing))
-    print(f"quotes: {len(quotes)}/{len(symbols)} resolved ({'alpaca+uw' if missing else 'alpaca'})")
+        uw_quotes = _fetch_uw(missing)
+        quotes.update(uw_quotes)
+        for s in uw_quotes:
+            status[s] = "OK"                            # the fallback answered - upgrade
+    for st in set(status.values()):
+        db.bump_telemetry(con, "alpaca", st, sum(1 for v in status.values() if v == st))
+    n_no_answer = sum(1 for v in status.values() if v in ("RATE_LIMITED", "ERROR"))
+    print(f"quotes: {len(quotes)}/{len(symbols)} resolved ({'alpaca+uw' if missing else 'alpaca'})"
+          + (f", {n_no_answer} NO-ANSWER (never counted as market facts)" if n_no_answer else ""))
 
-    resolved = _process_due(con, due, quotes, now)
+    resolved = _process_due(con, due, quotes, now, status=status)
     print(f"resolved: {resolved}")
     _maybe_email(con, resolved)
 
 
-def _process_due(con, due, quotes, now):
+def _process_due(con, due, quotes, now, status=None):
     """The real bid_path->barrier->label chain for the due candidates. Shared by run_once (real
-    quotes) and run_drill (canned quotes) so the drill exercises the identical production path."""
+    quotes) and run_drill (canned quotes) so the drill exercises the identical production path.
+    School 1b: a RATE_LIMITED/ERROR fetch writes a MISSING row that is EXCLUDED from the barrier
+    evaluation and counted in labels.n_missing - no answer is never a market fact."""
+    status = status or {}
     resolved = {"up": 0, "down": 0, "vertical": 0, "censored": 0, "open": 0}
     for c in due:
         occ = c["occ_symbol"]
         q = quotes.get(occ)
         if q is None:
-            db.append_bid_path(con, c["candidate_id"], now, None, None, None, True)
+            st = status.get(occ, "EMPTY")
+            fs = f"MISSING_{st}" if st in ("RATE_LIMITED", "ERROR") else "EMPTY"
+            db.append_bid_path(con, c["candidate_id"], now, None, None, None, True, fetch_status=fs)
         else:
             stale = q["stale"] or q["bid"] is None
-            db.append_bid_path(con, c["candidate_id"], now, q["bid"], q["ask"], q["quote_ts"], stale)
-        path = db.get_path(con, c["candidate_id"])
+            db.append_bid_path(con, c["candidate_id"], now, q["bid"], q["ask"], q["quote_ts"], stale,
+                               fetch_status="OK")
+        full_path = db.get_path(con, c["candidate_id"])
+        path = [p for p in full_path if not str(p.get("fetch_status", "OK")).startswith("MISSING")]
+        n_missing = len(full_path) - len(path)
         res = label_path(c["entry_ref"], c["barrier_up_pct"], c["barrier_down_pct"],
                          c["vertical_barrier_ts"], c["signal_ts_utc"], path)
+        res["n_missing"] = n_missing
         cadence = 15.0 if c["poll_tier"] == "standard" else 60.0
         if res["outcome"] != "open":
             db.upsert_label(con, c["candidate_id"], res, poll_cadence_min=cadence)

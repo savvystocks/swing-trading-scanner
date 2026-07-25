@@ -21,6 +21,7 @@ CANDIDATE_COLS = [
     "bid", "ask", "bid_size", "ask_size", "mid", "spread_pct", "last", "underlying_last",
     "entry_ref", "features", "rule_score", "executed", "skip_reason",
     "vertical_barrier_ts", "barrier_up_pct", "barrier_down_pct", "poll_tier", "sample_tier",
+    "untradeable",
 ]
 
 _SCHEMA = """
@@ -48,6 +49,24 @@ CREATE TABLE IF NOT EXISTS labels (
     mfe REAL, mae REAL, n_polls INTEGER, n_stale INTEGER, ambiguous_touch INTEGER,
     poll_cadence_min REAL, censored_reason TEXT
 );
+
+CREATE TABLE IF NOT EXISTS fills (
+    event_id TEXT PRIMARY KEY NOT NULL,
+    kind TEXT, ts_utc INTEGER, ticker TEXT, occ_symbol TEXT, order_id TEXT,
+    ordered_qty REAL, filled_qty REAL, filled_avg_price REAL, terminal_state TEXT,
+    payload TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_fills_occ ON fills(occ_symbol);
+
+CREATE TABLE IF NOT EXISTS api_telemetry (
+    day TEXT NOT NULL, provider TEXT NOT NULL, status TEXT NOT NULL, n INTEGER DEFAULT 0,
+    PRIMARY KEY (day, provider, status)
+);
+
+CREATE TABLE IF NOT EXISTS integrity_quarantine (
+    candidate_id TEXT, reason TEXT, detected_ts_utc INTEGER,
+    PRIMARY KEY (candidate_id, reason)
+);
 """
 
 
@@ -73,6 +92,14 @@ def _migrate(con):
     cols = {r[1] for r in con.execute("PRAGMA table_info(candidates)").fetchall()}
     if "params_hash" not in cols:                     # add the frozen-baseline stamp column to a pre-existing DB
         con.execute('ALTER TABLE candidates ADD COLUMN params_hash TEXT')
+    if "untradeable" not in cols:                     # school 1d: zero-bid / crossed-market at signal time
+        con.execute('ALTER TABLE candidates ADD COLUMN untradeable INTEGER')
+    bp_cols = {r[1] for r in con.execute("PRAGMA table_info(bid_path)").fetchall()}
+    if "fetch_status" not in bp_cols:                 # school 1b: OK/EMPTY/MISSING_RATE_LIMITED/MISSING_ERROR
+        con.execute('ALTER TABLE bid_path ADD COLUMN fetch_status TEXT')
+    lb_cols = {r[1] for r in con.execute("PRAGMA table_info(labels)").fetchall()}
+    if "n_missing" not in lb_cols:                    # school 1b: no-answer polls, counted apart from stale-market
+        con.execute('ALTER TABLE labels ADD COLUMN n_missing INTEGER')
 
 
 def insert_candidate(con, row):
@@ -108,30 +135,70 @@ def ingest_inbox(con):
     new = 0
     skipped = 0
     for f in sorted(glob.glob(os.path.join(INBOX_DIR, "*.jsonl"))):
+        if os.path.basename(f).startswith("fills_"):
+            continue                                   # fill-ledger events have their own ingest
         n, s = ingest_jsonl(con, f)
         new += n
         skipped += s
     return new, skipped
 
 
-def append_bid_path(con, candidate_id, poll_ts, bid, ask, quote_ts, stale):
+def ingest_fills(con):
+    """School 1c: ingest fill-ledger events, idempotent on event_id. Core metrics to columns, the
+    full event kept verbatim in payload."""
+    new = 0
+    for f in sorted(glob.glob(os.path.join(INBOX_DIR, "fills_*.jsonl"))):
+        with open(f, "r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    e = json.loads(line)
+                    cur = con.execute(
+                        "INSERT OR IGNORE INTO fills (event_id, kind, ts_utc, ticker, occ_symbol, "
+                        "order_id, ordered_qty, filled_qty, filled_avg_price, terminal_state, payload) "
+                        "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                        (e.get("event_id"), e.get("kind"), e.get("ts_utc"), e.get("ticker"),
+                         e.get("occ") or e.get("occ_symbol"), e.get("order_id"),
+                         e.get("ordered_qty"), e.get("filled_qty"), e.get("filled_avg_price"),
+                         e.get("terminal_state"), json.dumps(e)))
+                    new += cur.rowcount
+                except Exception:
+                    pass
+    con.commit()
+    return new
+
+
+def append_bid_path(con, candidate_id, poll_ts, bid, ask, quote_ts, stale, fetch_status="OK"):
     cur = con.execute(
-        "INSERT OR IGNORE INTO bid_path (candidate_id, poll_ts_utc, bid, ask, quote_ts, stale) VALUES (?,?,?,?,?,?)",
-        (candidate_id, poll_ts, bid, ask, quote_ts, 1 if stale else 0),
+        "INSERT OR IGNORE INTO bid_path (candidate_id, poll_ts_utc, bid, ask, quote_ts, stale, fetch_status) "
+        "VALUES (?,?,?,?,?,?,?)",
+        (candidate_id, poll_ts, bid, ask, quote_ts, 1 if stale else 0, fetch_status),
     )
     con.commit()
     return cur.rowcount
 
 
+def bump_telemetry(con, provider, status, n=1):
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    con.execute(
+        "INSERT INTO api_telemetry (day, provider, status, n) VALUES (?,?,?,?) "
+        "ON CONFLICT(day, provider, status) DO UPDATE SET n = n + excluded.n",
+        (day, provider, status, n),
+    )
+    con.commit()
+
+
 def upsert_label(con, candidate_id, res, poll_cadence_min=None, censored_reason=None):
     con.execute(
         "INSERT OR REPLACE INTO labels (candidate_id, outcome, label, realized_return, touch_ts_utc, "
-        "time_to_touch_min, mfe, mae, n_polls, n_stale, ambiguous_touch, poll_cadence_min, censored_reason) "
-        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "time_to_touch_min, mfe, mae, n_polls, n_stale, ambiguous_touch, poll_cadence_min, censored_reason, "
+        "n_missing) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         (candidate_id, res.get("outcome"), res.get("label"), res.get("realized_return"),
          res.get("touch_ts_utc"), res.get("time_to_touch_min"), res.get("mfe"), res.get("mae"),
          res.get("n_polls"), res.get("n_stale"), 1 if res.get("ambiguous_touch") else 0,
-         poll_cadence_min, censored_reason),
+         poll_cadence_min, censored_reason, res.get("n_missing")),
     )
     con.commit()
 
@@ -146,11 +213,13 @@ def open_candidates(con):
 
 def get_path(con, candidate_id):
     rows = con.execute(
-        "SELECT poll_ts_utc, bid, ask, quote_ts, stale FROM bid_path WHERE candidate_id=? ORDER BY poll_ts_utc",
+        "SELECT poll_ts_utc, bid, ask, quote_ts, stale, fetch_status FROM bid_path "
+        "WHERE candidate_id=? ORDER BY poll_ts_utc",
         (candidate_id,),
     ).fetchall()
     return [{"poll_ts": r["poll_ts_utc"], "bid": r["bid"], "ask": r["ask"],
-             "quote_ts": r["quote_ts"], "stale": bool(r["stale"])} for r in rows]
+             "quote_ts": r["quote_ts"], "stale": bool(r["stale"]),
+             "fetch_status": r["fetch_status"] or "OK"} for r in rows]
 
 
 def backup(path=None, keep=14):

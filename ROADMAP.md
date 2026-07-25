@@ -348,6 +348,26 @@ and SPRT clock are decisions 14/27.)
   gate's sample, with campaign PBO <= 0.20. Meeting it unlocks the PIVOT-RULE measurement discussion
   (owner decision); it never changes the engine, the Student's labels, or any decision path.
 
+- **Q: Does FLOW PERSISTENCE — repeat flow on the same name, which the engine's current read ignores
+  entirely — add tradeable value over the existing 82 features?**
+  Method: nine CAUSAL persistence features (prior-signal counts at 1d/3d, hours since the last signal
+  on that ticker, same-direction repeat count, direction agreement, and expanding-window within-day
+  rank/share — all computed from prior rows only). Tested head-to-head THROUGH THE HARNESS: the same
+  Student, same seed, same PurgedKFold splits, trained with and without them; compared on out-of-fold
+  selection hit rate, net return after executable costs, and the Wilson lower bound against the
+  empirical hurdle; PBO and deflated Sharpe on the variant; every configuration counted as a trial.
+  Provenance note: an earlier non-causal version of these features (whole-day aggregates that counted
+  signals arriving after the decision point) produced a 0.465 separation on 2026-07-25 — that figure
+  is void and is not evidence for anything.
+  Evidence gate: the existing 8,000 feature-bearing row gate; no separate minimum.
+  Pre-registered tripwire (written 2026-07-26, before the head-to-head was computed): persistence
+  counts as a real improvement ONLY if, on identical purged splits, adding it (a) raises the OOF
+  selection's uniqueness-weighted net return, AND (b) raises the selection hit rate's 95% Wilson lower
+  bound, AND (c) does not worsen PBO beyond 0.20 — and (d) the same three hold on a second consecutive
+  weekly run. Meeting all four promotes it to a Student feature-set change, which is itself a governed
+  change at a Sunday boundary. Anything less is logged as measured-and-rejected; a higher raw
+  separation on its own is explicitly NOT sufficient.
+
 ## The pivot rule (pre-registered 2026-07-25; draft pending owner ratification)
 
 The machinery outlives any single signal (NORTH_STAR). The current flow signal is declared MINED OUT

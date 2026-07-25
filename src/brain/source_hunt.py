@@ -117,14 +117,45 @@ def build_persistence(fb, cands_meta):
     with np.errstate(invalid="ignore", divide="ignore"):
         out["persist::direction_agreement"] = np.where(n_prior_3d > 0, same_dir_prior / n_prior_3d, np.nan)
 
+    # CAUSAL ONLY (fixed 2026-07-26). The first version of this block used whole-day aggregates -
+    # signals_on_ticker_that_day / premium_rank_in_day / ticker_share_of_day_premium - each of which
+    # counts signals arriving AFTER the decision point. That is lookahead: at entry you cannot know
+    # how many more signals the day will bring. They are replaced by expanding-window equivalents that
+    # see only what had already happened. (The contaminated version produced this family's headline
+    # 0.465 separation; it was not real.)
     day = (ts // DAY_MS).astype(np.int64)
-    df = pd.DataFrame({"day": day, "tick": tick, "prem": prem})
-    out["persist::signals_on_ticker_that_day"] = df.groupby(["day", "tick"])["prem"].transform("size").to_numpy()
-    out["persist::premium_rank_in_day"] = df.groupby("day")["prem"].rank(pct=True).to_numpy()
-    out["persist::ticker_share_of_day_premium"] = (
-        df.groupby(["day", "tick"])["prem"].transform("sum")
-        / df.groupby("day")["prem"].transform("sum")).to_numpy()
+    n_so_far_ticker = np.zeros(len(ts))
+    rank_so_far = np.full(len(ts), np.nan)
+    share_so_far = np.full(len(ts), np.nan)
+    seen_tk, day_prems, day_prem_sum, tk_prem_sum = {}, {}, {}, {}
+    for i in order:                                    # strict time order; only prior rows are visible
+        d, tk, p = day[i], tick[i], prem[i]
+        key = (d, tk)
+        n_so_far_ticker[i] = seen_tk.get(key, 0)
+        prior = day_prems.get(d, [])
+        if prior and np.isfinite(p):
+            rank_so_far[i] = float(np.mean(np.asarray(prior) <= p))
+        tot = day_prem_sum.get(d, 0.0)
+        if tot > 0:
+            share_so_far[i] = tk_prem_sum.get(key, 0.0) / tot
+        seen_tk[key] = seen_tk.get(key, 0) + 1
+        if np.isfinite(p):
+            day_prems.setdefault(d, []).append(p)
+            day_prem_sum[d] = tot + p
+            tk_prem_sum[key] = tk_prem_sum.get(key, 0.0) + p
+    out["persist::prior_signals_on_ticker_today"] = n_so_far_ticker
+    out["persist::premium_rank_so_far_today"] = rank_so_far
+    out["persist::ticker_share_of_prior_day_premium"] = share_so_far
     return out
+
+
+CAUSAL_PERSISTENCE = (
+    "persist::n_prior_signals_3d", "persist::n_prior_signals_1d",
+    "persist::hours_since_last_on_ticker", "persist::same_direction_repeats_3d",
+    "persist::is_repeat", "persist::direction_agreement",
+    "persist::prior_signals_on_ticker_today", "persist::premium_rank_so_far_today",
+    "persist::ticker_share_of_prior_day_premium",
+)
 
 
 def oof_separation(features, win, ts, trials_counter=None, min_early=300):

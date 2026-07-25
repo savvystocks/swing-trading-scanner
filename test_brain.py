@@ -169,7 +169,10 @@ def test_isolation():
         if ".git" in dp or "worktrees" in dp or os.path.join("src", "brain") in dp:
             continue
         for fn in fns:
-            if not fn.endswith(".py") or fn == "test_brain.py":
+            # test + MOT harnesses are NOT execution modules (never on the trade path); they may import
+            # the brain to assert its behavior, exactly as test_brain.py does.
+            if not fn.endswith(".py") or fn.startswith("test_") or fn.endswith("_mot.py") \
+                    or fn.endswith("_mot_harness.py"):
                 continue
             for m in _imports(os.path.join(dp, fn)):
                 if m == "brain" or m.startswith("src.brain") or m.endswith(".brain"):
@@ -405,6 +408,144 @@ def test_student_stage2():
         and not acc2["verdict"].startswith("WITHHELD"), acc2["verdict"])
 
 
+def _council_df(n, seed):
+    import pandas as pd
+    rng = np.random.default_rng(seed)
+    day = DAY // 24
+    start = np.arange(n) * day * 6.0
+    flow = rng.random(n)
+    dayrange = rng.random(n)
+    ivr = rng.random(n)
+    spread = rng.random(n) * 25.0
+    noise = rng.random(n)
+    # real, learnable signal: high flow AND mid IV win more; wide spread loses
+    base = 0.25 + 0.35 * (flow > 0.6) * (ivr > 0.4) - 0.15 * (spread > 15)
+    y = (rng.random(n) < np.clip(base, 0.03, 0.95)).astype(float)
+    df = pd.DataFrame({
+        "candidate_id": [f"c{i}" for i in range(n)], "ticker": [f"T{i % 40}" for i in range(n)],
+        "occ_symbol": "OCC", "signal_ts": start, "window_start": start, "window_end": start + day,
+        "y_up": y, "weight": 1.0, "w_raw": 1.0, "outcome": np.where(y > 0, "up", "down"),
+        "realized_return": np.where(y > 0, 0.4, -0.5), "cost_base": 0.03,
+        "net_ret": np.where(y > 0, 0.37, -0.53), "executed": (noise > 0.9).astype(int),
+        "sample_tier": "topn", "spread_pct": spread})
+    X = pd.DataFrame({"flow_aggression.ask_sweep_prem": flow, "price_action.day_range": dayrange,
+                      "iv_term.iv_ratio": ivr, "macro.vix": rng.random(n), "news.vader_compound": noise})
+    return df, X, list(X.columns)
+
+
+def test_council_stage2():
+    from src.brain import council as CC
+    from src.brain import ttl as TTL
+    df, X, kept = _council_df(1400, seed=11)
+    tr = D.Trials()
+    res = CC.run_council(df, X, kept, tr)
+    chk("council: all five members are defined", len(res["members"]) == 5)
+    scoring = [m for m in res["members"] if res["member_auc"][m] is not None]
+    chk("council: at least a quorum of members produced calibrated scores", len(scoring) >= 3,
+        f"scoring={scoring}")
+    chk("council: blended OOF AUC recovers the planted signal", res["blend_auc"] > 0.55,
+        f"blend_auc={res['blend_auc']}")
+    chk("council: disagreement is measured per candidate", np.isfinite(res["disagree"]).any())
+    # FAIL-CLOSED: a member that raises -> component_failure VETO (never a silent take)
+    good = {m: (lambda fr, a, d, p=0.9: p) for m in ["gbm_meta", "logistic_linear", "base_rate_2d"]}
+    boom = dict(good); boom["flow_specialist"] = (lambda fr, a, d: (_ for _ in ()).throw(RuntimeError("x")))
+    dec = CC.score_one(boom, {"_contract_bar": 0.5}, 0, 0)
+    chk("council: a failed component forces a VETO (fail-closed)",
+        dec["decision"] == "VETO" and dec["reason"] == "component_failure", str(dec)[:80])
+    # latency budget exceeded -> VETO
+    slow = {"m1": (lambda fr, a, d: __import__("time").sleep(0.05) or 0.9)}
+    dec2 = CC.score_one(slow, {"_contract_bar": 0.5}, 0, 0, latency_budget_s=0.0)
+    chk("council: latency budget breach is a VETO", dec2["decision"] == "VETO"
+        and dec2["reason"] == "latency_exceeded", str(dec2)[:80])
+    # a clean quorum that clears the bar with tight agreement -> TAKE
+    agree = {m: (lambda fr, a, d: 0.80) for m in ["gbm_meta", "logistic_linear", "base_rate_2d", "flow_specialist"]}
+    dec3 = CC.score_one(agree, {"_contract_bar": 0.55}, 0, 0)
+    chk("council: aligned quorum above the bar TAKES", dec3["decision"] == "TAKE", str(dec3)[:80])
+    # TTL: an old asof nulls a short-TTL block but preserves a long-TTL block
+    import pandas as pd
+    Xt = pd.DataFrame({"quotes_and_spreads.bid": [1.0, 2.0], "fundamentals.short_ratio": [3.0, 4.0]})
+    sig = np.array([0.0, 0.0])
+    out = TTL.apply_ttl(Xt, list(Xt.columns), sig, asof_ms=0.0, decision_ms=60 * 60 * 1000.0)  # 60 min later
+    chk("ttl: quotes block (10m TTL) goes MISSING after 60m",
+        np.isnan(out["quotes_and_spreads.bid"].to_numpy()).all())
+    chk("ttl: fundamentals block (7d TTL) survives 60m", np.isfinite(out["fundamentals.short_ratio"].to_numpy()).all())
+    chk("ttl: retrospective call (asof=None) never nulls anything",
+        TTL.apply_ttl(Xt, list(Xt.columns), sig)["quotes_and_spreads.bid"].notna().all())
+
+
+def test_governor_stage3():
+    from src.brain import governor as GV
+    d = tempfile.mkdtemp(prefix="gov_")
+    reg = {"organs": {}, "history": []}
+    # six consecutive GREEN weeks promote CANDIDATE -> SHADOW_PROVEN (evidence, not drift)
+    for wk in range(GV.PROMOTE_WEEKS):
+        GV.evaluate_organ(reg, "student", f"W{wk}", "GREEN", metric=0.05 + 0.01 * wk)
+    chk("governor: 6 GREEN weeks climb a rung",
+        reg["organs"]["student"]["rung"] == "SHADOW_PROVEN", reg["organs"]["student"]["rung"])
+    chk("governor: promotion never reaches LIVE without owner flag",
+        reg["organs"]["student"]["rung"] != "LIVE")
+    # a single RED demotes within one cycle and zeroes the streak
+    GV.evaluate_organ(reg, "student", "W6", "RED", metric=-0.1)
+    chk("governor: one RED demotes a rung immediately",
+        reg["organs"]["student"]["rung"] == "CANDIDATE" and reg["organs"]["student"]["green_streak"] == 0,
+        reg["organs"]["student"]["rung"])
+    # PERFORMANCE drift: a falling metric series flags concept drift and knocks GREEN to AMBER
+    reg2 = {"organs": {}, "history": []}
+    for wk, m in enumerate([0.20, 0.14, 0.08, 0.02]):
+        o = GV.evaluate_organ(reg2, "council", f"W{wk}", "GREEN", metric=m)
+    chk("governor: falling metric raises performance-drift and caps state at AMBER",
+        o["drift"]["perf_drift"] and o["state"] == "AMBER",
+        f"slope={o['drift']['slope']} state={o['state']}")
+    # POPULATION drift: a shifted signature vs the prior week flags data drift
+    reg3 = {"organs": {}, "history": []}
+    GV.evaluate_organ(reg3, "student", "W0", "GREEN", metric=0.1,
+                      signature={"base_up": 0.19, "wide_share": 0.10, "tight_share": 0.40})
+    o3 = GV.evaluate_organ(reg3, "student", "W1", "GREEN", metric=0.1,
+                           signature={"base_up": 0.19, "wide_share": 0.55, "tight_share": 0.10})
+    chk("governor: shifted population signature raises data-drift",
+        o3["drift"]["data_drift"] and o3["state"] == "AMBER", str(o3["drift"]))
+    # scoreboard renders and surfaces eligibility
+    md = GV.scoreboard_md(reg2, "W-test")
+    chk("governor: scoreboard renders a table", "| organ | rung | state |" in md)
+    shutil.rmtree(d, ignore_errors=True)
+
+
+def test_treasurer_stage4():
+    from src.brain import treasurer as T
+    # Kelly: positive edge sizes > 0 and is capped; non-positive edge sizes 0
+    f_edge = T.kelly_fraction(0.65, 0.40, -0.50)
+    chk("treasurer: positive edge -> positive fractional Kelly, capped at hard cap",
+        0 < f_edge <= T.KELLY_HARD_CAP, f"f={f_edge}")
+    chk("treasurer: no edge -> zero Kelly", T.kelly_fraction(0.40, 0.40, -0.50) == 0.0)
+    chk("treasurer: coin-flip below breakeven -> zero", T.kelly_fraction(0.50, 0.30, -0.50) == 0.0)
+    # liquidity cap: never exceeds 10% of resting size, nor the budget
+    cap = T.liquidity_cap(price=1.00, top_size=50, budget=800.0)      # budget allows 8; liquidity allows 5
+    chk("treasurer: liquidity cap binds below budget", cap == 5, f"cap={cap}")
+    cap2 = T.liquidity_cap(price=1.00, top_size=None, budget=800.0)   # no liquidity info -> budget only
+    chk("treasurer: budget cap when liquidity unknown", cap2 == 8, f"cap2={cap2}")
+    # ratchet only reduces, and zeroes at the halt
+    chk("treasurer: ratchet is 1.0 when flat", T.drawdown_ratchet(0.0) == 1.0)
+    chk("treasurer: ratchet reduces at 15% dd", T.drawdown_ratchet(0.15) == 0.5)
+    chk("treasurer: ratchet zeroes at the 30% halt", T.drawdown_ratchet(0.30) == 0.0)
+    # a deep drawdown forces zero contracts regardless of a strong edge
+    rec = T.recommend_size(0.80, 0.40, -0.50, price=0.50, top_size=1000, drawdown=0.30)
+    chk("treasurer: at the halt, recommended size is 0 even with a strong edge", rec["contracts"] == 0,
+        str(rec))
+    # P(halt): a losing distribution is far more likely to halt than a winning one, at equal sizing
+    rng = np.random.default_rng(1)
+    winners = np.where(rng.random(400) < 0.6, 0.4, -0.5)
+    losers = np.where(rng.random(400) < 0.3, 0.4, -0.5)
+    w = np.ones(400)
+    ph_win = T.estimate_p_halt(winners, w, fraction=0.2, n_paths=300)["p_halt"]
+    ph_lose = T.estimate_p_halt(losers, w, fraction=0.2, n_paths=300)["p_halt"]
+    chk("treasurer: P(halt) higher for a losing distribution", ph_lose > ph_win, f"{ph_lose} vs {ph_win}")
+    # macro brake: fires on a VIX spike / absolute level, fail-open on missing data
+    chk("treasurer: macro brake fires on absolute VIX", T.macro_brake_state(35.0, 18.0)["state"] == "BRAKE")
+    chk("treasurer: macro brake fires on a VIX spike", T.macro_brake_state(24.0, 18.0)["state"] == "BRAKE")
+    chk("treasurer: macro brake CLEAR in calm tape", T.macro_brake_state(16.0, 17.0)["state"] == "CLEAR")
+    chk("treasurer: macro brake fail-open on missing VIX", T.macro_brake_state(None, None)["state"] == "CLEAR")
+
+
 def test_convergence_classify_accrete():
     angle_names = [a for a, _ in CV.ANGLES]
     m = {"surv": {a: "confirmed" for a in angle_names[:8]} | {a: "absent" for a in angle_names[8:]},
@@ -437,8 +578,11 @@ if __name__ == "__main__":
     test_discovery_oos_only()
     test_discovery_walkforward_purge()
     test_student_stage2()
+    test_council_stage2()
+    test_governor_stage3()
+    test_treasurer_stage4()
     test_convergence_classify_accrete()
-    total = 12 * 3
+    total = 15 * 3
     print(f"\nTOTAL: brain suite - {len(fails)} failure(s)")
     if fails:
         raise SystemExit("FAILS: " + ", ".join(fails))

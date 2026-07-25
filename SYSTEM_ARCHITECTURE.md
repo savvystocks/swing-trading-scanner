@@ -183,7 +183,10 @@ Proves the logger cannot alter or crash live execution: `run_scheduled_cycle` is
 ### Supporting suites
 - `test_harvest_harvester.py` — tiering, per-contract-per-day dedup, band filter, barrier-ts stamping, schema.
 - `test_harvest_poller.py` — ingest, path accumulation, label resolution (up/down/stale), re-run idempotency.
-- `v11_mot_harness.py` — full offline "MOT", **73/73** checks green (routing, exit/autopsy state machine, sizing floor, observability, sourcing filter + flush, edge sensors).
+- `v11_mot_harness.py` — full offline "MOT", **119/119** checks green (routing, exit/autopsy state machine, sizing floor, observability, sourcing filter + flush, edge sensors, spread cap).
+- `v12_school_mot.py` — the school MOT, **30/30** green: the load-bearing off-state byte-identity proof (`school_mode=off` produces byte-identical orders and never calls the scorer) plus the fail-closed gate-mode chain, feature-TTL enforcement, Governor-never-grants-LIVE, Treasurer-shadow, and the spread cap.
+- `test_harvest_poller.py` — **15/15** (barrier/label chain + the API-failure classifier: a rate-limit/error writes a MISSING bid_path row excluded from grading, counted in `labels.n_missing`).
+- `test_brain.py` — **15 groups** green (isolation, leakage, weights, EV, calibration, discovery, Student, Council, Governor, Treasurer, convergence).
 
 ---
 
@@ -221,6 +224,45 @@ dispatch), which commits reports only.
   `reports/discovery/convergence_state.json`). Every configuration, rule, and threshold is counted
   into a global trials total that feeds PBO/DSR; no winner renders without it. Promotion is by the
   ROADMAP 8b rule (SHADOW candidate for the Student only); nothing deploys live from this rig.
+
+## 9. THE SCHOOL (shadow organs + dormant gate-mode)
+
+Built on `school-build`, merged phase-by-phase. Everything here is SHADOW (records only) or DORMANT
+(built, not armed). The frozen V10 engine trades alone under the one owner-approved governed change,
+the spread cap. Authority moves only through the Governor, and only by the owner's own switch.
+
+- **Phase 1 life support** (on `main`): `scripts/restore_drill.sh` (proves the off-box backup rebuilds
+  a working system, 6/6); `scripts/integrity_gate.py` (nightly plain-English data-integrity gate,
+  quarantines faults, red Telegram); the poller's API-failure classifier (OK/EMPTY/RATE_LIMITED/ERROR;
+  no-answer never becomes no-bid); `fill_ledger.py` (both-ends microstructure, four passive fail-open
+  engine hooks, paper fills documented as a FLOOR on real costs); engine skip-reason harvesting +
+  `untradeable` flag; `feature_ttl.json` (per-block staleness, harvest asof=signal_ts, decision-time
+  stale->NaN, no substitution); the **spread cap** (real Alpaca spread gates entry, fail-open);
+  `scripts/telegram_commands.py` (authenticated `/halt` `/resume` `/flatten` `/status` -> snapshots
+  flag -> engine env `SCHOOL_HALT`/`SCHOOL_FLATTEN`, pauses NEW entries only); daily broker-vs-records
+  reconciliation marker; weekly API + GHA-minutes telemetry.
+- **Phase 2 Council** (`src/brain/council.py`, shadow): five deliberately diverse members (gbm_meta,
+  logistic_linear, rule_survivors, base_rate_2d, flow_specialist) score out-of-fold, calibrate,
+  blend equal-weight, and decide against each contract's OWN break-even bar plus a disagreement band
+  (std <= 0.18, quorum 3/5). Missing feature -> native NaN path; failed component / latency breach ->
+  absolute VETO (fail-closed). Records only; no authority.
+- **Phase 3 Governor** (`src/brain/governor.py`): the accountability ledger and the ONLY place
+  authority changes. Ladder FROZEN->CANDIDATE->SHADOW_PROVEN->ELIGIBLE_FOR_OWNER->LIVE; 6 consecutive
+  GREEN weeks climb a rung; any RED demotes one rung within one cycle. Two drift species (performance
+  slope, population L1) cap a GREEN at AMBER. The Governor never writes LIVE — `owner_promoted` is the
+  owner's switch.
+- **Phase 4 Treasurer + macro brake** (`src/brain/treasurer.py`, shadow): fractional-Kelly sizing on
+  the empirical distribution (half-Kelly, 25% hard cap), liquidity cap (<=10% of resting size, $800
+  budget), drawdown ratchet (zeroes at the -30% halt), and `estimate_p_halt` (NORTH_STAR's pre-live
+  requirement). Macro circuit brake (VIX absolute/spike + trend break, fail-open). The engine sizes a
+  FIXED 1 contract until the Treasurer is promoted.
+- **Phase 5 gate-mode** (`school_gate.py`, DORMANT): the addendum's decision chain as pure fail-closed
+  logic behind `school_mode` (default `off`). When off, the engine hook returns None and never calls
+  the scorer — byte-identical orders, proven by `v12_school_mot.py`. Activation ladder + all frozen
+  constants live in `LIVE_GATE.md`; operations in `RUNBOOK.md`.
+
+The Council/Governor/Treasurer run each Sunday in `brain_weekly.yml` after the Student, committing
+reports to `reports/{council,treasurer,governor}/` and `governor_registry.json`.
 
 ## KNOWN GAPS (open)
 

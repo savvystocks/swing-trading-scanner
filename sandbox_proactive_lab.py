@@ -1696,6 +1696,15 @@ def run_scheduled_cycle(mock=False):
     engine_skips = {}                                        # school 1d: ticker -> skip-reason code, harvested
     for c in ([] if (brake_active or halt_active) else candidates):   # ONLY 'active'/HALT suppress; shadow lets entries fire
         t = c["ticker"]
+        try:                                          # school gate-mode (DORMANT): off -> None -> engine
+            import school_gate                        # decides alone; runs BEFORE entry so an armed gate
+            gate = school_gate.gate_engine_candidate(params, c)   # can veto without an order being placed
+            if gate is not None and gate.get("decision") == "VETO":
+                print(f"  school gate VETO {t}: {gate.get('reason')}")
+                engine_skips[t] = "school_gate_veto"
+                continue
+        except Exception:
+            pass                                      # fail-open on the school layer; the frozen engine stands
         try:
             rec = enter_proactive_set(t, None, mock=mock, candidate=c, dry_run=not live,
                                       positions=positions, open_orders=open_orders)

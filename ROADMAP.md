@@ -348,6 +348,27 @@ and SPRT clock are decisions 14/27.)
   gate's sample, with campaign PBO <= 0.20. Meeting it unlocks the PIVOT-RULE measurement discussion
   (owner decision); it never changes the engine, the Student's labels, or any decision path.
 
+## The pivot rule (pre-registered 2026-07-25; draft pending owner ratification)
+
+The machinery outlives any single signal (NORTH_STAR). The current flow signal is declared MINED OUT
+— and the owner pivot conversation opens — only when ALL three hold together, on matured data
+(>= 8,000 feature-bearing rows):
+  1. the Student is REJECTED for 6 consecutive weekly runs;
+  2. no discovery survivor has reached the Governor's SHADOW_PROVEN rung; and
+  3. the stock-horizon escape route has failed its tripwire for 2 consecutive runs.
+Meeting all three does not pivot anything automatically — it opens a decision (different structures,
+or a different signal source) made calmly on evidence, with the harness kept intact. Falling short on
+any one keeps the current course. Written before the outcome so a run of bad weeks cannot rush it and
+a lucky week cannot mask it. Ratification is the owner's; until then this is the standing draft the
+weekly reports measure against. Canonical constants live in LIVE_GATE.md.
+
+## Anti-overengineering (spec freeze, addendum Section 4)
+
+The school blueprint is CLOSED as of 2026-07-23. No new decision organ is built without a MEASURED
+failure or gap as its birth certificate (a dated line in an audit or report). Parameters are born
+wide and tightened only by the harness at Sunday boundaries — hand-tuning is prohibited. Every future
+proposal passes a simplicity test: does a number already in the reports justify it? If not, it waits.
+
 ## Scheduled decisions
 
 - **Gating temperament** - decided at the first real calibration reliability curve (how aggressively the

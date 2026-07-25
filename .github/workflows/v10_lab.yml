@@ -42,6 +42,25 @@ jobs:
           python-version: "3.11"
       - name: Install dependencies
         run: pip install -r requirements.txt -r requirements-sandbox.txt
+      - name: Read owner halt flag (school 1e - snapshots repo, fail-open)
+        env:
+          SNAP_KEY: ${{ secrets.HARVEST_SNAPSHOTS_DEPLOY_KEY }}
+        run: |
+          echo "SCHOOL_HALT=0" >> "$GITHUB_ENV"
+          echo "SCHOOL_FLATTEN=0" >> "$GITHUB_ENV"
+          mkdir -p ~/.ssh && printf '%s\n' "$SNAP_KEY" > ~/.ssh/snap && chmod 600 ~/.ssh/snap
+          if GIT_SSH_COMMAND="ssh -i ~/.ssh/snap -o StrictHostKeyChecking=accept-new" \
+             git clone -q --depth 1 git@github.com:savvystocks/harvest-snapshots.git /tmp/snapflag 2>/dev/null; then
+            if [ -f /tmp/snapflag/halt.json ]; then
+              H=$(python -c "import json;print(1 if json.load(open('/tmp/snapflag/halt.json')).get('halt') else 0)" 2>/dev/null || echo 0)
+              F=$(python -c "import json;print(1 if json.load(open('/tmp/snapflag/halt.json')).get('flatten') else 0)" 2>/dev/null || echo 0)
+              echo "SCHOOL_HALT=$H" >> "$GITHUB_ENV"
+              echo "SCHOOL_FLATTEN=$F" >> "$GITHUB_ENV"
+              echo "owner flag: halt=$H flatten=$F"
+            fi
+          else
+            echo "flag fetch failed - fail-open (no halt)"
+          fi
       - name: Execute Autonomous Proactive Lab
         env:
           ALPACA_PAPER_API_KEY: ${{ secrets.ALPACA_PAPER_API_KEY }}

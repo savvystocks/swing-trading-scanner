@@ -86,6 +86,12 @@ fl.log_event = ledger_boom
 orders_ledger_crash = run_capture()
 fl.log_event = _real_log
 
+print("--- run E: OWNER HALT active (school 1e - entries pause, harvest continues) ---")
+os.environ["SCHOOL_HALT"] = "1"
+orders_halt = run_capture()
+_halt_recs = [json.loads(l) for l in open(db.inbox_path(), encoding="utf-8")]
+os.environ.pop("SCHOOL_HALT")
+
 fails = []
 def chk(n, c, d=""):
     print(f"  [{'PASS' if c else 'FAIL'}] {n}  {d}")
@@ -107,8 +113,12 @@ _subs = [e for e in _fill_events if e["kind"] == "entry_submit"]
 chk("fill ledger logged entry_submit for the placed order (signal quote attached)",
     any(e.get("order_id") == "OID-DETERMINISTIC" and e.get("occ") == "AAA260717C00021000" for e in _subs),
     f"entry_submit events={len(_subs)}")
+chk("OWNER HALT paused new entries (no order placed this cycle)", orders_halt is None,
+    f"orders_halt={orders_halt}")
+chk("OWNER HALT still harvested (counterfactual logging continues under halt)", len(_halt_recs) > len(recs),
+    f"recs grew {len(recs)}->{len(_halt_recs)}")
 
-print(f"\nTOTAL: {10 - len(fails)}/10 passed")
+print(f"\nTOTAL: {12 - len(fails)}/12 passed", flush=True)
 if fails:
     raise SystemExit("FAILS: " + ", ".join(fails))
 print("PASSIVITY PROVEN: logging never alters or crashes the trade path")

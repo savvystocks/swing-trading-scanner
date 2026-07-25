@@ -1,0 +1,28 @@
+{
+  "_doc": "School addendum Section 2 - FEATURE TTL REGISTRY. Every feature block declares its maximum staleness in minutes. At HARVEST time the asof of every block is the row's signal_ts_utc (sensors compute at scan time; no separate stamp needed, no stale substitution exists). At DECISION time (Council/gate-mode) a value older than its TTL becomes MISSING and flows through the model's native missing-data path - never substituted. Quotes/spreads: current cycle only. Changing any TTL is a logged trial at a Sunday boundary.",
+  "ttl_minutes": {
+    "quotes_and_spreads": 10,
+    "liquidity_and_slippage": 10,
+    "flow_aggression": 30,
+    "flow_persistence": 30,
+    "dark_pool": 60,
+    "gex": 60,
+    "dealer_greeks": 60,
+    "iv_term": 120,
+    "skew": 120,
+    "vrp": 120,
+    "price_action": 30,
+    "technical": 30,
+    "relative_momentum": 120,
+    "macro": 60,
+    "macro_context": 60,
+    "regime_stack": 240,
+    "news": 240,
+    "news_sentiment_score": 240,
+    "alt_catalyst": 1440,
+    "pemd": 1440,
+    "fundamentals": 10080,
+    "float_mechanics": 10080
+  },
+  "decision_rule": "age_minutes = (decision_ts - asof_ts)/60000; if age_minutes > ttl_minutes[block] then every feature in that block scores as MISSING (NaN) for that decision. Component failure (no quote at all, no probability produced, latency budget exceeded) is a VETO instead - see the canonical missing-data rules."
+}

@@ -21,6 +21,7 @@ CANDIDATE_COLS = [
     "bid", "ask", "bid_size", "ask_size", "mid", "spread_pct", "last", "underlying_last",
     "entry_ref", "features", "rule_score", "executed", "skip_reason",
     "vertical_barrier_ts", "barrier_up_pct", "barrier_down_pct", "poll_tier", "sample_tier",
+    "untradeable",
 ]
 
 _SCHEMA = """

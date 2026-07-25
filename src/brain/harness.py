@@ -111,21 +111,69 @@ def compute_guard(n_rows, seconds_budget=1800, mb_budget=6000, n_ladder=(10, 8, 
     return n_ladder[-1], f"CPCV N floored at {n_ladder[-1]} (budget guard)"
 
 
-def probability_of_backtest_overfitting(oos_matrix, min_trials=2, min_rows=1000):
-    """CSCV PBO (de Prado). `oos_matrix` is rows=CSCV splits, cols=trials/configs of an out-of-sample
-    performance stat. Returns (pbo, note). Renders N/A until the CPCV minimums are met."""
+def probability_of_backtest_overfitting(oos_matrix, min_trials=2, min_rows=1000, max_combos=4000,
+                                        seed=7):
+    """CSCV PBO (Bailey & de Prado 2015). `oos_matrix` is rows=CSCV splits, cols=trials/configs of a
+    performance stat. Returns (pbo, note); N/A until the minimums are met.
+
+    The procedure, which must be followed exactly or the statistic inverts:
+      for every train/test partition of the SPLIT ROWS into two halves,
+        pick the winning TRIAL by mean performance on the TRAIN rows only, then
+        rank that trial among ALL TRIALS on the held-out TEST rows.
+      PBO = fraction of partitions where the train-winner lands in the bottom half out-of-sample.
+
+    FIXED 2026-07-25 (adversarial verification): the prior implementation selected the winner on a row
+    and then ranked that SAME row within the winner's column - no train/test separation, and ranking
+    across time-groups instead of across trials. On pure-noise matrices it returned PBO ~0.01 (i.e.
+    "certainly not overfit") where correct CSCV returns ~0.53. It was anti-conservative: it would have
+    waved a fluke through the Student's acceptance gate 2. Regression-tested in test_brain.py."""
     M = np.asarray(oos_matrix, dtype=np.float64)
-    if M.ndim != 2 or M.shape[1] < min_trials or M.shape[0] < 2:
-        return None, f"N/A (needs >= {min_trials} trials and CSCV splits; got shape {M.shape})"
+    if M.ndim != 2 or M.shape[1] < min_trials or M.shape[0] < 4:
+        return None, (f"N/A (needs >= {min_trials} trials and >= 4 CSCV split rows; got shape {M.shape})")
+    S, N = M.shape
+    rows = list(range(S))
+    combos = list(itertools.combinations(rows, S // 2))
+    note_extra = ""
+    if len(combos) > max_combos:                             # C(S, S/2) explodes; sample deterministically
+        rng = np.random.default_rng(seed)
+        idx = rng.choice(len(combos), size=max_combos, replace=False)
+        combos = [combos[i] for i in idx]
+        note_extra = f", sampled {max_combos} of C({S},{S // 2})"
     logits = []
-    for r in range(M.shape[0]):
-        best = int(np.argmax(M[r]))                          # in-sample winner for this split
-        col = M[:, best]
-        rank = (col < col[r]).sum() / max(len(col) - 1, 1)   # its OOS rank among all splits
+    for train in combos:
+        test = [r for r in rows if r not in train]
+        tr = np.nanmean(M[list(train)], axis=0)
+        te = np.nanmean(M[test], axis=0)
+        ok = np.isfinite(tr) & np.isfinite(te)
+        if ok.sum() < 2:
+            continue
+        n_star = int(np.flatnonzero(ok)[np.nanargmax(tr[ok])])   # winner chosen on TRAIN rows only
+        rank = float((te[ok] < te[n_star]).sum()) / max(int(ok.sum()) - 1, 1)   # among TRIALS on TEST
         rank = min(max(rank, 1e-6), 1 - 1e-6)
         logits.append(math.log(rank / (1 - rank)))
-    pbo = float(np.mean(np.asarray(logits) <= 0))            # fraction where OOS rank below median
-    return pbo, ""
+    if not logits:
+        return None, "N/A (no CSCV partition had two usable trials)"
+    pbo = float(np.mean(np.asarray(logits) <= 0))            # winner fell to the bottom half OOS
+    return pbo, f"CSCV over {len(logits)} partitions{note_extra}"
+
+
+def sharpe_variance_across_trials(oos_matrix):
+    """The correct `sr_variance` input for deflated_sharpe_ratio: the variance of the SHARPE RATIOS of
+    the trials, NOT the variance of the raw performance cells. Passing raw cells makes the deflation
+    benchmark come out in the cells' own units (dollars, say), which pins DSR at 0 regardless of
+    input. FIXED 2026-07-25 (adversarial verification)."""
+    M = np.asarray(oos_matrix, dtype=np.float64)
+    srs = []
+    for j in range(M.shape[1]):
+        c = M[:, j]
+        c = c[np.isfinite(c)]
+        if c.size >= 2:
+            sd = float(np.std(c, ddof=1))
+            if sd > 1e-12:
+                srs.append(float(np.mean(c)) / sd)
+    if len(srs) < 2:
+        return 1.0                                           # uninformative prior: SR variance of 1
+    return float(np.var(np.asarray(srs), ddof=1))
 
 
 def deflated_sharpe_ratio(sr, n_trials, sr_variance, skew=0.0, kurt=3.0, n_obs=0, sr_benchmark=None):

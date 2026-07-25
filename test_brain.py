@@ -589,6 +589,45 @@ def test_measurement_lane_trigger():
     shutil.rmtree(d, ignore_errors=True)
 
 
+def test_pbo_dsr_correctness():
+    """REGRESSION (2026-07-25): the PBO implementation was not CSCV - it selected the winner on a row
+    and ranked that same row, giving ~0.01 on PURE NOISE (i.e. certifying flukes as genuine). It gates
+    the Student's acceptance, so it is locked down here by ground truth."""
+    import math
+    # PURE NOISE: no strategy has an edge -> the in-sample winner is a coin flip OOS -> PBO ~ 0.5
+    noise_pbos = []
+    for i in range(40):
+        m = np.random.default_rng(500 + i).normal(0, 1, size=(6, 12))
+        p, note = H.probability_of_backtest_overfitting(m, min_trials=2)
+        if p is not None:
+            noise_pbos.append(p)
+    mean_noise = float(np.mean(noise_pbos))
+    chk("pbo: pure noise is NOT certified clean (mean PBO in a sane band)",
+        0.30 <= mean_noise <= 0.75, f"mean PBO on noise = {mean_noise:.3f} (was ~0.01 when broken)")
+    chk("pbo: noise rarely passes the <=0.20 gate",
+        float(np.mean(np.array(noise_pbos) <= 0.20)) < 0.35,
+        f"{100*np.mean(np.array(noise_pbos)<=0.20):.0f}% of noise passes (was 100% when broken)")
+    # GENUINE EDGE: one dominant column -> the winner holds up OOS -> PBO ~ 0
+    edge = np.random.default_rng(3).normal(0, 1, size=(6, 12))
+    edge[:, 3] += 4.0
+    p_edge, _ = H.probability_of_backtest_overfitting(edge, min_trials=2)
+    chk("pbo: a genuinely dominant strategy scores LOW", p_edge is not None and p_edge <= 0.20,
+        f"PBO on real edge = {p_edge}")
+    chk("pbo: noise scores strictly worse than real edge",
+        p_edge is not None and mean_noise > p_edge, f"noise {mean_noise:.3f} vs edge {p_edge}")
+    # guard rails
+    p_small, note_small = H.probability_of_backtest_overfitting(np.zeros((2, 3)), min_trials=2)
+    chk("pbo: too few split rows renders N/A rather than a number", p_small is None, note_small)
+    # DSR units: raw cells vs sharpe-ratio variance must not be conflated
+    cells = np.random.default_rng(1).normal(0, 50000.0, (6, 12))     # dollar-scale cells
+    v_wrong, v_right = float(np.nanvar(cells)), H.sharpe_variance_across_trials(cells)
+    d_wrong, _, _ = H.deflated_sharpe_ratio(1.5, n_trials=12, sr_variance=v_wrong, n_obs=6)
+    d_right, _, _ = H.deflated_sharpe_ratio(1.5, n_trials=12, sr_variance=v_right, n_obs=6)
+    chk("dsr: raw-cell variance pins DSR at 0 (the bug)", d_wrong < 0.01, f"{d_wrong}")
+    chk("dsr: sharpe-ratio variance gives a live statistic", d_right > 0.5, f"{d_right}")
+    chk("dsr: helper returns a scale-free number", 0.0 <= v_right < 100.0, f"{v_right}")
+
+
 def test_convergence_classify_accrete():
     angle_names = [a for a, _ in CV.ANGLES]
     m = {"surv": {a: "confirmed" for a in angle_names[:8]} | {a: "absent" for a in angle_names[8:]},
@@ -625,8 +664,9 @@ if __name__ == "__main__":
     test_governor_stage3()
     test_treasurer_stage4()
     test_measurement_lane_trigger()
+    test_pbo_dsr_correctness()
     test_convergence_classify_accrete()
-    total = 16 * 3
+    total = 17 * 3
     print(f"\nTOTAL: brain suite - {len(fails)} failure(s)")
     if fails:
         raise SystemExit("FAILS: " + ", ".join(fails))

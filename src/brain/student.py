@@ -178,8 +178,11 @@ def cpcv_pbo(df, X, features, trials, n_groups=6, seed=7):
     r = np.asarray(pinned, dtype=np.float64)
     if r.size >= 4 and r.std(ddof=1) > 1e-12:
         sr = float(r.mean() / r.std(ddof=1))
+        # sr_variance must be the variance of the trials' SHARPE RATIOS, not of the raw return cells
+        # (fixed 2026-07-25: passing raw cells put the deflation benchmark in return units).
         dsr, sr0, dnote = H.deflated_sharpe_ratio(sr, n_trials=max(trials.total, 1),
-                                                  sr_variance=float(np.nanvar(Mc)), n_obs=int(r.size))
+                                                  sr_variance=H.sharpe_variance_across_trials(Mc),
+                                                  n_obs=int(r.size))
     else:
         dsr, sr0, dnote = None, None, f"UNDERPOWERED ({r.size} pinned CPCV paths; needs >= 4)"
     return {"pbo": pbo, "pbo_note": note, "dsr": dsr, "dsr_benchmark": sr0, "dsr_note": dnote,

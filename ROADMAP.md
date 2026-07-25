@@ -323,6 +323,31 @@ and SPRT clock are decisions 14/27.)
   trade so far is tight-spread (<2%), so the engine may already dodge the bleed via fill mechanics; the
   executed bleed is unconfirmed until the slippage ledger and more executed rows exist.
 
+- **Q: Would a FIXED-HOLD option horizon (3 and 5 trading days, no barriers) label the same candidates
+  differently — and does any measured feature separate winners from losers better under that label?**
+  Method: PROSPECTIVE ONLY — feasibility (2026-07-25) showed stored paths cover just 1.6% at 3td / 0%
+  at 5td because polling stops at label resolution (median ~1 day). Requires the poller to keep polling
+  past resolution to signal+5td: a governed change (API budget from the existing adaptive cap; queued
+  for a Sunday boundary, owner go). Columns land as additive nullable measurement fields
+  (fixed_hold_3d_ret, fixed_hold_5d_ret), never decision inputs.
+  Evidence gate: >= 10k rows carrying prospective fixed-hold values.
+  Pre-registered tripwire (written 2026-07-25, before any value exists): a feature separation under
+  this label counts as evidence ONLY at OOS lift >= 1.5 with n_eff >= 15, campaign PBO <= 0.20, and
+  survival >= 8/10 convergence angles in 2 consecutive weekly rig runs — and may then propose at most
+  ONE governed label-definition trial for the Student. Never a live-path change from this question.
+- **Q: Does the flow predict the UNDERLYING STOCK 1/3/5 trading days out, even where the option loses
+  to costs?** (The pivot rule's designated escape route, measured early.)
+  Method: free daily closes (yfinance locally; Alpaca on the VPS as fallback), return signed by flow
+  direction (call = long, put = short), computed on the snapshot as additive nullable measurement
+  columns (stock_1d/3d/5d_signed_ret); analyzed ONLY through the rig - uniqueness weights mandatory,
+  purged evaluation, every configuration counted, PBO reported with every number.
+  Evidence gate: >= 80% coverage of graded candidates; >= 5k weighted rows per horizon.
+  Pre-registered tripwire (written 2026-07-25, before any value is computed): stock-horizon
+  predictability counts ONLY if, in 2 consecutive weekly rig runs, the uniqueness-weighted mean signed
+  return's 95% lower bound is > 0 AND the direction hit rate's lower bound is > 52% on the evidence
+  gate's sample, with campaign PBO <= 0.20. Meeting it unlocks the PIVOT-RULE measurement discussion
+  (owner decision); it never changes the engine, the Student's labels, or any decision path.
+
 ## Scheduled decisions
 
 - **Gating temperament** - decided at the first real calibration reliability curve (how aggressively the

@@ -124,3 +124,43 @@ jobs:
             git pull --rebase --autostash origin main || true
             sleep 2
           done
+
+  # School Phase 2 - the Council (shadow). Five diverse members score OOF; recording only, no authority.
+  council:
+    needs: student
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install brain deps
+        run: pip install -r requirements-brain.txt
+      - name: Fetch latest snapshot (read-only deploy key)
+        env:
+          SNAP_KEY: ${{ secrets.HARVEST_SNAPSHOTS_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh && printf '%s\n' "$SNAP_KEY" > ~/.ssh/snap && chmod 600 ~/.ssh/snap
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/snap -o StrictHostKeyChecking=accept-new" \
+            git clone --depth 1 git@github.com:savvystocks/harvest-snapshots.git snapshots
+      - name: Run the Council (5 members, disagreement, fail-closed) + Governor scoreboard
+        run: |
+          python -m src.brain.run_council --snapshot snapshots --out brain_work_council --reports reports/council
+          python -m src.brain.run_governor --reports reports/governor || echo "governor scoreboard skipped"
+      - name: Commit council + governor reports
+        if: always()
+        run: |
+          git config user.name "brain-bot"
+          git config user.email "noreply@github.com"
+          git pull --rebase --autostash origin main || true
+          git add -f reports/council/*.md reports/council/*.csv reports/governor/*.md governor_registry.json 2>/dev/null || true
+          if git diff --cached --quiet; then echo "no new council report"; exit 0; fi
+          git commit -m "v12 council + governor weekly report [skip ci]"
+          for i in 1 2 3 4 5; do
+            git push origin HEAD:main && break
+            git pull --rebase --autostash origin main || true
+            sleep 2
+          done

@@ -405,6 +405,71 @@ def test_student_stage2():
         and not acc2["verdict"].startswith("WITHHELD"), acc2["verdict"])
 
 
+def _council_df(n, seed):
+    import pandas as pd
+    rng = np.random.default_rng(seed)
+    day = DAY // 24
+    start = np.arange(n) * day * 6.0
+    flow = rng.random(n)
+    dayrange = rng.random(n)
+    ivr = rng.random(n)
+    spread = rng.random(n) * 25.0
+    noise = rng.random(n)
+    # real, learnable signal: high flow AND mid IV win more; wide spread loses
+    base = 0.25 + 0.35 * (flow > 0.6) * (ivr > 0.4) - 0.15 * (spread > 15)
+    y = (rng.random(n) < np.clip(base, 0.03, 0.95)).astype(float)
+    df = pd.DataFrame({
+        "candidate_id": [f"c{i}" for i in range(n)], "ticker": [f"T{i % 40}" for i in range(n)],
+        "occ_symbol": "OCC", "signal_ts": start, "window_start": start, "window_end": start + day,
+        "y_up": y, "weight": 1.0, "w_raw": 1.0, "outcome": np.where(y > 0, "up", "down"),
+        "realized_return": np.where(y > 0, 0.4, -0.5), "cost_base": 0.03,
+        "net_ret": np.where(y > 0, 0.37, -0.53), "executed": (noise > 0.9).astype(int),
+        "sample_tier": "topn", "spread_pct": spread})
+    X = pd.DataFrame({"flow_aggression.ask_sweep_prem": flow, "price_action.day_range": dayrange,
+                      "iv_term.iv_ratio": ivr, "macro.vix": rng.random(n), "news.vader_compound": noise})
+    return df, X, list(X.columns)
+
+
+def test_council_stage2():
+    from src.brain import council as CC
+    from src.brain import ttl as TTL
+    df, X, kept = _council_df(1400, seed=11)
+    tr = D.Trials()
+    res = CC.run_council(df, X, kept, tr)
+    chk("council: all five members are defined", len(res["members"]) == 5)
+    scoring = [m for m in res["members"] if res["member_auc"][m] is not None]
+    chk("council: at least a quorum of members produced calibrated scores", len(scoring) >= 3,
+        f"scoring={scoring}")
+    chk("council: blended OOF AUC recovers the planted signal", res["blend_auc"] > 0.55,
+        f"blend_auc={res['blend_auc']}")
+    chk("council: disagreement is measured per candidate", np.isfinite(res["disagree"]).any())
+    # FAIL-CLOSED: a member that raises -> component_failure VETO (never a silent take)
+    good = {m: (lambda fr, a, d, p=0.9: p) for m in ["gbm_meta", "logistic_linear", "base_rate_2d"]}
+    boom = dict(good); boom["flow_specialist"] = (lambda fr, a, d: (_ for _ in ()).throw(RuntimeError("x")))
+    dec = CC.score_one(boom, {"_contract_bar": 0.5}, 0, 0)
+    chk("council: a failed component forces a VETO (fail-closed)",
+        dec["decision"] == "VETO" and dec["reason"] == "component_failure", str(dec)[:80])
+    # latency budget exceeded -> VETO
+    slow = {"m1": (lambda fr, a, d: __import__("time").sleep(0.05) or 0.9)}
+    dec2 = CC.score_one(slow, {"_contract_bar": 0.5}, 0, 0, latency_budget_s=0.0)
+    chk("council: latency budget breach is a VETO", dec2["decision"] == "VETO"
+        and dec2["reason"] == "latency_exceeded", str(dec2)[:80])
+    # a clean quorum that clears the bar with tight agreement -> TAKE
+    agree = {m: (lambda fr, a, d: 0.80) for m in ["gbm_meta", "logistic_linear", "base_rate_2d", "flow_specialist"]}
+    dec3 = CC.score_one(agree, {"_contract_bar": 0.55}, 0, 0)
+    chk("council: aligned quorum above the bar TAKES", dec3["decision"] == "TAKE", str(dec3)[:80])
+    # TTL: an old asof nulls a short-TTL block but preserves a long-TTL block
+    import pandas as pd
+    Xt = pd.DataFrame({"quotes_and_spreads.bid": [1.0, 2.0], "fundamentals.short_ratio": [3.0, 4.0]})
+    sig = np.array([0.0, 0.0])
+    out = TTL.apply_ttl(Xt, list(Xt.columns), sig, asof_ms=0.0, decision_ms=60 * 60 * 1000.0)  # 60 min later
+    chk("ttl: quotes block (10m TTL) goes MISSING after 60m",
+        np.isnan(out["quotes_and_spreads.bid"].to_numpy()).all())
+    chk("ttl: fundamentals block (7d TTL) survives 60m", np.isfinite(out["fundamentals.short_ratio"].to_numpy()).all())
+    chk("ttl: retrospective call (asof=None) never nulls anything",
+        TTL.apply_ttl(Xt, list(Xt.columns), sig)["quotes_and_spreads.bid"].notna().all())
+
+
 def test_convergence_classify_accrete():
     angle_names = [a for a, _ in CV.ANGLES]
     m = {"surv": {a: "confirmed" for a in angle_names[:8]} | {a: "absent" for a in angle_names[8:]},
@@ -437,8 +502,9 @@ if __name__ == "__main__":
     test_discovery_oos_only()
     test_discovery_walkforward_purge()
     test_student_stage2()
+    test_council_stage2()
     test_convergence_classify_accrete()
-    total = 12 * 3
+    total = 13 * 3
     print(f"\nTOTAL: brain suite - {len(fails)} failure(s)")
     if fails:
         raise SystemExit("FAILS: " + ", ".join(fails))

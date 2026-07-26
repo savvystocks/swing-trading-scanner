@@ -367,6 +367,14 @@ and SPRT clock are decisions 14/27.)
   weekly run. Meeting all four promotes it to a Student feature-set change, which is itself a governed
   change at a Sunday boundary. Anything less is logged as measured-and-rejected; a higher raw
   separation on its own is explicitly NOT sufficient.
+  **ANSWERED 2026-07-26: REJECTED.** Run 1 passed (a)-(c) on the 07-24 snapshot (net −0.079 → +0.193,
+  Wilson lo 0.323 → 0.436, PBO 0.232 → 0.130). A vintage sweep over five nested snapshots then found
+  the advantage present in ONE of five — the newest — absent or reversed in the rest, with the
+  selection count running 0/4/1/3/54 across the sequence: one extra trading day multiplied the trade
+  count eighteen-fold. Fragility of that kind is a threshold on the edge of a noisy distribution, not
+  an effect. The result also never cleared the acceptance gates it would ultimately face (Wilson lo
+  0.436 vs the 0.594 hurdle). Closed as measured-and-rejected; persistence does not enter the
+  Student's feature set. Full record: reports/research/persistence_harness_2026-07-26.md.
 
 ## The pivot rule (pre-registered 2026-07-25; draft pending owner ratification)
 

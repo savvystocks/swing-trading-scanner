@@ -9,7 +9,7 @@
 ## The four acceptance gates (item 8)
 
 1. OOS Wilson lower bound 0.3231 > hurdle 0.5944: **FAIL** (selection: n 26, n_eff 12.0, hit 0.5878, net -0.0792)
-2. PBO 0.333 <= 0.2: **FAIL** (15 CPCV splits x 12 configs, 5 paths)
+2. PBO 0.232 <= 0.2: **FAIL** (15 CPCV splits x 12 configs, 5 paths)
 3. Deflated Sharpe 0.000 > 0.5: **FAIL** 
 4. Beats the engine on the same purged splits: **PASS** (student net -0.0792 vs engine net -0.7125; student hit 0.5878 vs engine hit 0.0244, engine n 462)
 
@@ -23,4 +23,4 @@
 
 - config (pinned): {'half_life_days': 21, 'cluster_corr': 0.85, 'n_folds': 5, 'embargo': 0.02, 'seed': 7, 'learning_rate': 0.08, 'max_depth': 3}
 - model artifact: `student_harvest_20260724_2130.joblib` (workdir; not committed)
-- run: 2373.2s | brain-side only, zero live changes
+- run: 604.4s | brain-side only, zero live changes

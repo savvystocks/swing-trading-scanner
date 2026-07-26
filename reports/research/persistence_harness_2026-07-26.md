@@ -60,6 +60,16 @@ The selection-count sequence — **0, 4, 1, 3, 54** — is the damning number. A
 day to 07-23 multiplied the strategy's trade count eighteen-fold. A real effect does not do that; a
 calibrated probability sitting just under the hurdle, nudged over it by new data, does exactly that.
 
+### Cluster-subsampling + fold robustness (completed 2026-07-27): 2 of 11 hold
+
+The final check, run after the vintage sweep had already decided the question. Dropping a random 20%
+of ticker-day clusters and refitting both arms (8 draws), plus varying the purged-fold count (3/5/7):
+the persistence advantage held in **1 of 8 subsamples** and **1 of 3 fold structures** — the one that
+held being the exact original configuration. Under subsampling the persistence arm's selection count
+swung between 0 and 24 and its net return ranged from **−104.7% to +50.7%**. A real effect does not
+have a sign that depends on which fifth of the data you remove. Confirms the vintage verdict:
+REJECTED.
+
 ### A null test that must not be mistaken for evidence
 
 A seed sweep (four seeds on the 07-24 snapshot) returned **identical results to four decimal places**

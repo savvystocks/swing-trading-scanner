@@ -3133,3 +3133,30 @@
 
 **Determining factor:** Bearish put FAILED (-69%, move 0.0%): no breakdown materialised; spot held above zero-gamma 53.0.
 
+## Autopsy - UUUU (a7c4d011129a)
+- entered 2026-07-23T16:41:15.929Z | trigger regime_BEARISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -11.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-11%, move 0.0%): no breakdown materialised; spot held above zero-gamma 8.0.
+
+## Autopsy - CSX (11919ff5d463)
+- entered 2026-07-23T19:41:48.407Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -58.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-59%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 50.0 worked against it.
+
+## Autopsy - M (b7ca33c45f52)
+- entered 2026-07-24T16:02:09.710Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 20.5.
+

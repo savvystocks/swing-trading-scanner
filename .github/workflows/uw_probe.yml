@@ -1,40 +1,104 @@
 name: uw-endpoint-probe
 
-# One-shot research probe (forward plan F2/F4): which UW API families does our plan tier include?
-# Prints HTTP status codes ONLY - no response data, no token. workflow_dispatch only; touches nothing.
+# Research probe (forward plan F2/F4 step zero). Two modes:
+#   status  - HTTP codes only (the original tier probe)
+#   depth   - history depth + timestamp semantics per feed, and the event tables shipped as RUN
+#             ARTIFACTS (never committed). Prints field NAMES, counts and date ranges only.
+# workflow_dispatch only; touches no engine path.
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "status | depth"
+        required: false
+        default: "depth"
 
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
-      - name: Probe endpoint families (status codes only)
+      - name: Status probe
+        if: ${{ github.event.inputs.mode == 'status' }}
         env:
           UW: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
         run: |
-          probe() {
+          for p in /option-trades/flow-alerts /congress/recent-trades /insider/transactions /screener/analysts /darkpool/recent; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
-              -H "Authorization: Bearer $UW" -H "Accept: application/json" \
-              "https://api.unusualwhales.com/api$1?limit=1")
-            echo "$code $1"
-          }
-          echo "--- control (production endpoint, must be 200) ---"
-          probe "/option-trades/flow-alerts"
-          echo "--- congress ---"
-          probe "/congress/recent-trades"
-          probe "/congress/congress-trader"
-          probe "/congress/late-reports"
-          echo "--- analyst ---"
-          probe "/analysts/ratings"
-          probe "/analyst/ratings"
-          probe "/screener/analysts"
-          echo "--- insider ---"
-          probe "/insider/transactions"
-          probe "/market/insider-buy-sells"
-          echo "--- adjacent free reads on our tier ---"
-          probe "/darkpool/recent"
-          probe "/earnings/afterhours"
-          probe "/news/headlines"
+              -H "Authorization: Bearer $UW" "https://api.unusualwhales.com/api$p?limit=1")
+            echo "$code $p"
+          done
+      - name: Depth probe + artifact fetch
+        if: ${{ github.event.inputs.mode != 'status' }}
+        env:
+          UW: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os, json, csv, time, urllib.request, urllib.parse
+          TOK = os.environ["UW"]
+          BASE = "https://api.unusualwhales.com/api"
+          def get(path, params):
+              url = BASE + path + "?" + urllib.parse.urlencode(params)
+              req = urllib.request.Request(url, headers={"Authorization": f"Bearer {TOK}",
+                                                         "Accept": "application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=25) as r:
+                      d = json.loads(r.read().decode())
+                      return d.get("data", d)
+              except Exception as e:
+                  print(f"  fetch error {path} {type(e).__name__}")
+                  return None
+
+          def date_fields(row):
+              return {k: v for k, v in row.items()
+                      if any(s in k.lower() for s in ("date", "time", "filed", "report", "disclos", "transact", "executed"))}
+
+          def paginate(path, out_csv, max_pages=40, stop_before="2026-05-25"):
+              rows, page = [], 0
+              while page < max_pages:
+                  d = get(path, {"limit": 500, "page": page})
+                  if not d or not isinstance(d, list) or not d:
+                      break
+                  rows += d
+                  # stop when the page's oldest date-ish value predates the study window
+                  df = date_fields(d[-1])
+                  oldest = min([str(v)[:10] for v in df.values() if v], default="")
+                  page += 1
+                  time.sleep(0.25)
+                  if oldest and oldest < stop_before:
+                      break
+              if rows:
+                  keys = sorted({k for r in rows for k in r.keys()})
+                  with open(out_csv, "w", newline="", encoding="utf-8") as fh:
+                      w = csv.DictWriter(fh, fieldnames=keys)
+                      w.writeheader()
+                      w.writerows(rows)
+              return rows
+
+          for name, path in (("congress", "/congress/recent-trades"),
+                             ("insider", "/insider/transactions"),
+                             ("analyst", "/screener/analysts")):
+              print(f"===== {name} {path} =====")
+              first = get(path, {"limit": 3})
+              if not first or not isinstance(first, list) or not first:
+                  print("  no data / not a list - current-state only or param mismatch")
+                  continue
+              print(f"  fields: {sorted(first[0].keys())}")
+              print(f"  date-ish fields of newest row: {date_fields(first[0])}")
+              rows = paginate(path, f"{name}.csv")
+              if rows:
+                  alld = [str(v)[:10] for r in rows for v in date_fields(r).values() if v]
+                  print(f"  fetched {len(rows)} rows | date-ish range {min(alld)} .. {max(alld)}")
+          PY
+      - name: Upload event tables
+        if: ${{ github.event.inputs.mode != 'status' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: uw-feed-tables
+          path: |
+            congress.csv
+            insider.csv
+            analyst.csv
+          if-no-files-found: warn
+          retention-days: 5

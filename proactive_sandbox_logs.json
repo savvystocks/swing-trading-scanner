@@ -145033,7 +145033,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 32.8,
+        "mfe_pct": 36.9,
         "mae_pct": -17.8,
         "stage": "scaled",
         "close_fails": 0,
@@ -146553,8 +146553,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 40.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 58.3,
+          "mae_pct": -23.3,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-27T14:41:28.383Z",
+            "return_pct": 36.7
+          }
+        }
+      },
+      "mfe_pct": 58.3,
+      "mae_pct": -23.3,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 22.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "CMCSA",
@@ -146567,12 +146592,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 11,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "CMCSA260821C00023000",
+        "closed_at": "2026-07-27T19:11:25.727Z",
+        "return_pct": 40.0,
+        "reason": "40.0% <= trail 46.6% (20% off peak MFE 58.3%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 58.3,
         "mae_pct": -23.3,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-27T14:41:28.383Z",
@@ -146584,6 +146618,11 @@
       {
         "order_id": "cfa5b54f-a027-45ca-8169-04624da47f9a",
         "at": "2026-07-27T14:41:28.383Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "bc2839fd-ceb4-49cd-b723-565deeaf0c27",
+        "at": "2026-07-27T19:11:25.727Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -156811,5 +156850,277 @@
         "stage": "initial"
       }
     }
+  },
+  {
+    "trade_set_id": "162258a90e69",
+    "ticker": "BMNR",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-27T19:12:41.679Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 52,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "QSR260821C00077500",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-27T19:12:41.679Z",
+      "macro": {
+        "spot": 18.28,
+        "sma20": 15.53,
+        "distance_to_sma20_pct": 17.732,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 89.2,
+        "iv_back": 79.5,
+        "iv_ratio": 1.122,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 2761381.6,
+        "zero_gamma_strike": 16.0,
+        "distance_to_zero_gamma_pct": 12.473,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 300.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.13,
+        "atr_pct": 6.16,
+        "rvol_10min": 1.41,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Capital Markets",
+        "market_cap": 11020946432,
+        "short_pct_float": 8.15,
+        "short_ratio": 1.24,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.33,
+        "vader_compound": 0.162,
+        "news_type": "Product",
+        "top_headline": "Oil Crashes 8%, Chip Rout Weighs on Nasdaq 100: Stock Market Today",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 17.732,
+        "market_spy_dist_pct": -0.993,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 1.828,
+        "sector_vs_market_spread": 2.821,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 85.5,
+        "call_iv_25d": 86.7,
+        "skew_ratio": 0.985,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 10.1,
+        "ask_sweep_prem": 423279.0,
+        "total_flow_prem": 4190183.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 4.75,
+        "heaviest_node_price": 17.41,
+        "node_size": 371964.0,
+        "n_prints": 200,
+        "window_start": "2026-07-27T14:10:02Z",
+        "window_end": "2026-07-27T19:12:30Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 13,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 116,
+        "next_earnings_date": "2026-11-20",
+        "iv_rank_1y": 16.09,
+        "last_earnings_date": "2026-07-14",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 87.19,
+        "front_iv": 89.2,
+        "vrp": 2.01,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 1953083.0,
+        "flow_persistence_pct": 30.68,
+        "flow_direction": "bullish",
+        "closing_accel": 323331.0,
+        "n_ticks": 343,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 680.67,
+        "vwma_20": 15.6,
+        "rsi_5": 65.12,
+        "rsi_15": 62.78,
+        "gap_pct": 5.596,
+        "day_range": 8.643,
+        "candle_body": 1.0,
+        "dist_sma50": 10.128,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 9.7,
+        "vix_level": 19.0,
+        "execution_hour": 19,
+        "day_of_week": 0,
+        "sector_vs_spy": 1.678,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 21592584.0,
+        "net_vanna": 33114325.0,
+        "net_charm": -9498239.0,
+        "delta_imbalance": 2.512,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.055,
+        "bid": 18.27,
+        "ask": 18.28,
+        "bid_size": 2400.0,
+        "ask_size": 2700.0,
+        "obi": -0.0588,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 1.44,
+        "gap_pct": 5.596,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 8.15,
+        "float_shares": 594714870,
+        "shares_short": 49117115,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.162,
+      "sweep_aggression_pct": 10.1,
+      "distance_to_zero_gamma_pct": 12.473,
+      "distance_to_heaviest_dp_node_pct": 4.75,
+      "days_since_earnings": 13,
+      "days_to_earnings": 116,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 30.68,
+      "brake_shadow": true
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "BMNR260828C00019000",
+        "expiry": "2026-08-28",
+        "strike": 19.0,
+        "dte": 35,
+        "entry_premium": 2.02,
+        "limit_price": 2.04,
+        "contracts": 3,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "213",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.52,
+          "ask": 1.57,
+          "mid": 1.545,
+          "bid_ask_spread_pct": 3.236,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 219.0,
+          "oi_prev": 213.0,
+          "oi_change": 6.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "4ad83757-9112-4784-bdd0-aed8af638ab0",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.04,
+        "contracts": 3,
+        "ledger_terminal": "filled"
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "_scan_candidate": {
+      "ticker": "BMNR",
+      "call_prem": 35856.0,
+      "put_prem": 0.0,
+      "underlying_price": 18.225,
+      "min_contract_premium": 1.08,
+      "flow_type": "call",
+      "total_premium": 35856.0
+    },
+    "brake_shadow_blocked": true,
+    "brake_stopouts_at_entry": 17
   }
 ]

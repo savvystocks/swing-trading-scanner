@@ -3205,3 +3205,12 @@
 
 **Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; negative_gamma amplified the breakout.
 
+## Autopsy - BAC (b6f47b15c191)
+- entered 2026-07-24T18:02:25.925Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -1.4% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-1%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 62.0 worked against it.
+

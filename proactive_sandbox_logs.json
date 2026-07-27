@@ -144110,10 +144110,10 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 50.0,
+        "mfe_pct": 55.2,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -153480,8 +153480,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -1.4
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 36.6,
+          "mae_pct": -8.5,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-27T13:41:23.175Z",
+            "return_pct": 36.6
+          }
+        }
+      },
+      "mfe_pct": 36.6,
+      "mae_pct": -8.5,
+      "determining_factor": "Bullish call FAILED (-1%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 62.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "BAC",
@@ -153494,12 +153519,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 19,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "BAC260821C00064000",
+        "closed_at": "2026-07-27T16:02:02.367Z",
+        "return_pct": -1.4,
+        "reason": "runner gave back to break-even (-1.4% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 36.6,
         "mae_pct": -8.5,
-        "stage": "scaled",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-27T13:41:23.175Z",
@@ -153511,6 +153545,11 @@
       {
         "order_id": "367464b8-bd00-4ed7-9738-a337143f1252",
         "at": "2026-07-27T13:41:23.175Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "bc53cf15-76c1-46d3-9c14-743111040438",
+        "at": "2026-07-27T16:02:02.367Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -154653,7 +154692,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 20.2,
+        "mfe_pct": 22.7,
         "mae_pct": -27.7,
         "stage": "initial"
       }

@@ -68,19 +68,23 @@ jobs:
               return {k: v for k, v in row.items()
                       if any(s in k.lower() for s in ("date", "time", "filed", "report", "disclos", "transact", "executed"))}
 
-          def paginate(path, out_csv, max_pages=40, stop_before="2026-05-25"):
-              rows, page = [], 0
+          def paginate(path, out_csv, limit, date_key, max_pages=60, stop_before="2026-05-25"):
+              rows, page, last_fp = [], 0, None
               while page < max_pages:
-                  d = get(path, {"limit": 500, "page": page})
+                  d = get(path, {"limit": limit, "page": page})
                   if not d or not isinstance(d, list) or not d:
                       break
+                  fp = json.dumps(d[0], sort_keys=True, default=str)[:200]
+                  if fp == last_fp:
+                      print(f"  page param IGNORED (page {page} == page {page-1}) - feed serves a fixed window only")
+                      break
+                  last_fp = fp
                   rows += d
-                  # stop when the page's oldest date-ish value predates the study window
-                  df = date_fields(d[-1])
-                  oldest = min([str(v)[:10] for v in df.values() if v], default="")
+                  oldest = min([str(r.get(date_key) or "9999")[:10] for r in d])
                   page += 1
-                  time.sleep(0.25)
+                  time.sleep(0.35)
                   if oldest and oldest < stop_before:
+                      print(f"  reached {oldest} at page {page} - window covered")
                       break
               if rows:
                   keys = sorted({k for r in rows for k in r.keys()})
@@ -97,9 +101,10 @@ jobs:
                   return f"list[{len(x)}]" + (" first=" + shape(x[0]) if x else "")
               return type(x).__name__
 
-          for name, path in (("congress", "/congress/recent-trades"),
-                             ("insider", "/insider/transactions"),
-                             ("analyst", "/screener/analysts")):
+          FEEDS = (("congress", "/congress/recent-trades", 199, "filed_at_date"),
+                   ("insider", "/insider/transactions", 500, "filing_date"),
+                   ("analyst", "/screener/analysts", 500, "timestamp"))
+          for name, path, lim, dkey in FEEDS:
               print(f"===== {name} {path} =====")
               first = get(path, {"limit": 3})
               if first is None:
@@ -119,7 +124,7 @@ jobs:
                       continue
               print(f"  fields: {sorted(first[0].keys())}")
               print(f"  date-ish fields of newest row: {date_fields(first[0])}")
-              rows = paginate(path, f"{name}.csv")
+              rows = paginate(path, f"{name}.csv", lim, dkey)
               if rows:
                   alld = [str(v)[:10] for r in rows for v in date_fields(r).values() if v]
                   print(f"  fetched {len(rows)} rows | date-ish range {min(alld)} .. {max(alld)}")

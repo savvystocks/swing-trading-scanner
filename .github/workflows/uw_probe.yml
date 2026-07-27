@@ -76,14 +76,33 @@ jobs:
                       w.writerows(rows)
               return rows
 
+          def shape(x, depth=0):
+              if isinstance(x, dict):
+                  return "dict keys=" + ",".join(list(x.keys())[:10])
+              if isinstance(x, list):
+                  return f"list[{len(x)}]" + (" first=" + shape(x[0]) if x else "")
+              return type(x).__name__
+
           for name, path in (("congress", "/congress/recent-trades"),
                              ("insider", "/insider/transactions"),
                              ("analyst", "/screener/analysts")):
               print(f"===== {name} {path} =====")
               first = get(path, {"limit": 3})
-              if not first or not isinstance(first, list) or not first:
-                  print("  no data / not a list - current-state only or param mismatch")
+              if first is None:
+                  print("  fetch failed")
                   continue
+              if not isinstance(first, list) or not first:
+                  print(f"  RESPONSE SHAPE: {shape(first)}")
+                  if isinstance(first, dict):
+                      for k, v in list(first.items())[:6]:
+                          print(f"    .{k}: {shape(v)}")
+                      inner = next((v for v in first.values() if isinstance(v, list) and v), None)
+                      if inner:
+                          first = inner
+                          print(f"  using inner list; fields: {sorted(first[0].keys())}")
+                          print(f"  date-ish of newest: {date_fields(first[0])}")
+                  if not isinstance(first, list) or not first:
+                      continue
               print(f"  fields: {sorted(first[0].keys())}")
               print(f"  date-ish fields of newest row: {date_fields(first[0])}")
               rows = paginate(path, f"{name}.csv")

@@ -135726,7 +135726,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 17.4,
+        "mfe_pct": 24.4,
         "mae_pct": -44.2,
         "stage": "initial"
       }
@@ -146923,8 +146923,31 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -50.5
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 14.7,
+          "mae_pct": -50.5,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 14.7,
+      "mae_pct": -50.5,
+      "determining_factor": "Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 60.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "XLE",
@@ -146937,14 +146960,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 15,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "XLE260821C00062000",
+        "closed_at": "2026-07-27T19:41:18.805Z",
+        "return_pct": -50.5,
+        "reason": "-50.5% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 14.7,
-        "mae_pct": -48.6,
-        "stage": "initial"
+        "mae_pct": -50.5,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "633a42ce-802e-416a-98ce-e9f867f17c15",
+        "at": "2026-07-27T19:41:18.805Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "9242458013f6",
@@ -156884,7 +156924,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -1.5,
+        "mfe_pct": 0.0,
         "mae_pct": -13.4,
         "stage": "initial"
       }
@@ -157165,7 +157205,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -5.7,
-        "mae_pct": -9.5,
+        "mae_pct": -12.7,
         "stage": "initial"
       }
     }

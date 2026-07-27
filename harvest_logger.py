@@ -323,17 +323,25 @@ def harvest_scan(params, executed_record=None, mock=False, engine_skips=None):
             occ = leg.get("occ_symbol")
             if not occ:
                 continue
+            # 2026-07-28 (school housekeeping, bake-off finding): the executed row's QUOTE must be the
+            # REAL Alpaca quote captured at entry (leg.execution_cost), not the model premium and the
+            # limit price (model x1.01) - those made entry_ref a price that was never quoted, anchoring
+            # every executed label on a fiction. FAIL-OPEN: if no real quote was captured (dry-run,
+            # synth resolution), fall back to the old synthetic fields rather than dropping the row.
+            _ec = leg.get("execution_cost") or {}
+            _real = isinstance(_ec.get("bid"), (int, float)) and isinstance(_ec.get("ask"), (int, float)) \
+                and _ec.get("ask") and _ec.get("source", "alpaca_quote") == "alpaca_quote"
             flow = {"ticker": executed_record.get("ticker"), "type": "call" if "call" in name else "put",
                     "strike": leg.get("strike"), "expiry": leg.get("expiry"),
-                    "price": leg.get("limit_price"), "bid": leg.get("entry_premium"), "ask": leg.get("limit_price"),
+                    "price": leg.get("limit_price"),
+                    "bid": _ec.get("bid") if _real else leg.get("entry_premium"),
+                    "ask": _ec.get("ask") if _real else leg.get("limit_price"),
                     "underlying_price": spot, "total_premium": rule_score}
             row = _build_row(flow, params, signal_ts, run_id, sha, True, None, "executed", md)
             row["occ_symbol"] = occ
-            # 2026-07-08 session-review fix: the executed row's spread must be the REAL Alpaca quote spread
-            # at entry (leg.execution_cost.bid_ask_spread_pct), NOT the synthetic entry_premium/limit_price
-            # gap (a ~0.99% constant that made every executed trade look tight). Measurement-only override:
-            # entry_ref, the label barriers and the bid path are all untouched.
-            _rsp = (leg.get("execution_cost") or {}).get("bid_ask_spread_pct")
+            # 2026-07-08 session-review fix (kept for the FALLBACK path): real Alpaca spread override
+            # when the quote itself is synthetic; redundant-but-harmless when _real is True above.
+            _rsp = _ec.get("bid_ask_spread_pct")
             if isinstance(_rsp, (int, float)):
                 row["spread_pct"] = round(float(_rsp), 3)
             _write_row(row)

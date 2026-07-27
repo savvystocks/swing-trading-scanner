@@ -43,7 +43,7 @@ the same vein would have consumed three weeks of harvest-forward hope without th
 | probe | hypothesis (pre-registered) | tripwire/kill | status + date |
 |---|---|---|---|
 | Insider drift (10d) | disclosure-time purchases carry drift | sign-consistent halves, LB>0 & hit LB>52% | **KILLED 07-28** (#7) |
-| VRP existence | implied vol > subsequent realized on our universe | VRP present in ≥60% of tickers, both halves | **Wed 07-29** (owned IV features + yfinance) |
+| VRP existence | implied vol > subsequent realized on our universe | VRP present in ≥60% of tickers, both halves | **PASS-interest 07-28** (ran early): median spread +11.2pts / +4.8pts across halves, IV>RV on 84%/66.5% of 866 ticker-days (451 tickers). Tenor-mismatched (10d RV vs ~30d IV, stated) and one calm month - existence shown, harvestability NOT: that is the premium-lane question (spec to owner Sun 08-02) |
 | Analyst-revision drift | upgrades carry multi-day stock drift | same bars as insider | harvest-forward: sensor block spec **Sun 08-02**, first read ~08-23 |
 | Congress disclosure drift | disclosed congress buys drift at 10–20d | same bars; DISCLOSURE time only | accumulate (199/week window) → first read when ≥300 events, est. ~08-16 |
 | PEAD 10–20d | post-earnings drift on owned sensors | same bars | **Sat 08-01** |

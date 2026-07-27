@@ -124095,7 +124095,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 18.6,
+        "mfe_pct": 20.0,
         "mae_pct": -21.4,
         "stage": "initial"
       }
@@ -132953,7 +132953,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 25.8,
-        "mae_pct": -31.8,
+        "mae_pct": -33.3,
         "stage": "initial"
       }
     }
@@ -138386,8 +138386,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -51.6
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -10.5,
+          "mae_pct": -51.6,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -10.5,
+      "mae_pct": -51.6,
+      "determining_factor": "Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 20.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "LYFT",
@@ -138400,14 +138421,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "LYFT260821P00013000",
+        "closed_at": "2026-07-27T15:11:21.457Z",
+        "return_pct": -51.6,
+        "reason": "-51.6% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -10.5,
-        "mae_pct": -49.5,
-        "stage": "initial"
+        "mae_pct": -51.6,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "3bf7629f-b148-4fbb-b7cf-4b0f3db503a5",
+        "at": "2026-07-27T15:11:21.457Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "1152bb103db0",
@@ -144036,7 +144074,7 @@
         "mfe_pct": 39.0,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -144627,7 +144665,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 31.2,
+        "mfe_pct": 32.5,
         "mae_pct": -20.8,
         "stage": "scaled",
         "close_fails": 0,
@@ -144919,7 +144957,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 11.6,
+        "mfe_pct": 14.5,
         "mae_pct": -17.8,
         "stage": "initial"
       }
@@ -149078,7 +149116,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -17.3,
+        "mfe_pct": -8.9,
         "mae_pct": -35.1,
         "stage": "initial"
       }
@@ -151371,7 +151409,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 1.7,
+        "mfe_pct": 22.9,
         "mae_pct": -23.3,
         "stage": "initial"
       }

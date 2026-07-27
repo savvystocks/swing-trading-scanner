@@ -399,6 +399,14 @@ proposal passes a simplicity test: does a number already in the reports justify 
 
 ## Scheduled decisions
 
+- **Premium lane activation — Sunday 2026-08-02 boundary.** The one-line ask: approve the
+  MEASUREMENT_PREMIUM lane (defined-risk short put verticals, mleg-atomic, 1/day, 2 concurrent, $800
+  total risk cap, firewalled from all gate evidence) to start Monday 2026-08-03 — yes or no. Spec:
+  reports/strategy/PREMIUM_LANE_SPEC_2026-07-28.md (pressure-tested draft; kill conditions
+  pre-registered; a low-VIX pass stays provisional until the lane has held through VIX > 25). If
+  approved: activation is a counted trial and the flag flips in one commit. Nothing activates
+  without the owner's explicit yes.
+
 - **Gating temperament** - decided at the first real calibration reliability curve (how aggressively the
   brain gates). Owner call.
 - **Position cap + paper-parallel** - decided at the live-capital gate (item 14): the per-underlying and

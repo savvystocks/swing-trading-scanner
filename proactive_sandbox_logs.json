@@ -139434,8 +139434,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 39.5
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 58.1,
+          "mae_pct": -14.0,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-27T13:51:22.683Z",
+            "return_pct": 44.2
+          }
+        }
+      },
+      "mfe_pct": 58.1,
+      "mae_pct": -14.0,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 43.5 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "BSX",
@@ -139448,12 +139473,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "BSX260821C00045000",
+        "closed_at": "2026-07-27T19:31:28.967Z",
+        "return_pct": 39.5,
+        "reason": "39.5% <= trail 46.5% (20% off peak MFE 58.1%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 58.1,
         "mae_pct": -14.0,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-27T13:51:22.683Z",
@@ -139465,6 +139499,11 @@
       {
         "order_id": "60c934d4-043f-48c4-8628-17c8c7d2f1b0",
         "at": "2026-07-27T13:51:22.683Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "b6822816-1898-4677-a17d-363f8607378a",
+        "at": "2026-07-27T19:31:28.966Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -146902,7 +146941,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 14.7,
-        "mae_pct": -47.7,
+        "mae_pct": -48.6,
         "stage": "initial"
       }
     }
@@ -156845,7 +156884,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -4.5,
+        "mfe_pct": -1.5,
         "mae_pct": -13.4,
         "stage": "initial"
       }
@@ -157126,7 +157165,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -5.7,
-        "mae_pct": -5.7,
+        "mae_pct": -9.5,
         "stage": "initial"
       }
     }

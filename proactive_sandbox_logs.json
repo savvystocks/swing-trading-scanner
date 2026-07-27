@@ -131175,8 +131175,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -52.5
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 43.7,
+          "mae_pct": -52.5,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 43.7,
+      "mae_pct": -52.5,
+      "determining_factor": "Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 105.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "SCHW",
@@ -131189,15 +131210,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 10,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "SCHW260821P00098000",
+        "closed_at": "2026-07-27T17:01:32.088Z",
+        "return_pct": -52.5,
+        "reason": "-52.5% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 43.7,
-        "mae_pct": -49.4,
-        "stage": "initial",
-        "close_fails": 4
+        "mae_pct": -52.5,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "bcfd3476-f0cd-4dc9-b579-93740ff21e6e",
+        "at": "2026-07-27T17:01:32.088Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "76fa155a3bb5",
@@ -133272,7 +133309,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 8.3,
-        "mae_pct": -33.3,
+        "mae_pct": -41.7,
         "stage": "initial"
       }
     }
@@ -144113,7 +144150,7 @@
         "mfe_pct": 55.2,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 1
+        "close_fails": 2
       }
     }
   },
@@ -146521,7 +146558,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 50.0,
+        "mfe_pct": 53.3,
         "mae_pct": -23.3,
         "stage": "trailing",
         "close_fails": 0,
@@ -151728,7 +151765,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -5.3,
+        "mfe_pct": -4.0,
         "mae_pct": -29.3,
         "stage": "initial"
       }

@@ -38,17 +38,31 @@ jobs:
           import os, json, csv, time, urllib.request, urllib.parse
           TOK = os.environ["UW"]
           BASE = "https://api.unusualwhales.com/api"
-          def get(path, params):
+          def get(path, params, tries=4):
               url = BASE + path + "?" + urllib.parse.urlencode(params)
               req = urllib.request.Request(url, headers={"Authorization": f"Bearer {TOK}",
-                                                         "Accept": "application/json"})
-              try:
-                  with urllib.request.urlopen(req, timeout=25) as r:
-                      d = json.loads(r.read().decode())
-                      return d.get("data", d)
-              except Exception as e:
-                  print(f"  fetch error {path} {type(e).__name__}")
-                  return None
+                                                         "Accept": "application/json",
+                                                         "User-Agent": "research-probe"})
+              for a in range(tries):
+                  try:
+                      with urllib.request.urlopen(req, timeout=25) as r:
+                          d = json.loads(r.read().decode())
+                          return d.get("data", d)
+                  except urllib.error.HTTPError as e:
+                      print(f"  HTTP {e.code} {path} (attempt {a+1})")
+                      if e.code == 429:
+                          time.sleep(8 * (a + 1))
+                          continue
+                      try:
+                          body = e.read().decode()[:200]
+                          print(f"    body: {body}")
+                      except Exception:
+                          pass
+                      return None
+                  except Exception as e:
+                      print(f"  fetch error {path} {type(e).__name__}: {e}")
+                      return None
+              return None
 
           def date_fields(row):
               return {k: v for k, v in row.items()

@@ -1,0 +1,40 @@
+name: uw-endpoint-probe
+
+# One-shot research probe (forward plan F2/F4): which UW API families does our plan tier include?
+# Prints HTTP status codes ONLY - no response data, no token. workflow_dispatch only; touches nothing.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe endpoint families (status codes only)
+        env:
+          UW: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+        run: |
+          probe() {
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+              -H "Authorization: Bearer $UW" -H "Accept: application/json" \
+              "https://api.unusualwhales.com/api$1?limit=1")
+            echo "$code $1"
+          }
+          echo "--- control (production endpoint, must be 200) ---"
+          probe "/option-trades/flow-alerts"
+          echo "--- congress ---"
+          probe "/congress/recent-trades"
+          probe "/congress/congress-trader"
+          probe "/congress/late-reports"
+          echo "--- analyst ---"
+          probe "/analysts/ratings"
+          probe "/analyst/ratings"
+          probe "/screener/analysts"
+          echo "--- insider ---"
+          probe "/insider/transactions"
+          probe "/market/insider-buy-sells"
+          echo "--- adjacent free reads on our tier ---"
+          probe "/darkpool/recent"
+          probe "/earnings/afterhours"
+          probe "/news/headlines"

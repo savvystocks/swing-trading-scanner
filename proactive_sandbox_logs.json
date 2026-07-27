@@ -123162,8 +123162,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 46.2
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 61.5,
+          "mae_pct": -42.3,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-27T13:41:19.022Z",
+            "return_pct": 34.6
+          }
+        }
+      },
+      "mfe_pct": 61.5,
+      "mae_pct": -42.3,
+      "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; negative_gamma amplified the breakout.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "GSK",
@@ -123176,12 +123201,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 11,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "GSK260821C00052000",
+        "closed_at": "2026-07-27T15:41:40.067Z",
+        "return_pct": 46.2,
+        "reason": "46.2% <= trail 49.2% (20% off peak MFE 61.5%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 61.5,
         "mae_pct": -42.3,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-27T13:41:19.022Z",
@@ -123193,6 +123227,11 @@
       {
         "order_id": "11ba930c-fb43-4217-bdb5-8a4e758e5de0",
         "at": "2026-07-27T13:41:19.022Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "e5169c22-d8b0-4a75-a8b1-942b19b81006",
+        "at": "2026-07-27T15:41:40.067Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -129361,7 +129400,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -10.9,
-        "mae_pct": -45.5,
+        "mae_pct": -47.3,
         "stage": "initial"
       }
     }
@@ -144074,7 +144113,7 @@
         "mfe_pct": 49.4,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 3
+        "close_fails": 4
       }
     }
   },
@@ -149116,7 +149155,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -8.9,
+        "mfe_pct": -6.7,
         "mae_pct": -35.1,
         "stage": "initial"
       }
@@ -151130,7 +151169,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -11.9,
-        "mae_pct": -45.2,
+        "mae_pct": -47.6,
         "stage": "initial"
       }
     }
@@ -151689,7 +151728,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -8.0,
+        "mfe_pct": -6.7,
         "mae_pct": -29.3,
         "stage": "initial"
       }
@@ -156680,7 +156719,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -10.4,
-        "mae_pct": -10.4,
+        "mae_pct": -11.9,
         "stage": "initial"
       }
     }

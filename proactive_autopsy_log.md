@@ -3196,3 +3196,12 @@
 
 **Determining factor:** Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 20.0.
 
+## Autopsy - GSK (aceb9a1eca63)
+- entered 2026-07-20T17:11:51.415Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +46.2% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; negative_gamma amplified the breakout.
+

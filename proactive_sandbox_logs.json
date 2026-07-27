@@ -116927,8 +116927,31 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -53.7
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 7.0,
+          "mae_pct": -53.7,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 7.0,
+      "mae_pct": -53.7,
+      "determining_factor": "Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 23.5 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "WULF",
@@ -116941,14 +116964,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 9,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "WULF260821C00020500",
+        "closed_at": "2026-07-27T14:11:23.085Z",
+        "return_pct": -53.7,
+        "reason": "-53.7% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 7.0,
-        "mae_pct": -48.8,
-        "stage": "initial"
+        "mae_pct": -53.7,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "57174a9f-ec6f-48e6-b684-7cc43bf73d6c",
+        "at": "2026-07-27T14:11:23.084Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "d269f1fc7111",
@@ -123139,9 +123179,9 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 42.3,
+        "mfe_pct": 50.0,
         "mae_pct": -42.3,
-        "stage": "scaled",
+        "stage": "trailing",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-27T13:41:19.022Z",
@@ -131383,7 +131423,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 34.2,
-        "mae_pct": -34.2,
+        "mae_pct": -39.6,
         "stage": "initial"
       }
     }
@@ -146929,7 +146969,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -4.5,
-        "mae_pct": -36.5,
+        "mae_pct": -40.4,
         "stage": "initial"
       }
     }
@@ -149807,7 +149847,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -2.3,
+        "mfe_pct": -1.1,
         "mae_pct": -18.8,
         "stage": "initial"
       }
@@ -150686,7 +150726,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -4.5,
-        "mae_pct": -30.6,
+        "mae_pct": -34.3,
         "stage": "initial"
       }
     }

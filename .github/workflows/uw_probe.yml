@@ -17,7 +17,7 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: Status probe
         if: ${{ github.event.inputs.mode == 'status' }}
@@ -68,7 +68,7 @@ jobs:
               return {k: v for k, v in row.items()
                       if any(s in k.lower() for s in ("date", "time", "filed", "report", "disclos", "transact", "executed"))}
 
-          def paginate(path, out_csv, limit, date_key, max_pages=60, stop_before="2026-05-25"):
+          def paginate(path, out_csv, limit, date_key, max_pages=240, stop_before="2026-03-01"):
               rows, page, last_fp = [], 0, None
               while page < max_pages:
                   d = get(path, {"limit": limit, "page": page})

@@ -69,9 +69,31 @@ jobs:
 
           uni = json.load(open("archiver_universe.json"))
           tickers = uni["core"] + uni["liquid"]
+          today = datetime.now(timezone.utc).date()
           for t in tickers:
-              save(f"chains_{t}", get(f"/stock/{t}/option-chains"))
+              chains = get(f"/stock/{t}/option-chains")
+              save(f"chains_{t}", chains)
               save(f"ivrank_{t}", get(f"/stock/{t}/iv-rank"))
+              # the chain endpoint returns the contract UNIVERSE only (bare OCC symbols); the daily
+              # IV/greeks surface - the genuinely irreplaceable part - comes from /greeks per expiry.
+              # Capture the nearest 8 expiries <= 75 DTE: the tenor band the premium/VRP research uses.
+              occs = chains.get("data", chains) if isinstance(chains, (dict, list)) else []
+              if isinstance(occs, list):
+                  exps = set()
+                  for s in occs:
+                      if isinstance(s, str) and len(s) > 15:
+                          root_len = len(s) - 15
+                          exps.add("20" + s[root_len:root_len + 6])
+                  def dte(e):
+                      try:
+                          return (datetime.strptime(e, "%Y%m%d").date() - today).days
+                      except ValueError:
+                          return 9999
+                  near = sorted((e for e in exps if 0 <= dte(e) <= 75), key=dte)[:8]
+                  for e in near:
+                      iso = f"{e[:4]}-{e[4:6]}-{e[6:]}"
+                      save(f"greeks_{t}_{e}", get(f"/stock/{t}/greeks", {"expiry": iso}))
+                      time.sleep(0.2)
               time.sleep(0.3)
           save("congress_window", get("/congress/recent-trades", {"limit": 199}))
           save("analyst_window", get("/screener/analysts", {"limit": 500}))

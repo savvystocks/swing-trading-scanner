@@ -399,6 +399,20 @@ proposal passes a simplicity test: does a number already in the reports justify 
 
 ## Scheduled decisions
 
+- **Dark-pool sensor hardening — Sunday 2026-08-02 boundary (governed; birth certificate:
+  source_hunt_2026-07-27.md machinery finding #1).** Finding refined 2026-07-28: there is NO
+  explicit payload ration — every full payload calls `darkpool_node`, and the 35% coverage is the
+  UW darkpool endpoint failing/rate-limiting inside `_safe` (~65% of calls). Spec: add 429-aware
+  retry-with-backoff (2 retries) inside `darkpool_node` + lengthen the UW client's darkpool cache
+  TTL; expected coverage 35% → ~80%+; cost ≤ 2 extra API calls per failing sensor call, inside
+  existing UW limits, £0. Harvest-side change → passivity battery mandatory. NOT deployed until the
+  owner's go at the boundary.
+- **Weekly-report expected-bands view (queued item 6) + shadow feature-attribution + inbox
+  retention — staged, need design/decision.** Bands: how NORMAL-VARIANCE vs DEGRADATION bands are
+  drawn around the four owner numbers deserves a considered design, not a 1am one — proposal at the
+  boundary. Attribution: SHAP-free "extreme-decile" per-TAKE attribution proposed (£0); confirm
+  approach. Inbox retention (item 4): pruning committed jsonl >14 days touches the transport — needs
+  an explicit owner ok.
 - **Premium lane activation — Sunday 2026-08-02 boundary.** The one-line ask: approve the
   MEASUREMENT_PREMIUM lane (defined-risk short put verticals, mleg-atomic, 1/day, 2 concurrent, $800
   total risk cap, firewalled from all gate evidence) to start Monday 2026-08-03 — yes or no. Spec:

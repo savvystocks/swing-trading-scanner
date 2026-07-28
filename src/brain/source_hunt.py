@@ -28,6 +28,12 @@ FLOW_BEST_D = 0.541
 FLOW_MEDIAN_D = 0.084
 DAY_MS = 86400000
 
+# EVENT-STUDY DEFAULTS (standing hygiene rule, 2026-07-28): every event study on stocks applies a
+# liquidity floor BEFORE any outcome is read - unfiltered micro-caps contaminated the 8-K study's
+# means (a handful of sub-$1 names printed "+84%" cells). Winsorize displayed means at 1/99pct.
+LIQUIDITY_FLOOR_PRICE = 5.0
+LIQUIDITY_FLOOR_MCAP = 2.5e8
+
 
 def cohens_d(values, win_mask):
     v = np.asarray(values, float)

@@ -6,13 +6,16 @@ components; the trading path is untouched (logging is observational, fail-open, 
 
 ## Storage
 
-SQLite at `data/harvest.db` (WAL, `busy_timeout=30000`). Local-only — never written inside GitHub
-Actions. Gitignored, with a dated backup at `data/harvest_backups/harvest_YYYYMMDD.db` (last 14 kept).
+SQLite at `data/harvest.db` (WAL, `busy_timeout=30000`). Lives on the VPS (harvest-poller,
+64.176.178.15) — never written inside GitHub Actions. Gitignored, with a same-day crash-cushion
+backup at `data/harvest_backups/harvest_YYYYMMDD.db` (last 2 kept; the real archive is the nightly
+off-box snapshot repo).
 
-Transport: the logger runs in GHA (inside the scan loop), where the DB does not persist, so it
-appends candidate rows to `data/harvest_inbox/candidates_YYYYMMDD.jsonl`. That inbox IS committed
-back to the `v10-research-sandbox` branch; the local poller pulls, ingests it into SQLite on each
-run (idempotent on `candidate_id`), then polls. Ingest never deletes the inbox.
+Transport (updated 2026-07-28 to match reality; the code wins): the logger runs in GHA (inside the
+scan loop), where the DB does not persist, so it appends candidate rows to
+`data/harvest_inbox/candidates_YYYYMMDD.jsonl` (and fill-ledger events to `fills_YYYYMMDD.jsonl`).
+That inbox IS committed back to `main`; the VPS poller syncs via fetch+reset, ingests into SQLite on
+each run (idempotent on `candidate_id` / `event_id`), then polls. Ingest never deletes the inbox.
 
 ## Component 1 — candidate logger
 

@@ -9,7 +9,7 @@ NORTH_STAR.md is the charter (mission, principles, risk constraints); it outrank
 Single engine: V10, on `main`, as of 2026-07-04. V9 was retired that day — the old Unusual-Whales-flow → Alpaca live engine and its workflows are gone. There is one branch, `main`; there is no separate sandbox branch anymore. Anything removed is recoverable from the `pre-v9-retire-*` and `archive/v10-research-sandbox-final` tags.
 
 Standing rules (non-negotiable):
-- £0 incremental cost — existing VPS, GitHub, Unusual Whales, and Alpaca only.
+- £0 incremental cost by default — existing VPS, GitHub, Unusual Whales, and Alpaca only. Any spend is case-by-case: the math goes to Savvas and he decides (NORTH_STAR); the $10/mo VPS upgrade of 2026-07-22 is the standing example, not a precedent for silent spending.
 - EODHD does not exist for any purpose. Do not add, call, or reference it.
 - Labels are bid-only and executable-price-only (entry_ref = ask at signal, never mid).
 - Harvest passivity is inviolable: logging must never alter or crash the trade path. Re-run `test_harvest_passivity.py` after ANY change touching the harvest logger or path.

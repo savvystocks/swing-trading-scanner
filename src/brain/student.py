@@ -217,6 +217,29 @@ def acceptance(trained, pbo_out, n_fb, trials):
     }
 
 
+def calibration_map(p_cal, hurdle, top=8):
+    """School priority-2 (2026-07-28, report-only): the step-cliff visibility map. Isotonic
+    calibration produces probability PLATEAUS; selection counts jump discontinuously as plateaus
+    cross the bar (the mechanism behind the 3->54 selection explosion of 07-26). This renders where
+    the plateaus sit and how much mass is near the bar, so the mechanism is visible BEFORE it
+    misbehaves. No decision impact; calibration-method changes remain separate counted trials."""
+    p = np.asarray(p_cal, float)
+    p = p[np.isfinite(p)]
+    if p.size == 0:
+        return None
+    vals, counts = np.unique(np.round(p, 4), return_counts=True)
+    order = np.argsort(-counts)
+    plateaus = [{"p": float(vals[i]), "n": int(counts[i]),
+                 "vs_bar": round(float(vals[i] - hurdle), 4)} for i in order[:top]]
+    bands = {"at_or_above_bar": int((p >= hurdle).sum()),
+             "within_5pts_below": int(((p >= hurdle - 0.05) & (p < hurdle)).sum()),
+             "5_to_10_below": int(((p >= hurdle - 0.10) & (p < hurdle - 0.05)).sum()),
+             "10_to_20_below": int(((p >= hurdle - 0.20) & (p < hurdle - 0.10)).sum())}
+    cliff = bands["within_5pts_below"] == 0 and bands["5_to_10_below"] == 0
+    return {"n": int(p.size), "n_distinct_levels": int(vals.size), "plateaus": plateaus,
+            "bands": bands, "max_p": float(p.max()), "cliff": bool(cliff)}
+
+
 def shadow_table(trained, df, X, days=5):
     """What the frozen Student WOULD say about the most recent candidates - the shadow report.
     Reporting only; nothing here touches the engine."""

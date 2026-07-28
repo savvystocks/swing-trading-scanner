@@ -3340,3 +3340,12 @@
 
 **Determining factor:** Bullish call FAILED (-57%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 16.0 worked against it.
 
+## Autopsy - FRMI (f89083e359d9)
+- entered 2026-07-24T17:51:45.421Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 7.5 worked against it.
+

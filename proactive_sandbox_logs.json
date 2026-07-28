@@ -128532,7 +128532,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 56.4,
+        "mfe_pct": 57.1,
         "mae_pct": -21.5,
         "stage": "trailing",
         "close_fails": 0,
@@ -132578,7 +132578,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 42.6,
-        "mae_pct": -19.9,
+        "mae_pct": -25.5,
         "stage": "initial"
       }
     }
@@ -133752,7 +133752,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 6.2,
-        "mae_pct": -45.1,
+        "mae_pct": -49.6,
         "stage": "initial"
       }
     }
@@ -136916,11 +136916,23 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 27.8,
+        "mfe_pct": 33.3,
         "mae_pct": -16.7,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-07-28T13:51:25.811Z",
+          "return_pct": 33.3
+        }
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "24dc1854-eaa1-4877-a5cb-20e9d372def9",
+        "at": "2026-07-28T13:51:25.811Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "0978a65e88f2",
@@ -142886,7 +142898,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 38.3,
+        "mfe_pct": 41.7,
         "mae_pct": -48.3,
         "stage": "scaled",
         "close_fails": 0,
@@ -144494,10 +144506,10 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 107.8,
+        "mfe_pct": 117.5,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 1
+        "close_fails": 2
       }
     }
   },
@@ -148168,7 +148180,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -12.2,
-        "mae_pct": -42.9,
+        "mae_pct": -44.9,
         "stage": "initial"
       }
     }
@@ -153793,8 +153805,31 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -50.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": -8.3,
+          "mae_pct": -50.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -8.3,
+      "mae_pct": -50.0,
+      "determining_factor": "Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 7.5 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "FRMI",
@@ -153807,14 +153842,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 19,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "FRMI260821C00008000",
+        "closed_at": "2026-07-28T13:51:26.379Z",
+        "return_pct": -50.0,
+        "reason": "-50.0% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -8.3,
-        "mae_pct": -45.8,
-        "stage": "initial"
+        "mae_pct": -50.0,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "c68cfb81-1377-49a6-8fa6-8c47620b4331",
+        "at": "2026-07-28T13:51:26.379Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "b6f47b15c191",
@@ -156209,7 +156261,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 13.3,
+        "mfe_pct": 20.0,
         "mae_pct": -26.7,
         "stage": "initial"
       }
@@ -156770,7 +156822,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 11.5,
-        "mae_pct": -34.6,
+        "mae_pct": -36.5,
         "stage": "initial"
       }
     }

@@ -86,7 +86,7 @@ jobs:
           PY
       - name: Push to snapshots repo (off-box at capture time)
         env:
-          SNAP_KEY: ${{ secrets.HARVEST_SNAPSHOTS_DEPLOY_KEY }}
+          SNAP_KEY: ${{ secrets.HARVEST_SNAPSHOTS_WRITE_KEY }}
         run: |
           mkdir -p ~/.ssh && printf '%s\n' "$SNAP_KEY" > ~/.ssh/snap && chmod 600 ~/.ssh/snap
           export GIT_SSH_COMMAND="ssh -i ~/.ssh/snap -o StrictHostKeyChecking=accept-new"

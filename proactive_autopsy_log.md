@@ -3385,3 +3385,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 8.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - CLSK (ADOPT-2a1b3db65a)
+- entered 2026-07-21T15:20:59.158Z | trigger orphan_reconcile | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | +46.4% | WINNER |
+
+**Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
+

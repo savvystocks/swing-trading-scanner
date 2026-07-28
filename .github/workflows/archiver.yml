@@ -89,7 +89,16 @@ jobs:
                           return (datetime.strptime(e, "%Y%m%d").date() - today).days
                       except ValueError:
                           return 9999
-                  near = sorted((e for e in exps if 0 <= dte(e) <= 75), key=dte)[:8]
+                  # dailies (SPY/QQQ) make "nearest 8" span ~1.5 weeks and miss the 30-45 DTE band
+                  # the premium research needs; pick nearest 3, then greedily one per >=5-day gap
+                  # across the rest of 0-75 DTE (cap 10 total)
+                  cand = sorted((e for e in exps if 0 <= dte(e) <= 75), key=dte)
+                  near = cand[:3]
+                  for e in cand[3:]:
+                      if len(near) >= 10:
+                          break
+                      if dte(e) - dte(near[-1]) >= 5:
+                          near.append(e)
                   for e in near:
                       iso = f"{e[:4]}-{e[4:6]}-{e[6:]}"
                       save(f"greeks_{t}_{e}", get(f"/stock/{t}/greeks", {"expiry": iso}))

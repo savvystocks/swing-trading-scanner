@@ -118227,8 +118227,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -53.5
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 7.7,
+          "mae_pct": -53.5,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 7.7,
+      "mae_pct": -53.5,
+      "determining_factor": "Bearish put FAILED (-54%, move 0.0%): no breakdown materialised; spot held above zero-gamma 93.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "WFC",
@@ -118241,14 +118262,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 9,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "WFC260821P00083000",
+        "closed_at": "2026-07-28T13:31:31.137Z",
+        "return_pct": -53.5,
+        "reason": "-53.5% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 7.7,
-        "mae_pct": -44.4,
-        "stage": "initial"
+        "mae_pct": -53.5,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "358403f1-46a0-4d96-8c90-1f7dcc127b84",
+        "at": "2026-07-28T13:31:31.137Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "791ecd6626db",
@@ -129151,7 +129189,7 @@
     },
     "leg_path": {
       "adopted_leg": {
-        "mfe_pct": 31.9,
+        "mfe_pct": 35.5,
         "mae_pct": -30.1,
         "stage": "scaled",
         "close_fails": 0,
@@ -129428,8 +129466,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -54.5
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": -10.9,
+          "mae_pct": -54.5,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -10.9,
+      "mae_pct": -54.5,
+      "determining_factor": "Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 17.5 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "FLY",
@@ -129442,14 +129501,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 9,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "FLY260821C00022000",
+        "closed_at": "2026-07-28T13:31:32.421Z",
+        "return_pct": -54.5,
+        "reason": "-54.5% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -10.9,
-        "mae_pct": -47.3,
-        "stage": "initial"
+        "mae_pct": -54.5,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "3f8cb922-c5f5-4251-86c6-636bc9c34f73",
+        "at": "2026-07-28T13:31:32.421Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "91afb893b790",
@@ -131540,8 +131616,31 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -68.5
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 34.2,
+          "mae_pct": -68.5,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 34.2,
+      "mae_pct": -68.5,
+      "determining_factor": "Bullish call FAILED (-68%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 22.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "AG",
@@ -131554,14 +131653,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 10,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "AG260821C00017500",
+        "closed_at": "2026-07-28T13:31:33.417Z",
+        "return_pct": -68.5,
+        "reason": "-68.5% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 34.2,
-        "mae_pct": -45.9,
-        "stage": "initial"
+        "mae_pct": -68.5,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "40578635-b72e-4816-8b5a-f462ebfacdd6",
+        "at": "2026-07-28T13:31:33.417Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "0b9269d82de6",
@@ -133076,7 +133192,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 25.8,
-        "mae_pct": -33.3,
+        "mae_pct": -48.5,
         "stage": "initial"
       }
     }
@@ -135476,8 +135592,31 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -53.3
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 41.8,
+          "mae_pct": -53.3,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 41.8,
+      "mae_pct": -53.3,
+      "determining_factor": "Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 25.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "SILJ",
@@ -135490,14 +135629,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 12,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "SILJ260821C00026000",
+        "closed_at": "2026-07-28T13:31:34.401Z",
+        "return_pct": -53.3,
+        "reason": "-53.3% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 41.8,
-        "mae_pct": -36.9,
-        "stage": "initial"
+        "mae_pct": -53.3,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "489c2dc4-82b4-4ab9-8b90-f1b1e03871e4",
+        "at": "2026-07-28T13:31:34.401Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "0a0ef1b9fa8a",
@@ -135756,8 +135912,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -47.7
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 30.2,
+          "mae_pct": -47.7,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-27T19:49:20.392Z",
+            "return_pct": 30.2
+          }
+        }
+      },
+      "mfe_pct": 30.2,
+      "mae_pct": -47.7,
+      "determining_factor": "Bearish put FAILED (-48%, move 0.0%): no breakdown materialised; spot held above zero-gamma 38.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "HAL",
@@ -135770,12 +135951,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 12,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "HAL260821P00032000",
+        "closed_at": "2026-07-28T13:31:35.392Z",
+        "return_pct": -47.7,
+        "reason": "runner gave back to break-even (-47.7% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 30.2,
-        "mae_pct": -44.2,
-        "stage": "scaled",
+        "mae_pct": -47.7,
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-27T19:49:20.392Z",
@@ -135787,6 +135977,11 @@
       {
         "order_id": "659b3ac4-c9f9-4545-8bb7-f4a77e8a646c",
         "at": "2026-07-27T19:49:20.392Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "6e07eed5-1cf5-4d00-af9f-98acc7b8de49",
+        "at": "2026-07-28T13:31:35.392Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -136721,7 +136916,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 20.8,
+        "mfe_pct": 25.0,
         "mae_pct": -16.7,
         "stage": "initial"
       }
@@ -138857,7 +139052,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 4.0,
-        "mae_pct": -31.7,
+        "mae_pct": -49.5,
         "stage": "initial"
       }
     }
@@ -144247,10 +144442,10 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 55.2,
+        "mfe_pct": 72.1,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 4
+        "close_fails": 0
       }
     }
   },
@@ -147921,7 +148116,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -12.2,
-        "mae_pct": -34.7,
+        "mae_pct": -42.9,
         "stage": "initial"
       }
     }
@@ -149386,7 +149581,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -5.8,
-        "mae_pct": -35.1,
+        "mae_pct": -38.7,
         "stage": "initial"
       }
     }
@@ -149947,7 +150142,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 11.1,
-        "mae_pct": -16.7,
+        "mae_pct": -27.8,
         "stage": "initial"
       }
     }
@@ -150241,7 +150436,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 13.6,
+        "mfe_pct": 14.2,
         "mae_pct": -18.8,
         "stage": "initial"
       }
@@ -151102,8 +151297,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -67.2
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -4.5,
+          "mae_pct": -67.2,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -4.5,
+      "mae_pct": -67.2,
+      "determining_factor": "Bearish put FAILED (-67%, move 0.0%): no breakdown materialised; spot held above zero-gamma 61.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "BMY",
@@ -151116,14 +151332,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 19,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "BMY260821P00060000",
+        "closed_at": "2026-07-28T13:31:37.234Z",
+        "return_pct": -67.2,
+        "reason": "-67.2% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -4.5,
-        "mae_pct": -44.8,
-        "stage": "initial"
+        "mae_pct": -67.2,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "a1fb3675-8f29-4d7c-b7c1-25f24eefd75e",
+        "at": "2026-07-28T13:31:37.234Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "c730ec28d114",
@@ -152223,8 +152456,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -61.7
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -10.2,
+          "mae_pct": -61.7,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -10.2,
+      "mae_pct": -61.7,
+      "determining_factor": "Bearish put FAILED (-62%, move 0.0%): no breakdown materialised; spot held above zero-gamma 20.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "ONON",
@@ -152237,14 +152491,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 19,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "ONON260821P00034000",
+        "closed_at": "2026-07-28T13:31:38.294Z",
+        "return_pct": -61.7,
+        "reason": "-61.7% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -10.2,
-        "mae_pct": -49.1,
-        "stage": "initial"
+        "mae_pct": -61.7,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "be138c76-8d72-4cc7-9dc8-86cf1afcef31",
+        "at": "2026-07-28T13:31:38.294Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "18cad3dc8d63",
@@ -152834,8 +153105,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -54.4
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": -15.2,
+          "mae_pct": -54.4,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -15.2,
+      "mae_pct": -54.4,
+      "determining_factor": "Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 15.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "GLXY",
@@ -152848,14 +153140,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 19,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "GLXY260821C00024500",
+        "closed_at": "2026-07-28T13:31:39.274Z",
+        "return_pct": -54.4,
+        "reason": "-54.4% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -15.2,
-        "mae_pct": -43.0,
-        "stage": "initial"
+        "mae_pct": -54.4,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "b132390f-61f8-4e2a-b9a4-e383aa6a654c",
+        "at": "2026-07-28T13:31:39.274Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "294ea2f8eeb4",
@@ -153450,7 +153759,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -8.3,
-        "mae_pct": -37.5,
+        "mae_pct": -41.7,
         "stage": "initial"
       }
     }
@@ -154926,11 +155235,23 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 22.7,
+        "mfe_pct": 34.5,
         "mae_pct": -27.7,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-07-28T13:31:40.249Z",
+          "return_pct": 34.5
+        }
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "728619db-ced2-471b-b50e-856f0ae42d81",
+        "at": "2026-07-28T13:31:40.249Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "ADOPT-26def20256",
@@ -155837,7 +156158,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 6.7,
-        "mae_pct": -10.0,
+        "mae_pct": -26.7,
         "stage": "initial"
       }
     }
@@ -156685,7 +157006,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -9.1,
-        "mae_pct": -27.3,
+        "mae_pct": -42.4,
         "stage": "initial"
       }
     }
@@ -156991,7 +157312,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 0.0,
+        "mfe_pct": 1.5,
         "mae_pct": -13.4,
         "stage": "initial"
       }
@@ -157272,9 +157593,30 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -5.7,
-        "mae_pct": -12.7,
+        "mae_pct": -46.8,
         "stage": "initial"
       }
     }
+  },
+  {
+    "type": "reconcile",
+    "ts_utc": "2026-07-28T13:31:41.158Z",
+    "open_records_no_position": 0,
+    "positions_no_record": 3,
+    "sample_stale": [],
+    "sample_orphan": [
+      "LQD260821C00111000",
+      "PFE260814C00025500",
+      "STLA260807P00005000"
+    ]
+  },
+  {
+    "type": "daily_brake",
+    "ts_utc": "2026-07-28T13:31:42.068Z",
+    "mode": "shadow",
+    "reason": "7 stop-outs >= 3",
+    "stopouts": 7,
+    "realized_loss_usd": 3686.4,
+    "status": "SHADOW"
   }
 ]

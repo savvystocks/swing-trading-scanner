@@ -1,0 +1,103 @@
+name: chain-feed-archiver
+
+# THE ARCHIVER (owner GO 2026-07-28): daily near-close snapshot of UW option chains (IV+greeks per
+# contract) for the archiver universe, plus the two LOSSY rolling-window feeds (congress 199-row
+# window, analyst ~4-day window). Every unarchived day is unrecoverable - this is the one dataset
+# that cannot be bought later under the GBP-0 rule.
+# Write-only: touches no engine path, no decision, no trade logic. Data lands in the private
+# harvest-snapshots repo (off-box at capture time); the VPS clone becomes a second copy on its next
+# pull. Runs in GHA because the working UW token lives here. 19:50 UTC = 10 minutes before the US
+# close: near-close quotes, still live.
+
+on:
+  schedule:
+    - cron: "50 19 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Capture snapshots
+        env:
+          UW: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os, json, gzip, time, urllib.request, urllib.parse
+          from datetime import datetime, timezone
+          TOK = os.environ["UW"]
+          BASE = "https://api.unusualwhales.com/api"
+          OUT = "archive_out"
+          os.makedirs(OUT, exist_ok=True)
+          manifest = {"captured_utc": datetime.now(timezone.utc).isoformat(),
+                      "calls": 0, "http_429": 0, "errors": 0, "files": {}}
+
+          def get(path, params=None, tries=4):
+              url = BASE + path + ("?" + urllib.parse.urlencode(params) if params else "")
+              req = urllib.request.Request(url, headers={"Authorization": f"Bearer {TOK}",
+                                                         "Accept": "application/json",
+                                                         "User-Agent": "archiver"})
+              for a in range(tries):
+                  manifest["calls"] += 1
+                  try:
+                      with urllib.request.urlopen(req, timeout=30) as r:
+                          return json.loads(r.read().decode())
+                  except urllib.error.HTTPError as e:
+                      if e.code == 429:
+                          manifest["http_429"] += 1
+                          time.sleep(6 * (a + 1))
+                          continue
+                      manifest["errors"] += 1
+                      return None
+                  except Exception:
+                      manifest["errors"] += 1
+                      return None
+              manifest["errors"] += 1
+              return None
+
+          def save(name, obj):
+              if obj is None:
+                  manifest["files"][name] = "FAILED"
+                  return
+              raw = json.dumps(obj, separators=(",", ":")).encode()
+              p = os.path.join(OUT, name + ".json.gz")
+              with gzip.open(p, "wb") as fh:
+                  fh.write(raw)
+              manifest["files"][name] = {"raw_bytes": len(raw), "gz_bytes": os.path.getsize(p)}
+
+          uni = json.load(open("archiver_universe.json"))
+          tickers = uni["core"] + uni["liquid"]
+          for t in tickers:
+              save(f"chains_{t}", get(f"/stock/{t}/option-chains"))
+              save(f"ivrank_{t}", get(f"/stock/{t}/iv-rank"))
+              time.sleep(0.3)
+          save("congress_window", get("/congress/recent-trades", {"limit": 199}))
+          save("analyst_window", get("/screener/analysts", {"limit": 500}))
+
+          ok = sum(1 for v in manifest["files"].values() if v != "FAILED")
+          manifest["ok"] = ok
+          manifest["total"] = len(manifest["files"])
+          json.dump(manifest, open(os.path.join(OUT, "manifest.json"), "w"), indent=2)
+          gz = sum(v["gz_bytes"] for v in manifest["files"].values() if isinstance(v, dict))
+          print(f"captured {ok}/{len(manifest['files'])} files | {manifest['calls']} calls | "
+                f"429s {manifest['http_429']} | errors {manifest['errors']} | {gz/1e6:.2f} MB gz")
+          PY
+      - name: Push to snapshots repo (off-box at capture time)
+        env:
+          SNAP_KEY: ${{ secrets.HARVEST_SNAPSHOTS_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh && printf '%s\n' "$SNAP_KEY" > ~/.ssh/snap && chmod 600 ~/.ssh/snap
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/snap -o StrictHostKeyChecking=accept-new"
+          git clone -q --depth 1 git@github.com:savvystocks/harvest-snapshots.git snaprepo
+          DAY=$(date -u +%F)
+          mkdir -p "snaprepo/archiver/$DAY"
+          cp archive_out/* "snaprepo/archiver/$DAY/"
+          cd snaprepo
+          git config user.name "archiver-bot"
+          git config user.email "noreply@github.com"
+          git add archiver
+          git commit -m "archiver: $DAY snapshot [skip ci]" || { echo "nothing to commit"; exit 0; }
+          git push origin HEAD:main
+          echo "landed: archiver/$DAY ($(ls archiver/$DAY | wc -l) files)"

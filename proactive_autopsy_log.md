@@ -3376,3 +3376,12 @@
 
 **Determining factor:** Calendar FAILED (-54%): the range broke; IV term None (ratio None) hurt the spread.
 
+## Autopsy - NVTS (8bd23480cb39)
+- entered 2026-07-21T14:41:59.769Z | trigger regime_BEARISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +52.8% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 8.0 -> negative-gamma slide, no positive catalyst.
+

@@ -128515,8 +128515,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": 52.8
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 68.7,
+          "mae_pct": -21.5,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-24T14:40:58.338Z",
+            "return_pct": 32.5
+          }
+        }
+      },
+      "mfe_pct": 68.7,
+      "mae_pct": -21.5,
+      "determining_factor": "Bearish breakdown (move 0.0%): spot below zero-gamma 8.0 -> negative-gamma slide, no positive catalyst.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "NVTS",
@@ -128529,19 +128554,35 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "NVTS260821P00012000",
+        "closed_at": "2026-07-28T14:41:31.256Z",
+        "return_pct": 52.8,
+        "reason": "52.8% <= trail 55.0% (20% off peak MFE 68.7%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 68.7,
         "mae_pct": -21.5,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-24T14:40:58.338Z",
           "return_pct": 32.5
         }
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "c8b7835a-d6f6-4e40-943e-bd4bccb8ac53",
+        "at": "2026-07-28T14:41:31.256Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "a7a3a2d68aef",
@@ -144587,7 +144628,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 1
+        "close_fails": 2
       }
     }
   },
@@ -150590,7 +150631,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 44.9,
+        "mfe_pct": 45.5,
         "mae_pct": -18.8,
         "stage": "scaled",
         "close_fails": 0,
@@ -151200,7 +151241,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 11.0,
+        "mfe_pct": 12.8,
         "mae_pct": -32.1,
         "stage": "initial"
       }
@@ -156693,7 +156734,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -5.7,
+        "mfe_pct": -5.2,
         "mae_pct": -30.4,
         "stage": "initial"
       }

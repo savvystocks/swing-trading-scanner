@@ -2242,3 +2242,9 @@ trade: winner=adopted_leg loser=adopted_leg | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - NVTS (8bd23480cb39) - 2026-07-28T14:41:31.919Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

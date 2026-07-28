@@ -144710,7 +144710,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 3
+        "close_fails": 4
       }
     }
   },
@@ -145284,8 +145284,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 51.9
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 66.2,
+          "mae_pct": -20.8,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-27T15:01:43.580Z",
+            "return_pct": 31.2
+          }
+        }
+      },
+      "mfe_pct": 66.2,
+      "mae_pct": -20.8,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 17.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "RKT",
@@ -145298,12 +145323,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "RKT260821C00013500",
+        "closed_at": "2026-07-28T19:11:38.137Z",
+        "return_pct": 51.9,
+        "reason": "51.9% <= trail 53.0% (20% off peak MFE 66.2%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 66.2,
         "mae_pct": -20.8,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-27T15:01:43.580Z",
@@ -145315,6 +145349,11 @@
       {
         "order_id": "4888b927-e71f-4831-aaf8-1824ff1856b7",
         "at": "2026-07-27T15:01:43.580Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "de40d4e2-b10a-42c8-9741-df5cce8dd195",
+        "at": "2026-07-28T19:11:38.137Z",
         "ledger_terminal": "filled"
       }
     ]

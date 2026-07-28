@@ -3412,3 +3412,12 @@
 
 **Determining factor:** Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 30.0.
 
+## Autopsy - RKT (35657a12d1b2)
+- entered 2026-07-23T19:21:50.680Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +51.9% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 17.0 fed the squeeze.
+

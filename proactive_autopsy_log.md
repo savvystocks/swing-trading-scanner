@@ -3322,3 +3322,21 @@
 
 **Determining factor:** Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 15.0 worked against it.
 
+## Autopsy - IBIT (1152bb103db0)
+- entered 2026-07-23T15:11:02.966Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -52.5% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-52%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 39.5 worked against it.
+
+## Autopsy - BMNR (162258a90e69)
+- entered 2026-07-27T19:12:41.679Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -57.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-57%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 16.0 worked against it.
+

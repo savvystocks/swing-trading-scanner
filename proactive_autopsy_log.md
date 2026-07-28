@@ -3394,3 +3394,12 @@
 
 **Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
 
+## Autopsy - ABT (918551705908)
+- entered 2026-07-24T15:04:34.298Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +106.5% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+

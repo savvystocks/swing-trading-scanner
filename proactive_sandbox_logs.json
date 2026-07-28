@@ -144667,7 +144667,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 4
+        "close_fails": 0
       }
     }
   },
@@ -149231,8 +149231,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 106.5
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 138.7,
+          "mae_pct": -25.8,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-28T14:11:37.059Z",
+            "return_pct": 138.7
+          }
+        }
+      },
+      "mfe_pct": 138.7,
+      "mae_pct": -25.8,
+      "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "ABT",
@@ -149245,12 +149270,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 18,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "ABT260821C00108000",
+        "closed_at": "2026-07-28T15:11:31.320Z",
+        "return_pct": 106.5,
+        "reason": "106.5% <= trail 111.0% (20% off peak MFE 138.7%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 138.7,
         "mae_pct": -25.8,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-28T14:11:37.059Z",
@@ -149262,6 +149296,11 @@
       {
         "order_id": "b04143b7-58bc-4318-9352-dce4f892d0a1",
         "at": "2026-07-28T14:11:37.059Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "5aaa66bb-6b7d-4e72-a110-bbcbc7794864",
+        "at": "2026-07-28T15:11:31.320Z",
         "ledger_terminal": "filled"
       }
     ]

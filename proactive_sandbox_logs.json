@@ -126393,7 +126393,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 9.9,
+        "mfe_pct": 17.2,
         "mae_pct": -49.1,
         "stage": "initial"
       }
@@ -133734,8 +133734,31 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -50.4
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 6.2,
+          "mae_pct": -50.4,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 6.2,
+      "mae_pct": -50.4,
+      "determining_factor": "Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 20.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "SOFI",
@@ -133748,14 +133771,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 11,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "SOFI260821C00018000",
+        "closed_at": "2026-07-28T14:11:35.990Z",
+        "return_pct": -50.4,
+        "reason": "-50.4% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 6.2,
-        "mae_pct": -49.6,
-        "stage": "initial"
+        "mae_pct": -50.4,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "621d2215-3482-4b65-a950-fdd20470bbd8",
+        "at": "2026-07-28T14:11:35.990Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "7d7653235db8",
@@ -142898,7 +142938,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 56.7,
+        "mfe_pct": 86.7,
         "mae_pct": -48.3,
         "stage": "trailing",
         "close_fails": 0,
@@ -144506,10 +144546,10 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 127.3,
+        "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 3
+        "close_fails": 4
       }
     }
   },
@@ -149090,11 +149130,23 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 29.0,
+        "mfe_pct": 138.7,
         "mae_pct": -25.8,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-07-28T14:11:37.059Z",
+          "return_pct": 138.7
+        }
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "b04143b7-58bc-4318-9352-dce4f892d0a1",
+        "at": "2026-07-28T14:11:37.059Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "910a8cd2945a",
@@ -150500,11 +150552,23 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 28.4,
+        "mfe_pct": 34.7,
         "mae_pct": -18.8,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-07-28T14:11:37.565Z",
+          "return_pct": 34.7
+        }
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "c8c34470-d58a-453e-8dc1-f463ff28aad3",
+        "at": "2026-07-28T14:11:37.565Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "b7ca33c45f52",

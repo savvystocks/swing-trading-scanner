@@ -266,6 +266,14 @@ reports to `reports/{council,treasurer,governor}/` and `governor_registry.json`.
 
 ## KNOWN GAPS (open)
 
+- **UW is unreachable from the VPS (IP-blocked, diagnosed 2026-07-28).** The poller's UW
+  quote-fallback cannot work from the harvest-poller box: UW returns 403 to its Vultr IP regardless
+  of token (the same token returns 200 from other networks; GHA's copy also 200). Consequence: quote
+  resolution on the VPS is Alpaca-only. Measured impact so far: zero (2026-07-27: 9,545/9,545
+  Alpaca-answered, 0 no-answers) and the 1b classifier telemetry alarms if that ever degrades. All
+  UW-dependent jobs (engine harvest, archiver) run in GHA, which is unaffected. Revisit only if
+  Alpaca no-answer telemetry goes amber.
+
 An honest anchor names what is broken. Full history in `reports/harvest_audit_2026-07-02.md`.
 
 **Resolved 2026-07-02/03 (removed from this list):** the Friday-hardcoded vertical barrier (now XNYS-calendar-aware, Section 6); orphaned positions not being exit-evaluated — all 72 broker positions were reconciled and now carry OPEN tracking records, so the exit engine manages every one; and, on **2026-07-03**, three gaps closed at once by moving the poller off the laptop onto an always-on **Vultr VPS** (Ubuntu 24.04):

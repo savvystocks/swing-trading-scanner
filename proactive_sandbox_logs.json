@@ -144710,7 +144710,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 2
+        "close_fails": 3
       }
     }
   },
@@ -148139,7 +148139,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 30.3,
+        "mfe_pct": 34.3,
         "mae_pct": -46.5,
         "stage": "scaled",
         "close_fails": 0,
@@ -148414,8 +148414,31 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -51.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": -12.2,
+          "mae_pct": -51.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -12.2,
+      "mae_pct": -51.0,
+      "determining_factor": "Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 45.5 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "PAAS",
@@ -148428,14 +148451,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 18,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "PAAS260821C00046000",
+        "closed_at": "2026-07-28T19:51:34.083Z",
+        "return_pct": -51.0,
+        "reason": "-51.0% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -12.2,
-        "mae_pct": -46.9,
-        "stage": "initial"
+        "mae_pct": -51.0,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "a70598c0-40e4-4450-9ffc-7af22aae1afd",
+        "at": "2026-07-28T19:51:34.083Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "7718897f354f",

@@ -86,9 +86,27 @@ nobody — including its author — reads 40 calm fills as proof.
 
 ## Pre-activation tasks (before the flag can flip, if approved)
 
-1. Test whether Alpaca paper simulates early assignment (open a deep-ITM short spread in a throwaway
-   test, or confirm via docs/support); record the answer in this file. If NO → clamp 4's permanent-
-   provisional wording applies, and the XSP alternative below gets priced.
+1. Test whether Alpaca paper simulates early assignment — **IN PROGRESS, probe live 2026-07-28.**
+   - Docs answer (checked): expiry assignment IS simulated (auto-assign ITM ≥ $0.01 at expiry, OPASN
+     activities documented); EARLY assignment on paper is undocumented. The paper account's OPASN
+     activity endpoint exists (HTTP 200, zero events ever); options level 3 confirmed.
+   - Empirical probe (order `5d69c21b`, placed 2026-07-28 00:05 UTC, fills at the 07-28 open):
+     1× F Aug-21 18/17 put credit spread at ≥ $0.90 credit — F at $14.68 makes the short leg ~23%
+     ITM with extrinsic below carry from day one, i.e. the rational-early-assignment condition is
+     continuously TRUE for the probe's whole life. **Max risk ~$10.**
+   - PASS (simulator models early assignment): an OPASN activity + shares appear well before expiry.
+     If so, the v2 ASSIGNMENT RULE gets a free live rehearsal: exercise the 17P wing the same day,
+     dispose as one unit, and record the drill here.
+   - FAIL (it does not): no OPASN by Aug-19 (T-2) despite the condition holding throughout → clamp
+     4's permanent-provisional wording is CONFIRMED for this venue; the probe is then deliberately
+     LEFT TO EXPIRE ITM to exercise the documented expiry path (short assigned + wing auto-exercised
+     as a pair, realizing the ~$10 max loss as the price of the expiry-mechanics test).
+   - Check cadence: daily one-liner in the status (OPASN activities query), explicit reads T+3
+     (07-31), T+7 (08-04), Sundays, T-2 (08-19).
+   - Documented side effects: the daily reconcile marker will report 2 extra positions-without-record
+     (the F legs) from 07-28 — expected, not an incident; if the engine ever signals F,
+     one-per-underlying blocks it (harmless). The probe also delivers the ledger's first SHORT-side
+     fill-quality datapoint (deep-ITM mleg credit fill vs quote).
 2. Price the XSP alternative (European, cash-settled — deletes assignment and pin outright): if its
    measured friction gate reads ≤ 15%, prefer XSP over SPY despite wider quotes; record the numbers.
 3. MOT check: `premium_lane_enabled: false` produces byte-identical engine behavior (brake pattern).

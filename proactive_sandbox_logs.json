@@ -124218,7 +124218,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 20.0,
+        "mfe_pct": 27.1,
         "mae_pct": -21.4,
         "stage": "initial"
       }
@@ -126393,7 +126393,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 24.5,
+        "mfe_pct": 28.2,
         "mae_pct": -49.1,
         "stage": "initial"
       }
@@ -133174,8 +133174,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -51.5
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 25.8,
+          "mae_pct": -51.5,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 25.8,
+      "mae_pct": -51.5,
+      "determining_factor": "Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 28.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "KWEB",
@@ -133188,14 +133209,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 11,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "KWEB260821P00026000",
+        "closed_at": "2026-07-28T14:31:42.641Z",
+        "return_pct": -51.5,
+        "reason": "-51.5% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 25.8,
-        "mae_pct": -48.5,
-        "stage": "initial"
+        "mae_pct": -51.5,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "87617b76-797e-45d1-9a1d-a5cdb08a4f78",
+        "at": "2026-07-28T14:31:42.641Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "95db136565d3",
@@ -142938,7 +142976,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 113.3,
+        "mfe_pct": 123.3,
         "mae_pct": -48.3,
         "stage": "trailing",
         "close_fails": 0,
@@ -144549,7 +144587,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -151162,7 +151200,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 2.8,
+        "mfe_pct": 11.0,
         "mae_pct": -32.1,
         "stage": "initial"
       }
@@ -152041,7 +152079,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 39.6,
+        "mfe_pct": 43.8,
         "mae_pct": -23.3,
         "stage": "scaled",
         "close_fails": 0,
@@ -155436,7 +155474,7 @@
   {
     "trade_set_id": "ADOPT-26def20256",
     "ticker": "RIG",
-    "status": "OPEN",
+    "status": "CLOSED",
     "entry_ts_utc": "2026-07-24T18:51:00.188Z",
     "adopted": true,
     "adopted_from": {
@@ -155481,12 +155519,50 @@
     "leg_path": {
       "adopted_leg": {
         "mfe_pct": 0.0,
-        "mae_pct": -42.3,
-        "stage": "initial"
+        "mae_pct": -53.8,
+        "stage": "closed",
+        "close_fails": 0
       }
     },
-    "leg_exits": {},
-    "exit": null
+    "leg_exits": {
+      "adopted_leg": {
+        "occ": "RIG260821C00005500",
+        "closed_at": "2026-07-28T14:31:44.322Z",
+        "return_pct": -53.8,
+        "reason": "-53.8% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "adopted_leg": -53.8
+      },
+      "winner": "adopted_leg",
+      "loser": "adopted_leg",
+      "leg_path": {
+        "adopted_leg": {
+          "mfe_pct": 0.0,
+          "mae_pct": -53.8,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 0.0,
+      "mae_pct": -53.8,
+      "determining_factor": "Calendar FAILED (-54%): the range broke; IV term None (ratio None) hurt the spread.",
+      "tuning_recommendations": []
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "acb393ad-5d89-4e15-8efe-abb5e953a6ad",
+        "at": "2026-07-28T14:31:44.322Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "42ad39c870c4",
@@ -156337,7 +156413,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 20.0,
+        "mfe_pct": 23.3,
         "mae_pct": -26.7,
         "stage": "initial"
       }
@@ -156617,7 +156693,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -7.4,
+        "mfe_pct": -5.7,
         "mae_pct": -30.4,
         "stage": "initial"
       }

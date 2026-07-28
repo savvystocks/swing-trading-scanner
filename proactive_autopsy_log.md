@@ -3358,3 +3358,21 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 20.0 worked against it.
 
+## Autopsy - KWEB (b0422a136a77)
+- entered 2026-07-21T17:41:37.106Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -51.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 28.0.
+
+## Autopsy - RIG (ADOPT-26def20256)
+- entered 2026-07-24T18:51:00.188Z | trigger orphan_reconcile | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -53.8% | WINNER |
+
+**Determining factor:** Calendar FAILED (-54%): the range broke; IV term None (ratio None) hurt the spread.
+

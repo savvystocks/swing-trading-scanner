@@ -1,4 +1,4 @@
-# PREMIUM LANE — measurement lane spec v2.2 (DRAFT for the Sunday 2026-08-02 boundary)
+# PREMIUM LANE — measurement lane spec v2.3 (DRAFT for the Sunday 2026-08-02 boundary)
 
 STATUS: **DRAFT — NOT ACTIVE.** Nothing trades from this document. Activation requires the owner's
 explicit yes at the Sunday boundary; if approved, activation is a counted trial and the flag flips
@@ -65,6 +65,17 @@ nobody — including its author — reads 40 calm fills as proof.
   path-dependence and produced 2.3× the cap in the attack's worked example.
 - Tagged `lane: MEASUREMENT_PREMIUM` everywhere; excluded from scoreboard, SPRT, brake counts, and
   all acceptance-gate evidence.
+- **ADOPTION-EXCLUSION RULE (v2.3, 2026-07-29 — learned live from the F probe):** the engine's
+  orphan-reconcile ADOPTED the probe's legs into OPEN records within one cycle, putting a
+  measurement spread under the long-only exit engine — which would have sold the wing at hold-expiry
+  and left a naked short. "Firewalled from the edge record" does NOT survive contact with adoption.
+  Therefore: (a) lane positions are written as `MEASUREMENT_PREMIUM` records BEFORE the order is
+  placed, so adoption's known-set already contains them; (b) reconcile_orphans must never adopt any
+  position whose OCC belongs to a lane/probe record; (c) CLASS BUG on file: adoption strips the sign
+  of any short (`abs(qty)`) and would double a short instead of closing it — until the adoption
+  logic is fixed (proposed: shorts quarantined to a non-OPEN `SHORT_UNMANAGED` status with a
+  Telegram alarm, never managed by the long-only exit engine), THE LANE MUST NOT ACTIVATE. This is
+  now a pre-activation blocker alongside the venue-assignment test.
 
 ## Tail clamps (unchanged in spirit, tightened in letter)
 

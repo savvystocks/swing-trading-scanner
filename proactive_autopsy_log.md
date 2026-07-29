@@ -3430,3 +3430,21 @@
 
 **Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 45.5 worked against it.
 
+## Autopsy - XLB (4fa1d37d9c76)
+- entered 2026-07-23T17:41:36.533Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +60.0% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+
+## Autopsy - SLB (ee423c5b9ad3)
+- entered 2026-07-24T14:31:49.585Z | trigger regime_BEARISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -9.1% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-9%, move 0.0%): no breakdown materialised; spot held above zero-gamma 49.5.
+

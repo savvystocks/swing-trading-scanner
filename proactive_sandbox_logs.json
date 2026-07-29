@@ -143082,8 +143082,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 60.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 130.0,
+          "mae_pct": -48.3,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-28T13:41:31.031Z",
+            "return_pct": 38.3
+          }
+        }
+      },
+      "mfe_pct": 130.0,
+      "mae_pct": -48.3,
+      "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "XLB",
@@ -143096,12 +143121,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "XLB260821C00052000",
+        "closed_at": "2026-07-29T13:31:24.430Z",
+        "return_pct": 60.0,
+        "reason": "60.0% <= trail 104.0% (20% off peak MFE 130.0%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 130.0,
         "mae_pct": -48.3,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-28T13:41:31.031Z",
@@ -143113,6 +143147,11 @@
       {
         "order_id": "276e1a65-219e-47b9-b43d-af7a6c320c62",
         "at": "2026-07-28T13:41:31.031Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "a58c665e-993f-44d4-ac0f-473524d06eac",
+        "at": "2026-07-29T13:31:24.430Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -144710,7 +144749,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 3
+        "close_fails": 4
       }
     }
   },
@@ -145632,7 +145671,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 53.5,
+        "mfe_pct": 63.9,
         "mae_pct": -17.8,
         "stage": "trailing",
         "close_fails": 0,
@@ -148122,8 +148161,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -9.1
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 34.3,
+          "mae_pct": -46.5,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-28T19:41:22.264Z",
+            "return_pct": 30.3
+          }
+        }
+      },
+      "mfe_pct": 34.3,
+      "mae_pct": -46.5,
+      "determining_factor": "Bearish put FAILED (-9%, move 0.0%): no breakdown materialised; spot held above zero-gamma 49.5.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "SLB",
@@ -148136,12 +148200,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 17,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "SLB260821P00049500",
+        "closed_at": "2026-07-29T13:31:25.854Z",
+        "return_pct": -9.1,
+        "reason": "runner gave back to break-even (-9.1% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 34.3,
         "mae_pct": -46.5,
-        "stage": "scaled",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-28T19:41:22.264Z",
@@ -148153,6 +148226,11 @@
       {
         "order_id": "8536e7bf-8f04-4642-b206-3ba77e2f5797",
         "at": "2026-07-28T19:41:22.264Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "183ffe32-4c69-4cb9-9b57-fa970bbe89da",
+        "at": "2026-07-29T13:31:25.854Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -156399,7 +156477,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -2.9,
-        "mae_pct": -25.2,
+        "mae_pct": -28.6,
         "stage": "initial"
       }
     }
@@ -156678,11 +156756,23 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 23.3,
+        "mfe_pct": 50.0,
         "mae_pct": -26.7,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-07-29T13:31:26.737Z",
+          "return_pct": 50.0
+        }
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "a97f3940-40a9-432d-8b6c-09b955d41378",
+        "at": "2026-07-29T13:31:26.737Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "ced3fbd3eda5",
@@ -157527,8 +157617,23 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -9.1,
-        "mae_pct": -43.9,
+        "mae_pct": -45.5,
         "stage": "initial"
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "14ed738c-4357-4b6d-8946-9b5874fb2ca1",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 1.65,
+        "qty": 2,
+        "entry_px": 3.3,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-07-29T13:31:27.830Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -158468,9 +158573,21 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 9.8,
-        "mae_pct": -19.5,
+        "mae_pct": -34.1,
         "stage": "initial"
       }
     }
+  },
+  {
+    "type": "reconcile",
+    "ts_utc": "2026-07-29T13:31:27.459Z",
+    "open_records_no_position": 0,
+    "positions_no_record": 3,
+    "sample_stale": [],
+    "sample_orphan": [
+      "LQD260821C00111000",
+      "PFE260814C00025500",
+      "STLA260807P00005000"
+    ]
   }
 ]

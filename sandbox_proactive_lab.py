@@ -1151,7 +1151,7 @@ def _save_log_list(data):
     json.dump(data, open(LOG_PATH, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 
 
-def _close_position(occ, creds, percentage=100):
+def _close_position(occ, creds, percentage=100, decision_mark=None):
     """Close an open option leg via Alpaca close-position (market order). percentage<100 scales
     out a partial position (e.g. 50 for the Strategy-B half-sell)."""
     import urllib.parse
@@ -1166,7 +1166,8 @@ def _close_position(occ, creds, percentage=100):
             ok = r.status in (200, 207)
             try:                                       # school 1c: stash the close ORDER (fail-open,
                 import fill_ledger                     # response body was previously discarded)
-                fill_ledger.stash_close_order(occ, json.loads(r.read().decode()))
+                fill_ledger.stash_close_order(occ, json.loads(r.read().decode()),
+                                              decision_mark=decision_mark)  # A2: decision-time ref
             except Exception:
                 pass
             return ok
@@ -1234,7 +1235,9 @@ def manage_open_positions(creds, params, positions=None):
                 if leg_name in rec["leg_exits"]:                          # a full backstop fill during retire closed it
                     dirty = True
                     continue
-                ok = _close_position(occ, creds, percentage=50)
+                _ep = (rec["legs"].get(leg_name) or {}).get("entry_premium")
+                _dm = round(_ep * (1 + dec["return_pct"] / 100.0), 4) if isinstance(_ep, (int, float)) and dec.get("return_pct") is not None else None
+                ok = _close_position(occ, creds, percentage=50, decision_mark=_dm)
                 if ok:                                                    # only advance to 'scaled' on a SUCCESSFUL half-sell
                     path["stage"] = "scaled"                              # (failed partial -> stay 'initial', retry next cycle)
                     path["close_fails"] = 0
@@ -1252,7 +1255,9 @@ def manage_open_positions(creds, params, positions=None):
                 if leg_name in rec["leg_exits"]:                          # backstop already fully closed the leg
                     dirty = True
                     continue
-                ok = _close_position(occ, creds, percentage=100)
+                _ep = (rec["legs"].get(leg_name) or {}).get("entry_premium")
+                _dm = round(_ep * (1 + dec["return_pct"] / 100.0), 4) if isinstance(_ep, (int, float)) and dec.get("return_pct") is not None else None
+                ok = _close_position(occ, creds, percentage=100, decision_mark=_dm)
                 if ok:                                                    # only mark exited on a SUCCESSFUL close
                     path["stage"] = dec["stage"]                          # (rejected close, e.g. market closed -> retry next cycle)
                     path["close_fails"] = 0

@@ -180,7 +180,11 @@ def cpcv_pbo(df, X, features, trials, n_groups=6, seed=7):
         sr = float(r.mean() / r.std(ddof=1))
         # sr_variance must be the variance of the trials' SHARPE RATIOS, not of the raw return cells
         # (fixed 2026-07-25: passing raw cells put the deflation benchmark in return units).
-        dsr, sr0, dnote = H.deflated_sharpe_ratio(sr, n_trials=max(trials.total, 1),
+        # Q1 (2026-07-29): the deflation benchmark reads the LIFETIME search, not one study's -
+        # eleven games deep, the bar for believing a winner must reflect everything ever tried.
+        from . import trials_ledger as TL
+        n_search = max(trials.total, 1) + TL.lifetime_total()
+        dsr, sr0, dnote = H.deflated_sharpe_ratio(sr, n_trials=n_search,
                                                   sr_variance=H.sharpe_variance_across_trials(Mc),
                                                   n_obs=int(r.size))
     else:

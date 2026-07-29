@@ -79,6 +79,9 @@ def run(snapshot_source, out_dir, reports_dir):
     card_path = os.path.join(reports_dir, f"card_{snap_id}.json")
     json.dump(card, open(card_path, "w", encoding="utf-8"), indent=2, default=str)
 
+    from . import trials_ledger as TL
+    TL.append(f"student_{snap_id}", trials.total)          # Q1: every run feeds the lifetime count
+
     md = _render(card, trained, pbo_out, acc, shadow, snap_id)
     report_path = os.path.join(reports_dir, f"student_{snap_id}.md")
     open(report_path, "w", encoding="utf-8").write(md)

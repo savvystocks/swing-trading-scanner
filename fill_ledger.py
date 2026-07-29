@@ -49,11 +49,14 @@ def log_event(kind, **fields):
         return False
 
 
-def stash_close_order(occ, resp):
-    """Called by _close_position with the parsed DELETE /positions response (the close order)."""
+def stash_close_order(occ, resp, decision_mark=None):
+    """Called by _close_position with the parsed DELETE /positions response (the close order).
+    A2 (2026-07-29): decision_mark = the option mark implied at the exit DECISION, so exit friction
+    is measured against a synchronous reference instead of a <=15-min-old poller bid."""
     try:
         _PENDING_CLOSE_ORDERS.append({"occ": occ, "order_id": (resp or {}).get("id"),
-                                      "qty": (resp or {}).get("qty"), "at": _now_iso()})
+                                      "qty": (resp or {}).get("qty"), "at": _now_iso(),
+                                      "decision_mark": decision_mark})
     except Exception:
         pass
 
@@ -98,7 +101,8 @@ def sweep(log_list, order_state_fn, creds, save_fn):
                         rec["exit_order_ids"].append({"order_id": st["order_id"], "at": st.get("at"),
                                                       "ledger_terminal": None})
                         log_event("exit_submit", ticker=rec.get("ticker"), occ=occ,
-                                  order_id=st.get("order_id"), qty=st.get("qty"), order_type="market")
+                                  order_id=st.get("order_id"), qty=st.get("qty"), order_type="market",
+                                  decision_mark=st.get("decision_mark"))
                         dirty = True
                     break
         horizon = _now_ms() - 3 * 24 * 3600 * 1000
@@ -142,7 +146,9 @@ def sweep(log_list, order_state_fn, creds, save_fn):
                               occ=next((l.get("occ_symbol") for l in (rec.get("legs") or {}).values()), None),
                               order_id=e["order_id"], terminal_state=status, filled_qty=fq,
                               filled_avg_price=fp, filled_at=state.get("filled_at"),
-                              submit_to_fill_ms=_delay_ms(e.get("at"), state.get("filled_at")))
+                              submit_to_fill_ms=_delay_ms(e.get("at"), state.get("filled_at")),
+                              decision_mark=e.get("decision_mark"),
+                              slip_vs_decision=_slip(fp, e.get("decision_mark")))
                     e["ledger_terminal"] = status
                     dirty = True
             if rec.get("status") in ("CLOSED", "FLUSHED") and _rec_ts_ms(ets) < horizon:

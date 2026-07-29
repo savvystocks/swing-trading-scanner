@@ -413,7 +413,7 @@ for label, d, want in dec:
 # 3.5 FULL production chain: manage_open_positions closes a LOSER (stop) + autopsies it
 _wipe()
 _ocp = lab._close_position
-lab._close_position = lambda occ, creds, percentage=100: True
+lab._close_position = lambda occ, creds, percentage=100, decision_mark=None: True
 recL = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
 occL = recL["legs"]["bullish_call"]["occ_symbol"]
 posL = [{"symbol": occL, "avg_entry_price": "10.0", "current_price": "4.0", "unrealized_plpc": "-0.6", "qty": "1"}]
@@ -433,7 +433,7 @@ check(3, "LOSER log record marked CLOSED with negative return recorded",
 
 # 3.6 FULL chain: manage_open_positions closes a WINNER (take-profit past 24h)
 _wipe()
-lab._close_position = lambda occ, creds, percentage=100: True
+lab._close_position = lambda occ, creds, percentage=100, decision_mark=None: True
 recW = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
 _lg = lab._load_log_list()
 _lg[-1]["entry_ts_utc"] = (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat(timespec="milliseconds").replace("+00:00", "Z")
@@ -497,7 +497,7 @@ check(3, "null-gex LOSER autopsies cleanly (no KeyError)", nok, str(resN.get("de
 # MFE/MAE trade-path: accumulates across cycles, then captured by the autopsy
 _wipe()
 _ocp3 = lab._close_position
-lab._close_position = lambda occ, creds, percentage=100: True
+lab._close_position = lambda occ, creds, percentage=100, decision_mark=None: True
 recP = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
 occP = recP["legs"]["bullish_call"]["occ_symbol"]
 def _cycle(plpc, px):
@@ -553,7 +553,7 @@ for label, dec, wa, ws in [
 # Full chain: scale-out (50%) -> trail-arm -> trail-close through manage_open_positions
 _wipe()
 _ocp4 = lab._close_position
-lab._close_position = lambda occ, creds, percentage=100: True
+lab._close_position = lambda occ, creds, percentage=100, decision_mark=None: True
 recR = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
 _lg2 = lab._load_log_list()
 _lg2[-1]["entry_ts_utc"] = (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat(timespec="milliseconds").replace("+00:00", "Z")
@@ -601,7 +601,7 @@ _ogp = lab.get_open_positions
 _ocpf = lab._close_position
 _omio = lab._market_is_open
 lab.get_open_positions = lambda creds=None: [{"symbol": "OCC1"}, {"symbol": "OCC2"}]
-lab._close_position = lambda occ, creds, percentage=100: True
+lab._close_position = lambda occ, creds, percentage=100, decision_mark=None: True
 lab._market_is_open = lambda creds=None: True     # market-open branch: real closes
 n = lab.flush_positions(("k", "s"))
 flushed_status = lab._load_log_list()[0]["status"]
@@ -618,7 +618,7 @@ _ocpf2 = lab._close_position
 _omio2 = lab._market_is_open
 _closes_attempted = []
 lab.get_open_positions = lambda creds=None: [{"symbol": "OCC1"}, {"symbol": "OCC2"}]
-lab._close_position = lambda occ, creds, percentage=100: (_closes_attempted.append(occ), True)[1]
+lab._close_position = lambda occ, creds, percentage=100, decision_mark=None: (_closes_attempted.append(occ), True)[1]
 lab._market_is_open = lambda creds=None: False
 n_dry = lab.flush_positions(("k", "s"))
 lab.get_open_positions = _ogp2
@@ -634,7 +634,7 @@ _ofs, _omio3, _ogp3, _ocpf3 = lab.FLUSH_SENTINEL, lab._market_is_open, lab.get_o
 _flushcalls = []
 lab.FLUSH_SENTINEL = _snt
 lab.get_open_positions = lambda creds=None: [{"symbol": "OCC1"}]
-lab._close_position = lambda occ, creds, percentage=100: (_flushcalls.append(occ), True)[1]
+lab._close_position = lambda occ, creds, percentage=100, decision_mark=None: (_flushcalls.append(occ), True)[1]
 no_sentinel = lab._maybe_flush_pending(("k", "s"))
 open(_snt, "w").write("x")
 lab._market_is_open = lambda creds=None: False
@@ -686,7 +686,7 @@ lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"},
 buy_fired = any(t.startswith("<b>BUY") for t in cap)
 _wipe()
 _ocp2 = lab._close_position
-lab._close_position = lambda occ, creds, percentage=100: True
+lab._close_position = lambda occ, creds, percentage=100, decision_mark=None: True
 recS = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
 occS = recS["legs"]["bullish_call"]["occ_symbol"]
 cap.clear()
@@ -799,7 +799,7 @@ lab._save_log_list([
 _omio, _ogop, _ocp6, _onp6 = lab._market_is_open, lab.get_open_positions, lab._close_position, lab._notify
 lab._market_is_open = lambda creds=None: True
 lab.get_open_positions = lambda creds=None: [{"symbol": _occF1, "qty": "1"}, {"symbol": _occF2, "qty": "1"}]
-lab._close_position = lambda occ, creds, percentage=100: occ == _occF1          # FB close FAILS
+lab._close_position = lambda occ, creds, percentage=100, decision_mark=None: occ == _occF1          # FB close FAILS
 lab._notify = lambda text: True
 lab.flush_positions(("k", "s"))
 _lg = lab._load_log_list()
@@ -868,7 +868,7 @@ lab._save_log_list([{"trade_set_id": "r1", "ticker": "RC", "status": "OPEN",
 _calls = []
 _ocan2, _ocp7, _onp7, _oos9 = lab._cancel_order, lab._close_position, lab._notify, lab._order_state
 lab._cancel_order = lambda oid, creds: (_calls.append(("cancel", oid)), True)[1]
-lab._close_position = lambda occ, creds, percentage=100: (_calls.append(("close", occ)), True)[1]
+lab._close_position = lambda occ, creds, percentage=100, decision_mark=None: (_calls.append(("close", occ)), True)[1]
 lab._notify = lambda text: True
 lab._order_state = lambda oid, creds: {"status": "canceled", "filled_qty": 0}   # stop confirmed DEAD, no fill
 lab.manage_open_positions(("k", "s"), _params6,
@@ -899,7 +899,7 @@ _uc = []
 _ocanU, _ocpU, _onpU, _oosU = lab._cancel_order, lab._close_position, lab._notify, lab._order_state
 lab._cancel_order = lambda oid, creds: False                          # cancel DELETE not accepted
 lab._order_state = lambda oid, creds: {"status": "accepted", "filled_qty": 0}   # stop still LIVE (non-terminal)
-lab._close_position = lambda occ, creds, percentage=100: (_uc.append(occ), True)[1]
+lab._close_position = lambda occ, creds, percentage=100, decision_mark=None: (_uc.append(occ), True)[1]
 lab._notify = lambda text: True
 lab.manage_open_positions(("k", "s"), _params6,
                           positions=[{"symbol": _occU, "avg_entry_price": "2.0", "unrealized_plpc": "-0.6", "qty": "2"}])

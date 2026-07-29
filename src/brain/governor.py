@@ -116,6 +116,18 @@ def evaluate_organ(reg, name, week_id, verdict, metric=None, signature=None):
     return o
 
 
+def _lifetime_trials_line():
+    """Q1 (2026-07-29): the search's total size, always visible - the deflation bar every winner
+    must clear reflects this number."""
+    try:
+        from . import trials_ledger as TL
+        return (f"Lifetime search intensity: **{TL.lifetime_total():,} model/config trials** across "
+                "all studies (feeds the deflated-Sharpe bar), plus the discovery rig's rule-search "
+                "trials counted inside its own campaign PBO.")
+    except Exception:
+        return "Lifetime search intensity: ledger unavailable."
+
+
 def scoreboard_md(reg, week_id):
     lines = [f"# Governor scoreboard - {week_id}", "",
              "Authority changes by evidence only. The Governor demotes on RED within one cycle; it never",
@@ -130,6 +142,7 @@ def scoreboard_md(reg, week_id):
     elig = [n for n, o in reg["organs"].items() if o["rung"] == "ELIGIBLE_FOR_OWNER" and not o.get("owner_promoted")]
     lines += ["", ("**Awaiting owner review:** " + ", ".join(elig)) if elig
               else "No organ is awaiting owner review; nothing is eligible for promotion this week.",
+              "", _lifetime_trials_line(),
               "", "Demotions are automatic and immediate; promotions to LIVE require the owner to set",
               "`owner_promoted` in governor_registry.json. The frozen V10 engine is unaffected by any state here."]
     return "\n".join(lines)

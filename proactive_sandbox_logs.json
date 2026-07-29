@@ -144749,7 +144749,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 3
+        "close_fails": 4
       }
     }
   },
@@ -152753,7 +152753,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 21.3,
+        "mfe_pct": 24.0,
         "mae_pct": -29.3,
         "stage": "initial"
       }
@@ -156778,8 +156778,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 46.7
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 60.0,
+          "mae_pct": -26.7,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-29T13:31:26.737Z",
+            "return_pct": 50.0
+          }
+        }
+      },
+      "mfe_pct": 60.0,
+      "mae_pct": -26.7,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 1.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "NIO",
@@ -156792,12 +156817,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 20,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "NIO260821C00004500",
+        "closed_at": "2026-07-29T15:11:16.241Z",
+        "return_pct": 46.7,
+        "reason": "46.7% <= trail 48.0% (20% off peak MFE 60.0%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 60.0,
         "mae_pct": -26.7,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-29T13:31:26.737Z",
@@ -156809,6 +156843,11 @@
       {
         "order_id": "a97f3940-40a9-432d-8b6c-09b955d41378",
         "at": "2026-07-29T13:31:26.737Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "dfa7b8a8-b977-40f1-aade-9958a97e4142",
+        "at": "2026-07-29T15:11:16.241Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -157694,7 +157733,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -9.1,
-        "mae_pct": -45.5,
+        "mae_pct": -47.0,
         "stage": "initial"
       }
     },
@@ -158651,7 +158690,7 @@
       "bullish_call": {
         "mfe_pct": 141.5,
         "mae_pct": -34.1,
-        "stage": "scaled",
+        "stage": "trailing",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-29T15:01:29.920Z",

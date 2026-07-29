@@ -1,4 +1,4 @@
-# PREMIUM LANE — measurement lane spec v2 (DRAFT for the Sunday 2026-08-02 boundary)
+# PREMIUM LANE — measurement lane spec v2.2 (DRAFT for the Sunday 2026-08-02 boundary)
 
 STATUS: **DRAFT — NOT ACTIVE.** Nothing trades from this document. Activation requires the owner's
 explicit yes at the Sunday boundary; if approved, activation is a counted trial and the flag flips
@@ -40,7 +40,12 @@ nobody — including its author — reads 40 calm fills as proof.
   worst-case booked credit, computed from the same quotes that book the trade. Today this passes SPY
   (~6%), is marginal on QQQ (~15%), and blocks TSLA (~23%+): the lane measures only trades that
   could plausibly survive their own costs.
-- Size/cadence: 1 contract, max 1 new spread/day, max 2 concurrent.
+- Size/cadence: 1 contract, max 1 new spread/day, max 2 concurrent — **only if in different
+  correlation clusters (v2.2 amendment, B2 2026-07-29): SPY/QQQ/IWM/XSP are ONE INDEX CLUSTER by
+  declaration; any other pair with 60-day daily-return correlation > 0.70 (computed at the Sunday
+  universe refresh) shares a slot. One slot = max one spread. Practical effect: never two concurrent
+  index spreads — the prior spec allowed what was effectively a single index bet at double size.
+  Max exposure to any correlated cluster: $450.**
 - **Risk budget, restated honestly (the tail attack):** structural risk = width − credit ≤ $400 per
   spread; realized worst case includes exit crossing costs — **budget $450/spread, $900 book**. The
   v1 claim "a gap to zero cannot exceed $800, full stop" was FALSE for American physically-settled

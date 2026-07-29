@@ -20,6 +20,11 @@ import sandbox_v11_sensors as v11
 from v10_params import load as load_params
 
 _tmp = tempfile.gettempdir()
+# 2026-07-29: redirect the fill ledger too - without this, MOT backstop tests leak synthetic
+# exit_fill_backstop events into the REAL data/harvest_inbox (caught 07-28 as untracked files;
+# never committed, but one `git add -A` away from polluting the pile).
+import fill_ledger as _fl
+_fl.INBOX_DIR = os.path.join(_tmp, "mot_inbox")
 lab.LOG_PATH = os.path.join(_tmp, "mot_log.json")
 lab.AUTOPSY_MD = os.path.join(_tmp, "mot_autopsy.md")
 lab.ADVISORY_MD = os.path.join(_tmp, "mot_advisory.md")

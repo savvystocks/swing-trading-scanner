@@ -144749,7 +144749,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 4
+        "close_fails": 0
       }
     }
   },
@@ -152461,7 +152461,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 56.2,
+        "mfe_pct": 66.7,
         "mae_pct": -23.3,
         "stage": "trailing",
         "close_fails": 0,
@@ -152753,7 +152753,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 24.0,
+        "mfe_pct": 25.3,
         "mae_pct": -29.3,
         "stage": "initial"
       }
@@ -156515,7 +156515,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 11.4,
+        "mfe_pct": 12.4,
         "mae_pct": -28.6,
         "stage": "initial"
       }
@@ -158671,8 +158671,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 90.2
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 141.5,
+          "mae_pct": -34.1,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-29T15:01:29.920Z",
+            "return_pct": 73.2
+          }
+        }
+      },
+      "mfe_pct": 141.5,
+      "mae_pct": -34.1,
+      "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "F",
@@ -158685,12 +158710,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 13,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "F260828C00015500",
+        "closed_at": "2026-07-29T15:17:52.177Z",
+        "return_pct": 90.2,
+        "reason": "90.2% <= trail 113.2% (20% off peak MFE 141.5%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 141.5,
         "mae_pct": -34.1,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-29T15:01:29.920Z",
@@ -158702,6 +158736,11 @@
       {
         "order_id": "499fa7c4-f2c0-48ed-a9a3-8ace8250bfc6",
         "at": "2026-07-29T15:01:29.920Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "4eb79758-422d-414b-bae1-ff38a24bd32e",
+        "at": "2026-07-29T15:17:52.177Z",
         "ledger_terminal": "filled"
       }
     ]

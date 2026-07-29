@@ -132701,7 +132701,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 42.6,
-        "mae_pct": -39.7,
+        "mae_pct": -41.8,
         "stage": "initial"
       }
     }
@@ -144749,7 +144749,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -150960,7 +150960,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 50.6,
+        "mfe_pct": 55.1,
         "mae_pct": -18.8,
         "stage": "trailing",
         "close_fails": 0,
@@ -152461,9 +152461,9 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 43.8,
+        "mfe_pct": 56.2,
         "mae_pct": -23.3,
-        "stage": "scaled",
+        "stage": "trailing",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-28T14:21:38.946Z",
@@ -152753,7 +152753,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 10.7,
+        "mfe_pct": 17.3,
         "mae_pct": -29.3,
         "stage": "initial"
       }
@@ -155835,7 +155835,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 56.3,
+        "mfe_pct": 62.2,
         "mae_pct": -27.7,
         "stage": "trailing",
         "close_fails": 0,
@@ -156220,7 +156220,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -33.3,
+        "mfe_pct": -22.2,
         "mae_pct": -44.4,
         "stage": "initial"
       }
@@ -156515,7 +156515,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 2.9,
+        "mfe_pct": 8.1,
         "mae_pct": -28.6,
         "stage": "initial"
       }
@@ -157350,8 +157350,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -50.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 11.5,
+          "mae_pct": -50.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 11.5,
+      "mae_pct": -50.0,
+      "determining_factor": "Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 6.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "NOK",
@@ -157364,14 +157385,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 21,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "NOK260821C00009500",
+        "closed_at": "2026-07-29T14:41:12.142Z",
+        "return_pct": -50.0,
+        "reason": "-50.0% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 11.5,
-        "mae_pct": -46.2,
-        "stage": "initial"
+        "mae_pct": -50.0,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "b08cf027-72be-4a55-a613-8ace94b0fc1c",
+        "at": "2026-07-29T14:41:12.142Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "type": "day_trade",

@@ -144950,7 +144950,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 4
+        "close_fails": 0
       }
     }
   },
@@ -160286,10 +160286,270 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -6.9,
+        "mfe_pct": -5.2,
         "mae_pct": -12.1,
         "stage": "initial"
       }
     }
+  },
+  {
+    "trade_set_id": "287f6f0afd37",
+    "ticker": "BMNR",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-30T17:02:12.329Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 14,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "FCEL260821C00022000",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-30T17:02:12.329Z",
+      "macro": {
+        "spot": 17.8,
+        "sma20": 16.04,
+        "distance_to_sma20_pct": 10.973,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 84.2,
+        "iv_back": 79.9,
+        "iv_ratio": 1.054,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 2872604.9,
+        "zero_gamma_strike": 17.5,
+        "distance_to_zero_gamma_pct": 1.685,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.27,
+        "atr_pct": 7.12,
+        "rvol_10min": 0.68,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Capital Markets",
+        "market_cap": 10725787648,
+        "short_pct_float": 8.15,
+        "short_ratio": 1.24,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 5.24,
+        "vader_compound": 0.344,
+        "news_type": "Unknown",
+        "top_headline": "Happy Birthday, Ethereum! 'ETH's New Leadership Era Is Here,' Expert Says",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 10.973,
+        "market_spy_dist_pct": -0.734,
+        "sector_etf": "XLF",
+        "sector_dist_pct": 1.269,
+        "sector_vs_market_spread": 2.003,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 81.8,
+        "call_iv_25d": 83.7,
+        "skew_ratio": 0.977,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 7.93,
+        "ask_sweep_prem": 504769.0,
+        "total_flow_prem": 6369158.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 17.8,
+        "node_size": 311940.0,
+        "n_prints": 200,
+        "window_start": "2026-07-30T12:04:43Z",
+        "window_end": "2026-07-30T17:01:51Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 16,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 113,
+        "next_earnings_date": "2026-11-20",
+        "iv_rank_1y": 15.58,
+        "last_earnings_date": "2026-07-14",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 86.91,
+        "front_iv": 84.2,
+        "vrp": -2.71,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 324177.0,
+        "flow_persistence_pct": 12.59,
+        "flow_direction": "bullish",
+        "closing_accel": -122244.0,
+        "n_ticks": 213,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 696.22,
+        "vwma_20": 16.16,
+        "rsi_5": 61.17,
+        "rsi_15": 63.07,
+        "gap_pct": 2.17,
+        "day_range": 5.392,
+        "candle_body": 0.891,
+        "dist_sma50": 8.442,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 4.3,
+        "vix_level": 18.25,
+        "execution_hour": 17,
+        "day_of_week": 3,
+        "sector_vs_spy": 1.679,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 17935375.0,
+        "net_vanna": 34953031.0,
+        "net_charm": -28215078.0,
+        "delta_imbalance": 2.072,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.056,
+        "bid": 17.78,
+        "ask": 17.79,
+        "bid_size": 100.0,
+        "ask_size": 4800.0,
+        "obi": -0.9592,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.66,
+        "gap_pct": 2.17,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 8.15,
+        "float_shares": 594714870,
+        "shares_short": 49117115,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.344,
+      "sweep_aggression_pct": 7.93,
+      "distance_to_zero_gamma_pct": 1.685,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 16,
+      "days_to_earnings": 113,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 12.59
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "BMNR260828C00018500",
+        "expiry": "2026-08-28",
+        "strike": 18.5,
+        "dte": 35,
+        "entry_premium": 1.86,
+        "limit_price": 1.88,
+        "contracts": 4,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "268",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 1.36,
+          "ask": 1.41,
+          "mid": 1.385,
+          "bid_ask_spread_pct": 3.61,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 270.0,
+          "oi_prev": 268.0,
+          "oi_change": 2.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "f8a9ad50-266c-452f-a54e-43f8e8e75957",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.88,
+        "contracts": 4,
+        "ledger_terminal": "filled"
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true
   }
 ]

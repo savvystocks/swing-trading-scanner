@@ -139761,8 +139761,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -50.3
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -2.9,
+          "mae_pct": -50.3,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -2.9,
+      "mae_pct": -50.3,
+      "determining_factor": "Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 70.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "SLV",
@@ -139775,14 +139796,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "SLV260821P00050000",
+        "closed_at": "2026-07-30T19:31:30.513Z",
+        "return_pct": -50.3,
+        "reason": "-50.3% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -2.9,
-        "mae_pct": -49.1,
-        "stage": "initial"
+        "mae_pct": -50.3,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "416c7d4b-f31f-4419-b614-f19a2521da36",
+        "at": "2026-07-30T19:31:30.513Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "ADOPT-772bc68e75",
@@ -144957,7 +144995,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -161456,5 +161494,14 @@
     },
     "leg_exits": {},
     "exit": null
+  },
+  {
+    "type": "daily_brake",
+    "ts_utc": "2026-07-30T19:31:32.413Z",
+    "mode": "shadow",
+    "reason": "3 stop-outs >= 3",
+    "stopouts": 3,
+    "realized_loss_usd": 1684.0,
+    "status": "SHADOW"
   }
 ]

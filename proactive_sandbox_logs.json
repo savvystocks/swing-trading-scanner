@@ -126376,8 +126376,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BREAKEVEN",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -54.6
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 30.0,
+          "mae_pct": -54.6,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-28T18:41:29.450Z",
+            "return_pct": 30.0
+          }
+        }
+      },
+      "mfe_pct": 30.0,
+      "mae_pct": -54.6,
+      "determining_factor": "Bullish call FAILED (-55%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 50.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "DIS",
@@ -126390,19 +126415,35 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 13,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "DIS260821C00100000",
+        "closed_at": "2026-07-30T13:31:30.432Z",
+        "return_pct": -54.6,
+        "reason": "runner gave back to break-even (-54.6% <= 0%)",
+        "action": "CLOSE_BREAKEVEN",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 30.0,
-        "mae_pct": -49.1,
-        "stage": "scaled",
+        "mae_pct": -54.6,
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-28T18:41:29.450Z",
           "return_pct": 30.0
         }
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "b3169309-cd7a-43e8-82ed-208b11ce769a",
+        "at": "2026-07-30T13:31:30.432Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "d8c6fe5d18f1",
@@ -138764,8 +138805,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -50.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 0.0,
+          "mae_pct": -50.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 0.0,
+      "mae_pct": -50.0,
+      "determining_factor": "Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 3.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "OPEN",
@@ -138778,14 +138840,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "OPEN260821C00004000",
+        "closed_at": "2026-07-30T13:31:31.407Z",
+        "return_pct": -50.0,
+        "reason": "-50.0% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 0.0,
-        "mae_pct": -45.5,
-        "stage": "initial"
+        "mae_pct": -50.0,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "29567043-f63e-451e-8e9a-bb82409c4e6e",
+        "at": "2026-07-30T13:31:31.407Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "1b6a680e4aad",
@@ -144871,7 +144950,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -153048,8 +153127,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": 32.0
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 57.3,
+          "mae_pct": -29.3,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-29T15:51:29.079Z",
+            "return_pct": 30.7
+          }
+        }
+      },
+      "mfe_pct": 57.3,
+      "mae_pct": -29.3,
+      "determining_factor": "Bearish breakdown (move 0.0%): spot below zero-gamma 8.0 -> negative-gamma slide, no positive catalyst.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "ONDS",
@@ -153062,12 +153166,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 19,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "ONDS260821P00007500",
+        "closed_at": "2026-07-30T13:31:32.327Z",
+        "return_pct": 32.0,
+        "reason": "32.0% <= trail 45.8% (20% off peak MFE 57.3%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 57.3,
         "mae_pct": -29.3,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-29T15:51:29.079Z",
@@ -153079,6 +153192,11 @@
       {
         "order_id": "6dc67930-b459-4db9-8646-bd4078088675",
         "at": "2026-07-29T15:51:29.079Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "1a7befc9-206c-4d84-a3e5-f5bb1e5c2054",
+        "at": "2026-07-30T13:31:32.327Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -159355,5 +159473,19 @@
     "stopouts": 6,
     "realized_loss_usd": 3095.2,
     "status": "SHADOW"
+  },
+  {
+    "type": "reconcile",
+    "ts_utc": "2026-07-30T13:31:33.588Z",
+    "open_records_no_position": 0,
+    "positions_no_record": 5,
+    "sample_stale": [],
+    "sample_orphan": [
+      "F260821P00017000",
+      "F260821P00018000",
+      "LQD260821C00111000",
+      "PFE260814C00025500",
+      "STLA260807P00005000"
+    ]
   }
 ]

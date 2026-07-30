@@ -144950,7 +144950,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -160544,6 +160544,274 @@
         "error": null,
         "submitted": true,
         "limit_price": 1.88,
+        "contracts": 4,
+        "ledger_terminal": "filled"
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -8.4,
+        "mae_pct": -8.4,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "56a3f4eabce3",
+    "ticker": "NKE",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-30T17:08:20.586Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 15,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "FCEL260821C00022000",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-30T17:08:20.586Z",
+      "macro": {
+        "spot": 41.95,
+        "sma20": 43.0,
+        "distance_to_sma20_pct": -2.449,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 37.2,
+        "iv_back": 37.6,
+        "iv_ratio": 0.989,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": -286574.4,
+        "zero_gamma_strike": 42.0,
+        "distance_to_zero_gamma_pct": -0.119,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -50.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.35,
+        "atr_pct": 3.22,
+        "rvol_10min": 0.49,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Consumer Cyclical",
+        "industry": "Footwear & Accessories",
+        "market_cap": 62166011904,
+        "short_pct_float": 6.7,
+        "short_ratio": 2.23,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 52.61,
+        "vader_compound": 0.299,
+        "news_type": "Earnings",
+        "top_headline": "Jim Cramer: Nike Is 'Just OK' While This 'Inexpensive' Financial Stock Is ‘Terrific'",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -2.449,
+        "market_spy_dist_pct": -0.768,
+        "sector_etf": "XLY",
+        "sector_dist_pct": -2.052,
+        "sector_vs_market_spread": -1.284,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 37.9,
+        "call_iv_25d": 36.3,
+        "skew_ratio": 1.044,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 3.65,
+        "ask_sweep_prem": 586416.0,
+        "total_flow_prem": 16076078.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 1.0,
+        "heaviest_node_price": 41.53,
+        "node_size": 240406.0,
+        "n_prints": 192,
+        "window_start": "2026-07-30T11:24:06Z",
+        "window_end": "2026-07-30T17:05:47Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 30,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 61,
+        "next_earnings_date": "2026-09-29",
+        "iv_rank_1y": 36.32,
+        "last_earnings_date": "2026-06-30",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 32.4,
+        "front_iv": 37.2,
+        "vrp": 4.8,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -526166.0,
+        "flow_persistence_pct": 28.06,
+        "flow_direction": "bearish",
+        "closing_accel": 213292.0,
+        "n_ticks": 219,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 929.83,
+        "vwma_20": 43.1,
+        "rsi_5": 63.5,
+        "rsi_15": 46.64,
+        "gap_pct": -2.543,
+        "day_range": 2.193,
+        "candle_body": 0.223,
+        "dist_sma50": -3.675,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -0.4,
+        "vix_level": 18.12,
+        "execution_hour": 17,
+        "day_of_week": 3,
+        "sector_vs_spy": 3.009,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -22372088.0,
+        "net_vanna": 80702686.0,
+        "net_charm": -18639745.0,
+        "delta_imbalance": 0.449,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.024,
+        "bid": 41.91,
+        "ask": 41.92,
+        "bid_size": 300.0,
+        "ask_size": 200.0,
+        "obi": 0.2,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.4,
+        "gap_pct": -2.543,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 6.7,
+        "float_shares": 1176918861,
+        "shares_short": 63943595,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.299,
+      "sweep_aggression_pct": 3.65,
+      "distance_to_zero_gamma_pct": -0.119,
+      "distance_to_heaviest_dp_node_pct": 1.0,
+      "days_since_earnings": 30,
+      "days_to_earnings": 61,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 28.06
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "NKE260828C00044000",
+        "expiry": "2026-08-28",
+        "strike": 44.0,
+        "dte": 35,
+        "entry_premium": 1.93,
+        "limit_price": 1.95,
+        "contracts": 4,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "287",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.92,
+          "ask": 0.95,
+          "mid": 0.935,
+          "bid_ask_spread_pct": 3.209,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 418.0,
+          "oi_prev": 287.0,
+          "oi_change": 131.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "bcaf69c8-a365-45c0-a26f-ed931441099a",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.95,
         "contracts": 4,
         "ledger_terminal": "filled"
       }

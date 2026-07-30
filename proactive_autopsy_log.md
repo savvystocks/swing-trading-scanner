@@ -3619,3 +3619,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 8.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - HYG (42ad39c870c4)
+- entered 2026-07-24T19:02:12.807Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -55.6% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-56%, move 0.0%): no breakdown materialised; spot held above zero-gamma 79.0.
+

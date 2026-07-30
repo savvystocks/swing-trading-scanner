@@ -139779,7 +139779,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -2.9,
-        "mae_pct": -47.4,
+        "mae_pct": -49.1,
         "stage": "initial"
       }
     }
@@ -140518,7 +140518,14 @@
         "stage": "closed",
         "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "46bb8965-0cb0-44d3-bea3-e3e0c3faa7c8",
+        "at": "2026-07-30T19:21:19.312Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "c6a416ef99ea",
@@ -144950,7 +144957,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 4
+        "close_fails": 0
       }
     }
   },
@@ -156684,8 +156691,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -55.6
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -22.2,
+          "mae_pct": -55.6,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -22.2,
+      "mae_pct": -55.6,
+      "determining_factor": "Bearish put FAILED (-56%, move 0.0%): no breakdown materialised; spot held above zero-gamma 79.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "HYG",
@@ -156698,12 +156726,22 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 20,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "HYG260821P00076000",
+        "closed_at": "2026-07-30T19:21:19.312Z",
+        "return_pct": -55.6,
+        "reason": "-55.6% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -22.2,
-        "mae_pct": -44.4,
-        "stage": "initial"
+        "mae_pct": -55.6,
+        "stage": "closed",
+        "close_fails": 0
       }
     }
   },
@@ -160286,7 +160324,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -5.2,
+        "mfe_pct": 1.7,
         "mae_pct": -12.1,
         "stage": "initial"
       }
@@ -160554,7 +160592,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 2.8,
+        "mfe_pct": 6.3,
         "mae_pct": -9.1,
         "stage": "initial"
       }
@@ -161358,7 +161396,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -7.5,
+        "mfe_pct": -2.5,
         "mae_pct": -7.5,
         "stage": "initial"
       }

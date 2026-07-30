@@ -144950,7 +144950,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 1
+        "close_fails": 2
       }
     }
   },
@@ -161081,6 +161081,274 @@
         "submitted": true,
         "limit_price": 1.97,
         "contracts": 4,
+        "ledger_terminal": "filled"
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -8.5,
+        "mae_pct": -8.5,
+        "stage": "initial"
+      }
+    }
+  },
+  {
+    "trade_set_id": "b49c4d6218ac",
+    "ticker": "QUBT",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "entry_ts_utc": "2026-07-30T18:51:58.540Z",
+    "leg_budget_usd": 800.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 17,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "FCEL260821C00022000",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-07-30T18:51:58.540Z",
+      "macro": {
+        "spot": 7.87,
+        "sma20": 8.18,
+        "distance_to_sma20_pct": -3.907,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 104.6,
+        "iv_back": 96.8,
+        "iv_ratio": 1.081,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 1376.8,
+        "zero_gamma_strike": 2.0,
+        "distance_to_zero_gamma_pct": 74.587,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.51,
+        "atr_pct": 6.48,
+        "rvol_10min": 0.64,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Computer Hardware",
+        "market_cap": 1775073152,
+        "short_pct_float": 32.43,
+        "short_ratio": 4.65,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 55.26,
+        "vader_compound": 0.252,
+        "news_type": "Unknown",
+        "top_headline": "D-Wave Quantum Stock Hits Pause After AT&T Deal Rally",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -3.907,
+        "market_spy_dist_pct": -0.665,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -2.027,
+        "sector_vs_market_spread": -1.362,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 198.2,
+        "call_iv_25d": 103.8,
+        "skew_ratio": 1.909,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 5.86,
+        "ask_sweep_prem": 211547.0,
+        "total_flow_prem": 3612419.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 1.75,
+        "heaviest_node_price": 7.73,
+        "node_size": 17390.0,
+        "n_prints": 5,
+        "window_start": "2026-07-30T13:52:27Z",
+        "window_end": "2026-07-30T15:09:54Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 80,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 11,
+        "next_earnings_date": "2026-08-10",
+        "iv_rank_1y": 28.39,
+        "last_earnings_date": "2026-05-11",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 75.15,
+        "front_iv": 104.6,
+        "vrp": 29.45,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 411058.0,
+        "flow_persistence_pct": 59.37,
+        "flow_direction": "bullish",
+        "closing_accel": 9553.0,
+        "n_ticks": 310,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 524.3,
+        "vwma_20": 8.13,
+        "rsi_5": 50.12,
+        "rsi_15": 37.27,
+        "gap_pct": 3.42,
+        "day_range": 4.635,
+        "candle_body": 0.863,
+        "dist_sma50": -17.904,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 7.8,
+        "vix_level": 17.85,
+        "execution_hour": 18,
+        "day_of_week": 3,
+        "sector_vs_spy": -2.229,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -2098263.0,
+        "net_vanna": 10461667.0,
+        "net_charm": -15454681.0,
+        "delta_imbalance": 0.76,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.127,
+        "bid": 7.87,
+        "ask": 7.88,
+        "bid_size": 100.0,
+        "ask_size": 6300.0,
+        "obi": -0.9688,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.62,
+        "gap_pct": 3.42,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 32.43,
+        "float_shares": 200414900,
+        "shares_short": 64678858,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.252,
+      "sweep_aggression_pct": 5.86,
+      "distance_to_zero_gamma_pct": 74.587,
+      "distance_to_heaviest_dp_node_pct": 1.75,
+      "days_since_earnings": 80,
+      "days_to_earnings": 11,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 59.37
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "QUBT260828C00008000",
+        "expiry": "2026-08-28",
+        "strike": 8.0,
+        "dte": 35,
+        "entry_premium": 1.02,
+        "limit_price": 1.03,
+        "contracts": 7,
+        "alloc_usd": 800.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "77",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.76,
+          "ask": 0.78,
+          "mid": 0.77,
+          "bid_ask_spread_pct": 2.597,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 78.0,
+          "oi_prev": 77.0,
+          "oi_change": 1.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "d3a30868-a093-40b8-aa3e-438cca035a72",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.03,
+        "contracts": 7,
         "ledger_terminal": "filled"
       }
     },

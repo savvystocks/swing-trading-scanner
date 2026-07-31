@@ -3637,3 +3637,12 @@
 
 **Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 70.0.
 
+## Autopsy - AA (98571c69a2ec)
+- entered 2026-07-24T19:11:28.756Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 65.0.
+

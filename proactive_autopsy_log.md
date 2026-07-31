@@ -3655,3 +3655,12 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 39.0 worked against it.
 
+## Autopsy - TLT (7a52a7e60f7e)
+- entered 2026-07-30T15:03:05.618Z | trigger regime_BEARISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +46.4% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 82.5 -> negative-gamma slide, no positive catalyst.
+

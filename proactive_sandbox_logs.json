@@ -144995,7 +144995,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -159858,15 +159858,49 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": 46.4
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 60.7,
+          "mae_pct": -17.9,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-07-31T15:11:16.467Z",
+            "return_pct": 42.9
+          }
+        }
+      },
+      "mfe_pct": 60.7,
+      "mae_pct": -17.9,
+      "determining_factor": "Bearish breakdown (move 0.0%): spot below zero-gamma 82.5 -> negative-gamma slide, no positive catalyst.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "TLT260828P00079500",
+        "closed_at": "2026-07-31T19:21:24.667Z",
+        "return_pct": 46.4,
+        "reason": "46.4% <= trail 48.6% (20% off peak MFE 60.7%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 60.7,
         "mae_pct": -17.9,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-07-31T15:11:16.467Z",
@@ -159878,6 +159912,11 @@
       {
         "order_id": "f751d5ea-e5ef-41d1-8a17-12d4b617a751",
         "at": "2026-07-31T15:11:16.467Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "d0622da6-b23c-45ff-8f1c-420d6c93c3d6",
+        "at": "2026-07-31T19:21:24.667Z",
         "ledger_terminal": "filled"
       }
     ]

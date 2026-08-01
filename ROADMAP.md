@@ -425,8 +425,10 @@ proposal passes a simplicity test: does a number already in the reports justify 
   lane, pure XSP put-write, school-gated V10, Lessons Engine, momentum shares — each with
   pre-registered success/kill bars, all six logged as lifetime trials at activation, winner-by-
   leaderboard explicitly banned (each method passes or fails its OWN bar at its OWN sample floor).
-  Spec: reports/strategy/ACCOUNT_TOURNAMENT_SPEC_2026-08-01.md. Requires the owner to create the
-  five Alpaca signups + key handoff via the hidden-input pattern. Accept: routing layer ships
+  Spec: reports/strategy/ACCOUNT_TOURNAMENT_SPEC_2026-08-01.md. Requires the owner to create five
+  titled paper accounts under the ONE existing Alpaca login (dashboard "New Paper Account" —
+  owner decision 2026-08-01, no separate signups) + per-account key handoff via the hidden-input
+  pattern. Accept: routing layer ships
   config-OFF per account with MOT off-state proof; activations one per day, each a counted trial.
   The premium-lane decision above folds into this as account 2 if the tournament is approved.
 

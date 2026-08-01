@@ -23,22 +23,31 @@ leaderboard by luck within weeks. Therefore:
 - NO CROSS-CONTAMINATION: no method reads another account's positions, fills, or P&L. The school's
   gate evidence firewall (adoption-exclusion) applies tournament-wide.
 
-## Account map
+## Account map (one Alpaca login; separate titled paper accounts — owner decision 2026-08-01)
 
-| Acct | Method | Instrument | Cadence | New signup needed |
+The Alpaca dashboard supports multiple paper accounts under the single existing login ("New Paper
+Account" in the account switcher). Each paper account carries its own account ID, its own API key
+pair, its own equity, and its own clean P&L — the same firewall the spec needs, with no extra
+signups. All six books live under the one login.
+
+| Acct | Paper account title | Method | Instrument | Cadence |
 |---|---|---|---|---|
-| 1 | V10 control (existing, frozen) | options, flow-triggered | ~10min cycles | no — existing |
-| 2 | Premium lane v2.2 | XSP/SPY put verticals, mleg | 1/day max | yes |
-| 3 | Pure index put-write | XSP ATM short put, cash-secured | monthly | yes |
-| 4 | School-gated V10 | options, flow-triggered, gated | ~10min cycles | yes |
-| 5 | Lessons Engine | options, flow-triggered, filtered | ~10min cycles | yes |
-| 6 | Momentum diversifier | shares, 12-1 momentum | monthly rebalance | yes |
+| 1 | v8.5 bot (existing) | V10 control, frozen | options, flow-triggered | ~10min cycles |
+| 2 | premium-lane | Premium lane v2.2 | XSP/SPY put verticals, mleg | 1/day max |
+| 3 | put-write | Pure index put-write | XSP ATM short put, cash-secured | monthly |
+| 4 | school-gate | School-gated V10 | options, flow-triggered, gated | ~10min cycles |
+| 5 | lessons-engine | Lessons Engine | options, flow-triggered, filtered | ~10min cycles |
+| 6 | momentum | Momentum diversifier | shares, 12-1 momentum | monthly rebalance |
 
-Alpaca allows one paper account per signup, so accounts 2–6 need five fresh registrations (Gmail
-plus-addressing — savvastgeorgiou+acct2@gmail.com etc. — normally works and keeps everything in
-one inbox). The owner creates the accounts and hands each key pair over via the established
-hidden-input terminal pattern; keys never appear in chat. Each pair lands as its own GHA secret
-(ALPACA_KEY_N / ALPACA_SECRET_N) plus VPS env entries where needed.
+The owner creates each titled paper account in the dashboard, switches into it, generates that
+account's API key pair, and hands it over via the established hidden-input terminal pattern; keys
+never appear in chat. Each pair lands as its own GHA secret (ALPACA_KEY_N / ALPACA_SECRET_N) plus
+VPS env entries where needed. Standard starting balance $100,000 per new account so the books are
+comparable (covers put-write's ~$63k XSP collateral with margin to spare). If Alpaca caps the
+number of paper accounts per login below six, the fallback is pre-decided: monthly-cadence books
+consolidate first (put-write + momentum share one account — they never overlap in instrument
+type, options vs shares, so reconcile separates them cleanly), then lessons-engine shares with
+school-gate under record-namespace tags as the last resort.
 
 ## Per-method specs (success + kill, pre-registered)
 
@@ -117,7 +126,8 @@ implementation faults only (missed rebalance, wrong universe, unintended positio
 
 ## Build order (post-approval; nothing before the yes)
 
-1. Owner: create the 5 Alpaca paper accounts; key handoff via terminal (hidden input, one at a
+1. Owner: create the 5 titled paper accounts under the existing login (dashboard → New Paper
+   Account), generate each account's API keys; key handoff via terminal (hidden input, one at a
    time). Keys → GHA secrets.
 2. Multi-account routing layer in the cycle (config-OFF per account; MOT off-state proof per
    account before any flag flips).
@@ -140,8 +150,10 @@ implementation faults only (missed rebalance, wrong universe, unintended positio
    everywhere; no winner-by-ranking; frozen specs.
 5. Dead weight: the tournament adds a routing layer and two tiny workflows; anything killed is
    deactivated the same week, not left running.
-6. Unknown unknowns (named): Alpaca multi-signup tolerance for paper accounts (if Alpaca objects,
-   we consolidate to fewer accounts with book tags — degraded but workable); five key pairs =
+6. Unknown unknowns (named): the per-login paper-account cap is unverified until the button is
+   pressed (fallback consolidation order pre-decided in the account map); whether Alpaca's
+   per-account rate limits are truly independent for paper accounts under one login is assumed,
+   not proven — verified in step 2's off-state checks before any flag flips; five key pairs =
    five leak surfaces (mitigated: secrets only, never chat); operator attention is the real
    scarce resource — six accounts of alarms funnel into the existing Telegram channel with
    per-account prefixes.

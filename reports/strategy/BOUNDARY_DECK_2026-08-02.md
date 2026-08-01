@@ -31,6 +31,7 @@ Supersedes/reframes standing decision 3 if ratified.
 | 9 | Analyst + congress accumulation sensors | approve forward accumulation | FRONTIER_PLAN sec.4 |
 | 10 | Poller extension (fixed-hold answerability) | approve | ROADMAP fixed-hold question |
 | 11 | Buy-signal rework blueprint (R1 subtractions now; R2 signed-intent flow columns as measurement, stock-labels-first; R3 = tournament; R4 watches) | approve R1+R2 | BUY_SIGNAL_REWORK_2026-08-01.md |
+| 12 | External evidence ranking of every UW indicator family (validates the pivot; adds insider cluster-buys as a ~Sep registrant; downgrades congress expectations; calibrates R2 to probably-null) | informational + approve item 2's insider registration slot | UW_INDICATOR_EVIDENCE_2026-08-02.md |
 
 Prereq for 2–4: the two new paper accounts' API keys (hidden-input terminal handoff; put-write
 first, premium-lane second).

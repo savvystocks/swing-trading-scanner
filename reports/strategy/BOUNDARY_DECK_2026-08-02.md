@@ -32,6 +32,7 @@ Supersedes/reframes standing decision 3 if ratified.
 | 10 | Poller extension (fixed-hold answerability) | approve | ROADMAP fixed-hold question |
 | 11 | Buy-signal rework blueprint (R1 subtractions now; R2 signed-intent flow columns as measurement, stock-labels-first; R3 = tournament; R4 watches) | approve R1+R2 | BUY_SIGNAL_REWORK_2026-08-01.md |
 | 12 | External evidence ranking of every UW indicator family (validates the pivot; adds insider cluster-buys as a ~Sep registrant; downgrades congress expectations; calibrates R2 to probably-null) | informational + approve item 2's insider registration slot | UW_INDICATOR_EVIDENCE_2026-08-02.md |
+| 13 | UW SUNSET REVIEW — pre-registered for Sunday 2026-09-27 (owner statement 08-02: "UW doesn't seem effective enough"). Dependency map: every proven-path book (put-write, lane, momentum, insider-via-EDGAR, short-interest conditioning) is UW-independent; UW remains only the flow-books' trigger + three open experiments (R2 signed-intent, dark-pool convergence, archiver history). Kill criteria fixed now: if by 09-27 R2 is null, dark-pool has not survived convergence, insider work runs on free EDGAR, and the flow-book A/Bs have hit their pre-registered floors with no pass — the subscription ends. Any experiment passing its bar before then justifies the spend (NORTH_STAR case-by-case rule; the £ math goes to the owner at the review). | ratify the review date + criteria | this file |
 
 Prereq for 2–4: the two new paper accounts' API keys (hidden-input terminal handoff; put-write
 first, premium-lane second).

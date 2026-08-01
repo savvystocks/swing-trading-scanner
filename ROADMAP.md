@@ -420,6 +420,15 @@ proposal passes a simplicity test: does a number already in the reports justify 
   pre-registered; a low-VIX pass stays provisional until the lane has held through VIX > 25). If
   approved: activation is a counted trial and the flag flips in one commit. Nothing activates
   without the owner's explicit yes.
+- **Multi-account strategy tournament — Sunday 2026-08-02 boundary (owner directive 2026-08-01:
+  "all of them").** Six-account plan: V10 control (existing) + five new paper accounts — premium
+  lane, pure XSP put-write, school-gated V10, Lessons Engine, momentum shares — each with
+  pre-registered success/kill bars, all six logged as lifetime trials at activation, winner-by-
+  leaderboard explicitly banned (each method passes or fails its OWN bar at its OWN sample floor).
+  Spec: reports/strategy/ACCOUNT_TOURNAMENT_SPEC_2026-08-01.md. Requires the owner to create the
+  five Alpaca signups + key handoff via the hidden-input pattern. Accept: routing layer ships
+  config-OFF per account with MOT off-state proof; activations one per day, each a counted trial.
+  The premium-lane decision above folds into this as account 2 if the tournament is approved.
 
 - **Gating temperament** - decided at the first real calibration reliability curve (how aggressively the
   brain gates). Owner call.

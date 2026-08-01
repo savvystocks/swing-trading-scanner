@@ -75,7 +75,7 @@ one-pager. No parameter moves outside Sunday boundaries; no daily reading of dai
 - Premium lane (if approved): dead if 40 real fills show net premium capture ≤ 0 after measured costs.
 Each kill is one evening's verdict, logged, and frees the slot for the next game.
 
-## 7. KNOWLEDGE BASE (the ledger of CONCLUSIONS — 9 entries)
+## 7. KNOWLEDGE BASE (the ledger of CONCLUSIONS — 10 entries)
 
 1. Buying flow-followed options: **dead** (hit 2–20% vs 57% bar; four independent reads).
 2. Re-reading the same features (normalize/structural/persistence): **dead** (nothing beats incumbent OOS; persistence was a threshold mirage, 07-26).
@@ -85,6 +85,7 @@ Each kill is one evening's verdict, logged, and frees the slot for the next game
 6. Structure-as-rescue (exits/holds/spreads on a signal-less long): **dead** (14 structures, all negative; ~7–10% bleed at zero cost).
 7. Insider-purchase drift, 3d & 10d: **dead on this window** (sign flips between halves; regime artifact, 07-28).
 8. Magnitude relabel (vol-structure shortcut): **closed** (option-magnitude AUC 0.720 vs direction 0.731, inside the ±0.05 band; D3, 07-29).
+9a. The pond is **NOT POISONED** (D2, 08-01): flagged names' vol sits BELOW their own baseline at flag time (median ratio 0.843 vs 1.25 bar) — the nine nulls are genuine signal absence, not stripped water. PEAD deferred UNDERPOWERED (13 events vs 40 floor; re-run 08-24).
 9. Stock-directional content of the ENTIRE feature set: **ZERO** (stock-label AUC 0.4955/0.4847 = coin-flip, best feature d 0.001; the Student's 0.73 is option-space vol/path structure, not direction; D4, 07-29). The directional game is dead in every formulation; only vol-side games remain supportable by this pile.
 Each entry carries its evidence file in reports/research/. This list IS the system's accumulated
 knowledge: seven games eliminated at ~zero cost, zero real money burned on any of them.

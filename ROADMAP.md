@@ -421,14 +421,16 @@ proposal passes a simplicity test: does a number already in the reports justify 
   approved: activation is a counted trial and the flag flips in one commit. Nothing activates
   without the owner's explicit yes.
 - **Multi-account strategy tournament — Sunday 2026-08-02 boundary (owner directive 2026-08-01:
-  "all of them").** Six-account plan: V10 control (existing) + five new paper accounts — premium
-  lane, pure XSP put-write, school-gated V10, Lessons Engine, momentum shares — each with
-  pre-registered success/kill bars, all six logged as lifetime trials at activation, winner-by-
-  leaderboard explicitly banned (each method passes or fails its OWN bar at its OWN sample floor).
-  Spec: reports/strategy/ACCOUNT_TOURNAMENT_SPEC_2026-08-01.md. Requires the owner to create five
-  titled paper accounts under the ONE existing Alpaca login (dashboard "New Paper Account" —
-  owner decision 2026-08-01, no separate signups) + per-account key handoff via the hidden-input
-  pattern. Accept: routing layer ships
+  "all of them").** Six methods — V10 control (frozen), premium lane, pure XSP put-write,
+  school-gated V10, Lessons Engine, momentum shares — each with pre-registered success/kill bars,
+  all six logged as lifetime trials at activation, winner-by-leaderboard explicitly banned (each
+  method passes or fails its OWN bar at its OWN sample floor). Alpaca's per-login paper-account
+  cap CONFIRMED at 3 (2026-08-01; the two new accounts exist), so the books consolidate by risk
+  type: control alone / short-premium account (lane + put-write) / flow-lab account (school-gate
+  + lessons-engine + momentum), with pre-registered same-OCC collision rules and
+  namespace-scoped quarantine-not-adopt reconcile. Spec:
+  reports/strategy/ACCOUNT_TOURNAMENT_SPEC_2026-08-01.md. Remaining owner step: two key pairs
+  via the hidden-input pattern. Accept: routing layer ships
   config-OFF per account with MOT off-state proof; activations one per day, each a counted trial.
   The premium-lane decision above folds into this as account 2 if the tournament is approved.
 

@@ -23,31 +23,41 @@ leaderboard by luck within weeks. Therefore:
 - NO CROSS-CONTAMINATION: no method reads another account's positions, fills, or P&L. The school's
   gate evidence firewall (adoption-exclusion) applies tournament-wide.
 
-## Account map (one Alpaca login; separate titled paper accounts — owner decision 2026-08-01)
+## Account map — FINAL (per-login cap CONFIRMED at 3, 2026-08-01)
 
-The Alpaca dashboard supports multiple paper accounts under the single existing login ("New Paper
-Account" in the account switcher). Each paper account carries its own account ID, its own API key
-pair, its own equity, and its own clean P&L — the same firewall the spec needs, with no extra
-signups. All six books live under the one login.
+The Alpaca dashboard allows multiple paper accounts under the one existing login, and the cap is
+three: after v8.5 bot + two new accounts (premium-lane, put-write, both created 2026-08-01 at
+$100,000) the "New Paper Account" button disappeared. Six methods therefore consolidate into
+three accounts — grouped by RISK TYPE, not cadence, which is stronger than the earlier fallback:
+every short-premium/assignment surface lives in ONE account, so an assignment or adoption mishap
+(the ADOPT abs(qty) class) can never tangle with the long books. The control stays alone.
 
-| Acct | Paper account title | Method | Instrument | Cadence |
-|---|---|---|---|---|
-| 1 | v8.5 bot (existing) | V10 control, frozen | options, flow-triggered | ~10min cycles |
-| 2 | premium-lane | Premium lane v2.2 | XSP/SPY put verticals, mleg | 1/day max |
-| 3 | put-write | Pure index put-write | XSP ATM short put, cash-secured | monthly |
-| 4 | school-gate | School-gated V10 | options, flow-triggered, gated | ~10min cycles |
-| 5 | lessons-engine | Lessons Engine | options, flow-triggered, filtered | ~10min cycles |
-| 6 | momentum | Momentum diversifier | shares, 12-1 momentum | monthly rebalance |
+| Paper account (dashboard) | Account ID | Books hosted | In-account separation |
+|---|---|---|---|
+| v8.5 bot (existing) | PA3Y8L8ZA493 | V10 control ONLY, frozen | none needed |
+| premium-lane | PA3DWS0CCP91 | premium lane + pure put-write ("short-premium") | OCC + mleg-vs-single + record namespace |
+| put-write | PA3IZ4697HP4 | school-gate + lessons-engine + momentum ("flow-lab") | shares vs options; OCC + record namespace between the two options books |
 
-The owner creates each titled paper account in the dashboard, switches into it, generates that
-account's API key pair, and hands it over via the established hidden-input terminal pattern; keys
-never appear in chat. Each pair lands as its own GHA secret (ALPACA_KEY_N / ALPACA_SECRET_N) plus
-VPS env entries where needed. Standard starting balance $100,000 per new account so the books are
-comparable (covers put-write's ~$63k XSP collateral with margin to spare). If Alpaca caps the
-number of paper accounts per login below six, the fallback is pre-decided: monthly-cadence books
-consolidate first (put-write + momentum share one account — they never overlap in instrument
-type, options vs shares, so reconcile separates them cleanly), then lessons-engine shares with
-school-gate under record-namespace tags as the last resort.
+Method specs below keep their original numbering as BOOK ids (books 2–6). Secret naming follows
+the dashboard titles even though each account hosts more than its title suggests — this table is
+authoritative: ALPACA_KEY_2/ALPACA_SECRET_2 = the premium-lane account; ALPACA_KEY_3/
+ALPACA_SECRET_3 = the put-write account. Keys are handed over via the established hidden-input
+terminal pattern (never chat) and land as GHA secrets.
+
+Consolidation rules (pre-registered before any book trades):
+- Per-method P&L comes from per-record fill ledgers under book namespaces, NEVER from account
+  equity — books share accounts, so equity is only a sanity cross-check.
+- Same-OCC collision, school-gate vs lessons-engine: school-gate has priority; lessons-engine
+  skips and logs the skip (the harvest still measures the counterfactual). Expected rare — the
+  gate refuses most entries.
+- Same-OCC collision, lane vertical leg vs put-write ATM XSP short: put-write (monthly,
+  first-mover) holds; the lane skips that day, logged. Different strikes make this rare.
+- Reconcile is per-account and namespace-scoped: an unmatched broker position is QUARANTINED
+  (MEASUREMENT_PROBE pattern), never blind-adopted — the abs(qty) adoption class stays closed
+  tournament-wide.
+- Equity allocation inside flow-lab: momentum book $40,000 notional (20 names × $2,000); the two
+  options books share the remainder. Inside short-premium: put-write collateral (~$63k for one
+  ATM XSP) + the lane's $900 risk book fit inside $100k with margin to spare.
 
 ## Per-method specs (success + kill, pre-registered)
 
@@ -126,9 +136,9 @@ implementation faults only (missed rebalance, wrong universe, unintended positio
 
 ## Build order (post-approval; nothing before the yes)
 
-1. Owner: create the 5 titled paper accounts under the existing login (dashboard → New Paper
-   Account), generate each account's API keys; key handoff via terminal (hidden input, one at a
-   time). Keys → GHA secrets.
+1. Owner: DONE 2026-08-01 — premium-lane and put-write created in the dashboard. Remaining:
+   generate each account's API keys; key handoff via terminal (hidden input, one at a time).
+   Two pairs → GHA secrets (ALPACA_KEY_2/SECRET_2, ALPACA_KEY_3/SECRET_3).
 2. Multi-account routing layer in the cycle (config-OFF per account; MOT off-state proof per
    account before any flag flips).
 3. Accounts activate one at a time, each activation a counted trial: lane first (already
@@ -150,10 +160,12 @@ implementation faults only (missed rebalance, wrong universe, unintended positio
    everywhere; no winner-by-ranking; frozen specs.
 5. Dead weight: the tournament adds a routing layer and two tiny workflows; anything killed is
    deactivated the same week, not left running.
-6. Unknown unknowns (named): the per-login paper-account cap is unverified until the button is
-   pressed (fallback consolidation order pre-decided in the account map); whether Alpaca's
-   per-account rate limits are truly independent for paper accounts under one login is assumed,
-   not proven — verified in step 2's off-state checks before any flag flips; five key pairs =
-   five leak surfaces (mitigated: secrets only, never chat); operator attention is the real
-   scarce resource — six accounts of alarms funnel into the existing Telegram channel with
-   per-account prefixes.
+6. Unknown unknowns: the per-login cap RESOLVED at 3 (2026-08-01) — consolidation map above is
+   final. Still open and named: whether Alpaca's rate limits are truly independent per paper
+   account under one login is assumed, not proven — verified in step 2's off-state checks before
+   any flag flips; same-OCC cross-book collisions are handled by the pre-registered priority
+   rules but the exit engine's namespace scoping must be MOT-proven before activation (two books
+   holding the same OCC would otherwise fight over one aggregated broker position); two new key
+   pairs = two leak surfaces (mitigated: secrets only, never chat); operator attention is the
+   real scarce resource — all books' alarms funnel into the existing Telegram channel with
+   per-book prefixes.

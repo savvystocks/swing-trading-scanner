@@ -30,6 +30,7 @@ Supersedes/reframes standing decision 3 if ratified.
 | 8 | Dark-pool sensor retry hardening | approve (passivity battery mandatory) | ROADMAP scheduled decisions |
 | 9 | Analyst + congress accumulation sensors | approve forward accumulation | FRONTIER_PLAN sec.4 |
 | 10 | Poller extension (fixed-hold answerability) | approve | ROADMAP fixed-hold question |
+| 11 | Buy-signal rework blueprint (R1 subtractions now; R2 signed-intent flow columns as measurement, stock-labels-first; R3 = tournament; R4 watches) | approve R1+R2 | BUY_SIGNAL_REWORK_2026-08-01.md |
 
 Prereq for 2–4: the two new paper accounts' API keys (hidden-input terminal handoff; put-write
 first, premium-lane second).
@@ -50,11 +51,17 @@ first, premium-lane second).
 1. DELETE biggest-premium-first selection → replace with tightest-spread-first among gate
    survivors (cost-justified: the whale rule preferentially bought crowded consensus; 250k+
    won 13.6% vs 17.0% mid-band; spread cost is the one measured, monotone lever).
-2. DROP the conviction-stack requirement (3/3-aligned selected 7.0%-win trades — a filter that
-   provably selects for failure is removed, not inverted; the fade/inversion is NOT deployed,
-   it is registered with tripwires).
-3. REMOVE mock blocks from all scoring paths (alt_catalyst insider/reddit have been placeholder
-   constants since June and write fictional "determining factor" narratives into records).
+2. CORRECTED (08-01 forensics, code-verified): there is NO conviction-stack requirement to
+   remove — classify_regime's flow weight (±2.0) always beats trend+market (max ±1.5), so flow
+   side alone decides every direction and the "stack" is decorative. The real defect is deeper:
+   alert TYPE is not INTENT (a big put print may be a bullish put SALE; the code discards the
+   ask/bid split, sweep/multileg flags, and opening indication that would sign it). The
+   Lessons Engine keeps V10's direction unchanged for control comparability; the signed-intent
+   reconstruction is the R2 measurement path in BUY_SIGNAL_REWORK_2026-08-01.md — never a
+   silent engine change.
+3. REMOVE mock blocks from all scoring paths (alt_catalyst insider/reddit fabricates hardcoded
+   constants on ANY failure — the only non-null fail-open in live mode; null it everywhere and
+   strike its fictional "determining factor" narratives).
 Plus the previously validated lessons: <=2% spread cap, liquidity floor (price >= 5, mcap >=
 250M), trail-dominant exits, one position per correlation cluster, earnings blackout enforced.
 Honest expectation stated in advance: loses less than V10, likely still negative — it is the

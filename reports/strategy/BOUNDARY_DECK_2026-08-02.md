@@ -1,0 +1,96 @@
+# Sunday boundary deck — 2026-08-02 (prepared night of 08-01; nothing here is active)
+
+Every item below is a decision for the owner. Nothing trades, activates, or changes without an
+explicit yes; every activation is a counted trial.
+
+## 0. Proposed NORTH_STAR amendment (owner ratification required — the night's core lesson)
+
+Draft principle, one sentence:
+**"The primary lane always belongs to the best-evidenced method; when the evidence ranking
+changes, the primary changes with it — no strategy holds the crown by incumbency."**
+
+Why: the 08-01 evidence scoreboard ranked every method we can run, and the incumbent (V10 flow
+engine) came LAST — hit rate 3.8% vs 55.9% hurdle, SPRT REJECT, conviction logic measured
+inverted — while the best-evidenced method (index put-write, 19.6y documented record) had no
+lane at all. The old standing decision "V10-only, one strategy perfected" (decision 3) built
+this inversion in. The amendment replaces perfect-the-incumbent with run-the-best-evidenced.
+Supersedes/reframes standing decision 3 if ratified.
+
+## 1. The decisions (in order)
+
+| # | decision | ask | spec |
+|---|---|---|---|
+| 1 | NORTH_STAR amendment above | ratify yes/no | this file, section 0 |
+| 2 | Multi-account tournament (3 paper accounts, 6 books, consolidation by risk type) | approve structure | ACCOUNT_TOURNAMENT_SPEC_2026-08-01.md |
+| 3 | Put-write book = PRIMARY lane (the amendment applied: only method with positive-expectation evidence) | activate as primary | tournament spec, book 3 |
+| 4 | Premium lane v2.2 (cost-measurement instrument) | activate yes/no | PREMIUM_LANE_SPEC_2026-07-28.md |
+| 5 | V10 demotion to control/data-generator | choose: full cadence as baseline+fill-generator, or throttled | section 2 below |
+| 6 | Lessons Engine trigger fix — three evidence-backed SUBTRACTIONS | approve spec | section 3 below |
+| 7 | Consensus-fade hypothesis | already registered with tripwires (no ask — informational) | ROADMAP question list, 2026-08-01 entry |
+| 8 | Dark-pool sensor retry hardening | approve (passivity battery mandatory) | ROADMAP scheduled decisions |
+| 9 | Analyst + congress accumulation sensors | approve forward accumulation | FRONTIER_PLAN sec.4 |
+| 10 | Poller extension (fixed-hold answerability) | approve | ROADMAP fixed-hold question |
+
+Prereq for 2–4: the two new paper accounts' API keys (hidden-input terminal handoff; put-write
+first, premium-lane second).
+
+## 2. V10 demotion options (decision 5)
+
+- OPTION A — keep full cadence as control: unchanged baseline every book is measured against;
+  keeps generating executed fills for cost models + harvest ground truth. Cost: continued paper
+  losses (~-$570/trade expectancy) that mean nothing financially but keep alarm noise.
+- OPTION B — throttle (e.g. 1 trade/day): keeps a thin control stream and most harvest value
+  (harvest logs candidates regardless of execution; executed tier shrinks). Cost: weaker cost
+  ground truth, smaller SPRT stream, control less comparable.
+- Recommendation on record: A, unchanged — a control's value is its constancy; paper losses are
+  the tuition we are already extracting via the ledger. (Owner decides.)
+
+## 3. Lessons Engine buy-trigger fix (decision 6) — subtractions only, from the autopsy
+
+1. DELETE biggest-premium-first selection → replace with tightest-spread-first among gate
+   survivors (cost-justified: the whale rule preferentially bought crowded consensus; 250k+
+   won 13.6% vs 17.0% mid-band; spread cost is the one measured, monotone lever).
+2. DROP the conviction-stack requirement (3/3-aligned selected 7.0%-win trades — a filter that
+   provably selects for failure is removed, not inverted; the fade/inversion is NOT deployed,
+   it is registered with tripwires).
+3. REMOVE mock blocks from all scoring paths (alt_catalyst insider/reddit have been placeholder
+   constants since June and write fictional "determining factor" narratives into records).
+Plus the previously validated lessons: <=2% spread cap, liquidity floor (price >= 5, mcap >=
+250M), trail-dominant exits, one position per correlation cluster, earnings blackout enforced.
+Honest expectation stated in advance: loses less than V10, likely still negative — it is the
+execution-vs-signal instrument, not a profit claim.
+
+## 4. Tonight's Sunday-chain digest (chain run 2026-08-01 21:59 UTC, all jobs green)
+
+- STUDENT: REJECTED — official week 2 of the pivot clock's 6. New this week: the Student
+  selected NOTHING (max calibrated p 0.500 vs hurdle 0.6006; 11,284 feature-bearing rows; AUC
+  0.739). Gates: 1 FAIL (no selections), 2 FAIL (PBO 0.294 vs 0.20), 3 FAIL (DSR 0.000),
+  4 FAIL (nothing to compare; engine itself -0.7043 net, hit 0.0273). Shadow: TAKE 0 / VETO
+  2,631; would have vetoed all 15 of the engine's executed picks. CLIFF WARNING stands (zero
+  probability mass within 10pts of the bar).
+  NOTE: strategy_this_week still prints "Week 1 of 6" — generator counts stale by one; the
+  honest count is 2 consecutive official REJECTED cards (07-24, 07-31). Fix queued.
+- WEEKLY EDGE REPORT: NO-EDGE. n=477 executed, hit 3.77% vs 55.94% hurdle, expectancy -0.5692,
+  SPRT REJECT (18/477, LLR -56.6). Dataset 32,281 rows. By real spread since 07-09: tight n=10
+  UNDERPOWERED, medium 2-8% hit 9.2% (best band), wide >=8% hit 3.5% (n=289 — most executions
+  still wide; the 5% cap only bites at entry from 07-29).
+- COUNCIL: blended AUC 0.7345; TAKEs 0 of 11,284 (all below contract bar); agreed with 0 of 477
+  engine picks. TREASURER: 0 TAKEs to size; P(halt) UNDERPOWERED; macro brake would have fired
+  on 0 rows. GOVERNOR: student + council both CANDIDATE/AMBER, 0/6 green streak, shadow only;
+  lifetime trials 1,222 (+ tonight's autopsy batch). Measurement-lane trigger NOT MET (organic
+  tight fills 131 already cover; lane stays down).
+- DISCOVERY: "a HINT of an edge — not yet defensible." First rules ABOVE the hurdle appear:
+  shares_short:HIGH & execution_hour:LOW & (gex zero-gamma HIGH / atr HIGH) OOS up-rate
+  0.66-0.68 at n_eff 14-19 (thin), dealer net_dex variant 0.6495 at n_eff 21.3; 68,402 trials
+  counted; promotion bar = survival across convergence angles in consecutive weekly runs.
+  Watch, do not touch. day_of_week is the top MDA feature (0.105) — matches the D3 idea-ledger
+  entry.
+- DEEP DIAGNOSTIC (owner-ordered, run tonight): winners_autopsy_2026-08-01.md — the buy
+  trigger's conviction is INVERTED (3/3-aligned 7.0% wins vs 0/3 25.6%); the only profitable
+  organ is the exit machinery; 54% of winner dollars = one mock-era week at 4x size.
+
+## 5. Standing watches (unchanged)
+
+F probe (OPASN by Aug-19), FCEL canary rest proven / fleet-wide = owner decision, PEAD re-run
+08-24, flagged-name drift re-read ~Sep, pivot clock week 2 of 6 (~Aug-30 decision if streak
+holds), Q2 exit-quote data accumulating since 07-29.

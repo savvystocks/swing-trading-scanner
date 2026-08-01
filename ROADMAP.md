@@ -376,6 +376,27 @@ and SPRT clock are decisions 14/27.)
   0.436 vs the 0.594 hurdle). Closed as measured-and-rejected; persistence does not enter the
   Student's feature set. Full record: reports/research/persistence_harness_2026-07-26.md.
 
+- **Q: Does the CONSENSUS-FADE entry (the winners'-autopsy inversion) carry tradeable value —
+  buying the flow-alert side precisely when trend and market DISAGREE with it (the 0/3–1/3
+  alignment states), i.e. the dip-bounce shape?**
+  Registered 2026-08-01 from the winners' autopsy (winners_autopsy_2026-08-01.md), which found
+  the conviction stack monotonically inverted on 379 joined executed legs (3/3 aligned 7.0%
+  wins; 0/3 aligned 25.6%; base 15.3%). That table was seen BEFORE this registration, so the
+  in-sample pile is spent as evidence — this question is answerable ONLY on data accumulated
+  after 2026-08-01, or via the discovery rig's convergence angles on strictly later slices.
+  Method: alignment computed exactly as the autopsy did (alert side vs flow_persistence
+  direction, SMA20 trend, SPY day) as a measurement column; evaluated through the rig with
+  uniqueness weights, day-clustered n_eff, every configuration counted.
+  Evidence gate: >= 40 executed or top-tier fills in the 0/3–1/3 states on post-registration
+  data, spanning >= 15 distinct days.
+  Pre-registered tripwire (written 2026-08-01, before any post-registration value exists):
+  consensus-fade counts as real ONLY if, in 2 consecutive weekly rig runs on post-registration
+  data, the 0/3–1/3 cohort's uniqueness-weighted net return 95% lower bound is > 0 AND its hit
+  rate's lower bound clears the empirical cost-inclusive hurdle, with campaign PBO <= 0.20.
+  Meeting it proposes at most ONE governed entry-logic trial at a Sunday boundary. Anything
+  less closes it as measured-and-rejected. A higher win rate that still loses money after
+  costs explicitly does NOT count.
+
 ## The pivot rule (pre-registered 2026-07-25; draft pending owner ratification)
 
 The machinery outlives any single signal (NORTH_STAR). The current flow signal is declared MINED OUT

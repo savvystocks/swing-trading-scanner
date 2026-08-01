@@ -1,0 +1,961 @@
+<title>Winners' Autopsy — every real closed trade, 2026-08-01</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:1150px;margin:0 auto;padding:24px;line-height:1.5}
+h1{font-size:1.5em} h2{font-size:1.15em;margin-top:2em;border-bottom:2px solid #8884;padding-bottom:4px}
+table{border-collapse:collapse;width:100%;font-size:0.82em;margin:12px 0}
+th,td{padding:4px 8px;border-bottom:1px solid #8883;text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:var(--bg,#fff)}
+.pos{color:#0a7d33;font-weight:600} .neg{color:#c0392b;font-weight:600}
+.mock{background:#e67e22;color:#fff;border-radius:4px;padding:0 6px;font-size:0.85em}
+.card{border:1px solid #8884;border-radius:10px;padding:14px 18px;margin:10px 0}
+.big{font-size:1.6em;font-weight:700}
+.warn{border-left:4px solid #e67e22;padding-left:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.scroll{overflow-x:auto}
+@media (prefers-color-scheme: dark){ body{background:#151719;color:#e8e6e3} th{background:#151719} .card{border-color:#444} }
+:root[data-theme="dark"] body{background:#151719;color:#e8e6e3}
+</style>
+<h1>Winners' Autopsy — every real closed trade</h1>
+<p>Executed, closed legs only (LIVE_PAPER fills on Alpaca). No counterfactuals, no shadow trades.
+Record spans <b>2026-06-24 → 2026-07-30</b>: <b>406 closed legs</b>, 68 winners, 338 losers.</p>
+
+<div class="grid">
+<div class="card"><div>Win rate</div><div class="big">16.7%</div>68 of 406 legs</div>
+<div class="card"><div>Winner money</div><div class="big pos">+$50,213</div>avg +$738/leg, avg +51%</div>
+<div class="card"><div>Loser money</div><div class="big neg">-$202,100</div>avg -$598/leg, avg -56%</div>
+<div class="card"><div>Net</div><div class="big neg">-$151,887</div>break-even needs 45% wins</div>
+</div>
+
+<h2>1. The single biggest reason winners won: the exit machinery, not the entry signal</h2>
+<p>Every one of the 68 winners was collected by the profit machinery — trailing exits and take-profits.
+Not one stop-loss or break-even exit ever produced a winner (by construction), and the stop bucket is where
+all the money died:</p>
+<div class="scroll"><table>
+<tr><th>exit mechanism</th><th>legs</th><th>winners</th><th>win rate</th><th>P&amp;L</th></tr>
+<tr><td>TRAIL (lock in after +50%, give back 20%)</td><td>63</td><td>63</td><td>100%</td><td class="pos">+$35,651</td></tr>
+<tr><td>TAKE_PROFIT (+30% scale-out)</td><td>7</td><td>7</td><td>100%</td><td class="pos">+$10,695</td></tr>
+<tr><td>reconciled/untracked exits</td><td>4</td><td>4</td><td>100%</td><td class="pos">+$3,867</td></tr>
+<tr><td>BREAK-EVEN stop (after shield)</td><td>35</td><td>0</td><td>0%</td><td class="neg">-$3,233</td></tr>
+<tr><td>STOP_LOSS (-50%)</td><td>305</td><td>0</td><td>0%</td><td class="neg">-$198,867</td></tr>
+</table></div>
+<p><b>The asymmetry is actually good:</b> the average winner (+738$) is bigger than the average loser
+(-598$), because trails let winners run to +52% average while stops cap losses. The system's fatal number
+is pure <b>frequency</b>: at this asymmetry it needs 45% winners to break even and the entry signal
+delivers 16.7%. The exits are a working organ bolted to a broken signal.</p>
+
+<h2 id="triggers">2. WHY each trade was executed — the buy triggers, and which of them won</h2>
+<p>The buy chain: every ~10 minutes the scanner pulls Unusual Whales flow alerts (≥$25k premium, contract $0.30–4.00),
+scores direction (flow side ±2, 20-day trend ±1, market ±0.5), applies the loose regime gate, and executes the
+<b>largest-premium</b> surviving alert. This table joins each of the 379 closed legs (through 07-28) to its
+executed harvest row and asks: which trigger states won? Base win rate of this joined set: 15.3%.
+"Share of winners" = how many of the 58 winners carried that state.</p>
+<div class="card warn"><b>The headline: the engine's conviction is INVERTED.</b> Its highest-confidence buys —
+flow, trend, and market all agreeing — won 7.0% of the time (5 winners on 4 days). Its "everything disagrees"
+buys won 25.6%. Every layer of agreement it stacked made the trade WORSE: with-trend 10.9% vs against-trend 19.9%;
+with-market 12.9% vs against-market 18.8%; with-tape 13.3% vs contra-tape 17.8%. Bigger flow premium did not help
+either: the $250k+ "whale" alerts won 13.6% vs 17.0% for the 100–250k band, and the biggest-premium-first rule is
+what selected every trade. The machine bought conviction at the top and its winners came from buying disagreement.</div>
+<div class="scroll"><table>
+<tr><th>metablock (buy trigger)</th><th>state</th><th>executed</th><th>winners</th><th>win rate</th><th>share of winners</th><th>net P&amp;L</th><th>win days</th></tr>
+<tr><td>conviction stack (flow+trend+market agree with bought side)</td><td><b>0/3 aligned</b></td><td>43</td><td>11</td><td><b>25.6%</b></td><td>19%</td><td class='neg'>-$9,901</td><td>7</td></tr><tr><td>conviction stack (flow+trend+market agree with bought side)</td><td><b>1/3 aligned</b></td><td>115</td><td>21</td><td><b>18.3%</b></td><td>36%</td><td class='neg'>-$28,791</td><td>12</td></tr><tr><td>conviction stack (flow+trend+market agree with bought side)</td><td><b>2/3 aligned</b></td><td>150</td><td>21</td><td><b>14.0%</b></td><td>36%</td><td class='neg'>-$43,487</td><td>12</td></tr><tr><td>conviction stack (flow+trend+market agree with bought side)</td><td><b>3/3 aligned</b></td><td>71</td><td>5</td><td><b>7.0%</b></td><td>9%</td><td class='neg'>-$25,378</td><td>4</td></tr><tr><td>flow premium size (rule_score - picks the trade)</td><td><b>100-250k</b></td><td>135</td><td>23</td><td><b>17.0%</b></td><td>40%</td><td class='neg'>-$34,870</td><td>12</td></tr><tr><td>flow premium size (rule_score - picks the trade)</td><td><b>50-100k</b></td><td>121</td><td>20</td><td><b>16.5%</b></td><td>34%</td><td class='neg'>-$32,615</td><td>11</td></tr><tr><td>flow premium size (rule_score - picks the trade)</td><td><b>250k+</b></td><td>59</td><td>8</td><td><b>13.6%</b></td><td>14%</td><td class='neg'>-$17,840</td><td>7</td></tr><tr><td>flow premium size (rule_score - picks the trade)</td><td><b>25-50k</b></td><td>64</td><td>7</td><td><b>10.9%</b></td><td>12%</td><td class='neg'>-$22,233</td><td>5</td></tr><tr><td>regime trigger</td><td><b>regime_BULLISH_loose</b></td><td>245</td><td>42</td><td><b>17.1%</b></td><td>72%</td><td class='neg'>-$65,151</td><td>14</td></tr><tr><td>regime trigger</td><td><b>regime_BEARISH_loose</b></td><td>134</td><td>16</td><td><b>11.9%</b></td><td>28%</td><td class='neg'>-$42,406</td><td>9</td></tr><tr><td>alert side vs persistent tape direction</td><td><b>CONTRA the tape</b></td><td>169</td><td>30</td><td><b>17.8%</b></td><td>52%</td><td class='neg'>-$45,643</td><td>13</td></tr><tr><td>alert side vs persistent tape direction</td><td><b>agrees with tape</b></td><td>210</td><td>28</td><td><b>13.3%</b></td><td>48%</td><td class='neg'>-$61,914</td><td>12</td></tr><tr><td>bought side vs 20-day trend</td><td><b>AGAINST trend</b></td><td>186</td><td>37</td><td><b>19.9%</b></td><td>64%</td><td class='neg'>-$46,853</td><td>13</td></tr><tr><td>bought side vs 20-day trend</td><td><b>with trend</b></td><td>193</td><td>21</td><td><b>10.9%</b></td><td>36%</td><td class='neg'>-$60,704</td><td>12</td></tr><tr><td>bought side vs SPY that day</td><td><b>AGAINST market</b></td><td>154</td><td>29</td><td><b>18.8%</b></td><td>50%</td><td class='neg'>-$38,277</td><td>12</td></tr><tr><td>bought side vs SPY that day</td><td><b>with market</b></td><td>225</td><td>29</td><td><b>12.9%</b></td><td>50%</td><td class='neg'>-$69,280</td><td>13</td></tr><tr><td>flow persistence</td><td><b>mid 10-30%</b></td><td>116</td><td>19</td><td><b>16.4%</b></td><td>33%</td><td class='neg'>-$31,636</td><td>9</td></tr><tr><td>flow persistence</td><td><b>strong >=30%</b></td><td>197</td><td>30</td><td><b>15.2%</b></td><td>52%</td><td class='neg'>-$55,739</td><td>12</td></tr><tr><td>flow persistence</td><td><b>weak <10%</b></td><td>66</td><td>9</td><td><b>13.6%</b></td><td>16%</td><td class='neg'>-$20,183</td><td>7</td></tr><tr><td>sweep aggression</td><td><b>high >=15%</b></td><td>82</td><td>14</td><td><b>17.1%</b></td><td>24%</td><td class='neg'>-$21,866</td><td>9</td></tr><tr><td>sweep aggression</td><td><b>mid 5-15%</b></td><td>193</td><td>31</td><td><b>16.1%</b></td><td>53%</td><td class='neg'>-$55,294</td><td>12</td></tr><tr><td>sweep aggression</td><td><b>low <5%</b></td><td>103</td><td>13</td><td><b>12.6%</b></td><td>22%</td><td class='neg'>-$29,974</td><td>12</td></tr><tr><td>contract premium at entry</td><td><b>rich $2.5-4</b></td><td>119</td><td>20</td><td><b>16.8%</b></td><td>34%</td><td class='neg'>-$29,883</td><td>9</td></tr><tr><td>contract premium at entry</td><td><b>cheap <$1</b></td><td>60</td><td>9</td><td><b>15.0%</b></td><td>16%</td><td class='neg'>-$20,781</td><td>7</td></tr><tr><td>contract premium at entry</td><td><b>mid $1-2.5</b></td><td>200</td><td>29</td><td><b>14.5%</b></td><td>50%</td><td class='neg'>-$56,892</td><td>12</td></tr>
+</table></div>
+<p><b>Honesty notes:</b> every row is still net-negative — no trigger state made money, some just died slower.
+The 0/3-aligned standout is 11 winners across 7 days (n=43): a real pattern in this pile, but day-clustered and
+descriptive, not a validated strategy. 27 legs entered after 07-28 aren't in the join (snapshot boundary). The
+"conviction inversion" is consistent with the independent findings that the features carry zero stock-direction
+information (D4) and that winners cluster in dip-bounce conditions — by the time flow, trend, and market all
+point the same way, the move is crowded and the option is fully priced.</p>
+
+<h2>3. Where the winner MONEY actually came from</h2>
+<div class="card warn"><b>+$28,080 of +$50,213 winner dollars (56%) came from ONE
+late-June rally week</b> (Jun 24–30: RKLB, SOFI, PLTR, SPY, ZM, NVDA, AMD, HOOD — 9 legs) when position
+sizing was ~4x larger ($3,333/leg vs today's $800) <em>and</em> the sensors were still mock placeholders. The engine
+did not find those trades with its blocks — it bought market-favourites during a rally with big size, and the rally paid.</div>
+<p>Winner concentration: top 10 legs = 58% of all winner dollars. Winners spread over 19 entry days;
+most-repeated winning tickers: SOFI (4), HOOD (2), SMCI (2), XLE (2), AAL (2), ONDS (2).</p>
+
+<h2>4. All 68 winners — the table (sorted by dollars)</h2>
+<p>Every real winning leg with its metablock state at entry. Orange tag = June mock-sensor era (block values untrustworthy).</p>
+<div class="scroll"><table>
+<tr><th>entry</th><th>ticker</th><th>side</th><th>return</th><th>P&amp;L</th><th>hold</th><th>exit</th>
+<th>gamma</th><th>IV term</th><th>skew</th><th>vs SMA20</th><th>SPY day</th><th>news sent</th><th>rvol</th><th>sweep</th></tr>
+<tr><td>2026-06-30</td><td><b>RKLB</b></td><td>CALL</td>
+    <td class="pos">+51.4%</td><td class="pos">+$4,825</td>
+    <td>26h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.22</td>
+    <td>0.19</td>
+    <td>4%</td></tr><tr><td>2026-06-25</td><td><b>SOFI</b></td><td>CALL</td>
+    <td class="pos">+41.0%</td><td class="pos">+$4,090</td>
+    <td>139h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>-</td>
+    <td>above</td>
+    <td>up</td>
+    <td>-</td>
+    <td>1.16</td>
+    <td>-</td></tr><tr><td>2026-06-25</td><td><b>PLTR</b></td><td>CALL</td>
+    <td class="pos">+38.9%</td><td class="pos">+$3,867</td>
+    <td>26h</td><td>reconciled</td>
+    <td>negative_gamma</td><td>contango</td>
+    <td>-</td>
+    <td>below</td>
+    <td>up</td>
+    <td>-</td>
+    <td>0.66</td>
+    <td>-</td></tr><tr><td>2026-06-26</td><td><b>SPY</b></td><td>CALL</td>
+    <td class="pos">+39.8%</td><td class="pos">+$3,669</td>
+    <td>71h</td><td>TAKE_PROFIT</td>
+    <td>negative_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>down</td>
+    <td>+0.29</td>
+    <td>0.77</td>
+    <td>-</td></tr><tr><td>2026-06-30</td><td><b>ZM</b></td><td>CALL</td>
+    <td class="pos">+35.2%</td><td class="pos">+$3,474</td>
+    <td>25h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>call_skew</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.04</td>
+    <td>0.31</td>
+    <td>3%</td></tr><tr><td>2026-06-26</td><td><b>NVDA</b></td><td>CALL</td>
+    <td class="pos">+33.0%</td><td class="pos">+$3,295</td>
+    <td>95h</td><td>TAKE_PROFIT</td>
+    <td>negative_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>down</td>
+    <td>+0.02</td>
+    <td>0.68</td>
+    <td>-</td></tr><tr><td>2026-06-25</td><td><b>AMD</b></td><td>CALL</td>
+    <td class="pos">+31.4%</td><td class="pos">+$2,876</td>
+    <td>115h</td><td>TAKE_PROFIT</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>-</td>
+    <td>above</td>
+    <td>up</td>
+    <td>-</td>
+    <td>0.90</td>
+    <td>-</td></tr><tr><td>2026-06-24</td><td><b>HOOD</b></td><td>CALL</td>
+    <td class="pos">+40.1%</td><td class="pos">+$1,130</td>
+    <td>166h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>-</td>
+    <td>above</td>
+    <td>up</td>
+    <td>-</td>
+    <td>0.76</td>
+    <td>-</td></tr><tr><td>2026-07-16</td><td><b>SMCI</b></td><td>CALL</td>
+    <td class="pos">+129.9%</td><td class="pos">+$1,033</td>
+    <td>147h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.48</td>
+    <td>0.18</td>
+    <td>19%</td></tr><tr><td>2026-06-24</td><td><b>HOOD</b></td><td>CALL</td>
+    <td class="pos">+32.3%</td><td class="pos">+$855</td>
+    <td>118h</td><td>TAKE_PROFIT</td>
+    <td>negative_gamma</td><td>backwardation</td>
+    <td>-</td>
+    <td>above</td>
+    <td>up</td>
+    <td>-</td>
+    <td>1.18</td>
+    <td>-</td> <span class='mock'>mock-era sensors</span></tr><tr><td>2026-07-24</td><td><b>ABT</b></td><td>CALL</td>
+    <td class="pos">+106.5%</td><td class="pos">+$765</td>
+    <td>96h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>above</td>
+    <td>down</td>
+    <td>+0.05</td>
+    <td>0.22</td>
+    <td>7%</td></tr><tr><td>2026-07-28</td><td><b>F</b></td><td>CALL</td>
+    <td class="pos">+90.2%</td><td class="pos">+$657</td>
+    <td>24h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>above</td>
+    <td>down</td>
+    <td>+0.18</td>
+    <td>0.40</td>
+    <td>3%</td></tr><tr><td>2026-07-06</td><td><b>STUB</b></td><td>PUT</td>
+    <td class="pos">+77.8%</td><td class="pos">+$605</td>
+    <td>166h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.28</td>
+    <td>0.46</td>
+    <td>9%</td></tr><tr><td>2026-07-06</td><td><b>XLE</b></td><td>CALL</td>
+    <td class="pos">+85.7%</td><td class="pos">+$604</td>
+    <td>50h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>-0.02</td>
+    <td>0.14</td>
+    <td>21%</td></tr><tr><td>2026-07-24</td><td><b>VZ</b></td><td>CALL</td>
+    <td class="pos">+76.4%</td><td class="pos">+$569</td>
+    <td>68h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>above</td>
+    <td>down</td>
+    <td>+0.09</td>
+    <td>0.60</td>
+    <td>5%</td></tr><tr><td>2026-07-17</td><td><b>XLE</b></td><td>CALL</td>
+    <td class="pos">+77.2%</td><td class="pos">+$565</td>
+    <td>146h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>balanced</td>
+    <td>above</td>
+    <td>up</td>
+    <td>-0.02</td>
+    <td>0.44</td>
+    <td>17%</td></tr><tr><td>2026-07-10</td><td><b>SOFI</b></td><td>PUT</td>
+    <td class="pos">+79.2%</td><td class="pos">+$539</td>
+    <td>164h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.59</td>
+    <td>1.45</td>
+    <td>12%</td></tr><tr><td>2026-07-17</td><td><b>HL</b></td><td>CALL</td>
+    <td class="pos">+74.2%</td><td class="pos">+$534</td>
+    <td>122h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>call_skew</td>
+    <td>below</td>
+    <td>down</td>
+    <td>-0.00</td>
+    <td>0.27</td>
+    <td>4%</td></tr><tr><td>2026-07-16</td><td><b>IGV</b></td><td>PUT</td>
+    <td class="pos">+65.4%</td><td class="pos">+$521</td>
+    <td>169h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.27</td>
+    <td>0.29</td>
+    <td>7%</td></tr><tr><td>2026-07-09</td><td><b>UNG</b></td><td>PUT</td>
+    <td class="pos">+64.0%</td><td class="pos">+$511</td>
+    <td>25h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>call_skew</td>
+    <td>below</td>
+    <td>up</td>
+    <td>-0.30</td>
+    <td>0.80</td>
+    <td>2%</td></tr><tr><td>2026-07-06</td><td><b>AAL</b></td><td>PUT</td>
+    <td class="pos">+57.8%</td><td class="pos">+$447</td>
+    <td>47h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.14</td>
+    <td>0.55</td>
+    <td>3%</td></tr><tr><td>2026-07-20</td><td><b>ONDS</b></td><td>CALL</td>
+    <td class="pos">+52.5%</td><td class="pos">+$420</td>
+    <td>25h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>down</td>
+    <td>+0.40</td>
+    <td>0.24</td>
+    <td>9%</td></tr><tr><td>2026-07-16</td><td><b>IBIT</b></td><td>CALL</td>
+    <td class="pos">+54.8%</td><td class="pos">+$419</td>
+    <td>118h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.05</td>
+    <td>0.29</td>
+    <td>17%</td></tr><tr><td>2026-07-15</td><td><b>TLT</b></td><td>CALL</td>
+    <td class="pos">+57.1%</td><td class="pos">+$416</td>
+    <td>49h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.15</td>
+    <td>0.08</td>
+    <td>5%</td></tr><tr><td>2026-07-23</td><td><b>XLB</b></td><td>CALL</td>
+    <td class="pos">+60.0%</td><td class="pos">+$414</td>
+    <td>140h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>down</td>
+    <td>-0.10</td>
+    <td>0.63</td>
+    <td>24%</td></tr><tr><td>2026-07-13</td><td><b>IBIT</b></td><td>CALL</td>
+    <td class="pos">+60.8%</td><td class="pos">+$409</td>
+    <td>47h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.05</td>
+    <td>0.52</td>
+    <td>16%</td></tr><tr><td>2026-07-09</td><td><b>CMG</b></td><td>CALL</td>
+    <td class="pos">+61.7%</td><td class="pos">+$402</td>
+    <td>97h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.06</td>
+    <td>0.64</td>
+    <td>6%</td></tr><tr><td>2026-07-21</td><td><b>SO</b></td><td>CALL</td>
+    <td class="pos">+63.3%</td><td class="pos">+$392</td>
+    <td>70h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.22</td>
+    <td>0.67</td>
+    <td>9%</td></tr><tr><td>2026-07-23</td><td><b>RKT</b></td><td>CALL</td>
+    <td class="pos">+51.9%</td><td class="pos">+$389</td>
+    <td>120h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>down</td>
+    <td>+0.16</td>
+    <td>0.75</td>
+    <td>19%</td></tr><tr><td>2026-07-21</td><td><b>NVTS</b></td><td>PUT</td>
+    <td class="pos">+52.8%</td><td class="pos">+$386</td>
+    <td>168h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>-0.27</td>
+    <td>0.21</td>
+    <td>22%</td></tr><tr><td>2026-07-23</td><td><b>U</b></td><td>CALL</td>
+    <td class="pos">+53.5%</td><td class="pos">+$383</td>
+    <td>139h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>down</td>
+    <td>+0.09</td>
+    <td>1.00</td>
+    <td>7%</td></tr><tr><td>2026-07-17</td><td><b>CORZ</b></td><td>CALL</td>
+    <td class="pos">+53.2%</td><td class="pos">+$381</td>
+    <td>98h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>call_skew</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.24</td>
+    <td>0.75</td>
+    <td>1%</td></tr><tr><td>2026-07-09</td><td><b>SQQQ</b></td><td>CALL</td>
+    <td class="pos">+57.9%</td><td class="pos">+$374</td>
+    <td>190h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>call_skew</td>
+    <td>below</td>
+    <td>up</td>
+    <td>-0.03</td>
+    <td>0.51</td>
+    <td>8%</td></tr><tr><td>2026-07-24</td><td><b>PDD</b></td><td>CALL</td>
+    <td class="pos">+52.1%</td><td class="pos">+$366</td>
+    <td>121h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>down</td>
+    <td>+0.12</td>
+    <td>0.32</td>
+    <td>1%</td></tr><tr><td>2026-07-07</td><td><b>OXY</b></td><td>CALL</td>
+    <td class="pos">+59.1%</td><td class="pos">+$365</td>
+    <td>24h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>up</td>
+    <td>-0.47</td>
+    <td>0.50</td>
+    <td>3%</td></tr><tr><td>2026-07-24</td><td><b>NIO</b></td><td>CALL</td>
+    <td class="pos">+46.7%</td><td class="pos">+$365</td>
+    <td>116h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>down</td>
+    <td>+0.19</td>
+    <td>1.04</td>
+    <td>7%</td></tr><tr><td>2026-07-20</td><td><b>GSK</b></td><td>CALL</td>
+    <td class="pos">+46.2%</td><td class="pos">+$365</td>
+    <td>166h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>down</td>
+    <td>-0.09</td>
+    <td>0.66</td>
+    <td>23%</td></tr><tr><td>2026-07-16</td><td><b>CDE</b></td><td>CALL</td>
+    <td class="pos">+50.0%</td><td class="pos">+$360</td>
+    <td>143h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.51</td>
+    <td>0.34</td>
+    <td>4%</td></tr><tr><td>2026-07-09</td><td><b>WULF</b></td><td>PUT</td>
+    <td class="pos">+57.1%</td><td class="pos">+$356</td>
+    <td>118h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>up</td>
+    <td>-0.09</td>
+    <td>0.98</td>
+    <td>6%</td></tr><tr><td>2026-07-20</td><td><b>PAAS</b></td><td>CALL</td>
+    <td class="pos">+60.9%</td><td class="pos">+$353</td>
+    <td>46h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.43</td>
+    <td>0.74</td>
+    <td>7%</td></tr><tr><td>2026-07-14</td><td><b>BBWI</b></td><td>CALL</td>
+    <td class="pos">+45.5%</td><td class="pos">+$350</td>
+    <td>48h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>-0.08</td>
+    <td>0.29</td>
+    <td>9%</td></tr><tr><td>2026-07-30</td><td><b>TLT</b></td><td>PUT</td>
+    <td class="pos">+46.4%</td><td class="pos">+$342</td>
+    <td>28h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>down</td>
+    <td>-0.15</td>
+    <td>0.84</td>
+    <td>10%</td></tr><tr><td>2026-07-10</td><td><b>SOC</b></td><td>CALL</td>
+    <td class="pos">+42.9%</td><td class="pos">+$329</td>
+    <td>72h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.10</td>
+    <td>0.25</td>
+    <td>10%</td></tr><tr><td>2026-07-20</td><td><b>BULL</b></td><td>CALL</td>
+    <td class="pos">+42.0%</td><td class="pos">+$328</td>
+    <td>24h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.23</td>
+    <td>0.62</td>
+    <td>5%</td></tr><tr><td>2026-07-23</td><td><b>SMCI</b></td><td>PUT</td>
+    <td class="pos">+41.7%</td><td class="pos">+$327</td>
+    <td>148h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>call_skew</td>
+    <td>above</td>
+    <td>down</td>
+    <td>+0.51</td>
+    <td>0.28</td>
+    <td>16%</td></tr><tr><td>2026-07-13</td><td><b>APA</b></td><td>CALL</td>
+    <td class="pos">+44.1%</td><td class="pos">+$326</td>
+    <td>238h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>above</td>
+    <td>up</td>
+    <td>-0.05</td>
+    <td>0.56</td>
+    <td>13%</td></tr><tr><td>2026-07-17</td><td><b>CLSK</b></td><td>CALL</td>
+    <td class="pos">+41.9%</td><td class="pos">+$325</td>
+    <td>71h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>call_skew</td>
+    <td>below</td>
+    <td>down</td>
+    <td>+0.14</td>
+    <td>0.79</td>
+    <td>12%</td></tr><tr><td>2026-07-24</td><td><b>CMCSA</b></td><td>CALL</td>
+    <td class="pos">+40.0%</td><td class="pos">+$304</td>
+    <td>78h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>down</td>
+    <td>+0.16</td>
+    <td>0.10</td>
+    <td>7%</td></tr><tr><td>2026-07-13</td><td><b>SHEL</b></td><td>CALL</td>
+    <td class="pos">+54.8%</td><td class="pos">+$297</td>
+    <td>92h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>call_skew</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.33</td>
+    <td>0.65</td>
+    <td>2%</td></tr><tr><td>2026-07-14</td><td><b>WFC</b></td><td>CALL</td>
+    <td class="pos">+46.1%</td><td class="pos">+$297</td>
+    <td>46h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.34</td>
+    <td>1.44</td>
+    <td>3%</td></tr><tr><td>2026-07-06</td><td><b>SOFI</b></td><td>PUT</td>
+    <td class="pos">+41.7%</td><td class="pos">+$296</td>
+    <td>46h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.39</td>
+    <td>0.70</td>
+    <td>8%</td></tr><tr><td>2026-07-17</td><td><b>FRMI</b></td><td>CALL</td>
+    <td class="pos">+40.0%</td><td class="pos">+$296</td>
+    <td>100h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.34</td>
+    <td>0.14</td>
+    <td>16%</td></tr><tr><td>2026-07-10</td><td><b>CCL</b></td><td>PUT</td>
+    <td class="pos">+40.4%</td><td class="pos">+$289</td>
+    <td>312h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>-0.02</td>
+    <td>0.29</td>
+    <td>10%</td></tr><tr><td>2026-07-23</td><td><b>BSX</b></td><td>CALL</td>
+    <td class="pos">+39.5%</td><td class="pos">+$288</td>
+    <td>100h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>backwardation</td>
+    <td>call_skew</td>
+    <td>below</td>
+    <td>down</td>
+    <td>-0.06</td>
+    <td>0.26</td>
+    <td>4%</td></tr><tr><td>2026-07-24</td><td><b>NVO</b></td><td>CALL</td>
+    <td class="pos">+43.8%</td><td class="pos">+$286</td>
+    <td>120h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>down</td>
+    <td>+0.01</td>
+    <td>0.38</td>
+    <td>19%</td></tr><tr><td>2026-07-10</td><td><b>BMNR</b></td><td>CALL</td>
+    <td class="pos">+36.7%</td><td class="pos">+$273</td>
+    <td>92h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.08</td>
+    <td>0.66</td>
+    <td>15%</td></tr><tr><td>2026-07-06</td><td><b>PLUG</b></td><td>PUT</td>
+    <td class="pos">+34.8%</td><td class="pos">+$268</td>
+    <td>162h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>call_skew</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.29</td>
+    <td>0.84</td>
+    <td>37%</td></tr><tr><td>2026-07-21</td><td><b>XLV</b></td><td>CALL</td>
+    <td class="pos">+42.3%</td><td class="pos">+$255</td>
+    <td>50h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>down</td>
+    <td>-0.12</td>
+    <td>0.13</td>
+    <td>6%</td></tr><tr><td>2026-07-09</td><td><b>NKE</b></td><td>CALL</td>
+    <td class="pos">+33.3%</td><td class="pos">+$254</td>
+    <td>92h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>backwardation</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.18</td>
+    <td>0.28</td>
+    <td>7%</td></tr><tr><td>2026-07-10</td><td><b>DIS</b></td><td>CALL</td>
+    <td class="pos">+44.4%</td><td class="pos">+$250</td>
+    <td>146h</td><td>TRAIL</td>
+    <td>negative_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.43</td>
+    <td>0.51</td>
+    <td>1%</td></tr><tr><td>2026-07-13</td><td><b>SLV</b></td><td>CALL</td>
+    <td class="pos">+38.9%</td><td class="pos">+$232</td>
+    <td>213h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>-0.03</td>
+    <td>0.36</td>
+    <td>14%</td></tr><tr><td>2026-07-24</td><td><b>ONDS</b></td><td>PUT</td>
+    <td class="pos">+32.0%</td><td class="pos">+$228</td>
+    <td>141h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>call_skew</td>
+    <td>above</td>
+    <td>down</td>
+    <td>+0.56</td>
+    <td>0.69</td>
+    <td>8%</td></tr><tr><td>2026-07-24</td><td><b>MARA</b></td><td>PUT</td>
+    <td class="pos">+29.4%</td><td class="pos">+$226</td>
+    <td>119h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>down</td>
+    <td>+0.11</td>
+    <td>0.69</td>
+    <td>8%</td></tr><tr><td>2026-07-14</td><td><b>XLV</b></td><td>CALL</td>
+    <td class="pos">+39.2%</td><td class="pos">+$219</td>
+    <td>46h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.04</td>
+    <td>0.73</td>
+    <td>9%</td></tr><tr><td>2026-07-07</td><td><b>SOFI</b></td><td>CALL</td>
+    <td class="pos">+29.2%</td><td class="pos">+$203</td>
+    <td>71h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>above</td>
+    <td>up</td>
+    <td>+0.45</td>
+    <td>0.27</td>
+    <td>7%</td></tr><tr><td>2026-07-13</td><td><b>UPST</b></td><td>PUT</td>
+    <td class="pos">+33.3%</td><td class="pos">+$198</td>
+    <td>246h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>contango</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.21</td>
+    <td>0.12</td>
+    <td>10%</td></tr><tr><td>2026-07-13</td><td><b>AAL</b></td><td>PUT</td>
+    <td class="pos">+20.5%</td><td class="pos">+$156</td>
+    <td>166h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>crash_hedging</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.09</td>
+    <td>0.40</td>
+    <td>8%</td></tr><tr><td>2026-07-14</td><td><b>NOK</b></td><td>PUT</td>
+    <td class="pos">+3.7%</td><td class="pos">+$26</td>
+    <td>68h</td><td>TRAIL</td>
+    <td>positive_gamma</td><td>backwardation</td>
+    <td>balanced</td>
+    <td>below</td>
+    <td>up</td>
+    <td>+0.25</td>
+    <td>0.76</td>
+    <td>17%</td></tr>
+</table></div>
+
+<h2>5. Which metablock conditions won (single blocks, n≥10, real-sensor era, base 16.6%)</h2>
+<p>Sorted by win rate. Read the P&amp;L column before falling in love with any row: <b>every condition
+with meaningful sample still lost money net</b> — higher win rate never overcame the 17%-vs-47% frequency gap.</p>
+<div class="scroll"><table>
+<tr><th>block = value</th><th>n</th><th>wins</th><th>win rate</th><th>lift</th><th>net P&amp;L</th><th>win days / days</th></tr>
+<tr><td>earnings = pre_earn<=7d</td>
+        <td>13</td><td>3</td><td><b>23.1%</b></td>
+        <td>1.39x</td><td class="neg">-$3,088</td>
+        <td>2/6</td></tr><tr><td>hour_utc = 17</td>
+        <td>65</td><td>15</td><td><b>23.1%</b></td>
+        <td>1.39x</td><td class="neg">-$36,043</td>
+        <td>11/16</td></tr><tr><td>hour_utc = 18</td>
+        <td>52</td><td>12</td><td><b>23.1%</b></td>
+        <td>1.39x</td><td class="neg">-$17,432</td>
+        <td>10/14</td></tr><tr><td>market = spy_down</td>
+        <td>97</td><td>22</td><td><b>22.7%</b></td>
+        <td>1.37x</td><td class="neg">-$18,199</td>
+        <td>8/9</td></tr><tr><td>weekday = Fri</td>
+        <td>93</td><td>20</td><td><b>21.5%</b></td>
+        <td>1.30x</td><td class="neg">-$18,041</td>
+        <td>4/4</td></tr><tr><td>trend = below_sma20</td>
+        <td>210</td><td>45</td><td><b>21.4%</b></td>
+        <td>1.29x</td><td class="neg">-$60,119</td>
+        <td>17/19</td></tr><tr><td>side = CALL</td>
+        <td>259</td><td>50</td><td><b>19.3%</b></td>
+        <td>1.16x</td><td class="neg">-$60,838</td>
+        <td>18/21</td></tr><tr><td>hour_utc = 15</td>
+        <td>68</td><td>13</td><td><b>19.1%</b></td>
+        <td>1.15x</td><td class="neg">-$12,203</td>
+        <td>12/17</td></tr><tr><td>news = neg</td>
+        <td>53</td><td>10</td><td><b>18.9%</b></td>
+        <td>1.14x</td><td class="neg">-$25,160</td>
+        <td>7/15</td></tr><tr><td>rvol = normal</td>
+        <td>44</td><td>8</td><td><b>18.2%</b></td>
+        <td>1.10x</td><td class="neg">-$18,880</td>
+        <td>6/15</td></tr><tr><td>news = neutral</td>
+        <td>78</td><td>14</td><td><b>17.9%</b></td>
+        <td>1.08x</td><td class="neg">-$22,540</td>
+        <td>10/16</td></tr><tr><td>gex = negative_gamma</td>
+        <td>85</td><td>15</td><td><b>17.6%</b></td>
+        <td>1.06x</td><td class="neg">-$36,440</td>
+        <td>12/18</td></tr><tr><td>vrp = cheap</td>
+        <td>120</td><td>21</td><td><b>17.5%</b></td>
+        <td>1.06x</td><td class="neg">-$59,620</td>
+        <td>10/15</td></tr><tr><td>dp_node = near<2%</td>
+        <td>147</td><td>25</td><td><b>17.0%</b></td>
+        <td>1.03x</td><td class="neg">-$43,312</td>
+        <td>13/14</td></tr><tr><td>iv_term = backwardation</td>
+        <td>171</td><td>29</td><td><b>17.0%</b></td>
+        <td>1.02x</td><td class="neg">-$57,714</td>
+        <td>13/18</td></tr><tr><td>earnings = no_earn_window</td>
+        <td>196</td><td>33</td><td><b>16.8%</b></td>
+        <td>1.02x</td><td class="neg">-$50,513</td>
+        <td>10/11</td></tr><tr><td>rvol = quiet<0.8</td>
+        <td>341</td><td>57</td><td><b>16.7%</b></td>
+        <td>1.01x</td><td class="neg">-$126,647</td>
+        <td>18/22</td></tr><tr><td>iv_term = contango</td>
+        <td>228</td><td>38</td><td><b>16.7%</b></td>
+        <td>1.00x</td><td class="neg">-$91,423</td>
+        <td>15/18</td></tr><tr><td>iv_rank = mid</td>
+        <td>216</td><td>36</td><td><b>16.7%</b></td>
+        <td>1.00x</td><td class="neg">-$63,665</td>
+        <td>14/16</td></tr><tr><td>skew = balanced</td>
+        <td>145</td><td>24</td><td><b>16.6%</b></td>
+        <td>1.00x</td><td class="neg">-$51,726</td>
+        <td>13/14</td></tr><tr><td>gex = positive_gamma</td>
+        <td>318</td><td>52</td><td><b>16.4%</b></td>
+        <td>0.99x</td><td class="neg">-$114,519</td>
+        <td>16/20</td></tr><tr><td>sweep = high>=15</td>
+        <td>86</td><td>14</td><td><b>16.3%</b></td>
+        <td>0.98x</td><td class="neg">-$41,528</td>
+        <td>9/14</td></tr><tr><td>weekday = Thu</td>
+        <td>111</td><td>18</td><td><b>16.2%</b></td>
+        <td>0.98x</td><td class="neg">-$42,967</td>
+        <td>5/6</td></tr><tr><td>sweep = mid5-15</td>
+        <td>199</td><td>32</td><td><b>16.1%</b></td>
+        <td>0.97x</td><td class="neg">-$74,350</td>
+        <td>13/18</td></tr><tr><td>skew = crash_hedging</td>
+        <td>179</td><td>28</td><td><b>15.6%</b></td>
+        <td>0.94x</td><td class="neg">-$66,570</td>
+        <td>15/20</td></tr><tr><td>skew = call_skew</td>
+        <td>71</td><td>11</td><td><b>15.5%</b></td>
+        <td>0.93x</td><td class="neg">-$21,830</td>
+        <td>7/14</td></tr><tr><td>dp_node = at_node<0.5%</td>
+        <td>185</td><td>28</td><td><b>15.1%</b></td>
+        <td>0.91x</td><td class="neg">-$82,243</td>
+        <td>15/18</td></tr><tr><td>weekday = Mon</td>
+        <td>100</td><td>15</td><td><b>15.0%</b></td>
+        <td>0.90x</td><td class="neg">-$26,658</td>
+        <td>3/4</td></tr><tr><td>news = pos</td>
+        <td>264</td><td>39</td><td><b>14.8%</b></td>
+        <td>0.89x</td><td class="neg">-$92,426</td>
+        <td>16/19</td></tr><tr><td>vrp = rich</td>
+        <td>272</td><td>40</td><td><b>14.7%</b></td>
+        <td>0.89x</td><td class="neg">-$82,793</td>
+        <td>15/18</td></tr><tr><td>hour_utc = 19</td>
+        <td>62</td><td>9</td><td><b>14.5%</b></td>
+        <td>0.88x</td><td class="neg">-$23,591</td>
+        <td>6/17</td></tr><tr><td>iv_rank = cheap<33</td>
+        <td>97</td><td>14</td><td><b>14.4%</b></td>
+        <td>0.87x</td><td class="neg">-$38,671</td>
+        <td>9/18</td></tr><tr><td>dp_node = far>=2%</td>
+        <td>56</td><td>8</td><td><b>14.3%</b></td>
+        <td>0.86x</td><td class="neg">-$15,551</td>
+        <td>6/14</td></tr><tr><td>sweep = low<5</td>
+        <td>106</td><td>15</td><td><b>14.2%</b></td>
+        <td>0.85x</td><td class="neg">-$26,112</td>
+        <td>13/17</td></tr><tr><td>iv_rank = rich>=67</td>
+        <td>79</td><td>11</td><td><b>13.9%</b></td>
+        <td>0.84x</td><td class="neg">-$40,077</td>
+        <td>8/15</td></tr><tr><td>market = spy_up</td>
+        <td>298</td><td>41</td><td><b>13.8%</b></td>
+        <td>0.83x</td><td class="neg">-$121,927</td>
+        <td>12/14</td></tr><tr><td>weekday = Tue</td>
+        <td>95</td><td>12</td><td><b>12.6%</b></td>
+        <td>0.76x</td><td class="neg">-$62,865</td>
+        <td>5/5</td></tr><tr><td>side = PUT</td>
+        <td>145</td><td>17</td><td><b>11.7%</b></td>
+        <td>0.71x</td><td class="neg">-$90,488</td>
+        <td>10/19</td></tr><tr><td>trend = above_sma20</td>
+        <td>194</td><td>22</td><td><b>11.3%</b></td>
+        <td>0.68x</td><td class="neg">-$91,207</td>
+        <td>14/20</td></tr><tr><td>hour_utc = 14</td>
+        <td>65</td><td>7</td><td><b>10.8%</b></td>
+        <td>0.65x</td><td class="neg">-$29,959</td>
+        <td>6/16</td></tr><tr><td>rvol = hot>=1.2</td>
+        <td>19</td><td>2</td><td><b>10.5%</b></td>
+        <td>0.63x</td><td class="neg">-$5,800</td>
+        <td>2/12</td></tr><tr><td>hour_utc = 16</td>
+        <td>58</td><td>6</td><td><b>10.3%</b></td>
+        <td>0.62x</td><td class="neg">-$19,612</td>
+        <td>5/13</td></tr><tr><td>hour_utc = 13</td>
+        <td>30</td><td>3</td><td><b>10.0%</b></td>
+        <td>0.60x</td><td class="neg">-$10,685</td>
+        <td>3/14</td></tr>
+</table></div>
+
+<h2>6. Winning combinations (pairs, n≥15)</h2>
+<p>The repeated shape at the top: <b>buying CALLS into weakness</b> — price below its 20-day average, SPY down on
+the day, negative news sentiment — roughly doubles the win rate (27–33% vs 16.6%). The engine's best moments were
+dip-bounces, not flow-following. The worst: PUTs in quiet tape, and anything entered chasing a hot spike (rvol≥1.2:
+10.5% wins). Days column shows how many distinct days the wins span — combos winning on ≤5 days are one market
+mood, not a pattern.</p>
+<div class="scroll"><table>
+<tr><th>combination</th><th>n</th><th>wins</th><th>win rate</th><th>lift</th><th>net P&amp;L</th><th>win days / days</th></tr>
+<tr><td>news=neg + market=spy_down</td>
+        <td>15</td><td>5</td><td><b>33.3%</b></td>
+        <td>2.01x</td><td class="neg">-$2,039</td>
+        <td>4/6</td></tr><tr><td>side=CALL + market=spy_down</td>
+        <td>59</td><td>18</td><td><b>30.5%</b></td>
+        <td>1.84x</td><td class="neg">-$1,548</td>
+        <td>7/9</td></tr><tr><td>iv_term=backwardation + news=neg</td>
+        <td>24</td><td>7</td><td><b>29.2%</b></td>
+        <td>1.76x</td><td class="neg">-$5,183</td>
+        <td>5/10</td></tr><tr><td>news=neutral + dp_node=near<2%</td>
+        <td>24</td><td>7</td><td><b>29.2%</b></td>
+        <td>1.76x</td><td class="neg">-$2,365</td>
+        <td>5/12</td></tr><tr><td>skew=call_skew + sweep=low<5</td>
+        <td>21</td><td>6</td><td><b>28.6%</b></td>
+        <td>1.72x</td><td class="neg">-$523</td>
+        <td>5/10</td></tr><tr><td>vrp=cheap + news=neutral</td>
+        <td>28</td><td>8</td><td><b>28.6%</b></td>
+        <td>1.72x</td><td class="neg">-$9,655</td>
+        <td>6/13</td></tr><tr><td>news=neg + trend=below_sma20</td>
+        <td>35</td><td>10</td><td><b>28.6%</b></td>
+        <td>1.72x</td><td class="neg">-$17,518</td>
+        <td>7/14</td></tr><tr><td>side=CALL + gex=negative_gamma</td>
+        <td>43</td><td>12</td><td><b>27.9%</b></td>
+        <td>1.68x</td><td class="neg">-$2,107</td>
+        <td>10/15</td></tr><tr><td>trend=below_sma20 + market=spy_down</td>
+        <td>61</td><td>17</td><td><b>27.9%</b></td>
+        <td>1.68x</td><td class="neg">-$9,920</td>
+        <td>7/8</td></tr><tr><td>side=CALL + trend=below_sma20</td>
+        <td>130</td><td>35</td><td><b>26.9%</b></td>
+        <td>1.62x</td><td class="neg">-$6,821</td>
+        <td>16/18</td></tr><tr><td>gex=negative_gamma + market=spy_down</td>
+        <td>26</td><td>7</td><td><b>26.9%</b></td>
+        <td>1.62x</td><td class="neg">-$3,428</td>
+        <td>5/6</td></tr><tr><td>gex=negative_gamma + news=neutral</td>
+        <td>15</td><td>4</td><td><b>26.7%</b></td>
+        <td>1.61x</td><td class="pos">+$427</td>
+        <td>4/10</td></tr><tr><td>iv_rank=rich>=67 + market=spy_down</td>
+        <td>15</td><td>4</td><td><b>26.7%</b></td>
+        <td>1.61x</td><td class="neg">-$2,483</td>
+        <td>3/4</td></tr><tr><td>news=neutral + trend=below_sma20</td>
+        <td>34</td><td>9</td><td><b>26.5%</b></td>
+        <td>1.60x</td><td class="pos">+$218</td>
+        <td>8/15</td></tr><tr><td>gex=negative_gamma + skew=balanced</td>
+        <td>19</td><td>5</td><td><b>26.3%</b></td>
+        <td>1.59x</td><td class="neg">-$4,688</td>
+        <td>4/9</td></tr><tr><td>sweep=high>=15 + market=spy_down</td>
+        <td>19</td><td>5</td><td><b>26.3%</b></td>
+        <td>1.59x</td><td class="neg">-$4,065</td>
+        <td>3/4</td></tr><tr><td>news=neg + dp_node=near<2%</td>
+        <td>23</td><td>6</td><td><b>26.1%</b></td>
+        <td>1.57x</td><td class="neg">-$4,657</td>
+        <td>4/11</td></tr><tr><td>rvol=quiet<0.8 + market=spy_down</td>
+        <td>73</td><td>19</td><td><b>26.0%</b></td>
+        <td>1.57x</td><td class="neg">-$11,666</td>
+        <td>7/9</td></tr><tr><td>gex=negative_gamma + vrp=cheap</td>
+        <td>27</td><td>7</td><td><b>25.9%</b></td>
+        <td>1.56x</td><td class="neg">-$15,097</td>
+        <td>5/12</td></tr><tr><td>sweep=high>=15 + trend=below_sma20</td>
+        <td>43</td><td>11</td><td><b>25.6%</b></td>
+        <td>1.54x</td><td class="neg">-$14,159</td>
+        <td>9/13</td></tr>
+</table></div>
+<p><b>Worst combinations:</b></p>
+<div class="scroll"><table>
+<tr><th>combination</th><th>n</th><th>wins</th><th>win rate</th><th>lift</th><th>net P&amp;L</th><th>win days / days</th></tr>
+<tr><td>dp_node=near<2% + trend=above_sma20</td>
+        <td>62</td><td>4</td><td><b>6.5%</b></td>
+        <td>0.39x</td><td class="neg">-$27,576</td>
+        <td>3/12</td></tr><tr><td>vrp=cheap + news=neg</td>
+        <td>16</td><td>1</td><td><b>6.2%</b></td>
+        <td>0.38x</td><td class="neg">-$17,071</td>
+        <td>1/9</td></tr><tr><td>dp_node=far>=2% + iv_rank=mid</td>
+        <td>32</td><td>2</td><td><b>6.2%</b></td>
+        <td>0.38x</td><td class="neg">-$11,118</td>
+        <td>2/12</td></tr><tr><td>side=PUT + sweep=low<5</td>
+        <td>34</td><td>2</td><td><b>5.9%</b></td>
+        <td>0.35x</td><td class="neg">-$15,670</td>
+        <td>2/13</td></tr><tr><td>skew=balanced + sweep=low<5</td>
+        <td>41</td><td>2</td><td><b>4.9%</b></td>
+        <td>0.29x</td><td class="neg">-$13,218</td>
+        <td>2/13</td></tr><tr><td>side=PUT + news=neutral</td>
+        <td>23</td><td>1</td><td><b>4.3%</b></td>
+        <td>0.26x</td><td class="neg">-$8,658</td>
+        <td>1/9</td></tr><tr><td>side=PUT + vrp=cheap</td>
+        <td>32</td><td>1</td><td><b>3.1%</b></td>
+        <td>0.19x</td><td class="neg">-$27,852</td>
+        <td>1/13</td></tr><tr><td>news=neg + trend=above_sma20</td>
+        <td>18</td><td>0</td><td><b>0.0%</b></td>
+        <td>0.00x</td><td class="neg">-$7,642</td>
+        <td>0/11</td></tr>
+</table></div>
+
+<h2>7. The honesty panel — read before drawing conclusions</h2>
+<ul>
+<li><b>The engine's own recorded "reasons" are partly fiction.</b> The insider-cluster and reddit blocks are mock
+placeholders in <em>every</em> record to this day (identical $1,250,000 / +540% values), and the per-trade
+"determining factor" stories were generated from them. Example from the record: <em>"Insider cluster buy
+($1,250,000/10d) predicted the bullish expansion"</em> — written on a trade whose insider data never existed.
+This table uses only blocks whose source tag shows real data.</li>
+<li><b>June-era winners (54% of the money) carry fully mock sensors and 4x sizing</b> — they prove the rally paid,
+not that any block worked.</li>
+<li><b>Day clustering:</b> the best combos span 4–18 distinct days; anything at the low end is one week's mood.
+The most robust winning condition by day-spread is CALL + below-SMA20 (26.9% wins across 18 days, n=130).</li>
+<li><b>Win rate ≠ profit:</b> not a single condition or combination shows positive net P&amp;L at n≥15 beyond
+noise-level (+$427 best). The finding is "loses slower", never "makes money".</li>
+<li><b>This matches the label studies:</b> D4 proved the features contain zero stock-direction information
+(AUC 0.4955). The winners here won on volatility paths the trails happened to catch — which is why the only
+consistently profitable organ is an exit rule, not any entry block.</li>
+</ul>
+
+<h2>8. What the winners actually teach</h2>
+<div class="scroll"><table>
+<tr><th>#</th><th>reason winners won</th><th>evidence</th><th>survives scrutiny?</th></tr>
+<tr><td>1</td><td>Trailing exit machinery let winners run (+52% avg) and cut nothing early</td><td>63/68 winners, +$35,651; the ONLY profitable organ in the system</td><td><b>YES</b> — mechanical, spans the whole record</td></tr>
+<tr><td>2</td><td>Buying calls into weakness (below SMA20, red SPY day, sour news) = dip-bounce</td><td>27–33% win rate vs 16.6% base; n=130 across 18 days for the core form</td><td>PARTLY — real lift, still net-negative; mean-reversion not flow</td></tr>
+<tr><td>3</td><td>One late-June rally week at 4x size</td><td>56% of all winner dollars, 8 legs, mock sensors</td><td><b>NO</b> — timing + sizing luck, unrepeatable by design</td></tr>
+<tr><td>4</td><td>Afternoon entries (17–18 UTC) beat morning chases (13–14 UTC)</td><td>23.1% vs ~10% win rate</td><td>WEAK — plausible microstructure, wide CIs</td></tr>
+<tr><td>5</td><td>Quiet tape beats hot tape (rvol&lt;0.8 vs ≥1.2)</td><td>16.7% vs 10.5%; chasing spikes loses most</td><td>WEAK-PARTLY — consistent with paying peak IV on spikes</td></tr>
+<tr><td>6</td><td>The engine's recorded per-trade reasons (insider/reddit/GEX stories)</td><td>generated from mock data</td><td><b>NO</b> — fiction; discard entirely</td></tr>
+</table></div>

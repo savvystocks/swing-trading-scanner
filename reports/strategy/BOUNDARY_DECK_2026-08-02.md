@@ -22,7 +22,7 @@ Supersedes/reframes standing decision 3 if ratified.
 |---|---|---|---|
 | 1 | NORTH_STAR amendment above | ratify yes/no | this file, section 0 |
 | 2 | Multi-account tournament (3 paper accounts, 6 books, consolidation by risk type) | approve structure | ACCOUNT_TOURNAMENT_SPEC_2026-08-01.md |
-| 3 | Put-write book = PRIMARY lane (the amendment applied: only method with positive-expectation evidence) | activate as primary | tournament spec, book 3 |
+| 3 | Put-write book = PRIMARY lane (the amendment applied: only method with positive-expectation evidence). AMENDED 08-02: Alpaca paper now supports INDEX options (SPX/XSP/VIX, cash-settled European) — the book trades real XSP, deleting early-assignment/pin risk by contract design | activate as primary | tournament spec, book 3 + SOFTWARE_DUE_DILIGENCE sec.5 |
 | 4 | Premium lane v2.2 (cost-measurement instrument) | activate yes/no | PREMIUM_LANE_SPEC_2026-07-28.md |
 | 5 | V10 demotion to control/data-generator | choose: full cadence as baseline+fill-generator, or throttled | section 2 below |
 | 6 | Lessons Engine trigger fix — three evidence-backed SUBTRACTIONS | approve spec | section 3 below |

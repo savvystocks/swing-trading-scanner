@@ -112,3 +112,48 @@ MONEY-PIT GUARDRAILS (standing): never two overlapping paid subscriptions; no pu
 a pre-written question + kill date; signal-platform category is closed (Section D); every spend
 case-by-case to the owner with the math (NORTH_STAR principle 7); default answer is the free
 tier until a named, evidenced gap says otherwise.
+
+## 5. Live-price layer, TradingView, and open-source terminals (owner follow-up, 08-02 12:00)
+
+ARE THESE ALL APIs? Data: ThetaData/Databento/Polygon = APIs; optionsDX/DeltaNeutral = file
+downloads (fine — backtests read files); QuantConnect = code platform. Backtesters: QC = API/
+code; Option Omega = web UI only (no API — another reason it stays a one-shot trial). Brokers:
+Alpaca/IBKR/tastytrade = full trading APIs. Signal platforms: mostly dashboards (one more
+reason the category is closed).
+
+LIVE PRICES FOR THE BUY DECISION — the bot already runs on them. Alpaca's real-time option
+quote API is what sets entry_ref (real ask) and enforces the 5% spread gate at order time.
+Verified today, two upgrades:
+- FEED HONESTY: Alpaca Basic (free) serves the options "indicative" feed (calculated/derived
+  values); the true consolidated OPRA NBBO requires Algo Trader Plus (~$99/mo). We do NOT buy
+  that blind: the fill ledger (decision_mark → slip_vs_decision) measures exactly how far
+  free-feed quotes sit from actual fills. If the measured gap is material, that number IS the
+  case for the $99/mo, taken to the owner with math. Until then, actual fills are ground truth
+  and the free feed stands.
+- INDEX OPTIONS IN PAPER (major find): Alpaca's Trading API now supports index options in
+  PAPER — SPX, SPXW, VIX, VIXW, DJX, XSP — cash-settled, European style. The put-write book
+  can trade REAL XSP in the tournament, deleting the early-assignment and pin-risk classes by
+  contract design (the exact −$930 / −$3,280 pressure-test paths). The lane's prefer-XSP gate
+  becomes executable. Boundary decision 3 amended accordingly.
+
+TRADINGVIEW — VERDICT: NOT FOR THIS BOT. It is a charting/alert front-end, not an execution
+engine: no native auto-execution (bans direct broker trading), webhooks need a paid plan plus a
+THIRD-PARTY bridge subscription (TradersPost-class — a new money-pit lane), and options support
+is single-leg only — no atomic mleg spreads, which our premium structures require. Our GHA
+cycle already is the automation layer, with atomic mleg. TradingView's only honest role here is
+manual chart-reading, which costs £0 on the free tier and touches nothing.
+
+OPEN-SOURCE TERMINALS / REPOS (the expanded field of view):
+| repo | what it is | role for us |
+|---|---|---|
+| OpenBB (MIT, very active; Terminal → OpenBB Platform/CLI) | the open-source Bloomberg: 600+ commands, options chains, equities, macro, Python-native | ADOPT as the free research cockpit ("terminal") — data browsing/sanity checks; £0; never in the trade path |
+| LEAN CLI (QuantConnect's engine, self-hostable) | the backtest engine behind QC | our Phase-1 lab; self-host later if we outgrow the cloud free tier |
+| ib_insync | the standard Python client for IBKR | becomes load-bearing at Phase 3 (IBKR UK) |
+| Lumibot | Python algo framework (Alpaca/IBKR/Tradier brokers, ThetaData backtests) | pattern source; we keep our own engine |
+| thetagang | reference wheel/premium-selling bot on IBKR | pattern source for the put-write book mechanics |
+| py_vollib / QuantLib | pricing + greeks libraries | greeks for our own backtester on optionsDX files |
+| Nautilus Trader | high-performance institutional-grade framework | heavier than our needs; watch only |
+| vectorbt / backtrader / optopsy | generic Python backtesters | options support weak/stale vs LEAN; optopsy patterns only |
+None of these replaces the engine, harness, or governance — they are a free research terminal
+(OpenBB), a free validation engine (LEAN), and the client library the live gate will need
+(ib_insync).

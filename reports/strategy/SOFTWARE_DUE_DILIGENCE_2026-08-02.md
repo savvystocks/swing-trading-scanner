@@ -157,3 +157,29 @@ OPEN-SOURCE TERMINALS / REPOS (the expanded field of view):
 None of these replaces the engine, harness, or governance — they are a free research terminal
 (OpenBB), a free validation engine (LEAN), and the client library the live gate will need
 (ib_insync).
+
+## 6. Hands-on verification round (08-02 12:35 owner order: "test and research everything even more")
+
+TESTED (not read about — run on this machine / our accounts, read-only):
+- XSP ON OUR PAPER ACCOUNT: GET /v2/options/contracts on PA3Y8L8ZA493 returns XSP, SPXW and
+  VIXW contracts tradable=TRUE, style=european; the free indicative feed served a live XSP
+  quote (bid 307.61 / ask 310.89, Friday close stamp). The put-write primary book is
+  executable in paper TODAY. (Read-only GETs; no orders placed.)
+- OPENBB INSTALLED AND WORKING locally: 9,248-row SPY option chain with OI+volume via the free
+  yfinance provider; XSP index history; and the SEC provider pulled 9 real Form 4 insider
+  filings for F with NO API key — the free EDGAR pipeline for the rank-2 insider signal
+  already runs on this machine.
+- QUANTCONNECT INDEX OPTIONS VERIFIED: AlgoSeek US Index Options dataset = SPX, VIX, NDX from
+  JANUARY 2012 at minute resolution, FREE on QC Cloud for research/backtest/live, plus a
+  greeks/IV universe dataset. XSP itself is not in the dataset → Phase-1 validation runs on
+  SPX at 10x scale (identical dynamics; divide sizing by 10).
+- OPTIONSDX VERIFIED: SPX/SPY full chains with greeks+IV+bid/ask+underlying; store prices
+  $0-$50 per bundle (free tiers exist; granularity of the $0 tier confirmed at download).
+  Registration required — a 2-minute owner step.
+- DELTANEUTRAL PRICED: one-off $230 (1y) to $2,035 (24y L3) — NOT NEEDED: QC free covers
+  2012+ including 2018/2020/2022, and 2008 is covered externally by the PUT index record.
+- ALPACA FEEDS: indicative feed tested live (above); true OPRA NBBO = Algo Trader Plus
+  (~$99/mo) — decision deferred to fill-ledger evidence per section 5.
+
+PHASE-1 BLOCKERS REMAINING: two free account creations only the owner can do (QuantConnect
+signup; optionsDX registration) — ~5 minutes total. Everything else is proven working.

@@ -10,7 +10,7 @@ grants LIVE authority - that is the owner's switch (owner_promoted).
 
 No organ is awaiting owner review; nothing is eligible for promotion this week.
 
-Lifetime search intensity: **1,222 model/config trials** across all studies (feeds the deflated-Sharpe bar), plus the discovery rig's rule-search trials counted inside its own campaign PBO.
+Lifetime search intensity: **1,878 model/config trials** across all studies (feeds the deflated-Sharpe bar), plus the discovery rig's rule-search trials counted inside its own campaign PBO.
 
 Demotions are automatic and immediate; promotions to LIVE require the owner to set
 `owner_promoted` in governor_registry.json. The frozen V10 engine is unaffected by any state here.

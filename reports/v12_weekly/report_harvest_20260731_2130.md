@@ -2,7 +2,7 @@
 
 - snapshot: harvest_20260731_2130  |  live snapshot rows: {'candidates': 32581, 'bid_path': 526199, 'labels': 32559}
 - dataset rows: 32281 (added +32281 vs last run)  |  date range: ['2026-07-01 23:59:01.310000+00:00', '2026-07-31 19:52:25.503000+00:00']
-- runtime: 17.0s  |  features: 119
+- runtime: 17.4s  |  features: 119
 
 ## Data quality WARN
 

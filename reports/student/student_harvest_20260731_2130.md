@@ -30,4 +30,4 @@
 
 - config (pinned): {'half_life_days': 21, 'cluster_corr': 0.85, 'n_folds': 5, 'embargo': 0.02, 'seed': 7, 'learning_rate': 0.08, 'max_depth': 3}
 - model artifact: `student_harvest_20260731_2130.joblib` (workdir; not committed)
-- run: 799.1s | brain-side only, zero live changes
+- run: 772.2s | brain-side only, zero live changes

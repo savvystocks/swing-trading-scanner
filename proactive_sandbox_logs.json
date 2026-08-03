@@ -144995,7 +144995,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -160491,11 +160491,23 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 24.1,
+        "mfe_pct": 56.9,
         "mae_pct": -22.4,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-08-03T13:41:15.246Z",
+          "return_pct": 56.9
+        }
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "9cd6dc2d-c4b5-40ad-af8f-f73a151dda63",
+        "at": "2026-08-03T13:41:15.246Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "287f6f0afd37",
@@ -161027,7 +161039,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 4.1,
+        "mfe_pct": 5.2,
         "mae_pct": -43.3,
         "stage": "initial"
       }
@@ -161572,7 +161584,7 @@
   {
     "trade_set_id": "ADOPT-65d857d7ba",
     "ticker": "SMR",
-    "status": "OPEN",
+    "status": "CLOSED",
     "entry_ts_utc": "2026-07-30T19:11:19.749Z",
     "adopted": true,
     "adopted_from": {
@@ -161617,12 +161629,50 @@
     "leg_path": {
       "adopted_leg": {
         "mfe_pct": 1.2,
-        "mae_pct": -21.2,
-        "stage": "initial"
+        "mae_pct": -67.5,
+        "stage": "closed",
+        "close_fails": 0
       }
     },
-    "leg_exits": {},
-    "exit": null
+    "leg_exits": {
+      "adopted_leg": {
+        "occ": "SMR260828C00009000",
+        "closed_at": "2026-08-03T13:41:15.765Z",
+        "return_pct": -67.5,
+        "reason": "-67.5% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "adopted_leg": -67.5
+      },
+      "winner": "adopted_leg",
+      "loser": "adopted_leg",
+      "leg_path": {
+        "adopted_leg": {
+          "mfe_pct": 1.2,
+          "mae_pct": -67.5,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 1.2,
+      "mae_pct": -67.5,
+      "determining_factor": "Calendar FAILED (-68%): the range broke; IV term None (ratio None) hurt the spread.",
+      "tuning_recommendations": []
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "c0ec609e-08fb-4663-b4d2-4b85d7c3aa2b",
+        "at": "2026-08-03T13:41:15.765Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "type": "daily_brake",
@@ -162177,11 +162227,23 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 13.0,
+        "mfe_pct": 42.9,
         "mae_pct": -7.8,
-        "stage": "initial"
+        "stage": "scaled",
+        "close_fails": 0,
+        "scaled_out": {
+          "at": "2026-08-03T13:41:16.683Z",
+          "return_pct": 42.9
+        }
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "d100733e-9830-464f-bd34-22e60cf41ce4",
+        "at": "2026-08-03T13:41:16.683Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "c112bbce69a3",
@@ -162982,7 +163044,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -2.7,
-        "mae_pct": -4.1,
+        "mae_pct": -10.8,
         "stage": "initial"
       }
     }
@@ -163259,6 +163321,14 @@
     },
     "exit": null,
     "status": "OPEN",
-    "buy_alert_delivered": true
+    "buy_alert_delivered": true,
+    "leg_exits": {},
+    "leg_path": {
+      "bearish_put": {
+        "mfe_pct": -3.3,
+        "mae_pct": -3.3,
+        "stage": "initial"
+      }
+    }
   }
 ]

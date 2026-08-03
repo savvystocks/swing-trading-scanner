@@ -3664,3 +3664,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 82.5 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - SMR (ADOPT-65d857d7ba)
+- entered 2026-07-30T19:11:19.749Z | trigger orphan_reconcile | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -67.5% | WINNER |
+
+**Determining factor:** Calendar FAILED (-68%): the range broke; IV term None (ratio None) hurt the spread.
+

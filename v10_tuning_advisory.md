@@ -2434,3 +2434,9 @@ trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - SMR (ADOPT-65d857d7ba) - 2026-08-03T13:41:16.141Z
+trade: winner=adopted_leg loser=adopted_leg | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

@@ -3673,3 +3673,12 @@
 
 **Determining factor:** Calendar FAILED (-68%): the range broke; IV term None (ratio None) hurt the spread.
 
+## Autopsy - AAL (d0489b91d04c)
+- entered 2026-07-30T15:32:24.404Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +56.9% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 2.0 fed the squeeze.
+

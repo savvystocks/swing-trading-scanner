@@ -144995,7 +144995,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 4
+        "close_fails": 0
       }
     }
   },
@@ -160485,15 +160485,49 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 56.9
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 75.9,
+          "mae_pct": -22.4,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-08-03T13:41:15.246Z",
+            "return_pct": 56.9
+          }
+        }
+      },
+      "mfe_pct": 75.9,
+      "mae_pct": -22.4,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 2.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "AAL260828C00016000",
+        "closed_at": "2026-08-03T15:11:26.085Z",
+        "return_pct": 56.9,
+        "reason": "56.9% <= trail 60.7% (20% off peak MFE 75.9%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 75.9,
         "mae_pct": -22.4,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-08-03T13:41:15.246Z",
@@ -160505,6 +160539,11 @@
       {
         "order_id": "9cd6dc2d-c4b5-40ad-af8f-f73a151dda63",
         "at": "2026-08-03T13:41:15.246Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "7c5a24f0-e4c7-40fe-873d-458bab8756a3",
+        "at": "2026-08-03T15:11:26.085Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -162227,7 +162266,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 83.1,
+        "mfe_pct": 84.4,
         "mae_pct": -7.8,
         "stage": "trailing",
         "close_fails": 0,

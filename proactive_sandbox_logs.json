@@ -144995,7 +144995,7 @@
         "mfe_pct": 133.8,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 2
+        "close_fails": 3
       }
     }
   },
@@ -161608,15 +161608,49 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 40.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 51.2,
+          "mae_pct": -25.0,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-08-03T15:31:28.614Z",
+            "return_pct": 33.8
+          }
+        }
+      },
+      "mfe_pct": 51.2,
+      "mae_pct": -25.0,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 2.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "QUBT260828C00008000",
+        "closed_at": "2026-08-03T19:51:34.327Z",
+        "return_pct": 40.0,
+        "reason": "40.0% <= trail 41.0% (20% off peak MFE 51.2%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 51.2,
         "mae_pct": -25.0,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-08-03T15:31:28.614Z",
@@ -161628,6 +161662,11 @@
       {
         "order_id": "d361a465-38ae-421a-af8b-2b69b960e102",
         "at": "2026-08-03T15:31:28.614Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "aca07410-109a-461c-a222-2e53a987e8c0",
+        "at": "2026-08-03T19:51:34.327Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -163640,6 +163679,14 @@
     },
     "exit": null,
     "status": "OPEN",
-    "buy_alert_delivered": true
+    "buy_alert_delivered": true,
+    "leg_exits": {},
+    "leg_path": {
+      "bullish_call": {
+        "mfe_pct": -12.1,
+        "mae_pct": -12.1,
+        "stage": "initial"
+      }
+    }
   }
 ]

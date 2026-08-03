@@ -3682,3 +3682,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 2.0 fed the squeeze.
 
+## Autopsy - QUBT (b49c4d6218ac)
+- entered 2026-07-30T18:51:58.540Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +40.0% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 2.0 fed the squeeze.
+

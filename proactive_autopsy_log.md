@@ -3709,3 +3709,12 @@
 
 **Determining factor:** Bullish call FAILED (-60%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 38.0 worked against it.
 
+## Autopsy - CNC (7a70493509c0)
+- entered 2026-07-31T16:13:56.903Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -58.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-58%, move 0.0%): no breakdown materialised; spot held above zero-gamma 59.0.
+

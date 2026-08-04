@@ -3691,3 +3691,21 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 2.0 fed the squeeze.
 
+## Autopsy - RGTI (de7d5927c879)
+- entered 2026-07-30T18:41:49.722Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -61.2% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-61%, move 0.0%): no breakdown materialised; spot held above zero-gamma 14.5.
+
+## Autopsy - EWZ (55f7b5a8d7d3)
+- entered 2026-08-03T19:41:47.535Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -60.3% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-60%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 38.0 worked against it.
+

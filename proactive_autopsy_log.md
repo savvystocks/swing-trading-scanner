@@ -3718,3 +3718,12 @@
 
 **Determining factor:** Bearish put FAILED (-58%, move 0.0%): no breakdown materialised; spot held above zero-gamma 59.0.
 
+## Autopsy - TLT (4be6bcee3792)
+- entered 2026-08-03T13:33:30.245Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 82.0.
+

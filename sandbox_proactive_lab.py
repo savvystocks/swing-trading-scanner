@@ -168,11 +168,22 @@ def _alpaca_atm_iv(ticker, spot, dte_min, dte_max, creds):
         cli = OptionHistoricalDataClient(creds[0], creds[1])
         gte = (date.today() + timedelta(days=dte_min)).isoformat()
         lte = (date.today() + timedelta(days=dte_max)).isoformat()
-        snaps = cli.get_option_chain(OptionChainRequest(
+        req = OptionChainRequest(
             underlying_symbol=ticker.split(".")[0], type="call",
             expiration_date_gte=gte, expiration_date_lte=lte,
-            strike_price_gte=str(round(spot * 0.92, 2)), strike_price_lte=str(round(spot * 1.08, 2))))
-    except Exception:
+            strike_price_gte=str(round(spot * 0.92, 2)), strike_price_lte=str(round(spot * 1.08, 2)))
+        try:
+            snaps = cli.get_option_chain(req)
+        except Exception as e1:
+            import time as _t
+            _t.sleep(2)                                   # one retry with backoff (2026-08-05:
+            try:                                          # engine-wide iv=unavailable since 08-04
+                snaps = cli.get_option_chain(req)         # ~18:00 UTC, GHA-only; local works. Print
+            except Exception as e2:                       # the error class so the next cycle log
+                print(f"  iv_term FETCH FAILED {ticker}: {type(e2).__name__}: {str(e2)[:120]}")
+                return None                               # names the real cause instead of silence)
+    except Exception as e:
+        print(f"  iv_term client init failed: {type(e).__name__}: {str(e)[:80]}")
         return None
     best_iv, best_d = None, 1e18
     for sym, s in (snaps or {}).items():

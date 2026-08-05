@@ -1,5 +1,6 @@
 import os, json, copy, tempfile, sys
 os.environ["GITHUB_ACTIONS"] = "true"
+os.environ["FADE_BOOK_FORCE_OFF"] = "1"   # passivity battery tests the OFF-state (V10) chain deterministically
 sys.path.insert(0, r"C:\Users\savva\OneDrive\Documents\Swing Trading")
 import harvest_db as db
 import harvest_logger as hl

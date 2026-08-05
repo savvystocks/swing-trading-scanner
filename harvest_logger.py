@@ -314,7 +314,11 @@ def harvest_scan(params, executed_record=None, mock=False, engine_skips=None):
     written = {"executed": 0, "topn": 0, "random": 0, "quota_cap": 0, "prefilter": 0, "skipped_dup": 0}
 
     executed_occ = set()
-    if executed_record:
+    # FADE v1.2: the engine may enter up to 2 clusters per cycle - accept a single record (dict,
+    # back-compat) or a list of records; every executed cluster gets its real-quote executed rows.
+    _exec_list = ([executed_record] if isinstance(executed_record, dict)
+                  else list(executed_record or []))
+    for executed_record in _exec_list:
         md = executed_record.get("metadata")
         cand = executed_record.get("_scan_candidate") or {}
         rule_score = _f(cand.get("total_premium"))

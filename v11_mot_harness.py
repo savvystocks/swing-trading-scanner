@@ -12,6 +12,8 @@ from types import SimpleNamespace as SN
 from datetime import datetime, timezone, timedelta, date
 
 os.environ.setdefault("ALPACA_API_KEY", "MOT_DUMMY")
+os.environ["FADE_BOOK_FORCE_OFF"] = "1"   # legacy chain checks assert the OFF-state (V10) semantics;
+                                          # fade-state behavior is asserted in the dedicated section below
 os.environ.setdefault("ALPACA_SECRET_KEY", "MOT_DUMMY")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -1026,6 +1028,35 @@ check(6, "digest: scoreboard + alert reconciliation lines render",
 
 # =====================================================================
 _wipe()
+
+# --- Dimension 7: FADE BOOK (2026-08-05 retool) ------------------------------------------------
+print("\n--- Dimension 7: FADE book state machine + gates ---")
+import fade_book as fb
+check(7, "FORCE_OFF honored (this harness runs OFF-state)", fb.active() is False, str(fb.active()))
+_env = os.environ.pop("FADE_BOOK_FORCE_OFF")
+fb._SPEC = {"status": "LIVE", "entry": {"flow_min": 50000, "flow_max": 250000, "max_spread_pct": 2.0},
+            "max_concurrent": 5}
+check(7, "spec LIVE -> active()", fb.active() is True)
+_mdF = {"macro": {"distance_to_sma20_pct": -2.0}, "regime_stack": {"market_spy_dist_pct": -0.5}}
+check(7, "fade shape accepted (call flow, trend+SPY both down)",
+      fb.direction(_mdF, {"flow_type": "call"}) == "BULLISH")
+_mdN = {"macro": {"distance_to_sma20_pct": +2.0}, "regime_stack": {"market_spy_dist_pct": -0.5}}
+check(7, "non-fade shape rejected (trend agrees)", fb.direction(_mdN, {"flow_type": "call"}) is None)
+check(7, "flow band filter keeps mid, drops whale+small",
+      [c["t"] for c in ({"t": "A", "total_premium": 900000}, {"t": "B", "total_premium": 120000},
+                        {"t": "C", "total_premium": 30000}) if c in fb.flow_band([
+          {"t": "A", "total_premium": 900000}, {"t": "B", "total_premium": 120000},
+          {"t": "C", "total_premium": 30000}])] == ["B"])
+check(7, "spread cap override 2.0 when LIVE", fb.spread_cap(5.0) == 2.0)
+_fd = lab.manage_exit(ts, 35.0, p, now=at(26), book="FADE")
+check(7, "FADE exit: +35% -> HOLD (no scale-out)", _fd["action"] == "HOLD" and _fd["stage"] == "initial", _fd["action"])
+_fd2 = lab.manage_exit(ts, 55.0, p, now=at(26), book="FADE")
+check(7, "FADE exit: +55% -> trail armed from initial", _fd2["action"] == "HOLD" and _fd2["stage"] == "trailing")
+_fd3 = lab.manage_exit(ts, -55.0, p, now=at(2), book="FADE")
+check(7, "FADE exit: -55% -> stop", _fd3["action"] == "CLOSE_STOP_LOSS")
+fb._SPEC = None
+os.environ["FADE_BOOK_FORCE_OFF"] = _env
+
 print("\n" + "=" * 70)
 total = len(RESULTS)
 passed = sum(1 for r in RESULTS if r[2])
@@ -1033,7 +1064,7 @@ by_dim = {}
 for dim, _, ok, _d in RESULTS:
     s = by_dim.setdefault(dim, [0, 0]); s[1] += 1; s[0] += int(ok)
 names = {1: "Input & Schema", 2: "Routing", 3: "Exit & Autopsy", 4: "Sizing Floor", 5: "Observability",
-         6: "Tier B Gates"}
+         6: "Tier B Gates", 7: "FADE Book"}
 print("V11 FULL MOT (rigorous) - RESULT BY DIMENSION")
 for d in sorted(by_dim):
     pa, to = by_dim[d]

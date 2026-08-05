@@ -629,7 +629,13 @@ def ticker_blocked(ticker, positions, params, open_orders=None, now=None, log=No
         closed = datetime.fromisoformat(ts.replace("Z", "+00:00"))
         hrs = ((now or datetime.now(timezone.utc)) - closed).total_seconds() / 3600.0
         if hrs < params.get("ticker_cooloff_hours", 24):
-            return True, f"cool-off: {base} closed {hrs:.1f}h ago (< {params.get('ticker_cooloff_hours', 24)}h)"
+            if fade_book.active():
+                # FADE v1.2: cooloff waived (the replay cohort had no cooloff - this moves the
+                # live book TOWARD the tested population). Concentration guard lives in the
+                # cycle loop instead: max 2 FADE entries per ticker per day.
+                pass
+            else:
+                return True, f"cool-off: {base} closed {hrs:.1f}h ago (< {params.get('ticker_cooloff_hours', 24)}h)"
     return False, "clear"
 
 
@@ -1724,15 +1730,25 @@ def run_scheduled_cycle(mock=False):
         except Exception:
             pass
     engine_skips = {}                                        # school 1d: ticker -> skip-reason code, harvested
+    entered_list = []                                        # FADE v1.2: up to 2 clusters per cycle
     _open_fade = (sum(1 for r in _load_log_list() if r.get("book") == "FADE" and r.get("status") == "OPEN")
                   if fade_book.active() else 0)
     for c in ([] if (brake_active or halt_active) else candidates):   # ONLY 'active'/HALT suppress; shadow lets entries fire
         t = c["ticker"]
-        if fade_book.active() and _open_fade >= (fade_book.spec().get("max_concurrent") or 3):
-            # FADE concurrency cap (spec max_concurrent, small-account math: 6 stop-outs on
-            # $800 stakes = -48% of a $5k book; 3 caps the cluster).
-            engine_skips[t] = "fade_concurrency_cap"
-            continue
+        if fade_book.active():
+            if _open_fade >= (fade_book.spec().get("max_concurrent") or 3):
+                # FADE concurrency cap (spec max_concurrent; v1.1 owner-raised to 5 on paper).
+                engine_skips[t] = "fade_concurrency_cap"
+                continue
+            # FADE v1.2 concentration guard (replaces the waived cooloff): max 2 entries per
+            # ticker per UTC day - re-entry after a close is allowed once, stacks are not.
+            _today = _now_iso_ms()[:10]
+            _tday = sum(1 for r in _load_log_list()
+                        if r.get("book") == "FADE" and r.get("ticker") == t
+                        and (r.get("entry_ts_utc") or "")[:10] == _today)
+            if _tday >= 2:
+                engine_skips[t] = "fade_ticker_day_cap"
+                continue
         try:                                          # school gate-mode (DORMANT): off -> None -> engine
             import school_gate                        # decides alone; runs BEFORE entry so an armed gate
             gate = school_gate.gate_engine_candidate(params, c)   # can veto without an order being placed
@@ -1777,24 +1793,30 @@ def run_scheduled_cycle(mock=False):
                 _rewrite_last(entered)                       # persist the tag onto the just-logged record (fail-open)
             except Exception:
                 pass
-        break
+        entered_list.append(entered)
+        # FADE v1.2 pacing: up to 2 entries per cycle while slots are free (burst refill after
+        # same-morning exits). V10/OFF-state keeps the original 1-per-cycle - byte-identical.
+        if len(entered_list) >= (2 if fade_book.active() else 1):
+            break
     try:                                                     # COUNTERFACTUAL HARVEST (observational, fail-open, post-trade)
         import harvest_logger
-        summary = harvest_logger.harvest_scan(params, executed_record=entered, mock=mock,
+        summary = harvest_logger.harvest_scan(params, executed_record=entered_list or None, mock=mock,
                                               engine_skips=engine_skips)
         print(f"harvest: {summary}")
     except Exception as e:
         print(f"harvest skipped (fail-open): {type(e).__name__}: {str(e)[:90]}")
     try:                                                     # FILL LEDGER (school 1c: observational, fail-open)
         import fill_ledger
-        fill_ledger.entry_submits(entered)
+        for _er in entered_list:
+            fill_ledger.entry_submits(_er)
         fill_ledger.sweep(_load_log_list(), _order_state, creds, _save_log_list)
     except Exception as e:
         print(f"fill ledger skipped (fail-open): {type(e).__name__}: {str(e)[:90]}")
-    if entered is not None:
-        entered.pop("_scan_candidate", None)
-        print("\nGHA scheduled cycle complete: 1 cluster entered + logged.")
-        return entered
+    if entered_list:
+        for _er in entered_list:
+            _er.pop("_scan_candidate", None)
+        print(f"\nGHA scheduled cycle complete: {len(entered_list)} cluster(s) entered + logged.")
+        return entered_list[0]
     print("\nno eligible candidate this cycle (all capped/cooled).")
     return None
 

@@ -23,6 +23,8 @@ def spec():
 
 
 def active():
+    if os.environ.get("FADE_BOOK_FORCE_OFF") == "1":
+        return False           # deterministic OFF for test harnesses (passivity/MOT legacy chain)
     return (spec().get("status") or "OFF").upper() == "LIVE"
 
 

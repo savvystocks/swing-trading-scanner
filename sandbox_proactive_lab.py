@@ -42,6 +42,7 @@ import re
 from datetime import datetime, timezone, timedelta, date
 
 from v10_params import load as load_params
+import fade_book
 
 try:
     import sandbox_v11_sensors as v11        # LOG-DON'T-BLOCK context sensors (fail-open)
@@ -936,7 +937,7 @@ def _note_close_failure(rec, path, leg_name, occ, params, creds=None):
             f"retries stop; auto-resolves at expiry {_occ_expiry(occ)}")
 
 
-def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage="initial", mfe_pct=None):
+def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage="initial", mfe_pct=None, book=None):
     """Strategy-B tiered exit STATE MACHINE (per leg). Stages:
       initial  -> hard stop at -stop_loss_pct (overrides 24h); SCALE_OUT_50 at +take_profit_pct
                   (gated by the 24h hold) -> sell half, arm the break-even shield.
@@ -968,6 +969,14 @@ def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage=
     if stage == "initial":
         if ret <= -stop:
             return {**base, "action": "CLOSE_STOP_LOSS", "stage": "closed", "reason": f"{ret}% <= -{stop}% hard stop"}
+        if book == "FADE":
+            # FADE book (fade_book_spec.json): NO scale-out - the exit sweep on 358 stored paths
+            # showed halving out amputates the +75..+130% runners that pay for the losers; full
+            # position rides, trail arms directly from initial at +trail_activate_pct.
+            if ret >= trig:
+                return {**base, "action": "HOLD", "stage": "trailing",
+                        "reason": f"FADE: +{ret}% >= {trig}% -> MFE trail armed (no scale-out)"}
+            return {**base, "action": "HOLD", "reason": f"FADE initial: {ret}% (stop -{stop}% / trail arms +{trig}%)"}
         if held_h >= min_hold and ret >= tp:
             return {**base, "action": "SCALE_OUT_50", "stage": "scaled",
                     "reason": f"+{ret}% >= {tp}% -> sell 50%, stop -> break-even"}
@@ -1046,7 +1055,17 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
                 "reason": f"core metadata unavailable (spot={md['macro']['source']}, "
                           f"iv={md['iv_term']['source']}) - degenerate/non-optionable ticker",
                 "status": "SKIPPED"}
-    regime = classify_regime(md, candidate)
+    if fade_book.active():
+        # FADE BOOK entry shape (fade_book_spec.json): take the flow side ONLY when the ticker's
+        # 20d trend AND the day's SPY both oppose it (the winners' disagreement shape). Anything
+        # else is skipped - the fade book trades the shape or nothing.
+        regime = fade_book.direction(md, candidate)
+        if regime is None:
+            return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": "FADE_SKIP",
+                    "reason": "fade_book: not fade-shaped (needs flow side contra trend AND contra SPY)",
+                    "status": "SKIPPED"}
+    else:
+        regime = classify_regime(md, candidate)
     if regime == "NEUTRAL":          # SAFETY: the calendar exit is not yet spread-aware (Strategy B is directional;
         return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,   # managing the two calendar
                 "reason": "NEUTRAL/calendar route disabled pending a spread-aware unit exit (naked-leg risk)",  # sub-legs
@@ -1076,7 +1095,7 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
     # Alpaca quote at OCC resolution. Evidence: monotone spread-bucket decay on 24k graded rows
     # (tight -0.04 -> wide>=20% -0.59 mean net) with 49% of real fills previously landing >=20%.
     # FAIL-OPEN on missing data: no quote -> no block (a dead sensor never halts the engine).
-    cap = params.get("max_bid_ask_spread_pct")
+    cap = fade_book.spread_cap(params.get("max_bid_ask_spread_pct"))
     if cap:
         for name, leg in legs.items():
             sp = (leg.get("execution_cost") or {}).get("bid_ask_spread_pct")
@@ -1086,6 +1105,7 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
                         "status": "SKIPPED"}
     orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run)
     record = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
+              "book": "FADE" if fade_book.active() else "V10",
               "entry_ts_utc": md["entry_ts_utc"], "leg_budget_usd": LEG_BUDGET,
               "execution_mode": "DRY_RUN" if dry_run else "LIVE_PAPER",
               "occ_resolution": "alpaca_real" if resolve_real else "synthesized",
@@ -1227,7 +1247,8 @@ def manage_open_positions(creds, params, positions=None):
             path["mae_pct"] = round(min(path["mae_pct"], ret_pct), 1)   # Max Adverse Excursion
             dirty = True                                                 # persist the running path every cycle
             dec = manage_exit(rec["entry_ts_utc"], ret_pct, params, expiry_iso=_occ_expiry(occ),
-                              stage=path.get("stage", "initial"), mfe_pct=path["mfe_pct"])
+                              stage=path.get("stage", "initial"), mfe_pct=path["mfe_pct"],
+                              book=rec.get("book"))
             if dec["action"] == "SCALE_OUT_50":                          # tier 1: sell half, runner continues
                 if not _retire_stop(rec, leg_name, occ, creds, log, closed_legs):
                     dirty = True                                          # stop live / cancel unconfirmed ->
@@ -1452,6 +1473,10 @@ def scan_candidates(params, limit=None):
         a["flow_type"] = "call" if a["call_prem"] >= a["put_prem"] else "put"
         a["total_premium"] = round(a["call_prem"] + a["put_prem"], 0)
         cands.append(a)
+    if fade_book.active():
+        # FADE BOOK: mid-band flow only ($50-250k spec default) - the whale band tested crowded
+        # (13.6% wins) and the small band noise (10.9%); biggest-premium-first dies with V10.
+        cands = fade_book.flow_band(cands)
     cands.sort(key=lambda x: x["total_premium"], reverse=True)
     return cands
 

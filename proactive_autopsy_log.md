@@ -3727,3 +3727,21 @@
 
 **Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 82.0.
 
+## Autopsy - NKE (56a3f4eabce3)
+- entered 2026-07-30T17:08:20.586Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -53.6% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 42.0 worked against it.
+
+## Autopsy - NOK (243f23777c53)
+- entered 2026-08-04T16:12:27.435Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -68.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-69%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 10.0 worked against it.
+

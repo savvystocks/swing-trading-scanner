@@ -3763,3 +3763,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 70.0 fed the squeeze.
 
+## Autopsy - B (980ccf05ef3d)
+- entered 2026-07-21T17:22:33.789Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +123.4% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+

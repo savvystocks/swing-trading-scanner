@@ -132762,8 +132762,33 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 123.4
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 155.3,
+          "mae_pct": -44.0,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-08-05T13:31:50.196Z",
+            "return_pct": 111.3
+          }
+        }
+      },
+      "mfe_pct": 155.3,
+      "mae_pct": -44.0,
+      "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "B",
@@ -132776,12 +132801,21 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 11,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "B260821C00038000",
+        "closed_at": "2026-08-05T17:11:40.152Z",
+        "return_pct": 123.4,
+        "reason": "123.4% <= trail 124.2% (20% off peak MFE 155.3%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 155.3,
         "mae_pct": -44.0,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-08-05T13:31:50.196Z",
@@ -132793,6 +132827,11 @@
       {
         "order_id": "40a212c8-2678-4852-b88c-b6e3cc04fcf1",
         "at": "2026-08-05T13:31:50.196Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "c39e6afc-cc5b-4814-a747-a704ff40351e",
+        "at": "2026-08-05T17:11:40.152Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -145007,7 +145046,7 @@
         "mfe_pct": 150.0,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 1
+        "close_fails": 2
       }
     }
   },

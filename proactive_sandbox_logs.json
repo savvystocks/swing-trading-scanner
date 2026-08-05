@@ -132779,7 +132779,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 111.3,
+        "mfe_pct": 137.6,
         "mae_pct": -44.0,
         "stage": "trailing",
         "close_fails": 0,
@@ -145007,7 +145007,7 @@
         "mfe_pct": 150.0,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 1
+        "close_fails": 2
       }
     }
   },
@@ -162687,7 +162687,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 129.2,
+        "mfe_pct": 144.0,
         "mae_pct": -22.6,
         "stage": "trailing",
         "close_fails": 0,
@@ -163267,17 +163267,55 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -50.0
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -2.7,
+          "mae_pct": -50.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -2.7,
+      "mae_pct": -50.0,
+      "determining_factor": "Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 10.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "IBIT260828P00034000",
+        "closed_at": "2026-08-05T14:11:37.420Z",
+        "return_pct": -50.0,
+        "reason": "-50.0% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -2.7,
-        "mae_pct": -47.3,
-        "stage": "initial"
+        "mae_pct": -50.0,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "2d550150-8578-46b9-b9c6-593d405c94fc",
+        "at": "2026-08-05T14:11:37.420Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "type": "reconcile",
@@ -164543,5 +164581,14 @@
       "PFE260814C00025500",
       "STLA260807P00005000"
     ]
+  },
+  {
+    "type": "daily_brake",
+    "ts_utc": "2026-08-05T14:11:38.747Z",
+    "mode": "shadow",
+    "reason": "3 stop-outs >= 3",
+    "stopouts": 3,
+    "realized_loss_usd": 1378.4,
+    "status": "SHADOW"
   }
 ]

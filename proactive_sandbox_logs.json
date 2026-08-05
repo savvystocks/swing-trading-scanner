@@ -145046,7 +145046,7 @@
         "mfe_pct": 150.0,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 1
+        "close_fails": 2
       }
     }
   },
@@ -162440,15 +162440,49 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 175.3
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 220.8,
+          "mae_pct": -7.8,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-08-03T13:41:16.683Z",
+            "return_pct": 42.9
+          }
+        }
+      },
+      "mfe_pct": 220.8,
+      "mae_pct": -7.8,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 19.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "SOFI260828C00016500",
+        "closed_at": "2026-08-05T18:51:43.838Z",
+        "return_pct": 175.3,
+        "reason": "175.3% <= trail 176.6% (20% off peak MFE 220.8%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 220.8,
         "mae_pct": -7.8,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-08-03T13:41:16.683Z",
@@ -162460,6 +162494,11 @@
       {
         "order_id": "d100733e-9830-464f-bd34-22e60cf41ce4",
         "at": "2026-08-03T13:41:16.683Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "222e9ca4-0249-46fb-8957-88d80198ca0c",
+        "at": "2026-08-05T18:51:43.838Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -164641,7 +164680,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -0.6,
-        "mae_pct": -20.3,
+        "mae_pct": -22.8,
         "stage": "initial"
       }
     }
@@ -164724,6 +164763,21 @@
         "order_id": "6ea5398e-42b9-4963-b6d5-cfa6bf1e8fc3",
         "symbol": "AMD260918C00030000",
         "age_min": 31.2,
+        "limit_price": "1.5"
+      }
+    ],
+    "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "AUDIT-ed247f24",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-08-05T18:51:43.073Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "72a49935-d0fa-4242-8ea6-d16cac06255a",
+        "symbol": "AMD260918C00030000",
+        "age_min": 31.5,
         "limit_price": "1.5"
       }
     ],

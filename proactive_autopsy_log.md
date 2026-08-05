@@ -3754,3 +3754,12 @@
 
 **Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 10.0.
 
+## Autopsy - SLV (c112bbce69a3)
+- entered 2026-07-31T15:52:57.281Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +114.3% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 70.0 fed the squeeze.
+

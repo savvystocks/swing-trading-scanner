@@ -145007,7 +145007,7 @@
         "mfe_pct": 150.0,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 2
+        "close_fails": 3
       }
     }
   },
@@ -162681,15 +162681,49 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 114.3
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 144.0,
+          "mae_pct": -22.6,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-08-04T13:31:41.347Z",
+            "return_pct": 36.9
+          }
+        }
+      },
+      "mfe_pct": 144.0,
+      "mae_pct": -22.6,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 70.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "SLV260828C00054000",
+        "closed_at": "2026-08-05T15:52:06.869Z",
+        "return_pct": 114.3,
+        "reason": "114.3% <= trail 115.2% (20% off peak MFE 144.0%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 144.0,
         "mae_pct": -22.6,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-08-04T13:31:41.347Z",
@@ -162701,6 +162735,11 @@
       {
         "order_id": "e1edaad4-1fd1-4ba7-8baa-53e70e8b3944",
         "at": "2026-08-04T13:31:41.347Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "b2669510-b420-4f04-80ee-059f33f15bd2",
+        "at": "2026-08-05T15:52:06.869Z",
         "ledger_terminal": "filled"
       }
     ]

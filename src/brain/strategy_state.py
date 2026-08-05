@@ -114,5 +114,18 @@ def strategy_section(root="."):
     else:
         L.append("**6. Pivot clock.** Week 0 of 6 (no official REJECTED on record) — or last "
                  "official verdict was not REJECTED.")
+    # 7. FADE book life bar (the retooled system, 2026-08-05). PIVOT EXECUTED: the pivot clock
+    # above is historical; the fade book's day-clustered t is the live question now.
+    try:
+        import glob as _glob
+        from . import fade_health
+        snaps = sorted(_glob.glob(os.path.join(root, "workdir", "harvest_*.db"))) or \
+            sorted(_glob.glob(os.path.join(root, "harvest_*.db")))
+        if snaps:
+            L.append("**7. FADE book.** " + fade_health.render(snaps[-1]))
+        else:
+            L.append("**7. FADE book.** no snapshot in workdir - no evidence this run")
+    except Exception:
+        L.append("**7. FADE book.** health instrument errored - no evidence this run")
     L.append("")
     return "\n".join(L)

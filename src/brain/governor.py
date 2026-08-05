@@ -140,9 +140,22 @@ def scoreboard_md(reg, week_id):
         lines.append(f"| {name} | {o['rung']} | {o['state']} | {o['green_streak']}/{PROMOTE_WEEKS} | "
                      f"{o['authority']} | {flags} |")
     elig = [n for n, o in reg["organs"].items() if o["rung"] == "ELIGIBLE_FOR_OWNER" and not o.get("owner_promoted")]
+    fade_line = None
+    try:
+        import glob as _glob
+        import os as _os
+        from . import fade_health
+        snaps = sorted(_glob.glob(_os.path.join("workdir", "harvest_*.db"))) or sorted(_glob.glob("harvest_*.db"))
+        if snaps:
+            fade_line = fade_health.render(snaps[-1])
+    except Exception:
+        fade_line = None
     lines += ["", ("**Awaiting owner review:** " + ", ".join(elig)) if elig
               else "No organ is awaiting owner review; nothing is eligible for promotion this week.",
-              "", _lifetime_trials_line(),
+              "", _lifetime_trials_line()]
+    if fade_line:
+        lines += ["", "## FADE book (the retooled system's life bar)", "", fade_line]
+    lines += [
               "", "Demotions are automatic and immediate; promotions to LIVE require the owner to set",
               "`owner_promoted` in governor_registry.json. The frozen V10 engine is unaffected by any state here."]
     return "\n".join(lines)

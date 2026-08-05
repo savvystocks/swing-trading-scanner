@@ -1724,8 +1724,15 @@ def run_scheduled_cycle(mock=False):
         except Exception:
             pass
     engine_skips = {}                                        # school 1d: ticker -> skip-reason code, harvested
+    _open_fade = (sum(1 for r in _load_log_list() if r.get("book") == "FADE" and r.get("status") == "OPEN")
+                  if fade_book.active() else 0)
     for c in ([] if (brake_active or halt_active) else candidates):   # ONLY 'active'/HALT suppress; shadow lets entries fire
         t = c["ticker"]
+        if fade_book.active() and _open_fade >= (fade_book.spec().get("max_concurrent") or 3):
+            # FADE concurrency cap (spec max_concurrent, small-account math: 6 stop-outs on
+            # $800 stakes = -48% of a $5k book; 3 caps the cluster).
+            engine_skips[t] = "fade_concurrency_cap"
+            continue
         try:                                          # school gate-mode (DORMANT): off -> None -> engine
             import school_gate                        # decides alone; runs BEFORE entry so an armed gate
             gate = school_gate.gate_engine_candidate(params, c)   # can veto without an order being placed
@@ -1747,6 +1754,8 @@ def run_scheduled_cycle(mock=False):
             engine_skips[t] = _skip_code(rec.get("reason") or "")
             continue
         md, legs, orders = rec["metadata"], rec["legs"], rec["orders"]
+        if rec.get("book") == "FADE":
+            _open_fade += 1                       # same-cycle entries count toward the cap
         print(f"\nENTERED {t} [{rec['regime']}] | {rec['execution_mode']} | OCC {rec['occ_resolution']}")
         print(f"  state: 20dSMA {md['macro']['distance_to_sma20_pct']:+.2f}% | IV {md['iv_term']['iv_ratio']} "
               f"| skew {md.get('skew', {}).get('skew_ratio')} ({md.get('skew', {}).get('skew_bias')}) "

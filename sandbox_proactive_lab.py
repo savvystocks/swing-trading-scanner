@@ -1516,6 +1516,17 @@ def daily_digest():
     lines = [f"<b>SANDBOX DIGEST {today}</b>",
              f"Entries: {len(entries)} ({', '.join(sorted(set(r.get('ticker') for r in entries))) or 'none'})",
              f"Closes: {len(closes)} | wins {len(wins)}/{len(closes)} | sum return {pnl:+.1f}%"]
+    if not entries and datetime.now(timezone.utc).weekday() < 5:
+        # ZERO-ENTRY MARKET-DAY ALARM (landing-check class, 2026-08-05: the iv_term outage ran
+        # 24h silent because nothing pages on absence). Loud line + separate notify so a dead
+        # entry path can never again hide inside a normal-looking digest.
+        lines.insert(1, "&#9888; <b>ZERO ENTRIES on a market day</b> - if this repeats 2 days "
+                        "running, check data-source health (iv_term/scanner) FIRST")
+        try:
+            _notify("<b>ALARM: zero entries on a market day</b> - entry path may be blocked "
+                    "(data outage / gates). See digest + cycle logs.")
+        except Exception:
+            pass
     for tk, ln, ex in closes[:8]:
         lines.append(f"  {tk} {ln} {ex.get('action')} {(ex.get('return_pct') or 0):+.1f}%")
     lines.append(f"Sensor-source degradations: {degraded}")

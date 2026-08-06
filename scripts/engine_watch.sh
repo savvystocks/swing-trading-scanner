@@ -31,7 +31,13 @@ LAST=$(git log -1 --format=%ct origin/main 2>/dev/null || echo 0)
 NOW=$(date -u +%s)
 AGE=$(( (NOW - LAST) / 60 ))
 if [ "$AGE" -gt 35 ]; then
-  alarm "engine heartbeat is ${AGE} min old during market hours - cycles are NOT completing (GHA timeout / dispatcher down / repo push failing). Check github.com/savvystocks/swing-trading-scanner/actions"
+  alarm "engine heartbeat is ${AGE} min old during market hours - cycles are NOT completing (GHA timeout / dispatcher down / platform incident). Running VPS FAILOVER exit pass now."
+  # FAILOVER (2026-08-06): exits-only engine pass on this box - manages open positions while
+  # GHA is dead; its push refreshes the heartbeat, which quiets this alarm until stale again.
+  git pull -q --rebase -X theirs 2>/dev/null || true
+  . ./.venv/bin/activate 2>/dev/null || true
+  python scripts/engine_failover_exits.py >> /home/poller/engine_failover.log 2>&1 || \
+    alarm "FAILOVER ITSELF FAILED - open positions are UNMANAGED. Manual intervention needed."
 else
   echo "$(date -u +%FT%TZ) ok: heartbeat ${AGE} min"
 fi

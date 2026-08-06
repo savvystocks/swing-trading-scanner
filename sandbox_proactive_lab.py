@@ -156,9 +156,19 @@ def macro_technical(ticker, mock):
             "atr": None, "atr_pct": None, "rvol_10min": None, "source": "unavailable"}
 
 
+_IV_BREAKER = {"fails": 0, "open": False}     # per-process circuit breaker (2026-08-06: the 08-05
+                                              # retry turned an IV outage into 15-min cycle hangs
+                                              # -> GHA 8-min timeouts -> a lost trading day. After
+                                              # 3 consecutive total failures the breaker OPENS and
+                                              # remaining candidates skip instantly - one loud line,
+                                              # no per-candidate retry storms.)
+
+
 def _alpaca_atm_iv(ticker, spot, dte_min, dte_max, creds):
     """ATM call implied volatility (%) for the dte_min..dte_max expiry window, from Alpaca option
     snapshots (snapshot.implied_volatility). Returns None on failure (fail-open)."""
+    if _IV_BREAKER["open"]:
+        return None
     if not (all(creds) and spot):
         return None
     try:
@@ -174,14 +184,15 @@ def _alpaca_atm_iv(ticker, spot, dte_min, dte_max, creds):
             strike_price_gte=str(round(spot * 0.92, 2)), strike_price_lte=str(round(spot * 1.08, 2)))
         try:
             snaps = cli.get_option_chain(req)
-        except Exception as e1:
-            import time as _t
-            _t.sleep(2)                                   # one retry with backoff (2026-08-05:
-            try:                                          # engine-wide iv=unavailable since 08-04
-                snaps = cli.get_option_chain(req)         # ~18:00 UTC, GHA-only; local works. Print
-            except Exception as e2:                       # the error class so the next cycle log
-                print(f"  iv_term FETCH FAILED {ticker}: {type(e2).__name__}: {str(e2)[:120]}")
-                return None                               # names the real cause instead of silence)
+            _IV_BREAKER["fails"] = 0                      # any success resets the breaker count
+        except Exception as e2:
+            print(f"  iv_term FETCH FAILED {ticker}: {type(e2).__name__}: {str(e2)[:120]}")
+            _IV_BREAKER["fails"] += 1
+            if _IV_BREAKER["fails"] >= 3 and not _IV_BREAKER["open"]:
+                _IV_BREAKER["open"] = True                # stop hammering a dead endpoint this cycle
+                print("  iv_term BREAKER OPEN: 3 consecutive failures - skipping IV for the rest "
+                      "of this cycle (no retry storms; cycle stays under the GHA timeout)")
+            return None
     except Exception as e:
         print(f"  iv_term client init failed: {type(e).__name__}: {str(e)[:80]}")
         return None

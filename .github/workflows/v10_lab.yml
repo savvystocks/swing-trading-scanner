@@ -6,9 +6,12 @@ name: v10-lab
 
 on:
   schedule:
-    - cron: "5,35 13-20 * * 1-5"   # SPARSE BACKUP trigger only - cron-job.org repository_dispatch is
-                                   # the primary (*/10 at :00,:10,..). Offset to :05/:35 so the backup
-                                   # never lands on a primary slot. Overlap is harmless for the HARVEST
+    - cron: "1,11,21,31,41,51 13-20 * * 1-5"
+                                   # FULL-CADENCE BACKUP (2026-08-06: cron-job.org went silent at 18:55
+                                   # and the sparse backup couldn't carry the day -> dispatcher is now
+                                   # REDUNDANT: GH schedule runs every 10 min at :x1 offsets, primary
+                                   # repository_dispatch at :x0. Either alone sustains full cadence.
+                                   # Overlap is harmless for the HARVEST
                                    # transport: the concurrency group serialises runs and
                                    # data/harvest_inbox/*.jsonl union-merges (.gitattributes, fa5bdc92).
                                    # KNOWN RESIDUAL: proactive_sandbox_logs.json is NOT union-merged, so

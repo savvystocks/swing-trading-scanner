@@ -31,7 +31,7 @@ LAST=$(git log -1 --format=%ct origin/main 2>/dev/null || echo 0)
 NOW=$(date -u +%s)
 AGE=$(( (NOW - LAST) / 60 ))
 if [ "$AGE" -gt 35 ]; then
-  alarm "engine heartbeat is ${AGE} min old during market hours - cycles are NOT completing (GHA timeout / dispatcher down / platform incident). Running VPS FAILOVER exit pass now."
+  alarm "engine heartbeat is ${AGE} min old during market hours - cycles are NOT completing (GHA timeout / dispatcher down / platform incident). Running VPS FULL FAILOVER cycle now (entries+exits+harvest)."
   # FAILOVER (2026-08-06): exits-only engine pass on this box - manages open positions while
   # GHA is dead; its push refreshes the heartbeat, which quiets this alarm until stale again.
   git pull -q --rebase -X theirs 2>/dev/null || true

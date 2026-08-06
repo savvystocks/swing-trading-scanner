@@ -39,8 +39,11 @@ def main(check_only=False):
     if check_only:
         print("CHECK OK: imports, creds, positions readable - no actions taken")
         return 0
-    closed, autopsies = lab.manage_open_positions(creds, params, positions=positions)
-    print(f"exit pass: {len(closed)} closed, {len(autopsies)} autopsies")
+    # FULL CYCLE (upgraded 2026-08-06 22:20: UW returns 200 from this box and the engine
+    # imports clean - entries, exits and harvest all run here when GHA is dead. Only fires
+    # when the heartbeat is >35 min stale, so GHA and VPS never trade simultaneously.)
+    rec = lab.run_scheduled_cycle(mock=False)
+    print(f"full failover cycle complete: entered={'yes: ' + rec['ticker'] if rec else 'none'}")
     sh("git add -A data/harvest_inbox proactive_sandbox_logs.json sandbox_ticker_cooloff.json 2>/dev/null")
     st = sh("git status --porcelain --untracked-files=no")
     if st:
@@ -51,8 +54,8 @@ def main(check_only=False):
         tok = os.environ.get("TELEGRAM_BOT_TOKEN"); chat = os.environ.get("TELEGRAM_CHAT_ID")
         if tok and chat:
             import urllib.request, urllib.parse
-            msg = (f"ENGINE FAILOVER (VPS): GHA heartbeat stale - ran exit pass: "
-                   f"{len(closed)} closed of {len(positions)} open. Entries paused until GHA revives.")
+            msg = (f"ENGINE FAILOVER (VPS): GHA heartbeat stale - ran FULL cycle (entries+exits+harvest). "
+                   f"{len(positions)} positions under management. GHA can take over any time.")
             urllib.request.urlopen("https://api.telegram.org/bot" + tok + "/sendMessage?" +
                                    urllib.parse.urlencode({"chat_id": chat, "text": msg}), timeout=15)
     except Exception:

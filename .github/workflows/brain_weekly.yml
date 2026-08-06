@@ -56,6 +56,9 @@ jobs:
   # Part 4 of the discovery spec: the search re-runs with every Sunday brain cycle and appends to
   # reports/discovery/. Brain-side only - reads the snapshot COPY, writes reports, touches no live path.
   discovery:
+    # RETIRED 2026-08-06 (owner: fade-only system). The rig answered the old flow question;
+    # weekly re-mining added trials noise on a closed case. Re-enable only by owner order.
+    if: ${{ false }}
     needs: brain
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -95,6 +98,9 @@ jobs:
   # Stage 2 - the Student (ROADMAP item 8). PROVISIONAL below the 8k feature-bearing gate; the same
   # run at/above the gate is the official ignition. Reports only; the engine is never touched.
   student:
+    # RETIRED 2026-08-06 - weekly verdicts on the dead V10 question; fade book has its own
+    # life bar (fade_health in the council job's governor scoreboard).
+    if: ${{ false }}
     needs: discovery
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -133,7 +139,7 @@ jobs:
 
   # School Phase 2 - the Council (shadow). Five diverse members score OOF; recording only, no authority.
   council:
-    needs: student
+    needs: brain
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
@@ -183,7 +189,7 @@ jobs:
           exit 1
 
   alarm:
-    needs: [brain, discovery, student, council, drill]
+    needs: [brain, council, drill]
     if: ${{ failure() }}
     runs-on: ubuntu-latest
     timeout-minutes: 3

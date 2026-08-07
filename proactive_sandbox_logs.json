@@ -124201,8 +124201,29 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -52.9
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 28.6,
+          "mae_pct": -52.9,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 28.6,
+      "mae_pct": -52.9,
+      "determining_factor": "Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 14.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "NU",
@@ -124215,14 +124236,31 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 12,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "NU260821C00014500",
+        "closed_at": "2026-08-07T17:11:49.636Z",
+        "return_pct": -52.9,
+        "reason": "-52.9% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 28.6,
-        "mae_pct": -48.6,
-        "stage": "initial"
+        "mae_pct": -52.9,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "9b24f1fe-b458-417f-9df4-f6dda3b7a236",
+        "at": "2026-08-07T17:11:49.636Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "e1ae885e150c",
@@ -145046,7 +145084,7 @@
         "mfe_pct": 150.0,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 3
+        "close_fails": 4
       }
     }
   },

@@ -34,8 +34,10 @@ if ! git fetch -q origin main 2>/dev/null; then
     # consecutive blind ticks; speak only at 3 (45 min), once per episode, honestly.
     N=$(cat "$BLINDF" 2>/dev/null || echo 0); N=$((N+1)); echo "$N" > "$BLINDF"
     echo "$(date -u +%FT%TZ) blind tick $N (github fetch failing)"
-    [ "$N" -eq 3 ] && alarm "cannot VERIFY the heartbeat for 45 min (GitHub API unreachable from VPS). The engine may well be fine - no failover while blind. Will re-page only if blindness persists another hour."
-    [ "$N" -eq 7 ] && alarm "still blind after ~105 min. If the engine is also dead this is a total outage - check the Actions page when possible."
+    # QUIET MODE (owner order 2026-08-08: Telegram = trades + critical only). Blindness is
+    # logged, never paged - if the engine is also dead, the AGE>35 branch pages when vision
+    # returns, and the failover handles positions meanwhile.
+    echo "$(date -u +%FT%TZ) blind tick $N logged (no page - quiet mode)"
     exit 0
   fi
 fi

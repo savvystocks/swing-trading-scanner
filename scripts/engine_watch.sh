@@ -26,7 +26,20 @@ DOW=$(date -u +%u)
 [ "$HHMM" -lt 1340 ] && exit 0
 [ "$HHMM" -gt 2005 ] && exit 0
 
-git fetch -q origin main 2>/dev/null || { alarm "git fetch failed - cannot see the heartbeat"; exit 0; }
+BLINDF=/home/poller/.engine_watch_blind
+if ! git fetch -q origin main 2>/dev/null; then
+  sleep 10
+  if ! git fetch -q origin main 2>/dev/null; then
+    # BLIND is not DEAD (2026-08-07 lesson: 8 false pages on a 50/50-green day). Count
+    # consecutive blind ticks; speak only at 3 (45 min), once per episode, honestly.
+    N=$(cat "$BLINDF" 2>/dev/null || echo 0); N=$((N+1)); echo "$N" > "$BLINDF"
+    echo "$(date -u +%FT%TZ) blind tick $N (github fetch failing)"
+    [ "$N" -eq 3 ] && alarm "cannot VERIFY the heartbeat for 45 min (GitHub API unreachable from VPS). The engine may well be fine - no failover while blind. Will re-page only if blindness persists another hour."
+    [ "$N" -eq 7 ] && alarm "still blind after ~105 min. If the engine is also dead this is a total outage - check the Actions page when possible."
+    exit 0
+  fi
+fi
+rm -f "$BLINDF" 2>/dev/null
 LAST=$(git log -1 --format=%ct origin/main 2>/dev/null || echo 0)
 NOW=$(date -u +%s)
 AGE=$(( (NOW - LAST) / 60 ))

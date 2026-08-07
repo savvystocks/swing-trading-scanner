@@ -3781,3 +3781,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 19.0 fed the squeeze.
 
+## Autopsy - SLB (256bae637237)
+- entered 2026-08-04T17:52:40.834Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -20.3% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-20%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 52.5 worked against it.
+

@@ -1110,6 +1110,12 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
     trigger = f"regime_{regime}_loose"          # (was should_enter_proactive() - it only ever returned this)
     legs = build_legs(ticker, md, regime, illiquid=illiquid)
     min_ct = params.get("min_contracts", 2)
+    if fade_book.active():
+        # FADE v1.2.1 (owner order 2026-08-08 00:11): min_contracts 1 - Friday's funnel showed 8
+        # of 24 qualifying candidates (SPY/QQQ/NVDA puts, the replay cohort's natural home) died
+        # as unaffordable at 2 contracts on $800. The 358-path replay was per-contract; 1
+        # contract aligns the live universe with the tested one.
+        min_ct = fade_book.spec().get("min_contracts", 1)
     if all((leg.get("contracts") or 0) < min_ct for leg in legs.values()):   # AFFORDABILITY GATE (real-money sim)
         return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
                 "reason": f"premium too rich for {min_ct}-contract min on ${LEG_BUDGET:.0f} budget (est >~$4.00/contract)",

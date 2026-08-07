@@ -93,6 +93,12 @@ LOG_PATH = "proactive_sandbox_logs.json"
 AUTOPSY_MD = "proactive_autopsy_log.md"
 ADVISORY_MD = "v10_tuning_advisory.md"
 LEG_BUDGET = 800.0                  # FLAT $800/trade = 20% of a $4k real account (1:1 sim of real constraints)
+try:                                # FADE v1.2.2 (owner order 2026-08-08): fade book sizes from its
+    import fade_book as _fb         # spec (size_usd 1000) - more affordable qualifying candidates,
+    if _fb.active():                # paper-only; OFF-state keeps the original flat 800.
+        LEG_BUDGET = float(_fb.spec().get("size_usd", 800.0))
+except Exception:
+    pass
 PAPER_BASE = "https://paper-api.alpaca.markets"
 CALL_DELTA, PUT_DELTA = 0.35, -0.35
 CAL_FRONT_DTE = (10, 15)             # short leg expiration window (days)

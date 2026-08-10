@@ -55,8 +55,32 @@ def main():
     if base:
         bm = sum(m for _, m in base) / len(base)
         lines.append(f"BASELINE: {len(base)}d day-mean {bm:+.2f}%")
+    # THROUGHPUT FLOOR (owner guard 2026-08-10: refinement must never become starvation).
+    # If the live book filled < 3 trades this week WHILE the funnel offered >= 15 qualifying
+    # candidates, the system is over-filtered: page it loudly, and block any RESTRICTIVE
+    # promotion (adding filters) until throughput recovers. Expansive changes stay allowed.
+    RESTRICTIVE = {"V13_DEPTH", "MILD_ONLY", "OPT_WINNER"}
+    starving = False
+    try:
+        recs = json.load(open("proactive_sandbox_logs.json", encoding="utf-8"))
+        import datetime as _dt
+        wk_ago = (_dt.date.today() - _dt.timedelta(days=7)).isoformat()
+        fills = sum(1 for r in recs if r.get("book") == "FADE" and (r.get("entry_ts_utc") or "") >= wk_ago)
+        quals = sum(d.get("BASELINE", {}).get("n") or 0 for d in days if d["day"] >= wk_ago)
+        if fills < 3 and quals >= 15:
+            starving = True
+            lines.append(f"THROUGHPUT FLOOR BREACH: {fills} fills vs {quals} qualifying this week - "
+                         "system is over-filtered. Restrictive promotions BLOCKED; investigate the "
+                         "newest gate first (funnel skip-reasons name the killer).")
+        else:
+            lines.append(f"throughput: {fills} fills / {quals} qualifying this week - ok")
+    except Exception:
+        pass
     applied = []
     for book, keys in MENU.items():
+        if starving and book in RESTRICTIVE:
+            lines.append(f"{book}: SKIPPED (throughput floor breach - no new restrictions while starving)")
+            continue
         pts = [(d["day"], d[book]["mean"]) for d in days
                if d.get(book, {}).get("mean") is not None and d[book].get("n", 0) > 0]
         if len(pts) < 10:

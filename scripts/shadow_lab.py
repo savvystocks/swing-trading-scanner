@@ -94,6 +94,10 @@ def run_day(db, day_iso):
         "V13_DEPTH": lambda m: fade(m) and tight(m) and band(m) and abs(m["sma"]) < 2.0,
         "BAND_WIDE": lambda m: fade(m) and tight(m) and band(m, 40000, 300000),
         "SHAPE_NO_SPREAD": lambda m: fade(m) and band(m),
+        # MILD hypothesis (registered 2026-08-10 after day-1 lab output: fade -16.3 vs control
+        # -4.1 on a strong-green day; depth finding says shallow beats deep): fade only GENTLE
+        # disagreement - both the ticker's and the market's displacement small.
+        "MILD_ONLY": lambda m: fade(m) and tight(m) and band(m) and abs(m["sma"]) < 2.0 and abs(m["spy"]) < 1.5,
     }
     day_spy = round(sum(spy_signs) / len(spy_signs), 3) if spy_signs else None
     out = {"day": day_iso, "computed_at": datetime.now(timezone.utc).isoformat()[:16],

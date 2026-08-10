@@ -1,0 +1,93 @@
+"""AUTONOMOUS SUNDAY BOUNDARY (owner order 2026-08-10: improvement without Claude).
+
+Runs on the VPS every Sunday. Reads the shadow-lab ledger's VIRGIN days, applies the
+pre-registered promotion bars, and - because every candidate upgrade is now a SPEC KEY the
+engine reads - can apply a passing upgrade mechanically: edit spec, bump version, commit,
+push, Telegram the verdict. No bars passed -> report only. Nothing outside the pre-registered
+MENU can ever be auto-applied; code-level changes still require a human session.
+
+MENU (hypothesis -> spec keys) + BARS (all must hold):
+  V13_DEPTH  -> entry.max_depth_pct = 2.0
+  MILD_ONLY  -> entry.max_depth_pct = 2.0, entry.max_spy_dist_pct = 1.5
+  BAND_WIDE  -> entry.flow_min = 40000, entry.flow_max = 300000
+BARS: >= 10 virgin days where the book had trades; book day-mean > BASELINE day-mean + 2pts;
+      book day-mean > 0; book positive in BOTH halves of its virgin window.
+"""
+import json
+import os
+import subprocess
+import urllib.parse
+import urllib.request
+from datetime import datetime, timezone
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(REPO)
+LEDGER = os.path.join(REPO, "reports", "shadow_lab", "ledger.jsonl")
+MENU = {
+    "V13_DEPTH": {"entry.max_depth_pct": 2.0},
+    "MILD_ONLY": {"entry.max_depth_pct": 2.0, "entry.max_spy_dist_pct": 1.5},
+    "BAND_WIDE": {"entry.flow_min": 40000, "entry.flow_max": 300000},
+}
+
+
+def tg(msg):
+    tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+    if tok and chat:
+        try:
+            urllib.request.urlopen("https://api.telegram.org/bot" + tok + "/sendMessage?" +
+                                   urllib.parse.urlencode({"chat_id": chat, "text": msg}), timeout=15)
+        except Exception:
+            pass
+
+
+def main():
+    if not os.path.exists(LEDGER):
+        tg("SUNDAY BOUNDARY: no shadow ledger yet - nothing to review.")
+        return
+    days = [json.loads(l) for l in open(LEDGER, encoding="utf-8") if l.strip()]
+    seen = {}
+    for d in days:
+        seen[d["day"]] = d                      # last write per day wins
+    days = [seen[k] for k in sorted(seen)]
+    base = [(d["day"], d["BASELINE"]["mean"]) for d in days if d.get("BASELINE", {}).get("mean") is not None]
+    lines = [f"SUNDAY BOUNDARY {datetime.now(timezone.utc).date()} - virgin days: {len(days)}"]
+    if base:
+        bm = sum(m for _, m in base) / len(base)
+        lines.append(f"BASELINE: {len(base)}d day-mean {bm:+.2f}%")
+    applied = []
+    for book, keys in MENU.items():
+        pts = [(d["day"], d[book]["mean"]) for d in days
+               if d.get(book, {}).get("mean") is not None and d[book].get("n", 0) > 0]
+        if len(pts) < 10:
+            lines.append(f"{book}: {len(pts)}d traded - HOLD (needs 10)")
+            continue
+        m = sum(x for _, x in pts) / len(pts)
+        bmap = dict(base)
+        rel = [x - bmap[d] for d, x in pts if d in bmap]
+        half = len(pts) // 2
+        e = sum(x for _, x in pts[:half]) / max(half, 1)
+        l2 = sum(x for _, x in pts[half:]) / max(len(pts) - half, 1)
+        ok = (m > 0 and rel and sum(rel) / len(rel) > 2.0 and e > 0 and l2 > 0)
+        lines.append(f"{book}: {len(pts)}d mean {m:+.2f}% vs base {'PASS' if ok else 'HOLD'}")
+        if ok and not applied:                  # apply at most ONE upgrade per Sunday
+            spec = json.load(open("fade_book_spec.json"))
+            for path, val in keys.items():
+                sect, key = path.split(".")
+                spec.setdefault(sect, {})[key] = val
+            v = spec.get("spec_version", "1.2")
+            spec["spec_version"] = v + "+auto"
+            spec[f"auto_{datetime.now(timezone.utc).date()}"] = f"{book} passed pre-registered bars"
+            json.dump(spec, open("fade_book_spec.json", "w"), indent=1)
+            subprocess.run("git add fade_book_spec.json && git commit -qm 'auto-boundary: "
+                           + book + " promoted per pre-registered bars [skip ci]' && "
+                           "git pull -q --rebase -X ours && git push -q", shell=True)
+            applied.append(book)
+            lines.append(f">>> APPLIED {book} to the live spec (data-only change; engine reads it next cycle)")
+    if not applied:
+        lines.append("No upgrade passed its bars - spec unchanged. The grind continues honestly.")
+    tg("\n".join(lines))
+    print("\n".join(lines))
+
+
+if __name__ == "__main__":
+    main()

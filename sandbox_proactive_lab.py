@@ -1009,6 +1009,12 @@ def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage=
         if ret <= -stop:
             return {**base, "action": "CLOSE_STOP_LOSS", "stage": "closed", "reason": f"{ret}% <= -{stop}% hard stop"}
         if book == "FADE":
+            _ov = fade_book.exit_overrides()
+            stop = _ov.get("stop", stop)
+            _mh = _ov.get("max_hold_days")
+            if _mh and held_h >= _mh * 24:
+                return {**base, "action": "CLOSE_EXPIRY", "stage": "closed",
+                        "reason": f"FADE max-hold {_mh}d reached ({held_h:.0f}h)"}
             # FADE book (fade_book_spec.json): NO scale-out - the exit sweep on 358 stored paths
             # showed halving out amputates the +75..+130% runners that pay for the losers; full
             # position rides, trail arms directly from initial at +trail_activate_pct.

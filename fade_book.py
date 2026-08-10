@@ -47,9 +47,27 @@ def direction(md, candidate):
     if not isinstance(sma, (int, float)) or not isinstance(spy, (int, float)):
         return None
     if sma * side < 0 and spy * side < 0:
+        e = spec().get("entry") or {}
+        md_ = e.get("max_depth_pct")
+        if isinstance(md_, (int, float)) and abs(sma) >= md_:
+            return None                       # depth cap (spec-driven; None = no cap)
+        ms = e.get("max_spy_dist_pct")
+        if isinstance(ms, (int, float)) and abs(spy) >= ms:
+            return None                       # MILD condition (spec-driven)
         return "BULLISH" if side > 0 else "BEARISH"
     return None
 
 
 def spread_cap(default_cap):
     return (spec().get("entry") or {}).get("max_spread_pct", default_cap) if active() else default_cap
+
+
+def exit_overrides():
+    """Spec-driven exit params for the FADE branch: {stop, max_hold_days} or {}."""
+    x = spec().get("exit") or {}
+    out = {}
+    if isinstance(x.get("stop"), (int, float)):
+        out["stop"] = abs(x["stop"])
+    if isinstance(x.get("max_hold_days"), (int, float)):
+        out["max_hold_days"] = x["max_hold_days"]
+    return out

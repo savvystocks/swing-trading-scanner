@@ -403,6 +403,11 @@ def build_legs(ticker, md, regime="NEUTRAL", leg_budget=LEG_BUDGET, illiquid=Non
     iv_f, iv_b = md["iv_term"]["iv_front"], md["iv_term"]["iv_back"]
     per_leg = leg_budget                      # FLAT $800 per trade
     min_ct = load_params().get("min_contracts", 2)
+    if fade_book.active():
+        # FADE v1.2.3 (2026-08-10): the SECOND affordability gate - the 08-08 fix patched the
+        # entry CHECK but this CALCULATOR still returned 0 contracts below 2, so 7 of 17
+        # qualifying candidates died premium_too_rich today. Both gates now read the spec.
+        min_ct = fade_book.spec().get("min_contracts", 1)
     illiquid = illiquid or set()
     call_k, put_k = round(spot * 1.04, 1), round(spot * 0.96, 1)
     cp, pp = _est_premium(spot, call_k, iv_f, 35, "call"), _est_premium(spot, put_k, iv_f, 35, "put")

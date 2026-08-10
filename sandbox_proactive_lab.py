@@ -1786,6 +1786,11 @@ def run_scheduled_cycle(mock=False):
         except Exception:
             pass
     engine_skips = {}                                        # school 1d: ticker -> skip-reason code, harvested
+    try:                                                     # PUT-WRITE LEG (green-day, weekly, fail-open;
+        import putw_leg                                      # PUTW records have no legs dict -> exit pass
+        putw_leg.weekly_cycle(creds)                         # ignores them; they self-settle at expiry)
+    except Exception as e:
+        print(f"  putw leg skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")
     entered_list = []                                        # FADE v1.2: up to 2 clusters per cycle
     _open_fade = (sum(1 for r in _load_log_list() if r.get("book") == "FADE" and r.get("status") == "OPEN")
                   if fade_book.active() else 0)

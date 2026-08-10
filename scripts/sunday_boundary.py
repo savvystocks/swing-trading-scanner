@@ -69,6 +69,9 @@ def main():
         l2 = sum(x for _, x in pts[half:]) / max(len(pts) - half, 1)
         ok = (m > 0 and rel and sum(rel) / len(rel) > 2.0 and e > 0 and l2 > 0)
         lines.append(f"{book}: {len(pts)}d mean {m:+.2f}% vs base {'PASS' if ok else 'HOLD'}")
+        if ok and os.environ.get("BOUNDARY_REPORT_ONLY") == "1":
+            lines.append(f">>> {book} PASSES its bars - application deferred to Sunday (report-only run)")
+            continue
         if ok and not applied:                  # apply at most ONE upgrade per Sunday
             spec = json.load(open("fade_book_spec.json"))
             for path, val in keys.items():

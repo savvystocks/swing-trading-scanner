@@ -53367,7 +53367,7 @@
       }
     },
     "exit": null,
-    "status": "PARKED",
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "_scan_candidate": {
       "ticker": "STLA",
@@ -53380,7 +53380,16 @@
     },
     "brake_shadow_blocked": true,
     "brake_stopouts_at_entry": 8,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "STLA260807P00005000",
+        "closed_at": "2026-08-10T13:32:25.046Z",
+        "return_pct": -100.0,
+        "reason": "parked corpse expired worthless",
+        "action": "CLOSE_EXPIRED_WORTHLESS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -20.0,
@@ -145084,7 +145093,7 @@
         "mfe_pct": 150.0,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 2
+        "close_fails": 3
       }
     }
   },
@@ -164928,5 +164937,18 @@
       }
     ],
     "status": "CANCELLED"
+  },
+  {
+    "type": "reconcile",
+    "ts_utc": "2026-08-10T13:32:26.427Z",
+    "open_records_no_position": 0,
+    "positions_no_record": 4,
+    "sample_stale": [],
+    "sample_orphan": [
+      "F260821P00017000",
+      "F260821P00018000",
+      "LQD260821C00111000",
+      "PFE260814C00025500"
+    ]
   }
 ]

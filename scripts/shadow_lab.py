@@ -97,6 +97,9 @@ def run_day(db, day_iso):
         # MILD hypothesis (registered 2026-08-10 after day-1 lab output: fade -16.3 vs control
         # -4.1 on a strong-green day; depth finding says shallow beats deep): fade only GENTLE
         # disagreement - both the ticker's and the market's displacement small.
+        # OPT_WINNER (25,920-config joint sweep 2026-08-10: top worst-half stability +8.4/+11.0;
+        # in-sample argmax - must earn promotion on virgin days like everything else)
+        "OPT_WINNER": lambda m: fade(m) and m["spr"] <= 2.0 and band(m) and abs(m["spy"]) < 1.5 and abs(m["sma"]) < 3.0,
         "BAND_50_400": lambda m: fade(m) and tight(m) and band(m, 50000, 400000),
         "SPR_25_MILD": lambda m: fade(m) and m["spr"] <= 2.5 and band(m, 50000, 400000) and abs(m["spy"]) < 1.5,
         "MILD_ONLY": lambda m: fade(m) and tight(m) and band(m) and abs(m["sma"]) < 2.0 and abs(m["spy"]) < 1.5,

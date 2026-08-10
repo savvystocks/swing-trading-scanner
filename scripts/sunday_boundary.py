@@ -27,6 +27,7 @@ MENU = {
     "V13_DEPTH": {"entry.max_depth_pct": 2.0},
     "MILD_ONLY": {"entry.max_depth_pct": 2.0, "entry.max_spy_dist_pct": 1.5},
     "BAND_WIDE": {"entry.flow_min": 40000, "entry.flow_max": 300000},
+    "OPT_WINNER": {"entry.max_depth_pct": 3.0, "exit.stop": -40, "entry.flow_max": 250000},
 }
 
 

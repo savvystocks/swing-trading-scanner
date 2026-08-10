@@ -97,6 +97,8 @@ def run_day(db, day_iso):
         # MILD hypothesis (registered 2026-08-10 after day-1 lab output: fade -16.3 vs control
         # -4.1 on a strong-green day; depth finding says shallow beats deep): fade only GENTLE
         # disagreement - both the ticker's and the market's displacement small.
+        "BAND_50_400": lambda m: fade(m) and tight(m) and band(m, 50000, 400000),
+        "SPR_25_MILD": lambda m: fade(m) and m["spr"] <= 2.5 and band(m, 50000, 400000) and abs(m["spy"]) < 1.5,
         "MILD_ONLY": lambda m: fade(m) and tight(m) and band(m) and abs(m["sma"]) < 2.0 and abs(m["spy"]) < 1.5,
     }
     day_spy = round(sum(spy_signs) / len(spy_signs), 3) if spy_signs else None

@@ -76,6 +76,32 @@ def main():
             lines.append(f"throughput: {fills} fills / {quals} qualifying this week - ok")
     except Exception:
         pass
+    # META-MODEL TRIGGER (owner order 2026-08-11): when the labeled fade cohort reaches 500,
+    # page loudly - the selection-brain training session unlocks (code-level, needs a session).
+    try:
+        con = __import__("sqlite3").connect("file:data/harvest.db?mode=ro", uri=True)
+        rows = con.execute("""select c.right, c.spread_pct, c.rule_score, c.features from candidates c
+            join labels l on l.candidate_id=c.candidate_id
+            where l.outcome is not null and c.features!='' and c.entry_ref>0""").fetchall()
+        nco = 0
+        for right, spr, score, fj in rows:
+            try:
+                f = json.loads(fj)
+            except Exception:
+                continue
+            sma = (f.get("macro") or {}).get("distance_to_sma20_pct")
+            spy = (f.get("regime_stack") or {}).get("market_spy_dist_pct")
+            side = 1 if right == "call" else -1
+            if (isinstance(sma, (int, float)) and isinstance(spy, (int, float)) and sma * side < 0
+                    and spy * side < 0 and (spr or 99) <= 2.0 and score and 50000 <= score <= 400000):
+                nco += 1
+        lines.append(f"fade-cohort labels: {nco}/500 toward the meta-model (selection brain)")
+        if nco >= 500:
+            lines.append(">>> META-MODEL THRESHOLD REACHED - training session unlocked. "
+                         "Tell Claude: 'run the fade meta-model' - it trains the Student on the "
+                         "fade cohort only and adds P(win) ranking to the lab.")
+    except Exception:
+        pass
     applied = []
     for book, keys in MENU.items():
         if starving and book in RESTRICTIVE:

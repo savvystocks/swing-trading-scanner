@@ -1624,6 +1624,11 @@ def reconcile_orphans(creds, params, positions=None, log=None):
     log_list = log if log is not None else _load_log_list()
     known = set()
     for rec in log_list:
+        if rec.get("book") == "PUTW" and rec.get("occ"):
+            known.add(rec["occ"].upper())      # 2026-08-11 friendly-fire fix: PUTW records carry a
+            continue                           # bare occ (no legs dict) - the reconciler adopted our
+                                               # own short put 23 min after entry and the exit engine
+                                               # bought it back. PUTW positions are KNOWN, never orphans.
         if isinstance(rec.get("legs"), dict):
             for occ in _record_leg_occs(rec).values():
                 known.add((occ or "").upper())

@@ -24,7 +24,7 @@
  ],
  "activated_utc": "2026-08-05T16:56Z",
  "activation": "owner explicit yes (counted trial); paper only; life bar day_clustered_t",
- "spec_version": "1.4.1",
+ "spec_version": "1.5-probe",
  "v1.1_note": "owner order 2026-08-05 17:34 UTC: capacity 3->5 on paper; signal/filters/exits unchanged; dip-day cluster drawdown risk accepted and measured",
  "v1.2_note": "owner order 2026-08-05 17:38 UTC: 2 entries/cycle when slots free; cooloff waived for FADE (replay cohort had none); concentration guard = max 2 FADE entries per ticker per day",
  "min_contracts": 1,
@@ -38,5 +38,11 @@
   "green_gate": true,
   "evidence": "2.1y real XSP quotes: green-only +$2,103/67wk 88% win; ALL +$2,710/109wk"
  },
- "v1.4.1_note": "2026-08-10 volume sweep (1,296 variants): band ceiling 250k->400k = +15% volume, day-mean unchanged (+5.80 vs +5.78), halves +3.7/+10.7 both positive. Only no-harm volume adder applied; put-tilt and spread-2.5 refused pending virgin evidence."
+ "v1.4.1_note": "2026-08-10 volume sweep (1,296 variants): band ceiling 250k->400k = +15% volume, day-mean unchanged (+5.80 vs +5.78), halves +3.7/+10.7 both positive. Only no-harm volume adder applied; put-tilt and spread-2.5 refused pending virgin evidence.",
+ "probe": {
+  "enabled": true,
+  "size_usd": 300,
+  "max_per_day": 2,
+  "purpose": "exploration: daily execution/capture data across all conditions; excluded from fade evidence"
+ }
 }

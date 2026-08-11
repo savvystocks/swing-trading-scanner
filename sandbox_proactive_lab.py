@@ -1091,7 +1091,7 @@ def _stamp_spreads(legs):
 
 
 def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True, illiquid=None,
-                        resolve_real=None, positions=None, open_orders=None):
+                        resolve_real=None, positions=None, open_orders=None, probe=False):
     params = load_params()
     creds = _paper_creds()
     if positions is None:
@@ -1106,7 +1106,7 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
                 "reason": f"core metadata unavailable (spot={md['macro']['source']}, "
                           f"iv={md['iv_term']['source']}) - degenerate/non-optionable ticker",
                 "status": "SKIPPED"}
-    if fade_book.active():
+    if fade_book.active() and not probe:
         # FADE BOOK entry shape (fade_book_spec.json): take the flow side ONLY when the ticker's
         # 20d trend AND the day's SPY both oppose it (the winners' disagreement shape). Anything
         # else is skipped - the fade book trades the shape or nothing.
@@ -1884,6 +1884,40 @@ def run_scheduled_cycle(mock=False):
         fill_ledger.sweep(_load_log_list(), _order_state, creds, _save_log_list)
     except Exception as e:
         print(f"fill ledger skipped (fail-open): {type(e).__name__}: {str(e)[:90]}")
+    # PROBE BOOK (owner order 2026-08-11: "studying by TRYING trades"). When the fade took
+    # nothing this cycle, take up to spec probe.max_per_day tiny exploration entries from the
+    # REAL candidate list, safety gates only (spread/affordability/metadata) - no shape, no
+    # router. Purpose: daily execution/capture data across ALL market conditions. Tagged
+    # book=PROBE, excluded from all fade evidence; paper-only by definition of this account.
+    try:
+        _pc = (fade_book.spec().get("probe") or {}) if fade_book.active() else {}
+        if _pc.get("enabled") and not entered_list:
+            _today = _now_iso_ms()[:10]
+            _plog = _load_log_list()
+            _pn = sum(1 for r in _plog if r.get("book") == "PROBE"
+                      and (r.get("entry_ts_utc") or "")[:10] == _today)
+            if _pn < (_pc.get("max_per_day") or 2):
+                global LEG_BUDGET
+                _keep = LEG_BUDGET
+                LEG_BUDGET = float(_pc.get("size_usd") or 300)
+                for c in candidates[:6]:
+                    t = c["ticker"]
+                    if engine_skips.get(t) in ("fade_concurrency_cap",):
+                        continue
+                    try:
+                        rec = enter_proactive_set(t, None, mock=mock, candidate=c,
+                                                  dry_run=not live, positions=positions,
+                                                  open_orders=open_orders, probe=True)
+                    except Exception:
+                        continue
+                    if rec and not rec.get("skipped"):
+                        rec["book"] = "PROBE"
+                        _rewrite_last(rec)
+                        print(f"  PROBE entered {t} (exploration - execution data, not fade evidence)")
+                        break
+                LEG_BUDGET = _keep
+    except Exception as _pe:
+        print(f"  probe skipped (fail-open): {type(_pe).__name__}")
     if entered_list:
         for _er in entered_list:
             _er.pop("_scan_candidate", None)

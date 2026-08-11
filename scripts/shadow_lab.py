@@ -49,13 +49,14 @@ def run_day(db, day_iso):
     lo, hi = d0 * 86400000, (d0 + 1) * 86400000
     con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
     rows = con.execute(
-        """select c.candidate_id, c.entry_ref, c.right, c.spread_pct, c.rule_score, c.features
+        """select c.candidate_id, c.entry_ref, c.right, c.spread_pct, c.rule_score, c.features,
+                  c.strike, c.underlying_last
            from candidates c join labels l on l.candidate_id=c.candidate_id
            where c.signal_ts_utc >= ? and c.signal_ts_utc < ? and l.outcome is not null
              and c.entry_ref > 0 and c.features != ''""", (lo, hi)).fetchall()
     meta = {}
     spy_signs = []
-    for cid, e, right, spr, score, fj in rows:
+    for cid, e, right, spr, score, fj, _K, _S in rows:
         try:
             f = json.loads(fj)
         except Exception:
@@ -67,8 +68,9 @@ def run_day(db, day_iso):
         side = 1 if right == "call" else -1
         spy_signs.append(spy)
         dp = (f.get("dark_pool") or {}).get("n_prints") or 0
+        mny = ((_K / _S - 1) * 100 * (1 if right == "call" else -1)) if (_K and _S) else None
         meta[cid] = {"e": e, "side": side, "sma": sma, "spy": spy, "spr": spr or 99,
-                     "score": score or 0, "right": right, "dp": dp}
+                     "score": score or 0, "right": right, "dp": dp, "mny": mny}
     paths = defaultdict(list)
     for cid, ts, bid in con.execute(
             "select candidate_id, poll_ts_utc, bid from bid_path where bid is not null and stale is not 1"):
@@ -105,6 +107,9 @@ def run_day(db, day_iso):
         "SPR_25_MILD": lambda m: fade(m) and m["spr"] <= 2.5 and band(m, 50000, 400000) and abs(m["spy"]) < 1.5,
         # FADE_DP (registered 2026-08-11: dark-pool density was the pile's strongest measured
         # conditioner - 40.9% vs 19.3% win. Does it lift the fade cohort on virgin days?)
+        # FADE_ATM (registered 2026-08-11 round-2 mine: ATM/ITM carries the cohort +4.5 stable
+        # while OTM runs flat - matches Hu JFE 2014: informative flow is ATM/ITM, never lottery OTM)
+        "FADE_ATM": lambda m: fade(m) and tight(m) and band(m, 50000, 400000) and m.get("mny") is not None and m["mny"] < 1.0,
         "FADE_DP": lambda m: fade(m) and tight(m) and band(m, 50000, 400000) and m["dp"] >= 150,
         "MILD_ONLY": lambda m: fade(m) and tight(m) and band(m) and abs(m["sma"]) < 2.0 and abs(m["spy"]) < 1.5,
     }

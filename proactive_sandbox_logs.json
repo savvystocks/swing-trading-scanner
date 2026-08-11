@@ -145093,7 +145093,7 @@
         "mfe_pct": 201.9,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 1
+        "close_fails": 2
       }
     }
   },
@@ -165051,5 +165051,106 @@
     "status": "OPEN",
     "entry_ts_utc": "2026-08-11T15:02:19.566924+00:00",
     "note": "green-day put-write leg v1"
+  },
+  {
+    "trade_set_id": "ADOPT-93d1013f08",
+    "ticker": "XSP",
+    "status": "CLOSED",
+    "entry_ts_utc": "2026-08-11T15:25:07.575Z",
+    "adopted": true,
+    "adopted_from": {
+      "occ": "XSP260814P00761000",
+      "qty": 1,
+      "avg_entry_price": 0.4,
+      "at": "2026-08-11T15:25:07.575Z"
+    },
+    "regime": "ADOPTED",
+    "trigger": "orphan_reconcile",
+    "execution_mode": "ADOPTED",
+    "occ_resolution": "adopted",
+    "leg_budget_usd": 40.0,
+    "metadata": {
+      "macro": {
+        "spot": 0.4,
+        "source": "adopted"
+      },
+      "gex": {
+        "zero_gamma_strike": null,
+        "regime": null
+      },
+      "iv_term": {
+        "iv_ratio": null,
+        "structure": null
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": null,
+        "insider_10d_buy_usd": null,
+        "insider_cluster_flag": false
+      }
+    },
+    "legs": {
+      "adopted_leg": {
+        "structure": "ADOPTED",
+        "occ_symbol": "XSP260814P00761000",
+        "expiry": "2026-08-14",
+        "entry_premium": 0.4,
+        "contracts": 1
+      }
+    },
+    "leg_path": {
+      "adopted_leg": {
+        "mfe_pct": 0.0,
+        "mae_pct": -25.0,
+        "stage": "closed",
+        "close_fails": 0
+      }
+    },
+    "leg_exits": {
+      "adopted_leg": {
+        "occ": "XSP260814P00761000",
+        "closed_at": "2026-08-11T15:25:08.659Z",
+        "return_pct": -25.0,
+        "reason": "3d to expiry -> close before decay/assignment",
+        "action": "CLOSE_EXPIRY",
+        "closed_ok": true
+      }
+    },
+    "exit": {
+      "reason": "CLOSE_EXPIRY",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "adopted_leg": -25.0
+      },
+      "winner": "adopted_leg",
+      "loser": "adopted_leg",
+      "leg_path": {
+        "adopted_leg": {
+          "mfe_pct": 0.0,
+          "mae_pct": -25.0,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 0.0,
+      "mae_pct": -25.0,
+      "determining_factor": "Calendar FAILED (-25%): the range broke; IV term None (ratio None) hurt the spread.",
+      "tuning_recommendations": []
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "aa7b9e38-d7cc-40e8-b331-357acc23e4f2",
+        "at": "2026-08-11T15:25:08.659Z",
+        "ledger_terminal": "filled"
+      }
+    ]
+  },
+  {
+    "type": "day_trade",
+    "ts_utc": "2026-08-11T15:25:09.042Z",
+    "ticker": "XSP",
+    "occ": "XSP260814P00761000",
+    "via": "CLOSE_EXPIRY",
+    "status": "LOGGED"
   }
 ]

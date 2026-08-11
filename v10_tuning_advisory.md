@@ -2524,3 +2524,9 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - XSP (ADOPT-93d1013f08) - 2026-08-11T15:25:09.043Z
+trade: winner=adopted_leg loser=adopted_leg | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

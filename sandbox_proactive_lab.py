@@ -609,6 +609,9 @@ def audit_stale_orders(creds=None, max_minutes=None, orders=None):
     return cancelled
 
 
+_WHALE_CANDS = []          # per-cycle side-pool of fade-shaped 400k-1M prints (FADE_WHALE probe only)
+
+
 def _occ_matches_base(sym, base):
     """True if OCC symbol `sym` belongs to underlying `base` - the root must be followed by the
     6-digit expiry, so BB never matches BBAI contracts."""
@@ -1552,7 +1555,15 @@ def scan_candidates(params, limit=None):
     if fade_book.active():
         # FADE BOOK: mid-band flow only ($50-250k spec default) - the whale band tested crowded
         # (13.6% wins) and the small band noise (10.9%); biggest-premium-first dies with V10.
-        cands = fade_book.flow_band(cands)
+        _pw = (fade_book.spec().get("probe") or {}).get("whale") or {}
+        if _pw:                                     # v1.7.1 FADE_WHALE probe side-pool: 400k-1M
+            global _WHALE_CANDS                     # fade-shaped whales day-meaned +3.37 vs -0.47
+            _WHALE_CANDS = sorted(                  # in-band on the stored cohort (n=47/24d, t=0.34,
+                [c for c in cands                   # halves +13.7/-6.9 - promising, unstable) so the
+                 if (_pw.get("flow_min") or 400000) # probe buys them live; the FADE list below stays
+                 < (c.get("total_premium") or 0) <= (_pw.get("flow_max") or 1000000)],
+                key=lambda x: x["total_premium"], reverse=True)
+        cands = fade_book.flow_band(cands)          # byte-identical for the live book
     cands.sort(key=lambda x: x["total_premium"], reverse=True)
     return cands
 
@@ -1966,6 +1977,10 @@ def run_scheduled_cycle(mock=False):
                                           and ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
                 ("OPT_WINNER", lambda md, c: _shape(md, c) and _depth_lt(md, 3.0)
                                              and ((c or {}).get("total_premium") or 0) <= 250000),
+                ("FADE_WHALE", lambda md, c: _shape(md, c)),        # 400k-1M side-pool (owner ask
+                                                                    # 2026-08-12: sim +3.37 vs -0.47
+                                                                    # day-mean, halves flipped - live
+                                                                    # fills settle it)
             ]
             _cyc = 0
             _keep = LEG_BUDGET
@@ -1976,7 +1991,9 @@ def run_scheduled_cycle(mock=False):
                         break                       # 2 probes per cycle max - spread across the day
                     if _pcount.get(_pname, 0) >= _per:
                         continue
-                    for c in candidates[2:12]:  # skim BELOW the fade book's 2-per-cycle top picks
+                    _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
+                             else candidates[2:12])   # skim BELOW the fade book's 2-per-cycle picks
+                    for c in _pool:
                         t = c["ticker"]
                         if t.upper() in _open_tk:
                             continue            # never stack a probe on any book's open underlying

@@ -51,8 +51,14 @@
    "DP_HEAVY",
    "QUIET_TAPE",
    "FADE_DP",
-   "OPT_WINNER"
+   "OPT_WINNER",
+   "FADE_WHALE"
   ],
+  "whale": {
+   "flow_min": 400000,
+   "flow_max": 1000000,
+   "evidence": "2026-08-12 stored-cohort replay (identical barrier labels): fade-shaped 400k-1M n=47/24d day-mean +3.37 t=0.34 halves +13.7/-6.9 vs in-band -0.47; 1M-3M negative n=8 excluded; >3M none stored"
+  },
   "early_strength": {
    "min_pct": 5,
    "max_pct": 15,
@@ -68,5 +74,6 @@
   "purpose": "the WIDE experimental net: every feasible tested strategy trades live daily at $1k, up to 5 fills per strategy, all tagged PROBE + name; none of it touches fade evidence"
  },
  "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal.",
+ "v1.7.1_note": "owner order 2026-08-12 00:36 (sim-first then probe): FADE_WHALE probe slot - fade-shaped 400k-1M prints from a side-pool the live book never sees (its candidate list is byte-identical). Sim promising but half-flipped; live fills decide. 1M+ excluded (negative, n=8).",
  "v1.7_note": "owner order 2026-08-11 21:52: confirmed-entry REVERTED off the live book (it cut fills ~7x - over-engineering toward never trading). Fade book buys immediately again, exactly as validated. Early-strength becomes an exploratory PARALLEL door (probe.early_strength, 5/day): the watcher stashes the same candidates and buys its own lot when one confirms - both doors get live fills and the ledger settles it. Probe roster widened to 7 options strategies at 5 fills/day each, plus OVERNIGHT and TURN_OF_MONTH shares probes (the two tested-positive outside-the-box strategies)."
 }

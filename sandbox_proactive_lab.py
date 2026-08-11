@@ -1091,7 +1091,7 @@ def _stamp_spreads(legs):
 
 
 def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True, illiquid=None,
-                        resolve_real=None, positions=None, open_orders=None, probe=False):
+                        resolve_real=None, positions=None, open_orders=None, probe=False, probe_filter=None):
     params = load_params()
     creds = _paper_creds()
     if positions is None:
@@ -1105,6 +1105,10 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         return {"trade_set_id": None, "ticker": ticker, "skipped": True,    # SKIP (never fabricate a trade)
                 "reason": f"core metadata unavailable (spot={md['macro']['source']}, "
                           f"iv={md['iv_term']['source']}) - degenerate/non-optionable ticker",
+                "status": "SKIPPED"}
+    if probe and probe_filter is not None and not probe_filter(md, candidate):
+        return {"trade_set_id": None, "ticker": ticker, "skipped": True,
+                "reason": "probe_filter: candidate does not match this probe slot's hypothesis",
                 "status": "SKIPPED"}
     if fade_book.active() and not probe:
         # FADE BOOK entry shape (fade_book_spec.json): take the flow side ONLY when the ticker's
@@ -1884,37 +1888,53 @@ def run_scheduled_cycle(mock=False):
         fill_ledger.sweep(_load_log_list(), _order_state, creds, _save_log_list)
     except Exception as e:
         print(f"fill ledger skipped (fail-open): {type(e).__name__}: {str(e)[:90]}")
-    # PROBE BOOK (owner order 2026-08-11: "studying by TRYING trades"). When the fade took
-    # nothing this cycle, take up to spec probe.max_per_day tiny exploration entries from the
-    # REAL candidate list, safety gates only (spread/affordability/metadata) - no shape, no
-    # router. Purpose: daily execution/capture data across ALL market conditions. Tagged
-    # book=PROBE, excluded from all fade evidence; paper-only by definition of this account.
+    # PROBE ROSTER v2 (owner order 2026-08-11 20:55: $1000, 5/day, named hypotheses -
+    # structured trial-and-error, every probe an experiment with a question attached).
     try:
         _pc = (fade_book.spec().get("probe") or {}) if fade_book.active() else {}
-        if _pc.get("enabled") and not entered_list:
+        if _pc.get("enabled"):
             _today = _now_iso_ms()[:10]
             _plog = _load_log_list()
-            _pn = sum(1 for r in _plog if r.get("book") == "PROBE"
-                      and (r.get("entry_ts_utc") or "")[:10] == _today)
-            if _pn < (_pc.get("max_per_day") or 2):
+            _fired = {r.get("probe_strategy") for r in _plog if r.get("book") == "PROBE"
+                      and (r.get("entry_ts_utc") or "")[:10] == _today}
+            def _shape(md, c):
+                sma = (md.get("macro") or {}).get("distance_to_sma20_pct")
+                spy = (md.get("regime_stack") or {}).get("market_spy_dist_pct")
+                sd = 1 if (c or {}).get("flow_type") == "call" else -1
+                return isinstance(sma, (int, float)) and isinstance(spy, (int, float)) and sma * sd < 0 and spy * sd < 0
+            _ROSTER = [
+                ("EXEC_BASELINE", None),                                    # pure execution data
+                ("FADE_UNROUTED", lambda md, c: _shape(md, c)),             # what the router blocks
+                ("CONSENSUS", lambda md, c: not _shape(md, c)),             # the inverse arm, live
+                ("DP_HEAVY", lambda md, c: ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
+                ("QUIET_TAPE", lambda md, c: ((md.get("technical") or {}).get("rvol_10min") or 9) < 0.8),
+            ]
+            if len(_fired) < (_pc.get("max_per_day") or 5) and not entered_list:
                 global LEG_BUDGET
                 _keep = LEG_BUDGET
-                LEG_BUDGET = float(_pc.get("size_usd") or 300)
-                for c in candidates[:6]:
-                    t = c["ticker"]
-                    if engine_skips.get(t) in ("fade_concurrency_cap",):
+                LEG_BUDGET = float(_pc.get("size_usd") or 1000)
+                for _pname, _pf in _ROSTER:
+                    if _pname in _fired:
                         continue
-                    try:
-                        rec = enter_proactive_set(t, None, mock=mock, candidate=c,
-                                                  dry_run=not live, positions=positions,
-                                                  open_orders=open_orders, probe=True)
-                    except Exception:
-                        continue
-                    if rec and not rec.get("skipped"):
-                        rec["book"] = "PROBE"
-                        _rewrite_last(rec)
-                        print(f"  PROBE entered {t} (exploration - execution data, not fade evidence)")
-                        break
+                    _done = False
+                    for c in candidates[:10]:
+                        t = c["ticker"]
+                        try:
+                            rec = enter_proactive_set(t, None, mock=mock, candidate=c,
+                                                      dry_run=not live, positions=positions,
+                                                      open_orders=open_orders, probe=True,
+                                                      probe_filter=_pf)
+                        except Exception:
+                            continue
+                        if rec and not rec.get("skipped"):
+                            rec["book"] = "PROBE"
+                            rec["probe_strategy"] = _pname
+                            _rewrite_last(rec)
+                            print(f"  PROBE[{_pname}] entered {t} (hypothesis slot - not fade evidence)")
+                            _done = True
+                            break
+                    if _done:
+                        break                       # one probe per cycle max - spread across the day
                 LEG_BUDGET = _keep
     except Exception as _pe:
         print(f"  probe skipped (fail-open): {type(_pe).__name__}")

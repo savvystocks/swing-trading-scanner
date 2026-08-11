@@ -108,12 +108,34 @@ def run_day(db, day_iso):
         "FADE_DP": lambda m: fade(m) and tight(m) and band(m, 50000, 400000) and m["dp"] >= 150,
         "MILD_ONLY": lambda m: fade(m) and tight(m) and band(m) and abs(m["sma"]) < 2.0 and abs(m["spy"]) < 1.5,
     }
+    # EARLY_CUT book (path-signature rule mined 2026-08-11): baseline entries, but cut at
+    # <= -15% once >= 2h held. Second replay pass with the cut.
+    res_cut = {}
+    for cid, pts in paths.items():
+        if len(pts) < 3:
+            continue
+        e = meta[cid]["e"]; t0 = pts[0][0]; peak = -999.0; on = False; out_r = None
+        for ts, b in pts:
+            r = (b / e - 1) * 100
+            if (ts - t0) >= 2 * 3600000 and r <= -15:
+                out_r = r; break
+            if r >= 50:
+                on = True
+            if on:
+                peak = max(peak, r)
+                if r <= peak * 0.8:
+                    out_r = r; break
+            if r <= -50:
+                out_r = -50; break
+        res_cut[cid] = out_r if out_r is not None else (pts[-1][1] / e - 1) * 100
+    _bl = [res_cut[c] for c in res_cut if books["BASELINE"](meta[c])]
     day_spy = round(sum(spy_signs) / len(spy_signs), 3) if spy_signs else None
     out = {"day": day_iso, "computed_at": datetime.now(timezone.utc).isoformat()[:16],
            "spy_mean_dist": day_spy, "day_type": "RED" if (day_spy or 0) < 0 else "GREEN",
            "labeled": len(res)}
     for name, pred in books.items():
         out[name] = sel(pred)
+    out["EARLY_CUT"] = {"n": len(_bl), "mean": round(sum(_bl) / len(_bl), 2) if _bl else None}
     with open(os.path.join(OUT, "ledger.jsonl"), "a", encoding="utf-8") as f:
         f.write(json.dumps(out) + "\n")
     return out

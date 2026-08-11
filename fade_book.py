@@ -70,4 +70,7 @@ def exit_overrides():
         out["stop"] = abs(x["stop"])
     if isinstance(x.get("max_hold_days"), (int, float)):
         out["max_hold_days"] = x["max_hold_days"]
+    if isinstance(x.get("early_cut_hours"), (int, float)) and isinstance(x.get("early_cut_below"), (int, float)):
+        out["early_cut_hours"] = x["early_cut_hours"]
+        out["early_cut_below"] = x["early_cut_below"]
     return out

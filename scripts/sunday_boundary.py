@@ -28,6 +28,7 @@ MENU = {
     "MILD_ONLY": {"entry.max_depth_pct": 2.0, "entry.max_spy_dist_pct": 1.5},
     "BAND_WIDE": {"entry.flow_min": 40000, "entry.flow_max": 300000},
     "OPT_WINNER": {"entry.max_depth_pct": 3.0, "exit.stop": -40, "entry.flow_max": 250000},
+    "EARLY_CUT": {"exit.early_cut_hours": 2, "exit.early_cut_below": -15},
 }
 
 

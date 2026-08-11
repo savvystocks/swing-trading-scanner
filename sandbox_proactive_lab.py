@@ -1011,6 +1011,12 @@ def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage=
         if book == "FADE":
             _ov = fade_book.exit_overrides()
             stop = _ov.get("stop", stop)
+            _ec_h, _ec_b = _ov.get("early_cut_hours"), _ov.get("early_cut_below")
+            if _ec_h and _ec_b and held_h >= _ec_h and held_h <= _ec_h + 2 and ret <= _ec_b:
+                # PATH-SIGNATURE rule (mined 2026-08-11: <-15% at 2h ends -21.7 avg, both halves;
+                # spec-driven, present only when the Sunday boundary promotes it)
+                return {**base, "action": "CLOSE_STOP_LOSS", "stage": "closed",
+                        "reason": f"FADE early-cut: {ret}% <= {_ec_b}% at {held_h:.1f}h (path signature)"}
             _mh = _ov.get("max_hold_days")
             if _mh and held_h >= _mh * 24:
                 return {**base, "action": "CLOSE_EXPIRY", "stage": "closed",

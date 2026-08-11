@@ -6,7 +6,13 @@
   "flow_max": 400000,
   "direction": "contra_trend_and_spy",
   "max_spread_pct": 2.0,
-  "max_spy_dist_pct": 1.5
+  "max_spy_dist_pct": 1.5,
+  "confirm_strength": {
+   "min_pct": 5,
+   "max_pct": 15,
+   "min_age_min": 20,
+   "max_age_min": 150
+  }
  },
  "exit": {
   "scale_out": null,
@@ -24,7 +30,7 @@
  ],
  "activated_utc": "2026-08-05T16:56Z",
  "activation": "owner explicit yes (counted trial); paper only; life bar day_clustered_t",
- "spec_version": "1.5.1-roster",
+ "spec_version": "1.6-earlystrength",
  "v1.1_note": "owner order 2026-08-05 17:34 UTC: capacity 3->5 on paper; signal/filters/exits unchanged; dip-day cluster drawdown risk accepted and measured",
  "v1.2_note": "owner order 2026-08-05 17:38 UTC: 2 entries/cycle when slots free; cooloff waived for FADE (replay cohort had none); concentration guard = max 2 FADE entries per ticker per day",
  "min_contracts": 1,
@@ -51,5 +57,6 @@
    "QUIET_TAPE"
   ],
   "purpose": "structured exploration: 5 named hypotheses/day at full size; excluded from fade evidence"
- }
+ },
+ "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal."
 }

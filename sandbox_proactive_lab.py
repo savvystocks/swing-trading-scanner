@@ -1164,6 +1164,19 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
                 return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
                         "reason": f"spread_cap: real spread {sp:.1f}% > {cap:.1f}% cap ({name})",
                         "status": "SKIPPED"}
+    try:                                                  # EARLY-STRENGTH (spec entry.confirm_strength):
+        import early_strength                             # fade candidates are WATCHLISTED, not bought;
+        if (not probe) and early_strength.enabled():      # confirmed +5..15% within 2h -> entered by
+            _lg = next(iter(legs.values()))               # early_strength.process() on a later cycle.
+            _ec = _lg.get("execution_cost") or {}
+            if _lg.get("occ_symbol") and _ec.get("ask"):
+                early_strength.stash(ticker, _lg["occ_symbol"], _ec["ask"], regime,
+                                     _lg.get("contracts") or 1, _lg.get("alloc_usd") or LEG_BUDGET)
+                return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
+                        "reason": "early_strength: watchlisted for confirmation (not an immediate entry)",
+                        "status": "SKIPPED"}
+    except Exception as _ese:
+        print(f"  early-strength stash fail-open: {type(_ese).__name__}")
     orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run)
     record = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
               "book": "FADE" if fade_book.active() else "V10",
@@ -1801,6 +1814,12 @@ def run_scheduled_cycle(mock=False):
         except Exception:
             pass
     engine_skips = {}                                        # school 1d: ticker -> skip-reason code, harvested
+    try:                                                     # EARLY-STRENGTH watchlist pass (fail-open)
+        import early_strength
+        import sandbox_proactive_lab as _selflab
+        early_strength.process(creds, _selflab)
+    except Exception as _ee:
+        print(f"  early-strength pass skipped: {type(_ee).__name__}")
     try:                                                     # PUT-WRITE LEG (green-day, weekly, fail-open;
         import putw_leg                                      # PUTW records have no legs dict -> exit pass
         putw_leg.weekly_cycle(creds)                         # ignores them; they self-settle at expiry)

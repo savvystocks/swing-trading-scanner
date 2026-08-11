@@ -29,6 +29,12 @@ MENU = {
     "BAND_WIDE": {"entry.flow_min": 40000, "entry.flow_max": 300000},
     "OPT_WINNER": {"entry.max_depth_pct": 3.0, "exit.stop": -40, "entry.flow_max": 250000},
     "EARLY_CUT": {"exit.early_cut_hours": 2, "exit.early_cut_below": -15},
+    # VOLUME hypotheses (owner priority 2026-08-12: "we need improvements and volume").
+    # "_vs" picks the comparator book: these differ from the LIVE book by exactly one key,
+    # so they are judged against LIVE_SPEC, not the unrouted BASELINE. Both are EXPANSIVE
+    # (more trades) - the throughput floor never blocks them.
+    "FADE_WHALE": {"entry.flow_max": 1000000, "_vs": "LIVE_SPEC"},
+    "BAND_50_400": {"entry.max_spy_dist_pct": 99.0, "_vs": "LIVE_SPEC"},   # = kill the router
 }
 
 
@@ -108,25 +114,29 @@ def main():
         if starving and book in RESTRICTIVE:
             lines.append(f"{book}: SKIPPED (throughput floor breach - no new restrictions while starving)")
             continue
+        vs = keys.get("_vs", "BASELINE")
         pts = [(d["day"], d[book]["mean"]) for d in days
                if d.get(book, {}).get("mean") is not None and d[book].get("n", 0) > 0]
         if len(pts) < 10:
             lines.append(f"{book}: {len(pts)}d traded - HOLD (needs 10)")
             continue
         m = sum(x for _, x in pts) / len(pts)
-        bmap = dict(base)
+        bmap = {d: v for d, v in ((dd["day"], (dd.get(vs) or {}).get("mean")) for dd in days)
+                if v is not None}
         rel = [x - bmap[d] for d, x in pts if d in bmap]
         half = len(pts) // 2
         e = sum(x for _, x in pts[:half]) / max(half, 1)
         l2 = sum(x for _, x in pts[half:]) / max(len(pts) - half, 1)
         ok = (m > 0 and rel and sum(rel) / len(rel) > 2.0 and e > 0 and l2 > 0)
-        lines.append(f"{book}: {len(pts)}d mean {m:+.2f}% vs base {'PASS' if ok else 'HOLD'}")
+        lines.append(f"{book}: {len(pts)}d mean {m:+.2f}% vs {vs} {'PASS' if ok else 'HOLD'}")
         if ok and os.environ.get("BOUNDARY_REPORT_ONLY") == "1":
             lines.append(f">>> {book} PASSES its bars - application deferred to Sunday (report-only run)")
             continue
         if ok and not applied:                  # apply at most ONE upgrade per Sunday
             spec = json.load(open("fade_book_spec.json"))
             for path, val in keys.items():
+                if path.startswith("_"):
+                    continue                    # "_vs" is boundary metadata, never a spec key
                 sect, key = path.split(".")
                 spec.setdefault(sect, {})[key] = val
             v = spec.get("spec_version", "1.2")

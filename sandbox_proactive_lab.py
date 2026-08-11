@@ -1926,6 +1926,9 @@ def run_scheduled_cycle(mock=False):
                 ("FADE_UNROUTED", lambda md, c: _shape(md, c)),             # what the router blocks
                 ("CONSENSUS", lambda md, c: not _shape(md, c)),             # the inverse arm, live
                 ("DP_HEAVY", lambda md, c: ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
+                ("FADE_IMMEDIATE", lambda md, c: _shape(md, c)),   # the A/B arm: immediate-entry
+                                                  # fades at full flow (vs the live book's confirmed
+                                                  # mode) - the ledger settles which door earns more
                 ("QUIET_TAPE", lambda md, c: ((md.get("technical") or {}).get("rvol_10min") or 9) < 0.8),
             ]
             if len(_fired) < (_pc.get("max_per_day") or 5) and not entered_list:

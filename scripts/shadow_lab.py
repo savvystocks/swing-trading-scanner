@@ -66,8 +66,9 @@ def run_day(db, day_iso):
             continue
         side = 1 if right == "call" else -1
         spy_signs.append(spy)
+        dp = (f.get("dark_pool") or {}).get("n_prints") or 0
         meta[cid] = {"e": e, "side": side, "sma": sma, "spy": spy, "spr": spr or 99,
-                     "score": score or 0, "right": right}
+                     "score": score or 0, "right": right, "dp": dp}
     paths = defaultdict(list)
     for cid, ts, bid in con.execute(
             "select candidate_id, poll_ts_utc, bid from bid_path where bid is not null and stale is not 1"):
@@ -102,6 +103,9 @@ def run_day(db, day_iso):
         "OPT_WINNER": lambda m: fade(m) and m["spr"] <= 2.0 and band(m) and abs(m["spy"]) < 1.5 and abs(m["sma"]) < 3.0,
         "BAND_50_400": lambda m: fade(m) and tight(m) and band(m, 50000, 400000),
         "SPR_25_MILD": lambda m: fade(m) and m["spr"] <= 2.5 and band(m, 50000, 400000) and abs(m["spy"]) < 1.5,
+        # FADE_DP (registered 2026-08-11: dark-pool density was the pile's strongest measured
+        # conditioner - 40.9% vs 19.3% win. Does it lift the fade cohort on virgin days?)
+        "FADE_DP": lambda m: fade(m) and tight(m) and band(m, 50000, 400000) and m["dp"] >= 150,
         "MILD_ONLY": lambda m: fade(m) and tight(m) and band(m) and abs(m["sma"]) < 2.0 and abs(m["spy"]) < 1.5,
     }
     day_spy = round(sum(spy_signs) / len(spy_signs), 3) if spy_signs else None

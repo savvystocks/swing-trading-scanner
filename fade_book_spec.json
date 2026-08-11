@@ -6,13 +6,7 @@
   "flow_max": 400000,
   "direction": "contra_trend_and_spy",
   "max_spread_pct": 2.0,
-  "max_spy_dist_pct": 1.5,
-  "confirm_strength": {
-   "min_pct": 5,
-   "max_pct": 15,
-   "min_age_min": 20,
-   "max_age_min": 150
-  }
+  "max_spy_dist_pct": 1.5
  },
  "exit": {
   "scale_out": null,
@@ -30,7 +24,7 @@
  ],
  "activated_utc": "2026-08-05T16:56Z",
  "activation": "owner explicit yes (counted trial); paper only; life bar day_clustered_t",
- "spec_version": "1.6.1",
+ "spec_version": "1.7-widenet",
  "v1.1_note": "owner order 2026-08-05 17:34 UTC: capacity 3->5 on paper; signal/filters/exits unchanged; dip-day cluster drawdown risk accepted and measured",
  "v1.2_note": "owner order 2026-08-05 17:38 UTC: 2 entries/cycle when slots free; cooloff waived for FADE (replay cohort had none); concentration guard = max 2 FADE entries per ticker per day",
  "min_contracts": 1,
@@ -48,16 +42,31 @@
  "probe": {
   "enabled": true,
   "size_usd": 1000,
-  "max_per_day": 6,
+  "per_strategy_max_per_day": 5,
+  "max_per_day": 25,
   "roster": [
    "EXEC_BASELINE",
    "FADE_UNROUTED",
    "CONSENSUS",
    "DP_HEAVY",
-   "FADE_IMMEDIATE",
-   "QUIET_TAPE"
+   "QUIET_TAPE",
+   "FADE_DP",
+   "OPT_WINNER"
   ],
-  "purpose": "structured exploration: 5 named hypotheses/day at full size; excluded from fade evidence"
+  "early_strength": {
+   "min_pct": 5,
+   "max_pct": 15,
+   "min_age_min": 20,
+   "max_age_min": 150,
+   "max_per_day": 5
+  },
+  "shares": {
+   "enabled": true,
+   "symbol": "SPY",
+   "size_usd": 1000
+  },
+  "purpose": "the WIDE experimental net: every feasible tested strategy trades live daily at $1k, up to 5 fills per strategy, all tagged PROBE + name; none of it touches fade evidence"
  },
- "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal."
+ "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal.",
+ "v1.7_note": "owner order 2026-08-11 21:52: confirmed-entry REVERTED off the live book (it cut fills ~7x - over-engineering toward never trading). Fade book buys immediately again, exactly as validated. Early-strength becomes an exploratory PARALLEL door (probe.early_strength, 5/day): the watcher stashes the same candidates and buys its own lot when one confirms - both doors get live fills and the ledger settles it. Probe roster widened to 7 options strategies at 5 fills/day each, plus OVERNIGHT and TURN_OF_MONTH shares probes (the two tested-positive outside-the-box strategies)."
 }

@@ -73,7 +73,8 @@ def entry_submits(record):
                 continue
             leg = legs.get(name) or {}
             ec = leg.get("execution_cost") or {}
-            log_event("entry_submit", ticker=record.get("ticker"), occ=leg.get("occ_symbol"),
+            log_event("entry_submit", book=record.get("book"), probe_strategy=record.get("probe_strategy"),
+                      ticker=record.get("ticker"), occ=leg.get("occ_symbol"),
                       order_id=o.get("order_id"), ordered_qty=leg.get("contracts"),
                       limit_price=leg.get("limit_price"), order_type="limit", tif="day",
                       quote_bid=ec.get("bid"), quote_ask=ec.get("ask"), quote_mid=ec.get("mid"),
@@ -100,7 +101,8 @@ def sweep(log_list, order_state_fn, creds, save_fn):
                     if st.get("order_id") and st["order_id"] not in [e.get("order_id") for e in rec["exit_order_ids"]]:
                         rec["exit_order_ids"].append({"order_id": st["order_id"], "at": st.get("at"),
                                                       "ledger_terminal": None})
-                        log_event("exit_submit", ticker=rec.get("ticker"), occ=occ,
+                        log_event("exit_submit", book=rec.get("book"), probe_strategy=rec.get("probe_strategy"),
+                                  ticker=rec.get("ticker"), occ=occ,
                                   order_id=st.get("order_id"), qty=st.get("qty"), order_type="market",
                                   decision_mark=st.get("decision_mark"))
                         dirty = True
@@ -123,7 +125,8 @@ def sweep(log_list, order_state_fn, creds, save_fn):
                     fq = _f(state.get("filled_qty"))
                     fp = _f(state.get("filled_avg_price"))
                     delay = _delay_ms(ets, state.get("filled_at"))
-                    log_event("entry_fill", ticker=rec.get("ticker"), occ=leg.get("occ_symbol"),
+                    log_event("entry_fill", book=rec.get("book"), probe_strategy=rec.get("probe_strategy"),
+                              ticker=rec.get("ticker"), occ=leg.get("occ_symbol"),
                               order_id=o["order_id"], terminal_state=status,
                               ordered_qty=leg.get("contracts"), filled_qty=fq,
                               filled_avg_price=fp, filled_at=state.get("filled_at"),
@@ -142,7 +145,8 @@ def sweep(log_list, order_state_fn, creds, save_fn):
                 if status in ("filled", "canceled", "cancelled", "expired", "rejected", "done_for_day"):
                     fq = _f(state.get("filled_qty"))
                     fp = _f(state.get("filled_avg_price"))
-                    log_event("exit_fill", ticker=rec.get("ticker"),
+                    log_event("exit_fill", book=rec.get("book"), probe_strategy=rec.get("probe_strategy"),
+                              ticker=rec.get("ticker"),
                               occ=next((l.get("occ_symbol") for l in (rec.get("legs") or {}).values()), None),
                               order_id=e["order_id"], terminal_state=status, filled_qty=fq,
                               filled_avg_price=fp, filled_at=state.get("filled_at"),

@@ -398,10 +398,12 @@ def _occ(ticker, dte, right, strike):
     return f"{ticker.upper()[:6]}{ymd}{rc}{k}", expiry.isoformat()
 
 
-def build_legs(ticker, md, regime="NEUTRAL", leg_budget=LEG_BUDGET, illiquid=None):
+def build_legs(ticker, md, regime="NEUTRAL", leg_budget=None, illiquid=None):
     spot = md["macro"]["spot"]
     iv_f, iv_b = md["iv_term"]["iv_front"], md["iv_term"]["iv_back"]
-    per_leg = leg_budget                      # FLAT $800 per trade
+    per_leg = LEG_BUDGET if leg_budget is None else leg_budget
+    # ^ resolved at CALL time, not def time: a default bound at import froze the probe roster's
+    #   LEG_BUDGET swap out of sizing (probe.size_usd was silently decorative)
     min_ct = load_params().get("min_contracts", 2)
     if fade_book.active():
         # FADE v1.2.3 (2026-08-10): the SECOND affordability gate - the 08-08 fix patched the
@@ -641,12 +643,12 @@ def ticker_blocked(ticker, positions, params, open_orders=None, now=None, log=No
     held = 0
     for p in positions or []:
         sym = (p.get("symbol") or "").upper()
-        if _occ_matches_base(sym, base):
+        if sym != base and _occ_matches_base(sym, base):    # equity shares (probes) are not contracts
             held += abs(int(float(p.get("qty", 0) or 0)))
     pending = 0
     for o in open_orders or []:
         syms = [o.get("symbol")] + [l.get("symbol") for l in (o.get("legs") or [])]
-        if any(_occ_matches_base(s, base) for s in syms if s):
+        if any(_occ_matches_base(s, base) for s in syms if s and s.upper() != base):
             pending += abs(int(float(o.get("qty", 0) or 0)))
     cap = params.get("max_contracts_per_ticker", 3)
     if held + pending >= cap:                                   # subordinated to one-per-underlying above
@@ -697,6 +699,9 @@ def daily_brake_status(params, log=None):
     today = datetime.now(timezone.utc).date().isoformat()
     stopouts, loss_usd = 0, 0.0
     for rec in log:
+        if rec.get("book") == "PROBE":
+            continue                 # v1.7: the brake protects the LIVE book; probe experiments are
+                                     # excluded so 25 $1k probes can't trip the fade's measurement
         legs = rec.get("legs") or {}
         for ln, ex in (rec.get("leg_exits") or {}).items():
             if not str(ex.get("closed_at", "")).startswith(today):
@@ -1164,22 +1169,19 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
                 return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
                         "reason": f"spread_cap: real spread {sp:.1f}% > {cap:.1f}% cap ({name})",
                         "status": "SKIPPED"}
-    try:                                                  # EARLY-STRENGTH (spec entry.confirm_strength):
-        import early_strength                             # fade candidates are WATCHLISTED, not bought;
-        if (not probe) and early_strength.enabled():      # confirmed +5..15% within 2h -> entered by
-            _lg = next(iter(legs.values()))               # early_strength.process() on a later cycle.
-            _ec = _lg.get("execution_cost") or {}
-            if _lg.get("occ_symbol") and _ec.get("ask"):
+    try:                                                  # EARLY-STRENGTH (spec probe.early_strength):
+        import early_strength                             # v1.7 watch-in-PARALLEL. The fade book buys
+        if (not probe) and early_strength.enabled():      # immediately below, uncut; the watcher ALSO
+            _lg = next(iter(legs.values()))               # stashes this candidate and, if it confirms
+            _ec = _lg.get("execution_cost") or {}         # +5..15% strength, buys its OWN $1k probe
+            if _lg.get("occ_symbol") and _ec.get("ask"):  # lot - both doors get live fills.
                 early_strength.stash(ticker, _lg["occ_symbol"], _ec["ask"], regime,
                                      _lg.get("contracts") or 1, _lg.get("alloc_usd") or LEG_BUDGET)
-                return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
-                        "reason": "early_strength: watchlisted for confirmation (not an immediate entry)",
-                        "status": "SKIPPED"}
     except Exception as _ese:
         print(f"  early-strength stash fail-open: {type(_ese).__name__}")
     orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run)
     record = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
-              "book": "FADE" if fade_book.active() else "V10",
+              "book": "PROBE" if probe else ("FADE" if fade_book.active() else "V10"),
               "entry_ts_utc": md["entry_ts_utc"], "leg_budget_usd": LEG_BUDGET,
               "execution_mode": "DRY_RUN" if dry_run else "LIVE_PAPER",
               "occ_resolution": "alpaca_real" if resolve_real else "synthesized",
@@ -1652,6 +1654,9 @@ def reconcile_orphans(creds, params, positions=None, log=None):
             continue                           # bare occ (no legs dict) - the reconciler adopted our
                                                # own short put 23 min after entry and the exit engine
                                                # bought it back. PUTW positions are KNOWN, never orphans.
+        if rec.get("status") == "OPEN" and (rec.get("shares") or {}).get("symbol"):
+            known.add(rec["shares"]["symbol"].upper())   # OPEN shares probes (OVERNIGHT/TURN_OF_MONTH)
+            continue                                     # manage their own equity - same lesson as PUTW
         if isinstance(rec.get("legs"), dict):
             for occ in _record_leg_occs(rec).values():
                 known.add((occ or "").upper())
@@ -1665,6 +1670,10 @@ def reconcile_orphans(creds, params, positions=None, log=None):
         if qty < 1:
             continue
         m = re.match(r"^([A-Z]+)\d{6}[CP]\d+$", occ)
+        if not m:
+            print(f"  orphan reconcile: {occ} is not an option - NOT adopting equity into the "
+                  "options exit engine (visible via the daily reconcile marker)")
+            continue
         now = _now_iso_ms()
         log_list.append({
             "trade_set_id": "ADOPT-" + uuid.uuid4().hex[:10], "ticker": m.group(1) if m else occ,
@@ -1743,10 +1752,16 @@ def run_scheduled_cycle(mock=False):
             pos_occs = {(p.get("symbol") or "").upper() for p in positions}
             rec_occs = {}
             for r in log_r:
-                if r.get("status") == "OPEN" and isinstance(r.get("legs"), dict):
+                if r.get("status") != "OPEN":
+                    continue
+                if isinstance(r.get("legs"), dict):
                     for l in r["legs"].values():
                         if l.get("occ_symbol"):
                             rec_occs[l["occ_symbol"].upper()] = r.get("ticker")
+                if r.get("occ"):                                   # PUTW short leg
+                    rec_occs[r["occ"].upper()] = r.get("ticker")
+                if (r.get("shares") or {}).get("symbol"):          # shares probes (OVERNIGHT/TOM)
+                    rec_occs[r["shares"]["symbol"].upper()] = r.get("ticker")
             open_no_pos = sorted(o for o in rec_occs if o not in pos_occs)
             pos_no_rec = sorted(o for o in pos_occs if o not in rec_occs)
             prev = next((r for r in reversed(log_r) if r.get("type") == "reconcile"), {})
@@ -1814,10 +1829,11 @@ def run_scheduled_cycle(mock=False):
         except Exception:
             pass
     engine_skips = {}                                        # school 1d: ticker -> skip-reason code, harvested
-    try:                                                     # EARLY-STRENGTH watchlist pass (fail-open)
-        import early_strength
+    try:                                                     # EARLY-STRENGTH watchlist pass (fail-open;
+        import early_strength                                # entries only, so HALT/brake skip it whole)
         import sandbox_proactive_lab as _selflab
-        early_strength.process(creds, _selflab)
+        if not (brake_active or halt_active):
+            early_strength.process(creds, _selflab)
     except Exception as _ee:
         print(f"  early-strength pass skipped: {type(_ee).__name__}")
     try:                                                     # PUT-WRITE LEG (green-day, weekly, fail-open;
@@ -1825,6 +1841,12 @@ def run_scheduled_cycle(mock=False):
         putw_leg.weekly_cycle(creds)                         # ignores them; they self-settle at expiry)
     except Exception as e:
         print(f"  putw leg skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")
+    try:                                                     # SHARES PROBES (OVERNIGHT + TURN_OF_MONTH,
+        import shares_probes                                 # self-managed records, book=PROBE, no legs
+        shares_probes.cycle(creds,                           # dict -> options exit pass ignores them;
+                            allow_entries=not (brake_active or halt_active))   # HALT stops buys, not sells
+    except Exception as e:
+        print(f"  shares probes skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")
     entered_list = []                                        # FADE v1.2: up to 2 clusters per cycle
     _open_fade = (sum(1 for r in _load_log_list() if r.get("book") == "FADE" and r.get("status") == "OPEN")
                   if fade_book.active() else 0)
@@ -1907,40 +1929,57 @@ def run_scheduled_cycle(mock=False):
         fill_ledger.sweep(_load_log_list(), _order_state, creds, _save_log_list)
     except Exception as e:
         print(f"fill ledger skipped (fail-open): {type(e).__name__}: {str(e)[:90]}")
-    # PROBE ROSTER v2 (owner order 2026-08-11 20:55: $1000, 5/day, named hypotheses -
-    # structured trial-and-error, every probe an experiment with a question attached).
+    # PROBE ROSTER v3 (owner order 2026-08-11 21:52: the probe section is the WIDE experimental
+    # net - every feasible tested strategy trades live daily, up to 5 fills per strategy per day,
+    # $1000 each, fired regardless of what the fade book did; all tagged book=PROBE + strategy
+    # name so none of it ever touches fade evidence).
     try:
         _pc = (fade_book.spec().get("probe") or {}) if fade_book.active() else {}
-        if _pc.get("enabled"):
+        if _pc.get("enabled") and not (brake_active or halt_active):    # probes honor HALT + active brake
+            global LEG_BUDGET
             _today = _now_iso_ms()[:10]
             _plog = _load_log_list()
-            _fired = {r.get("probe_strategy") for r in _plog if r.get("book") == "PROBE"
-                      and (r.get("entry_ts_utc") or "")[:10] == _today}
+            _open_tk = {(r.get("ticker") or "").upper() for r in _plog if r.get("status") == "OPEN"}
+            _pcount = {}                       # _plog is loaded AFTER this cycle's fade entries, so
+            for _pr in _plog:                  # _open_tk sees them - no same-cycle duplicate underlying
+                if _pr.get("book") == "PROBE" and (_pr.get("entry_ts_utc") or "")[:10] == _today:
+                    _pk = _pr.get("probe_strategy")
+                    _pcount[_pk] = _pcount.get(_pk, 0) + 1
+            _per = int(_pc.get("per_strategy_max_per_day") or 5)
+            _tot_cap = int(_pc.get("max_per_day") or 25)
+            _tot = sum(_pcount.values())
             def _shape(md, c):
                 sma = (md.get("macro") or {}).get("distance_to_sma20_pct")
                 spy = (md.get("regime_stack") or {}).get("market_spy_dist_pct")
                 sd = 1 if (c or {}).get("flow_type") == "call" else -1
                 return isinstance(sma, (int, float)) and isinstance(spy, (int, float)) and sma * sd < 0 and spy * sd < 0
+            def _depth_lt(md, cap_):
+                sma = (md.get("macro") or {}).get("distance_to_sma20_pct")
+                return isinstance(sma, (int, float)) and abs(sma) < cap_
             _ROSTER = [
                 ("EXEC_BASELINE", None),                                    # pure execution data
-                ("FADE_UNROUTED", lambda md, c: _shape(md, c)),             # what the router blocks
+                ("FADE_UNROUTED", lambda md, c: _shape(md, c)),             # fade shape, router ignored
                 ("CONSENSUS", lambda md, c: not _shape(md, c)),             # the inverse arm, live
                 ("DP_HEAVY", lambda md, c: ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
-                ("FADE_IMMEDIATE", lambda md, c: _shape(md, c)),   # the A/B arm: immediate-entry
-                                                  # fades at full flow (vs the live book's confirmed
-                                                  # mode) - the ledger settles which door earns more
                 ("QUIET_TAPE", lambda md, c: ((md.get("technical") or {}).get("rvol_10min") or 9) < 0.8),
+                ("FADE_DP", lambda md, c: _shape(md, c)
+                                          and ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
+                ("OPT_WINNER", lambda md, c: _shape(md, c) and _depth_lt(md, 3.0)
+                                             and ((c or {}).get("total_premium") or 0) <= 250000),
             ]
-            if len(_fired) < (_pc.get("max_per_day") or 5) and not entered_list:
-                global LEG_BUDGET
-                _keep = LEG_BUDGET
-                LEG_BUDGET = float(_pc.get("size_usd") or 1000)
+            _cyc = 0
+            _keep = LEG_BUDGET
+            LEG_BUDGET = float(_pc.get("size_usd") or 1000)
+            try:
                 for _pname, _pf in _ROSTER:
-                    if _pname in _fired:
+                    if _cyc >= 2 or _tot >= _tot_cap:
+                        break                       # 2 probes per cycle max - spread across the day
+                    if _pcount.get(_pname, 0) >= _per:
                         continue
-                    _done = False
-                    for c in candidates[:10]:
+                    for c in candidates[2:12]:  # skim BELOW the fade book's 2-per-cycle top picks
                         t = c["ticker"]
+                        if t.upper() in _open_tk:
+                            continue            # never stack a probe on any book's open underlying
                         try:
                             rec = enter_proactive_set(t, None, mock=mock, candidate=c,
                                                       dry_run=not live, positions=positions,
@@ -1953,10 +1992,12 @@ def run_scheduled_cycle(mock=False):
                             rec["probe_strategy"] = _pname
                             _rewrite_last(rec)
                             print(f"  PROBE[{_pname}] entered {t} (hypothesis slot - not fade evidence)")
-                            _done = True
+                            _open_tk.add(t.upper())
+                            _pcount[_pname] = _pcount.get(_pname, 0) + 1
+                            _tot += 1
+                            _cyc += 1
                             break
-                    if _done:
-                        break                       # one probe per cycle max - spread across the day
+            finally:
                 LEG_BUDGET = _keep
     except Exception as _pe:
         print(f"  probe skipped (fail-open): {type(_pe).__name__}")

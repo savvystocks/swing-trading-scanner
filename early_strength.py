@@ -1,11 +1,12 @@
-"""EARLY-STRENGTH CONFIRMED ENTRY (owner-ordered build 2026-08-11 21:31).
+"""EARLY-STRENGTH probe (built 2026-08-11; retagged exploratory same night, owner order 21:52).
 
-Sim evidence (real cohort paths, day-clustered): entering fade candidates only after their
-option shows +5..15% from signal within the first hour produced +7.0%/day-mean with halves
-+22.9/+21.8 - the most stable configuration ever measured here. Mechanic: the fade path
-WATCHLISTS qualifying candidates instead of buying; each cycle re-quotes them; confirmed
-strength -> enter at the confirmed ask; too old or overshot -> drop. Spec-gated by
-entry.confirm_strength; absent = original immediate-entry behavior (OFF-state identical).
+Sim evidence (real cohort paths, day-clustered): entering fade candidates only after their option
+shows +5..15% from signal within ~2h produced +7.0%/day-mean with halves +22.9/+21.8 - but only
+~1-in-7 candidates ever confirm. Owner verdict: too few fills to be the live book's only door.
+So it runs as the exploratory PARALLEL door: the live fade book buys immediately and uncut; this
+watcher stashes the same candidates, re-quotes them each cycle, and when one confirms it buys its
+OWN $1k lot tagged book=PROBE / EARLY_STRENGTH (max 5/day). The ledger settles which door earns.
+Spec-gated by probe.early_strength; absent = watcher fully inert (OFF-state identical).
 """
 import json
 import os
@@ -19,7 +20,7 @@ _WL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sandbox_watchlis
 
 
 def _cfg():
-    return (fade_book.spec().get("entry") or {}).get("confirm_strength") or {}
+    return (fade_book.spec().get("probe") or {}).get("early_strength") or {}
 
 
 def enabled():
@@ -43,7 +44,7 @@ def stash(ticker, occ, ref_ask, regime, contracts, alloc):
               "contracts": contracts, "alloc": alloc,
               "ts": datetime.now(timezone.utc).isoformat()}
     _save(d)
-    print(f"  early-strength WATCHLISTED {ticker} {occ} ref ${ref_ask} (awaiting +5..15%)")
+    print(f"  early-strength WATCHING {ticker} {occ} ref ${ref_ask} (parallel door, +5..15% confirms)")
 
 
 def _quote(occ, creds):
@@ -73,7 +74,7 @@ def _buy(occ, qty, limit, creds):
 
 
 def process(creds, lab):
-    """Called each cycle: re-quote watchlist, enter confirmed, expire stale. Fail-open."""
+    """Called each cycle: re-quote watchlist, enter confirmed as PROBE, expire stale. Fail-open."""
     if not enabled() or not creds or not all(creds):
         return
     cfg = _cfg()
@@ -83,6 +84,13 @@ def process(creds, lab):
     if not d:
         return
     now = datetime.now(timezone.utc)
+    log = lab._load_log_list()
+    today = now.isoformat()[:10]
+    n_today = sum(1 for r in log if r.get("probe_strategy") == "EARLY_STRENGTH"
+                  and (r.get("entry_ts_utc") or "")[:10] == today)
+    cap = int(cfg.get("max_per_day", 5))
+    held = {(l.get("occ_symbol") or "").upper() for r in log if r.get("status") == "OPEN"
+            and isinstance(r.get("legs"), dict) for l in r["legs"].values()}
     changed = False
     for occ, w in list(d.items()):
         age = (now - datetime.fromisoformat(w["ts"])).total_seconds() / 60.0
@@ -101,34 +109,45 @@ def process(creds, lab):
             print(f"  early-strength missed {occ} (+{rise*100:.0f}% > cap)")
             continue
         if rise >= lo:
-            resp = _buy(occ, w["contracts"], ask, creds)
+            if n_today >= cap:
+                continue                          # daily probe cap reached - leave it to age out
+            if occ.upper() in held:
+                continue                          # the fade lot is still OPEN on this OCC - never
+                                                  # stack a second lot (OCC-keyed exits would blend
+                                                  # the books); fires once the fade record closes
+                                                  # or its unfilled order was cancelled by the audit
+            qty = max(1, int(w["alloc"] // (ask * 100))) if ask > 0 else (w["contracts"] or 1)
+            resp = _buy(occ, qty, ask, creds)
             del d[occ]; changed = True
             if resp and resp.get("id"):
                 right = "call" if occ[-9] == "C" else "put"
                 name = "bullish_call" if right == "call" else "bearish_put"
                 rec = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": w["ticker"],
                        "regime": w["regime"], "trigger": "early_strength_confirmed",
-                       "book": "FADE", "entry_mode": "early_strength",
+                       "book": "PROBE", "probe_strategy": "EARLY_STRENGTH",
+                       "entry_mode": "early_strength",
                        "entry_ts_utc": now.isoformat(), "leg_budget_usd": w["alloc"],
                        "execution_mode": "LIVE_PAPER", "occ_resolution": "alpaca_real",
                        "params_snapshot": {}, "metadata": {"entry_ts_utc": now.isoformat()},
                        "legs": {name: {"structure": f"LONG_{right.upper()}", "occ_symbol": occ,
                                        "strike": None, "dte": None, "entry_premium": ask,
-                                       "limit_price": ask, "contracts": w["contracts"],
+                                       "limit_price": ask, "contracts": qty,
                                        "alloc_usd": w["alloc"],
                                        "execution_cost": {"bid": bid, "ask": ask,
                                                           "bid_ask_spread_pct": round((ask - bid) / ask * 100, 2),
                                                           "source": "alpaca_quote"}}},
                        "orders": {name: {"status": resp.get("status"), "order_id": resp["id"],
                                          "submitted": True, "limit_price": ask,
-                                         "contracts": w["contracts"]}},
+                                         "contracts": qty}},
                        "exit": None, "status": "OPEN"}
-                log = lab._load_log_list()
                 log.append(rec)
-                lab._save_log_list(log)
-                print(f"  EARLY-STRENGTH ENTERED {w['ticker']} {occ} @ {ask} (+{rise*100:.0f}% confirmed)")
+                lab._save_log_list(log)           # persist IMMEDIATELY (a kill mid-loop must never
+                _save(d)                          # leave a filled order without its record)
+                held.add(occ.upper())
+                n_today += 1
+                print(f"  PROBE[EARLY_STRENGTH] entered {w['ticker']} {occ} @ {ask} (+{rise*100:.0f}% confirmed)")
                 try:
-                    lab._notify(f"<b>FADE entry (early-strength)</b> {w['ticker']} {occ} @ ${ask} "
+                    lab._notify(f"<b>PROBE EARLY_STRENGTH</b> {w['ticker']} {occ} @ ${ask} "
                                 f"(confirmed +{rise*100:.0f}% from signal)")
                 except Exception:
                     pass

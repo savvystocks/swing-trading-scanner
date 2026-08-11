@@ -81,6 +81,7 @@ jobs:
           git config user.email "noreply@github.com"
           git add -f proactive_sandbox_logs.json 2>/dev/null || true
           git add -f sandbox_ticker_cooloff.json 2>/dev/null || true
+          git add -f sandbox_watchlist.json 2>/dev/null || true   # early-strength watch state (ephemeral runners forget it otherwise)
           git add -f v10_tuning_advisory.md proactive_autopsy_log.md v10_tunable_parameters.json 2>/dev/null || true
           git add -f data/harvest_inbox/*.jsonl data/harvest_state.json 2>/dev/null || true   # harvest transport -> VPS poller (main)
           git add -A data/FLUSH_PENDING 2>/dev/null || true   # commit the one-time-flush sentinel removal

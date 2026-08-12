@@ -81,7 +81,50 @@
     "ASTS260918C00070000",
     "SNDK260814P01200000",
     "QQQ260812C00724000",
-    "ORCL260918C00195000"
+    "ORCL260918C00195000",
+    "CRWV260814C00094000",
+    "ASML271217C01940000",
+    "TER261016C00560000",
+    "SMH260918C00650000",
+    "ASML271217C02000000",
+    "AVAV280121C00210000",
+    "PYPL281215P00065000",
+    "IBM280121P00260000",
+    "MELI260911C01840000",
+    "TSLA260812C00327500",
+    "MU261016C01300000",
+    "IREN261016C00060000",
+    "XOM260918P00160000",
+    "SNDK260814P01250000",
+    "IREN260814C00045000",
+    "LITE260814C00875000",
+    "PLTR260911C00200000",
+    "PANW260925C00325000",
+    "SLV270319C00100000",
+    "MU261016P00950000",
+    "INTC260821C00110000",
+    "NBIS280121C00440000",
+    "PYPL281215C00062500",
+    "CRWV260821C00093000",
+    "QQQ270115C00700000",
+    "NBIS260918P00230000",
+    "MU260821C00930000",
+    "AMD270617P00400000",
+    "COPX260821P00085000",
+    "TEAM260918P00150000",
+    "MU270617P00800000",
+    "NVDA260821C00225000",
+    "TOST280121C00050000",
+    "NVTS260918C00019000",
+    "NVDA260814C00225000",
+    "USO261218P00121000",
+    "PAAS261016C00060000",
+    "FRHC270319C00140000",
+    "MSFT260821P00500000",
+    "NVDA260812C00222500",
+    "XBI260821P00154000",
+    "STX261016C00870000",
+    "ONON280121P00025000"
   ],
   "tickers": {
     "NVDA": {
@@ -3123,10 +3166,1450 @@
       "days_to_earnings": 78,
       "post_earnings_iv_crush_flag": false,
       "flow_persistence_pct": 5.81
+    },
+    "INTC": {
+      "entry_ts_utc": "2026-08-12T13:53:06.843Z",
+      "macro": {
+        "spot": 102.0,
+        "sma20": 96.12,
+        "distance_to_sma20_pct": 6.115,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 65.0,
+        "iv_back": 71.0,
+        "iv_ratio": 0.915,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 1239860.6,
+        "zero_gamma_strike": 103.0,
+        "distance_to_zero_gamma_pct": -0.98,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 7.26,
+        "atr_pct": 7.12,
+        "rvol_10min": 0.38,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Semiconductors",
+        "market_cap": 514740191232,
+        "short_pct_float": 2.48,
+        "short_ratio": 1.07,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.21,
+        "vader_compound": 0.04,
+        "news_type": "Analyst",
+        "top_headline": "UBS Maintains Neutral on Intel, Lowers Price Target to $112",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 6.115,
+        "market_spy_dist_pct": 2.596,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 5.238,
+        "sector_vs_market_spread": 2.642,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 69.6,
+        "call_iv_25d": 74.2,
+        "skew_ratio": 0.939,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.3,
+        "ask_sweep_prem": 1372522.0,
+        "total_flow_prem": 21787233.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 102.25,
+        "node_size": 195786.0,
+        "n_prints": 200,
+        "window_start": "2026-08-12T13:48:28Z",
+        "window_end": "2026-08-12T13:53:11Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 20,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 71,
+        "next_earnings_date": "2026-10-22",
+        "iv_rank_1y": 47.85,
+        "last_earnings_date": "2026-07-23",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 82.84,
+        "front_iv": 65.0,
+        "vrp": -17.84,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 10347004.0,
+        "flow_persistence_pct": 37.57,
+        "flow_direction": "bullish",
+        "closing_accel": -9474893.0,
+        "n_ticks": 24,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 892.24,
+        "vwma_20": 95.04,
+        "rsi_5": 54.0,
+        "rsi_15": 49.43,
+        "gap_pct": 3.85,
+        "day_range": 2.696,
+        "candle_body": 0.207,
+        "dist_sma50": -6.999,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -6.0,
+        "vix_level": 14.93,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": 1.309,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 125670883.0,
+        "net_vanna": 72759347.0,
+        "net_charm": -35515708.0,
+        "delta_imbalance": 4.069,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.049,
+        "bid": 102.04,
+        "ask": 102.09,
+        "bid_size": 100.0,
+        "ask_size": 100.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.35,
+        "gap_pct": 3.85,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 2.48,
+        "float_shares": 4490370560,
+        "shares_short": 125100834,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.04,
+      "sweep_aggression_pct": 6.3,
+      "distance_to_zero_gamma_pct": -0.98,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": 20,
+      "days_to_earnings": 71,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 37.57
+    },
+    "PAAS": {
+      "entry_ts_utc": "2026-08-12T13:53:16.813Z",
+      "macro": {
+        "spot": 52.74,
+        "sma20": 45.68,
+        "distance_to_sma20_pct": 15.467,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": null,
+        "iv_back": null,
+        "iv_ratio": null,
+        "structure": null,
+        "source": "unavailable"
+      },
+      "gex": {
+        "net_gex": 219555.3,
+        "zero_gamma_strike": 53.0,
+        "distance_to_zero_gamma_pct": -0.493,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.88,
+        "atr_pct": 3.56,
+        "rvol_10min": 0.06,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Basic Materials",
+        "industry": "Gold",
+        "market_cap": 22188292096,
+        "short_pct_float": null,
+        "short_ratio": 1.51,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 18.37,
+        "vader_compound": 0.355,
+        "news_type": "Earnings",
+        "top_headline": "Coherent Could Swing By $9.54 Billion After Earnings",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 15.467,
+        "market_spy_dist_pct": 2.596,
+        "sector_etf": "XLB",
+        "sector_dist_pct": 2.636,
+        "sector_vs_market_spread": 0.04,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": null,
+        "call_iv_25d": null,
+        "skew_ratio": null,
+        "skew_bias": null,
+        "delta_source": null,
+        "source": "unavailable"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 4.14,
+        "ask_sweep_prem": 226890.0,
+        "total_flow_prem": 5485532.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.25,
+        "heaviest_node_price": 52.61,
+        "node_size": 13089.0,
+        "n_prints": 8,
+        "window_start": "2026-08-12T12:47:40Z",
+        "window_end": "2026-08-12T13:51:20Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 0,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 30.43,
+        "last_earnings_date": "2026-08-12",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": null,
+        "front_iv": null,
+        "vrp": null,
+        "vrp_regime": null,
+        "source": "unavailable"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 377054.0,
+        "flow_persistence_pct": 34.93,
+        "flow_direction": "bullish",
+        "closing_accel": 713547.0,
+        "n_ticks": 23,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 977.24,
+        "vwma_20": 45.86,
+        "rsi_5": 95.24,
+        "rsi_15": 74.19,
+        "gap_pct": 3.089,
+        "day_range": 2.209,
+        "candle_body": 0.562,
+        "dist_sma50": 13.88,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": null,
+        "vix_level": 14.93,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": 0.19,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 7848456.0,
+        "net_vanna": 5036343.0,
+        "net_charm": -1129615.0,
+        "delta_imbalance": 6.568,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.076,
+        "bid": 52.67,
+        "ask": 52.71,
+        "bid_size": 200.0,
+        "ask_size": 200.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.06,
+        "gap_pct": 3.089,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": 406893482,
+        "shares_short": 4593785,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.355,
+      "sweep_aggression_pct": 4.14,
+      "distance_to_zero_gamma_pct": -0.493,
+      "distance_to_heaviest_dp_node_pct": 0.25,
+      "days_since_earnings": 0,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 34.93
+    },
+    "ONON": {
+      "entry_ts_utc": "2026-08-12T13:53:22.640Z",
+      "macro": {
+        "spot": 31.17,
+        "sma20": 36.67,
+        "distance_to_sma20_pct": -14.996,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": null,
+        "iv_back": null,
+        "iv_ratio": null,
+        "structure": null,
+        "source": "unavailable"
+      },
+      "gex": {
+        "net_gex": -303126.7,
+        "zero_gamma_strike": 20.0,
+        "distance_to_zero_gamma_pct": 35.836,
+        "regime": "negative_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.83,
+        "atr_pct": 5.87,
+        "rvol_10min": 0.46,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Consumer Cyclical",
+        "industry": "Footwear & Accessories",
+        "market_cap": 10409116672,
+        "short_pct_float": 7.89,
+        "short_ratio": 4.81,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.07,
+        "vader_compound": -0.155,
+        "news_type": "Analyst",
+        "top_headline": "UBS Maintains Buy on On Holding, Lowers Price Target to $73",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -14.996,
+        "market_spy_dist_pct": 2.596,
+        "sector_etf": "XLY",
+        "sector_dist_pct": 2.463,
+        "sector_vs_market_spread": -0.133,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": null,
+        "call_iv_25d": null,
+        "skew_ratio": null,
+        "skew_bias": null,
+        "delta_source": null,
+        "source": "unavailable"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 12.3,
+        "ask_sweep_prem": 456474.0,
+        "total_flow_prem": 3710195.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 31.17,
+        "node_size": 97366.0,
+        "n_prints": 24,
+        "window_start": "2026-08-12T12:31:50Z",
+        "window_end": "2026-08-12T13:51:28Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 1,
+        "post_earnings_iv_crush_flag": true,
+        "days_to_earnings": 91,
+        "next_earnings_date": "2026-11-11",
+        "iv_rank_1y": 10.39,
+        "last_earnings_date": "2026-08-11",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": null,
+        "front_iv": null,
+        "vrp": null,
+        "vrp_regime": null,
+        "source": "unavailable"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 256075.0,
+        "flow_persistence_pct": 36.01,
+        "flow_direction": "bullish",
+        "closing_accel": 386531.0,
+        "n_ticks": 23,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 934.45,
+        "vwma_20": 35.51,
+        "rsi_5": 16.41,
+        "rsi_15": 36.03,
+        "gap_pct": 2.927,
+        "day_range": 2.823,
+        "candle_body": 0.739,
+        "dist_sma50": -15.828,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": null,
+        "vix_level": 14.91,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": -0.692,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": -5151363.0,
+        "net_vanna": 11201747.0,
+        "net_charm": -5861621.0,
+        "delta_imbalance": 0.329,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.706,
+        "bid": 30.95,
+        "ask": 31.17,
+        "bid_size": 100.0,
+        "ask_size": 100.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.46,
+        "gap_pct": 2.927,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 7.89,
+        "float_shares": 241475931,
+        "shares_short": 19819226,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.155,
+      "sweep_aggression_pct": 12.3,
+      "distance_to_zero_gamma_pct": 35.836,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 1,
+      "days_to_earnings": 91,
+      "post_earnings_iv_crush_flag": true,
+      "flow_persistence_pct": 36.01
+    },
+    "COPX": {
+      "entry_ts_utc": "2026-08-12T13:53:26.993Z",
+      "macro": {
+        "spot": 89.84,
+        "sma20": 80.86,
+        "distance_to_sma20_pct": 11.105,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": null,
+        "iv_back": null,
+        "iv_ratio": null,
+        "structure": null,
+        "source": "unavailable"
+      },
+      "gex": {
+        "net_gex": 254351.6,
+        "zero_gamma_strike": 88.0,
+        "distance_to_zero_gamma_pct": 2.048,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 0.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 2.51,
+        "atr_pct": 2.79,
+        "rvol_10min": 0.05,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 147.98,
+        "vader_compound": -0.179,
+        "news_type": "Earnings",
+        "top_headline": "\u2018It Doesn\u2019t Make Sense,\u2019 Expert Warns West Is Bleeding Control Over Copper",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 11.105,
+        "market_spy_dist_pct": 2.596,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": null,
+        "call_iv_25d": null,
+        "skew_ratio": null,
+        "skew_bias": null,
+        "delta_source": null,
+        "source": "unavailable"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 3.99,
+        "ask_sweep_prem": 142324.0,
+        "total_flow_prem": 3568906.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 90.06,
+        "node_size": 10666.0,
+        "n_prints": 10,
+        "window_start": "2026-08-12T13:01:25Z",
+        "window_end": "2026-08-12T13:49:25Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 36.37,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": null,
+        "front_iv": null,
+        "vrp": null,
+        "vrp_regime": null,
+        "source": "unavailable"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 146226.0,
+        "flow_persistence_pct": 67.84,
+        "flow_direction": "bullish",
+        "closing_accel": 150190.0,
+        "n_ticks": 22,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 952.22,
+        "vwma_20": 81.15,
+        "rsi_5": 75.28,
+        "rsi_15": 72.02,
+        "gap_pct": 1.501,
+        "day_range": 0.824,
+        "candle_body": 0.101,
+        "dist_sma50": 11.258,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": null,
+        "vix_level": 14.91,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 6085748.0,
+        "net_vanna": 5604810.0,
+        "net_charm": -785604.0,
+        "delta_imbalance": 5.254,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.289,
+        "bid": 89.63,
+        "ask": 89.89,
+        "bid_size": 600.0,
+        "ask_size": 100.0,
+        "obi": 0.7143,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.05,
+        "gap_pct": 1.501,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.179,
+      "sweep_aggression_pct": 3.99,
+      "distance_to_zero_gamma_pct": 2.048,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 67.84
+    },
+    "TSLA": {
+      "entry_ts_utc": "2026-08-12T13:53:33.362Z",
+      "macro": {
+        "spot": 328.17,
+        "sma20": 333.63,
+        "distance_to_sma20_pct": -1.636,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 42.2,
+        "iv_back": 39.4,
+        "iv_ratio": 1.071,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 259509.4,
+        "zero_gamma_strike": 345.0,
+        "distance_to_zero_gamma_pct": -5.128,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -50.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 10.52,
+        "atr_pct": 3.21,
+        "rvol_10min": 0.07,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Consumer Cyclical",
+        "industry": "Auto Manufacturers",
+        "market_cap": 1296357916672,
+        "short_pct_float": 1.94,
+        "short_ratio": 1.61,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 4.81,
+        "vader_compound": 0.326,
+        "news_type": "MnA",
+        "top_headline": "Elon Musk Could Score $824 Billion Payday in Tesla-SpaceX Merger\u2014Ross Gerber Says \u2018Fantastical Abundance!\u2019",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -1.636,
+        "market_spy_dist_pct": 2.596,
+        "sector_etf": "XLY",
+        "sector_dist_pct": 2.463,
+        "sector_vs_market_spread": -0.133,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 38.5,
+        "call_iv_25d": 40.8,
+        "skew_ratio": 0.946,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 8.66,
+        "ask_sweep_prem": 2876670.0,
+        "total_flow_prem": 33224250.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 328.17,
+        "node_size": 82467.0,
+        "n_prints": 200,
+        "window_start": "2026-08-12T13:47:36Z",
+        "window_end": "2026-08-12T13:52:42Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 21,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 70,
+        "next_earnings_date": "2026-10-21",
+        "iv_rank_1y": 0.0,
+        "last_earnings_date": "2026-07-22",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 64.37,
+        "front_iv": 42.2,
+        "vrp": -22.17,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -10763542.0,
+        "flow_persistence_pct": 48.33,
+        "flow_direction": "bearish",
+        "closing_accel": 4077090.0,
+        "n_ticks": 23,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1081.27,
+        "vwma_20": 329.11,
+        "rsi_5": 66.99,
+        "rsi_15": 32.41,
+        "gap_pct": 0.67,
+        "day_range": 2.2,
+        "candle_body": 0.951,
+        "dist_sma50": -12.337,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 2.8,
+        "vix_level": 14.93,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": -0.692,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 12177275.0,
+        "net_vanna": 142183993.0,
+        "net_charm": -90471482.0,
+        "delta_imbalance": 1.166,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.024,
+        "bid": 327.92,
+        "ask": 328.0,
+        "bid_size": 40.0,
+        "ask_size": 80.0,
+        "obi": -0.3333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.06,
+        "gap_pct": 0.67,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 1.94,
+        "float_shares": 2758284909,
+        "shares_short": 68501639,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.326,
+      "sweep_aggression_pct": 8.66,
+      "distance_to_zero_gamma_pct": -5.128,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 21,
+      "days_to_earnings": 70,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 48.33
+    },
+    "SLV": {
+      "entry_ts_utc": "2026-08-12T13:53:39.807Z",
+      "macro": {
+        "spot": 59.68,
+        "sma20": 53.97,
+        "distance_to_sma20_pct": 10.574,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 41.2,
+        "iv_back": 43.8,
+        "iv_ratio": 0.941,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 4948062.5,
+        "zero_gamma_strike": 59.0,
+        "distance_to_zero_gamma_pct": 1.139,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -83.3,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.71,
+        "atr_pct": 2.87,
+        "rvol_10min": 0.2,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 116.08,
+        "vader_compound": 0.32,
+        "news_type": "Macro",
+        "top_headline": "Chinese Buying Lifts Gold And Silver From Technical Support; Jobs Report Shocker And Iran Hopium Trigger Aggressive Stock Buying",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 10.574,
+        "market_spy_dist_pct": 2.596,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 44.9,
+        "call_iv_25d": 49.9,
+        "skew_ratio": 0.899,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 7.78,
+        "ask_sweep_prem": 559278.0,
+        "total_flow_prem": 7184877.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.25,
+        "heaviest_node_price": 59.53,
+        "node_size": 186480.0,
+        "n_prints": 155,
+        "window_start": "2026-08-12T08:00:07Z",
+        "window_end": "2026-08-12T13:52:57Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 23.87,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 37.5,
+        "front_iv": 41.2,
+        "vrp": 3.7,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -1186591.0,
+        "flow_persistence_pct": 44.6,
+        "flow_direction": "bearish",
+        "closing_accel": -50749.0,
+        "n_ticks": 24,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 989.86,
+        "vwma_20": 54.07,
+        "rsi_5": 81.3,
+        "rsi_15": 67.67,
+        "gap_pct": 1.631,
+        "day_range": 0.813,
+        "candle_body": 0.34,
+        "dist_sma50": 6.367,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -2.6,
+        "vix_level": 14.93,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 70299566.0,
+        "net_vanna": 158401126.0,
+        "net_charm": -39917564.0,
+        "delta_imbalance": 1.986,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.033,
+        "bid": 59.73,
+        "ask": 59.75,
+        "bid_size": 1500.0,
+        "ask_size": 800.0,
+        "obi": 0.3043,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.19,
+        "gap_pct": 1.631,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.32,
+      "sweep_aggression_pct": 7.78,
+      "distance_to_zero_gamma_pct": 1.139,
+      "distance_to_heaviest_dp_node_pct": 0.25,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 44.6
+    },
+    "XBI": {
+      "entry_ts_utc": "2026-08-12T13:53:44.259Z",
+      "macro": {
+        "spot": 159.17,
+        "sma20": 152.63,
+        "distance_to_sma20_pct": 4.284,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": null,
+        "iv_back": null,
+        "iv_ratio": null,
+        "structure": null,
+        "source": "unavailable"
+      },
+      "gex": {
+        "net_gex": 177875.2,
+        "zero_gamma_strike": 163.0,
+        "distance_to_zero_gamma_pct": -2.406,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 3.81,
+        "atr_pct": 2.39,
+        "rvol_10min": 0.08,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 718.83,
+        "vader_compound": 0.001,
+        "news_type": "Product",
+        "top_headline": "Here's How Much $100 Invested In State Street SPDR S&P Biotech ETF 20 Years Ago Would Be Worth Today",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 4.284,
+        "market_spy_dist_pct": 2.596,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": null,
+        "call_iv_25d": null,
+        "skew_ratio": null,
+        "skew_bias": null,
+        "delta_source": null,
+        "source": "unavailable"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.46,
+        "ask_sweep_prem": 380634.0,
+        "total_flow_prem": 5888311.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 1.0,
+        "heaviest_node_price": 157.58,
+        "node_size": 20409.0,
+        "n_prints": 29,
+        "window_start": "2026-08-12T13:11:10Z",
+        "window_end": "2026-08-12T13:53:38Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 31.86,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": null,
+        "front_iv": null,
+        "vrp": null,
+        "vrp_regime": null,
+        "source": "unavailable"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -84114.0,
+        "flow_persistence_pct": 24.92,
+        "flow_direction": "bearish",
+        "closing_accel": 156298.0,
+        "n_ticks": 24,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1193.21,
+        "vwma_20": 152.28,
+        "rsi_5": 100.0,
+        "rsi_15": 64.43,
+        "gap_pct": 0.127,
+        "day_range": 1.417,
+        "candle_body": 0.386,
+        "dist_sma50": 6.967,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": null,
+        "vix_level": 14.93,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 12661729.0,
+        "net_vanna": -6018477.0,
+        "net_charm": -402290.0,
+        "delta_imbalance": 4.057,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.151,
+        "bid": 159.13,
+        "ask": 159.37,
+        "bid_size": 200.0,
+        "ask_size": 100.0,
+        "obi": 0.3333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.07,
+        "gap_pct": 0.127,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.001,
+      "sweep_aggression_pct": 6.46,
+      "distance_to_zero_gamma_pct": -2.406,
+      "distance_to_heaviest_dp_node_pct": 1.0,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 24.92
+    },
+    "TOST": {
+      "entry_ts_utc": "2026-08-12T13:53:49.734Z",
+      "macro": {
+        "spot": 33.95,
+        "sma20": 32.21,
+        "distance_to_sma20_pct": 5.394,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": null,
+        "iv_back": null,
+        "iv_ratio": null,
+        "structure": null,
+        "source": "unavailable"
+      },
+      "gex": {
+        "net_gex": 489112.2,
+        "zero_gamma_strike": 35.0,
+        "distance_to_zero_gamma_pct": -3.093,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.4,
+        "atr_pct": 4.13,
+        "rvol_10min": 0.05,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Software - Infrastructure",
+        "market_cap": 19660900352,
+        "short_pct_float": 6.76,
+        "short_ratio": 2.72,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 42.74,
+        "vader_compound": 0.114,
+        "news_type": "Analyst",
+        "top_headline": "DA Davidson Maintains Neutral on Toast, Raises Price Target to $34",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 5.394,
+        "market_spy_dist_pct": 2.596,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 5.238,
+        "sector_vs_market_spread": 2.642,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": null,
+        "call_iv_25d": null,
+        "skew_ratio": null,
+        "skew_bias": null,
+        "delta_source": null,
+        "source": "unavailable"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 4.34,
+        "ask_sweep_prem": 197099.0,
+        "total_flow_prem": 4537817.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.75,
+        "heaviest_node_price": 34.2,
+        "node_size": 8400.0,
+        "n_prints": 7,
+        "window_start": "2026-08-12T13:35:38Z",
+        "window_end": "2026-08-12T13:52:15Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 8,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 83,
+        "next_earnings_date": "2026-11-03",
+        "iv_rank_1y": 2.48,
+        "last_earnings_date": "2026-08-04",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": null,
+        "front_iv": null,
+        "vrp": null,
+        "vrp_regime": null,
+        "source": "unavailable"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -80437.0,
+        "flow_persistence_pct": 74.64,
+        "flow_direction": "bearish",
+        "closing_accel": -63057.0,
+        "n_ticks": 23,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1030.36,
+        "vwma_20": 32.44,
+        "rsi_5": 36.97,
+        "rsi_15": 70.33,
+        "gap_pct": -1.204,
+        "day_range": 2.327,
+        "candle_body": 0.658,
+        "dist_sma50": 17.477,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": null,
+        "vix_level": 14.93,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": 1.309,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 6726781.0,
+        "net_vanna": 5408261.0,
+        "net_charm": -1298176.0,
+        "delta_imbalance": 4.735,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.059,
+        "bid": 33.98,
+        "ask": 34.0,
+        "bid_size": 200.0,
+        "ask_size": 200.0,
+        "obi": 0.0,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.04,
+        "gap_pct": -1.204,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 6.76,
+        "float_shares": 471347440,
+        "shares_short": 34304036,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.114,
+      "sweep_aggression_pct": 4.34,
+      "distance_to_zero_gamma_pct": -3.093,
+      "distance_to_heaviest_dp_node_pct": -0.75,
+      "days_since_earnings": 8,
+      "days_to_earnings": 83,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 74.64
+    },
+    "NVTS": {
+      "entry_ts_utc": "2026-08-12T13:53:57.366Z",
+      "macro": {
+        "spot": 14.47,
+        "sma20": 12.01,
+        "distance_to_sma20_pct": 20.465,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": null,
+        "iv_back": null,
+        "iv_ratio": null,
+        "structure": null,
+        "source": "unavailable"
+      },
+      "gex": {
+        "net_gex": 1304384.5,
+        "zero_gamma_strike": 12.0,
+        "distance_to_zero_gamma_pct": 17.07,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -50.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.24,
+        "atr_pct": 8.6,
+        "rvol_10min": 0.11,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Semiconductors",
+        "market_cap": 3762879232,
+        "short_pct_float": 16.94,
+        "short_ratio": 2.46,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 41.68,
+        "vader_compound": 0.18,
+        "news_type": "Unknown",
+        "top_headline": "Navitas Semiconductor Announces Patent Infringement Lawsuit Against Renesas In Eastern District Of Texas Over SuperGaN Products, Asserting F",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 20.465,
+        "market_spy_dist_pct": 2.596,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 5.238,
+        "sector_vs_market_spread": 2.642,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": null,
+        "call_iv_25d": null,
+        "skew_ratio": null,
+        "skew_bias": null,
+        "delta_source": null,
+        "source": "unavailable"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.53,
+        "ask_sweep_prem": 465207.0,
+        "total_flow_prem": 7121941.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 14.47,
+        "node_size": 50108.0,
+        "n_prints": 15,
+        "window_start": "2026-08-12T08:12:13Z",
+        "window_end": "2026-08-12T13:50:58Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 16,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 82,
+        "next_earnings_date": "2026-11-02",
+        "iv_rank_1y": 17.96,
+        "last_earnings_date": "2026-07-27",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": null,
+        "front_iv": null,
+        "vrp": null,
+        "vrp_regime": null,
+        "source": "unavailable"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -226558.0,
+        "flow_persistence_pct": 31.51,
+        "flow_direction": "bearish",
+        "closing_accel": 248908.0,
+        "n_ticks": 24,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 516.1,
+        "vwma_20": 11.65,
+        "rsi_5": 79.69,
+        "rsi_15": 57.96,
+        "gap_pct": 5.742,
+        "day_range": 3.641,
+        "candle_body": 0.105,
+        "dist_sma50": -13.418,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": null,
+        "vix_level": 14.93,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": 1.281,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 12613531.0,
+        "net_vanna": 9341131.0,
+        "net_charm": -5455950.0,
+        "delta_imbalance": 3.449,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.139,
+        "bid": 14.41,
+        "ask": 14.43,
+        "bid_size": 400.0,
+        "ask_size": 300.0,
+        "obi": 0.1429,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.11,
+        "gap_pct": 5.742,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 16.94,
+        "float_shares": 242252982,
+        "shares_short": 39326692,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.18,
+      "sweep_aggression_pct": 6.53,
+      "distance_to_zero_gamma_pct": 17.07,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 16,
+      "days_to_earnings": 82,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 31.51
     }
   },
-  "payload_count": 19,
-  "topn_count": 26,
+  "payload_count": 28,
+  "topn_count": 40,
   "random_count": 0,
   "backoff_429": false,
   "cap_today": 300,

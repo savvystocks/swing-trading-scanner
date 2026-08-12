@@ -145093,7 +145093,7 @@
         "mfe_pct": 201.9,
         "mae_pct": -22.1,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -165199,5 +165199,266 @@
       "LQD260821C00111000",
       "PFE260814C00025500"
     ]
+  },
+  {
+    "trade_set_id": "842b8f775532",
+    "ticker": "SLV",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "book": "PROBE",
+    "entry_ts_utc": "2026-08-12T13:56:30.966Z",
+    "leg_budget_usd": 1000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 7,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "FCEL260821C00022000",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-08-12T13:56:30.966Z",
+      "macro": {
+        "spot": 59.72,
+        "sma20": 53.98,
+        "distance_to_sma20_pct": 10.644,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 40.5,
+        "iv_back": 44.3,
+        "iv_ratio": 0.914,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 4948062.5,
+        "zero_gamma_strike": 59.0,
+        "distance_to_zero_gamma_pct": 1.206,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -83.3,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.71,
+        "atr_pct": 2.87,
+        "rvol_10min": 0.21,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 116.13,
+        "vader_compound": 0.32,
+        "news_type": "Macro",
+        "top_headline": "Chinese Buying Lifts Gold And Silver From Technical Support; Jobs Report Shocker And Iran Hopium Trigger Aggressive Stock Buying",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 10.644,
+        "market_spy_dist_pct": 2.583,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 43.5,
+        "call_iv_25d": 49.9,
+        "skew_ratio": 0.87,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 7.78,
+        "ask_sweep_prem": 559278.0,
+        "total_flow_prem": 7184877.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.25,
+        "heaviest_node_price": 59.57,
+        "node_size": 156589.0,
+        "n_prints": 155,
+        "window_start": "2026-08-12T08:00:07Z",
+        "window_end": "2026-08-12T13:52:57Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 23.87,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 37.53,
+        "front_iv": 40.5,
+        "vrp": 2.97,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -1186591.0,
+        "flow_persistence_pct": 44.6,
+        "flow_direction": "bearish",
+        "closing_accel": -50749.0,
+        "n_ticks": 24,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 990.52,
+        "vwma_20": 54.07,
+        "rsi_5": 81.43,
+        "rsi_15": 67.75,
+        "gap_pct": 1.631,
+        "day_range": 0.812,
+        "candle_body": 0.423,
+        "dist_sma50": 6.436,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -3.8,
+        "vix_level": 14.93,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 70299566.0,
+        "net_vanna": 158401126.0,
+        "net_charm": -39917564.0,
+        "delta_imbalance": 1.986,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.017,
+        "bid": 59.71,
+        "ask": 59.72,
+        "bid_size": 800.0,
+        "ask_size": 100.0,
+        "obi": 0.7778,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.2,
+        "gap_pct": 1.631,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.32,
+      "sweep_aggression_pct": 7.78,
+      "distance_to_zero_gamma_pct": 1.206,
+      "distance_to_heaviest_dp_node_pct": 0.25,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 44.6
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "SLV260911C00062000",
+        "expiry": "2026-09-11",
+        "strike": 62.0,
+        "dte": 35,
+        "entry_premium": 3.0,
+        "limit_price": 3.03,
+        "contracts": 3,
+        "alloc_usd": 1000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "170",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.19,
+          "ask": 2.23,
+          "mid": 2.21,
+          "bid_ask_spread_pct": 1.81,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 175.0,
+          "oi_prev": 170.0,
+          "oi_change": 5.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "609b0dab-df75-4edc-8cbe-c7cb37705052",
+        "error": null,
+        "submitted": true,
+        "limit_price": 3.03,
+        "contracts": 3
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "probe_strategy": "QUIET_TAPE"
   }
 ]

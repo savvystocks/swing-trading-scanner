@@ -69,8 +69,9 @@ def run_day(db, day_iso):
         spy_signs.append(spy)
         dp = (f.get("dark_pool") or {}).get("n_prints") or 0
         mny = ((_K / _S - 1) * 100 * (1 if right == "call" else -1)) if (_K and _S) else None
+        hr = (f.get("macro_context") or {}).get("execution_hour")
         meta[cid] = {"e": e, "side": side, "sma": sma, "spy": spy, "spr": spr or 99,
-                     "score": score or 0, "right": right, "dp": dp, "mny": mny}
+                     "score": score or 0, "right": right, "dp": dp, "mny": mny, "hr": hr}
     paths = defaultdict(list)
     for cid, ts, bid in con.execute(
             "select candidate_id, poll_ts_utc, bid from bid_path where bid is not null and stale is not 1"):
@@ -107,6 +108,15 @@ def run_day(db, day_iso):
         # LIVE_SPEC (registered 2026-08-12): exact replica of the live book's gates - the honest
         # comparator for hypotheses that differ from it by exactly one key (router, band ceiling).
         "LIVE_SPEC": lambda m: fade(m) and tight(m) and band(m, 50000, 400000) and abs(m["spy"]) < 1.5,
+        # TIME-OF-DAY buckets (registered 2026-08-12, owner: "what are we missing" - entry hour
+        # was never tested; path signatures say the first 2h decide destiny, so WHEN we enter
+        # may matter as much as what). LIVE_SPEC gates + UTC execution-hour windows.
+        "TOD_OPEN": lambda m: (fade(m) and tight(m) and band(m, 50000, 400000)
+                               and abs(m["spy"]) < 1.5 and isinstance(m.get("hr"), (int, float)) and m["hr"] <= 14),
+        "TOD_MID": lambda m: (fade(m) and tight(m) and band(m, 50000, 400000)
+                              and abs(m["spy"]) < 1.5 and isinstance(m.get("hr"), (int, float)) and 15 <= m["hr"] <= 17),
+        "TOD_LATE": lambda m: (fade(m) and tight(m) and band(m, 50000, 400000)
+                               and abs(m["spy"]) < 1.5 and isinstance(m.get("hr"), (int, float)) and m["hr"] >= 18),
         # FADE_WHALE (registered 2026-08-12 after owner band question: stored-cohort replay put
         # fade-shaped 400k-1M at +3.37 day-mean vs -0.47 in-band, halves flipped - unproven)
         "FADE_WHALE": lambda m: fade(m) and tight(m) and 400000 < m["score"] <= 1000000,
@@ -147,6 +157,34 @@ def run_day(db, day_iso):
     for name, pred in books.items():
         out[name] = sel(pred)
     out["EARLY_CUT"] = {"n": len(_bl), "mean": round(sum(_bl) / len(_bl), 2) if _bl else None}
+    # EXIT VARIANTS (registered 2026-08-12, owner: exploration was entry-only). LIVE_SPEC
+    # cohort, five alternative exit rules replayed on the same stored bid paths. EXIT_STOP40
+    # maps to the live exit.stop key (auto-promotable); the others are measurement until one
+    # earns a code session.
+    _live_cids = [c for c in res if books["LIVE_SPEC"](meta[c])]
+
+    def _trunc_tp(pts, e, cap=80):
+        cut = []
+        for ts, b in pts:
+            cut.append((ts, b))
+            if (b / e - 1) * 100 >= cap:
+                break
+        return cut
+
+    def _trunc_time(pts, hours=48):
+        t0 = pts[0][0]
+        return [(ts, b) for ts, b in pts if (ts - t0) <= hours * 3600000] or pts[:1]
+
+    _variants = {
+        "EXIT_STOP40": lambda pts, e: replay(pts, e, stop=-40),
+        "EXIT_TIGHT_TRAIL": lambda pts, e: replay(pts, e, give=0.10),
+        "EXIT_TRAIL30": lambda pts, e: replay(pts, e, trig=30),
+        "EXIT_TP80": lambda pts, e: replay(_trunc_tp(pts, e), e),
+        "EXIT_TIME48": lambda pts, e: replay(_trunc_time(pts), e),
+    }
+    for _vn, _vf in _variants.items():
+        _vals = [_vf(paths[c], meta[c]["e"]) for c in _live_cids if len(paths.get(c) or []) >= 3]
+        out[_vn] = {"n": len(_vals), "mean": round(sum(_vals) / len(_vals), 2) if _vals else None}
     with open(os.path.join(OUT, "ledger.jsonl"), "a", encoding="utf-8") as f:
         f.write(json.dumps(out) + "\n")
     return out

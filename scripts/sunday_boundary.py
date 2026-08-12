@@ -35,6 +35,9 @@ MENU = {
     # (more trades) - the throughput floor never blocks them.
     "FADE_WHALE": {"entry.flow_max": 1000000, "_vs": "LIVE_SPEC"},
     "BAND_50_400": {"entry.max_spy_dist_pct": 99.0, "_vs": "LIVE_SPEC"},   # = kill the router
+    # EXIT exploration (2026-08-12): the one exit variant that maps to an existing live spec
+    # key. Trail/TP/time variants are ledger-measured but need a code session to wire.
+    "EXIT_STOP40": {"exit.stop": -40, "_vs": "LIVE_SPEC"},
 }
 
 

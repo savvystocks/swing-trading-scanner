@@ -62,6 +62,13 @@ def spread_cap(default_cap):
     return (spec().get("entry") or {}).get("max_spread_pct", default_cap) if active() else default_cap
 
 
+def no_same_day_exit():
+    """Owner hold rule 2026-08-12: no position is SOLD the same calendar day it was bought
+    (broker day-trade flags). Applies to every book's managed exits and backstop arming;
+    owner /flatten is exempt (its flush path does not consult this)."""
+    return bool((spec().get("exit") or {}).get("no_same_day_exit")) and active()
+
+
 def exit_overrides():
     """Spec-driven exit params for the FADE branch: {stop, max_hold_days} or {}."""
     x = spec().get("exit") or {}

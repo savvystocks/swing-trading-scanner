@@ -902,6 +902,10 @@ def manage_backstops(creds, params, positions=None, log=None):
     for rec in log_list:
         if rec.get("status") != "OPEN" or not isinstance(rec.get("legs"), dict):
             continue
+        if (fade_book.no_same_day_exit()
+                and str(rec.get("entry_ts_utc", ""))[:10] == datetime.now(timezone.utc).date().isoformat()):
+            continue                                              # owner hold rule: a resting stop can
+                                                                  # fill same-day - arm from tomorrow
         for leg_name, occ in _record_leg_occs(rec).items():
             sym = (occ or "").upper()
             if canary and sym != canary:
@@ -1328,6 +1332,12 @@ def manage_open_positions(creds, params, positions=None):
             dec = manage_exit(rec["entry_ts_utc"], ret_pct, params, expiry_iso=_occ_expiry(occ),
                               stage=path.get("stage", "initial"), mfe_pct=path["mfe_pct"],
                               book=rec.get("book"))
+            if (dec.get("action") not in (None, "HOLD") and fade_book.no_same_day_exit()
+                    and str(rec.get("entry_ts_utc", ""))[:10] == datetime.now(timezone.utc).date().isoformat()):
+                path["pdt_deferred"] = dec["action"]              # owner hold rule (2026-08-12): no
+                dec = {"action": "HOLD", "return_pct": ret_pct}   # same-CALENDAR-DAY sells (broker
+                                                                  # day-trade flags); the exit rule
+                                                                  # fires from tomorrow's first cycle
             if dec["action"] == "SCALE_OUT_50":                          # tier 1: sell half, runner continues
                 if not _retire_stop(rec, leg_name, occ, creds, log, closed_legs):
                     dirty = True                                          # stop live / cancel unconfirmed ->

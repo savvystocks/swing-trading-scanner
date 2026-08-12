@@ -79,6 +79,19 @@ def _close(r, creds, lab, now):
     return False
 
 
+def _held_qty(sym, creds):
+    """Broker-side truth: current equity qty for sym (0 if none). The idempotency guard for
+    entries - a record lost to a push race must never cause a second buy (2026-08-12: the
+    first OVERNIGHT night bought twice exactly this way)."""
+    req = urllib.request.Request(f"https://paper-api.alpaca.markets/v2/positions/{sym}",
+                                 headers={"APCA-API-KEY-ID": creds[0], "APCA-API-SECRET-KEY": creds[1]})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return abs(int(float(json.loads(r.read()).get("qty") or 0)))
+    except Exception:
+        return 0
+
+
 def cycle(creds, allow_entries=True):
     """Called each engine cycle (market already confirmed open upstream). Fail-open.
     allow_entries=False (owner HALT / active brake) still runs exits - never entries."""
@@ -134,6 +147,11 @@ def cycle(creds, allow_entries=True):
             return True
         return False
 
+    open_qty = sum((r.get("shares") or {}).get("qty") or 0 for r in log
+                   if r.get("status") == "OPEN" and (r.get("shares") or {}).get("symbol") == sym)
+    if allow_entries and _held_qty(sym, creds) > open_qty:
+        allow_entries = False
+        print(f"  shares probe: broker holds more {sym} than OPEN records claim - entry guard on")
     if allow_entries and open_ov is None and not ov_entered_today:
         mtc = _mins_to_close(creds)
         if mtc is not None and mtc <= 25:          # the session's last ~2 cycles, whatever the close

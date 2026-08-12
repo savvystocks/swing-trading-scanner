@@ -165423,7 +165423,7 @@
     "expiry": "2026-09-11",
     "strike": 62.0,
     "dte": 35,
-    "entry_premium": 3.0,
+    "entry_premium": 2.25,
     "limit_price": 3.03,
     "contracts": 3,
     "alloc_usd": 1000.0,
@@ -165443,6 +165443,11 @@
      "oi_prev": 170.0,
      "oi_change": 5.0,
      "source": "uw_historic"
+    },
+    "fill_corrected": {
+     "logged": 3.0,
+     "actual": 2.25,
+     "why": "limit filled below stale scoring quote (broker avg is truth)"
     }
    }
   },
@@ -165793,7 +165798,7 @@
     "expiry": "2026-09-11",
     "strike": 741.0,
     "dte": 35,
-    "entry_premium": 9.66,
+    "entry_premium": 3.02,
     "limit_price": 9.76,
     "contracts": 1,
     "alloc_usd": 1000.0,
@@ -165813,6 +165818,11 @@
      "oi_prev": 324.0,
      "oi_change": 6.0,
      "source": "uw_historic"
+    },
+    "fill_corrected": {
+     "logged": 9.66,
+     "actual": 3.02,
+     "why": "limit filled below stale scoring quote (broker avg is truth)"
     }
    }
   },
@@ -166093,7 +166103,7 @@
     "expiry": "2026-09-11",
     "strike": 291.0,
     "dte": 35,
-    "entry_premium": 4.88,
+    "entry_premium": 1.91,
     "limit_price": 4.93,
     "contracts": 2,
     "alloc_usd": 1000.0,
@@ -166113,6 +166123,11 @@
      "oi_prev": 237.0,
      "oi_change": 9.0,
      "source": "uw_historic"
+    },
+    "fill_corrected": {
+     "logged": 4.88,
+     "actual": 1.91,
+     "why": "limit filled below stale scoring quote (broker avg is truth)"
     }
    }
   },
@@ -166143,7 +166158,7 @@
  {
   "trade_set_id": "ADOPT-615bae8381",
   "ticker": "IWM",
-  "status": "OPEN",
+  "status": "CLOSED",
   "entry_ts_utc": "2026-08-12T19:45:00.168Z",
   "adopted": true,
   "adopted_from": {
@@ -166193,7 +166208,11 @@
    }
   },
   "leg_exits": {},
-  "exit": null
+  "exit": {
+   "reason": "reconcile_duplicate_claim",
+   "note": "adoption raced the merge resolver - DP_HEAVY record owns these 2 contracts",
+   "at": "2026-08-12T21:20Z"
+  }
  },
  {
   "book": "PROBE",

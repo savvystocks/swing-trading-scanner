@@ -38,6 +38,8 @@ MENU = {
     # EXIT exploration (2026-08-12): the one exit variant that maps to an existing live spec
     # key. Trail/TP/time variants are ledger-measured but need a code session to wire.
     "EXIT_STOP40": {"exit.stop": -40, "_vs": "LIVE_SPEC"},
+    # SOFT_ROUTER (2026-08-12): widen the mild window 1.5 -> 2.5 if the middle rung earns it.
+    "SOFT_ROUTER": {"entry.max_spy_dist_pct": 2.5, "_vs": "LIVE_SPEC"},
 }
 
 

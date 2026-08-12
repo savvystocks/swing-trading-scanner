@@ -111,6 +111,14 @@ def run_day(db, day_iso):
         # TIME-OF-DAY buckets (registered 2026-08-12, owner: "what are we missing" - entry hour
         # was never tested; path signatures say the first 2h decide destiny, so WHEN we enter
         # may matter as much as what). LIVE_SPEC gates + UTC execution-hour windows.
+        # SOFT_ROUTER (registered 2026-08-12: the router is binary at 1.5 - test the middle
+        # rung. Owner: "what can we do to make the fade system better")
+        "SOFT_ROUTER": lambda m: fade(m) and tight(m) and band(m, 50000, 400000) and abs(m["spy"]) < 2.5,
+        # TREND_CONSENSUS (registered 2026-08-12): the trend-day counterpart candidate - flow
+        # agreeing with both trends, ONLY on the days the fade router stands down. If this
+        # earns, the router becomes a junction (mild->fade, trend->consensus), not a stop.
+        "TREND_CONSENSUS": lambda m: (m["sma"] * m["side"] > 0 and m["spy"] * m["side"] > 0
+                                      and tight(m) and band(m, 50000, 400000) and abs(m["spy"]) >= 1.5),
         "TOD_OPEN": lambda m: (fade(m) and tight(m) and band(m, 50000, 400000)
                                and abs(m["spy"]) < 1.5 and isinstance(m.get("hr"), (int, float)) and m["hr"] <= 14),
         "TOD_MID": lambda m: (fade(m) and tight(m) and band(m, 50000, 400000)

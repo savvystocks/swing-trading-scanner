@@ -90,6 +90,16 @@ jobs:
           for i in 1 2 3 4 5; do
             git push origin HEAD:main && break
             echo "push rejected - rebasing onto sandbox, attempt $i"
-            git pull --rebase --autostash origin main || true
+            if ! git pull --rebase --autostash origin main; then
+              # record-level resolver (2026-08-12: the silent-loss bug that orphaned NVDA -
+              # a conflicted rebase died here and the run's trade records vanished)
+              if python scripts/merge_logs.py; then
+                GIT_EDITOR=true git rebase --continue || true
+              else
+                git rebase --abort || true
+                git pull --rebase -X theirs --autostash origin main || true
+              fi
+            fi
             sleep 2
           done
+          git push origin HEAD:main || { echo "PERSIST FAILED - trade records NOT on main"; exit 1; }

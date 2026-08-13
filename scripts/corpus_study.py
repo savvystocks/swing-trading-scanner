@@ -64,10 +64,22 @@ def line(name, pts):
             f"| {sh['day_mean']:+.2f}% | {s['h1']:+.1f} / {s['h2']:+.1f} |")
 
 
+def spy_day_color():
+    """GREEN/RED per day from SPY close-to-close (equity.json is written by the harvester)."""
+    eq = json.load(open(os.path.join(OUT, "equity.json"), encoding="utf-8"))["SPY"]
+    days = sorted(eq)
+    out = {}
+    for i in range(1, len(days)):
+        out[days[i]] = "GREEN" if eq[days[i]]["c"] >= eq[days[i - 1]]["c"] else "RED"
+    return out
+
+
 def main():
     rows = json.load(open(os.path.join(OUT, "rows.json"), encoding="utf-8"))
+    color = spy_day_color()
     for r in rows:
         r["ret"] = replay([c for _, c in r["path"]], r["e"])
+        r["color"] = color.get(r["day"], "?")
     L = ["# Historical corpus stress-test - built overnight 2026-08-13",
          "",
          f"Corpus: {len(rows)} replayable proxy candidates (20 liquid tickers, Sep-2024 to Jul-2026,",
@@ -100,6 +112,40 @@ def main():
         fs = f"{f['day_mean']:+.2f}% ({f['trades']}/{f['days']}d t={f['t']})" if f else "-"
         cs = f"{c['day_mean']:+.2f}% ({c['trades']}/{c['days']}d t={c['t']})" if c else "-"
         L.append(f"| {tag} | {fs} | {cs} |")
+    L.append("")
+    L.append("## Every-day coverage (owner ask 2026-08-13: green AND red days, all strategies)")
+    L.append("| slice | n/days | day-mean raw | haircut | halves |")
+    L.append("|---|---|---|---|---|")
+    allr = rows
+    L.append(line("EXEC_BASELINE (any shape, any day)", P([r for r in allr if band(r)])))
+    L.append(line("EXEC_BASELINE green days", P([r for r in allr if band(r) and r["color"] == "GREEN"])))
+    L.append(line("EXEC_BASELINE red days", P([r for r in allr if band(r) and r["color"] == "RED"])))
+    L.append(line("FADE mild GREEN days", P([r for r in fade if mild(r) and band(r) and r["color"] == "GREEN"])))
+    L.append(line("FADE mild RED days", P([r for r in fade if mild(r) and band(r) and r["color"] == "RED"])))
+    L.append(line("CONSENSUS trend GREEN (calls w/ uptrend)", P([r for r in cons if not mild(r) and r["color"] == "GREEN"])))
+    L.append(line("CONSENSUS trend RED (puts w/ downtrend)", P([r for r in cons if not mild(r) and r["color"] == "RED"])))
+    L.append(line("MIXED shape (neither fade nor consensus)", P([r for r in allr if r["shape"] == "mixed"])))
+    L.append(line("CALLS only, green days", P([r for r in allr if r["side"] == 1 and r["color"] == "GREEN"])))
+    L.append(line("PUTS only, red days", P([r for r in allr if r["side"] == -1 and r["color"] == "RED"])))
+    L.append("")
+    L.append("## EARLY_STRENGTH confirmation on FADE mild in-band (enter only after +5..15% rise)")
+    L.append("| mode | n/days | day-mean raw | haircut | halves |")
+    L.append("|---|---|---|---|---|")
+    es_pts, es_all = [], [r for r in fade if mild(r) and band(r)]
+    for r in es_all:
+        closes = [c for _, c in r["path"]]
+        if len(closes) < 4:
+            continue
+        for j in (1, 2, 3):                       # confirmation window ~first 3 hourly bars
+            rise = closes[j] / r["e"] - 1
+            if 0.05 <= rise <= 0.15:
+                e2 = closes[j]                    # enter at the confirmed price
+                es_pts.append((r["day"], replay(closes[j + 1:] or closes[-1:], e2)))
+                break
+            if rise > 0.15:
+                break
+    L.append(line("immediate entry (live mode)", P(es_all)))
+    L.append(line("confirmed entry (early-strength)", es_pts))
     L.append("")
     L.append("## Exit variants on FADE mild in-band (raw)")
     L.append("| exit rule | n/days | day-mean raw | haircut | halves |")

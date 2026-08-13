@@ -144,6 +144,11 @@ def main():
     if len(cands) > 6000:
         stepn = len(cands) / 6000.0
         cands = [cands[int(i * stepn)] for i in range(6000)]
+    allc = sorted(ck["cands"], key=lambda c: (c["day"], c["occ"]))   # owner ask 2026-08-13 02:02:
+    if len(allc) > 4000:                                            # EXEC_BASELINE analogue - every
+        stepn = len(allc) / 4000.0                                  # shape incl. mixed, evenly
+        allc = [allc[int(i * stepn)] for i in range(4000)]          # sampled across the 2 years
+    cands = cands + allc
     print(f"path stage: {len(cands)} candidates", flush=True)
     rows = json.load(open(os.path.join(OUT, "rows.json"))) if os.path.exists(os.path.join(OUT, "rows.json")) else []
     seen = {(r["occ"], r["day"]) for r in rows}

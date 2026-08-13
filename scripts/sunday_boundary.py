@@ -134,6 +134,14 @@ def main():
         l2 = sum(x for _, x in pts[half:]) / max(len(pts) - half, 1)
         ok = (m > 0 and rel and sum(rel) / len(rel) > 2.0 and e > 0 and l2 > 0)
         lines.append(f"{book}: {len(pts)}d mean {m:+.2f}% vs {vs} {'PASS' if ok else 'HOLD'}")
+        try:                                     # 2y corpus prior beside every verdict - ADVISORY
+            pri = json.load(open("reports/research/historical_corpus_2026-08-13/corpus_priors.json"))
+            cp = pri.get(book)
+            if cp:
+                lines.append(f"   corpus prior 2y: {cp['day_mean']:+.2f}% t={cp['t']} over "
+                             f"{cp['days']}d (advisory - virgin days decide)")
+        except Exception:
+            pass
         if ok and os.environ.get("BOUNDARY_REPORT_ONLY") == "1":
             lines.append(f">>> {book} PASSES its bars - application deferred to Sunday (report-only run)")
             continue

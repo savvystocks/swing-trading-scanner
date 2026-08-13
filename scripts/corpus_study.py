@@ -156,6 +156,31 @@ def main():
                      ("take-profit +80", {"cap": 80}), ("time-stop ~3 sessions", {"max_bars": 21})]:
         pts = [(r["day"], replay([c for _, c in r["path"]], r["e"], **kw)) for r in base]
         L.append(line(name, pts))
+    # CORPUS PRIORS (owner order 2026-08-13 02:12: "all of this data into the lab") - a
+    # machine-readable 2y prior per Sunday-menu hypothesis. ADVISORY ONLY by design: the
+    # boundary prints it beside each virgin verdict but never blocks on it - historical
+    # concordance informs, virgin days decide. A new blocking gate would be the exact
+    # over-engineering the throughput floor exists to prevent.
+    pri = {}
+    b_all = stats(P([r for r in allr if band(r)]))
+    lv = stats(P(base))
+    pri["_baseline_any_shape"] = b_all["day_mean"] if b_all else None
+    pri["_live_spec_analogue"] = lv["day_mean"] if lv else None
+
+    def put(k, pts):
+        s = stats(pts)
+        pri[k] = ({"day_mean": s["day_mean"], "t": s["t"], "n": s["trades"], "days": s["days"]}
+                  if s else None)
+    RP = lambda r, **kw: replay([c for _, c in r["path"]], r["e"], **kw)
+    put("EXIT_STOP40", [(r["day"], RP(r, stop=-40)) for r in base])
+    put("FADE_WHALE", P([r for r in fade if mild(r) and whale(r)]))
+    put("BAND_50_400", P([r for r in fade if band(r)]))
+    put("SOFT_ROUTER", P([r for r in fade if band(r) and abs(r["spy"]) < 2.5]))
+    put("OPT_WINNER", [(r["day"], RP(r, stop=-40)) for r in fade
+                       if mild(r) and abs(r["sma"]) < 3 and r["prem"] <= 250000])
+    put("V13_DEPTH", P([r for r in fade if mild(r) and band(r) and abs(r["sma"]) < 2]))
+    put("MILD_ONLY", P([r for r in fade if mild(r) and band(r) and abs(r["sma"]) < 2]))
+    json.dump(pri, open(os.path.join(OUT, "corpus_priors.json"), "w"), indent=1)
     open(os.path.join(OUT, "STRESS_TEST.md"), "w", encoding="utf-8").write("\n".join(L) + "\n")
     print("\n".join(L))
 

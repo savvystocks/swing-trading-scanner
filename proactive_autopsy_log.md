@@ -3808,3 +3808,12 @@
 
 **Determining factor:** Calendar FAILED (-25%): the range broke; IV term None (ratio None) hurt the spread.
 
+## Autopsy - BMNR (287f6f0afd37)
+- entered 2026-07-30T17:02:12.329Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -51.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 17.5 worked against it.
+

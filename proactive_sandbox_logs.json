@@ -160902,17 +160902,55 @@
     "ledger_terminal": "filled"
    }
   },
-  "exit": null,
-  "status": "OPEN",
+  "exit": {
+   "reason": "CLOSE_STOP_LOSS",
+   "underlying_move_pct": 0.0,
+   "entry_slippage_pct": null,
+   "leg_returns_pct": {
+    "bullish_call": -51.0
+   },
+   "winner": "bullish_call",
+   "loser": "bullish_call",
+   "leg_path": {
+    "bullish_call": {
+     "mfe_pct": 13.3,
+     "mae_pct": -51.0,
+     "stage": "closed",
+     "close_fails": 0
+    }
+   },
+   "mfe_pct": 13.3,
+   "mae_pct": -51.0,
+   "determining_factor": "Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 17.5 worked against it.",
+   "tuning_recommendations": []
+  },
+  "status": "CLOSED",
   "buy_alert_delivered": true,
-  "leg_exits": {},
+  "leg_exits": {
+   "bullish_call": {
+    "occ": "BMNR260828C00018500",
+    "closed_at": "2026-08-13T16:44:46.682Z",
+    "return_pct": -51.0,
+    "reason": "-51.0% <= -50% hard stop",
+    "action": "CLOSE_STOP_LOSS",
+    "closed_ok": true
+   }
+  },
   "leg_path": {
    "bullish_call": {
     "mfe_pct": 13.3,
-    "mae_pct": -49.0,
-    "stage": "initial"
+    "mae_pct": -51.0,
+    "stage": "closed",
+    "close_fails": 0
    }
-  }
+  },
+  "exit_order_ids": [
+   {
+    "order_id": "3471258b-77fe-4c12-b8d2-f4c66f4aca9a",
+    "at": "2026-08-13T16:44:46.682Z",
+    "ledger_terminal": "filled"
+   }
+  ]
  },
  {
   "trade_set_id": "56a3f4eabce3",

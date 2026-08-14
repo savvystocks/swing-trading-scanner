@@ -42,7 +42,7 @@ def tg(msg):
             pass
 
 
-def cohort(db="data/harvest.db"):
+def cohort(db="data/harvest.db", wide=False):
     con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
     rows = con.execute(
         """select c.candidate_id, c.entry_ref, c.right, c.spread_pct, c.rule_score, c.features,
@@ -59,15 +59,21 @@ def cohort(db="data/harvest.db"):
         sma = (f.get("macro") or {}).get("distance_to_sma20_pct")
         spy = (f.get("regime_stack") or {}).get("market_spy_dist_pct")
         side = 1 if right == "call" else -1
-        if not (isinstance(sma, (int, float)) and isinstance(spy, (int, float))
-                and sma * side < 0 and spy * side < 0 and (spr or 99) <= 2.0
-                and score and 50000 <= score <= 400000):
+        if not (isinstance(sma, (int, float)) and isinstance(spy, (int, float))):
+            continue
+        if not wide and not (sma * side < 0 and spy * side < 0 and (spr or 99) <= 2.0
+                             and score and 50000 <= score <= 400000):
             continue
         vec = []
         for blk, key in NUMERIC_PATHS:
             v = (f.get(blk) or {}).get(key)
             vec.append(float(v) if isinstance(v, (int, float)) else float("nan"))
         vec.append(float(side))
+        if wide:                              # WIDE student: whole funnel; shape/spread/size are
+            vec.append(float(spr or 99))      # FEATURES here, not filters (owner order 2026-08-15)
+            vec.append(float(score or 0))
+            vec.append(1.0 if (sma * side < 0 and spy * side < 0) else 0.0)
+            vec.append(1.0 if (sma * side > 0 and spy * side > 0) else 0.0)
         X.append(vec)
         y.append(1 if ret > 0 else 0)
         days.append(day)
@@ -115,7 +121,37 @@ def main():
                       "mean": round(sum(top) / len(top) * 100, 2)},
                       "computed_at": datetime.now(timezone.utc).isoformat()[:16]}) + "\n")
     led.close()
+    Xw, yw, dw, cw = cohort(wide=True)
+    if len(Xw) >= 1000:
+        Xw = np.array(Xw); yw = np.array(yw); gw = np.array(dw)
+        oofw = np.full(len(yw), np.nan)
+        for tr, te in GroupKFold(n_splits=min(5, len(set(dw)))).split(Xw, yw, gw):
+            mw = HistGradientBoostingClassifier(max_depth=3, learning_rate=0.08, random_state=7)
+            mw.fit(Xw[tr], yw[tr])
+            oofw[te] = mw.predict_proba(Xw[te])[:, 1]
+        aucw = roc_auc_score(yw[~np.isnan(oofw)], oofw[~np.isnan(oofw)])
+        lines.append(f"WIDE student: n={len(yw)}, day-grouped OOF AUC {aucw:.3f}")
+        per_dw = defaultdict(list)
+        for i, cid in enumerate(cw):
+            if gw[i] > REG_DAY and not np.isnan(oofw[i]):
+                per_dw[gw[i]].append((oofw[i], ret_by_cid.get(cid)))
+        led = open("reports/shadow_lab/ledger.jsonl", "a", encoding="utf-8")
+        for d, items in sorted(per_dw.items()):
+            items.sort(reverse=True)
+            top = [r for _, r in items[:3] if r is not None]
+            if top:
+                iso = date.fromordinal(date(1970, 1, 1).toordinal() + d).isoformat()
+                led.write(json.dumps({"day": iso, "META_WIDE": {"n": len(top),
+                          "mean": round(sum(top) / len(top) * 100, 2)},
+                          "computed_at": datetime.now(timezone.utc).isoformat()[:16]}) + '\n')
+        led.close()
+        json.dump({"n": len(yw), "auc": round(aucw, 4),
+                   "trained": datetime.now(timezone.utc).isoformat()},
+                  open(f"reports/fade_meta/wide_{date.today().isoformat()}.json", "w"), indent=1)
+    else:
+        lines.append(f"WIDE student: cohort {len(Xw)}/1000 - not yet")
     fname = f"reports/fade_meta/model_{date.today().isoformat()}.json"
+
     json.dump({"n": n, "auc": round(auc, 4), "trained": datetime.now(timezone.utc).isoformat(),
                "features": [f"{b}.{k}" for b, k in NUMERIC_PATHS] + ["side"]},
               open(fname, "w"), indent=1)

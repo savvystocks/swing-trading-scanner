@@ -60,7 +60,9 @@ def main():
     days = [json.loads(l) for l in open(LEDGER, encoding="utf-8") if l.strip()]
     seen = {}
     for d in days:
-        seen[d["day"]] = d                      # last write per day wins
+        seen.setdefault(d["day"], {}).update(d)  # MERGE per day (2026-08-14: a META_SELECT-only
+                                                 # append was clobbering the day's full book row -
+                                                 # every book read 0d on the first Friday boundary)
     days = [seen[k] for k in sorted(seen)]
     base = [(d["day"], d["BASELINE"]["mean"]) for d in days if d.get("BASELINE", {}).get("mean") is not None]
     lines = [f"SUNDAY BOUNDARY {datetime.now(timezone.utc).date()} - virgin days: {len(days)}"]

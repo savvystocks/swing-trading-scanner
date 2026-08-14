@@ -2536,3 +2536,9 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - ETHA (675c8257213b) - 2026-08-14T13:32:33.860Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---

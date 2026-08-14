@@ -3817,3 +3817,12 @@
 
 **Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 17.5 worked against it.
 
+## Autopsy - ETHA (675c8257213b)
+- entered 2026-07-31T14:12:09.806Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -52.5% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-52%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 14.5 worked against it.
+

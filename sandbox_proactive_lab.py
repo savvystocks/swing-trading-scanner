@@ -1681,10 +1681,26 @@ def reconcile_orphans(creds, params, positions=None, log=None):
         if isinstance(rec.get("legs"), dict):
             for occ in _record_leg_occs(rec).values():
                 known.add((occ or "").upper())
+    recent = set()
+    try:                                   # 2026-08-14 double-claim fix: an occ FILLED in the last
+        from datetime import timedelta as _td      # 45 min gets a propagation grace period before
+        _after = (datetime.now(timezone.utc) - _td(minutes=45)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        _rq = urllib.request.Request(
+            "https://paper-api.alpaca.markets/v2/orders?status=closed&limit=100&after=" + _after,
+            headers={"APCA-API-KEY-ID": creds[0], "APCA-API-SECRET-KEY": creds[1]})
+        with urllib.request.urlopen(_rq, timeout=15) as _r:
+            for _o in json.loads(_r.read()):
+                if _o.get("filled_at") and (_o.get("side") or "buy") == "buy":
+                    recent.add((_o.get("symbol") or "").upper())
+    except Exception:
+        pass                               # fail-open: no grace list -> old behavior
     adopted = []
     for p in positions:
         occ = (p.get("symbol") or "").upper()
         if not occ or occ in known:
+            continue
+        if occ in recent:
+            print(f"  orphan reconcile: {occ} filled <45min ago - grace period, record likely in flight")
             continue
         qty = abs(int(float(p.get("qty") or 0)))
         avg = float(p.get("avg_entry_price") or 0)

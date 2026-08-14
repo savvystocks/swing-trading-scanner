@@ -6,7 +6,7 @@ name: v10-lab
 
 on:
   schedule:
-    - cron: "1,11,21,31,41,51 13-20 * * 1-5"
+    - cron: "1,11,21,31,41,51 13-21 * * 1-5"   # hour 21 = winter (EST) last trading hour; summer 21:xx cycles no-op on the market-closed guard
                                    # FULL-CADENCE BACKUP (2026-08-06: cron-job.org went silent at 18:55
                                    # and the sparse backup couldn't carry the day -> dispatcher is now
                                    # REDUNDANT: GH schedule runs every 10 min at :x1 offsets, primary

@@ -1189,6 +1189,9 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
     orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run)
     record = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
               "book": "PROBE" if probe else ("FADE" if fade_book.active() else "V10"),
+              "router_state": ("MILD" if isinstance((md.get("regime_stack") or {}).get("market_spy_dist_pct"),
+                                                    (int, float))
+                               and abs(md["regime_stack"]["market_spy_dist_pct"]) < 1.5 else "TREND"),
               "entry_ts_utc": md["entry_ts_utc"], "leg_budget_usd": LEG_BUDGET,
               "execution_mode": "DRY_RUN" if dry_run else "LIVE_PAPER",
               "occ_resolution": "alpaca_real" if resolve_real else "synthesized",
@@ -1670,7 +1673,7 @@ def reconcile_orphans(creds, params, positions=None, log=None):
     log_list = log if log is not None else _load_log_list()
     known = set()
     for rec in log_list:
-        if rec.get("book") == "PUTW" and rec.get("occ"):
+        if rec.get("occ") and not isinstance(rec.get("legs"), dict):   # PUTW + VRP_DAILY bare-occ
             known.add(rec["occ"].upper())      # 2026-08-11 friendly-fire fix: PUTW records carry a
             continue                           # bare occ (no legs dict) - the reconciler adopted our
                                                # own short put 23 min after entry and the exit engine
@@ -1884,6 +1887,12 @@ def run_scheduled_cycle(mock=False):
                             allow_entries=not (brake_active or halt_active))   # HALT stops buys, not sells
     except Exception as e:
         print(f"  shares probes skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")
+    try:                                                     # VRP_DAILY probe (structural premium leg,
+        import vrp_probe                                     # self-settling like PUTW - no sell orders,
+        vrp_probe.cycle(creds,                               # never a day trade)
+                        allow_entries=not (brake_active or halt_active))
+    except Exception as e:
+        print(f"  vrp probe skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")
     entered_list = []                                        # FADE v1.2: up to 2 clusters per cycle
     _open_fade = (sum(1 for r in _load_log_list() if r.get("book") == "FADE" and r.get("status") == "OPEN")
                   if fade_book.active() else 0)

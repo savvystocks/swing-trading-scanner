@@ -6,7 +6,7 @@
   "flow_max": 400000,
   "direction": "contra_trend_and_spy",
   "max_spread_pct": 2.0,
-  "max_spy_dist_pct": 1.5
+  "max_spy_dist_pct": 99.0
  },
  "exit": {
   "scale_out": null,
@@ -26,7 +26,7 @@
  ],
  "activated_utc": "2026-08-05T16:56Z",
  "activation": "owner explicit yes (counted trial); paper only; life bar day_clustered_t",
- "spec_version": "1.7-widenet",
+ "spec_version": "1.8-discovery",
  "v1.1_note": "owner order 2026-08-05 17:34 UTC: capacity 3->5 on paper; signal/filters/exits unchanged; dip-day cluster drawdown risk accepted and measured",
  "v1.2_note": "owner order 2026-08-05 17:38 UTC: 2 entries/cycle when slots free; cooloff waived for FADE (replay cohort had none); concentration guard = max 2 FADE entries per ticker per day",
  "min_contracts": 1,
@@ -73,9 +73,17 @@
    "symbol": "SPY",
    "size_usd": 1000
   },
-  "purpose": "the WIDE experimental net: every feasible tested strategy trades live daily at $1k, up to 5 fills per strategy, all tagged PROBE + name; none of it touches fade evidence"
+  "purpose": "the WIDE experimental net: every feasible tested strategy trades live daily at $1k, up to 5 fills per strategy, all tagged PROBE + name; none of it touches fade evidence",
+  "vrp": {
+   "enabled": true,
+   "otm_pct": 2.5,
+   "dte": 2,
+   "max_open": 3,
+   "note": "daily short XSP put ~2.5% OTM ~2td out, hold to cash settlement; 1/day; structural premium leg (signal-origin top row); conditions earned later via virgin days"
+  }
  },
  "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal.",
  "v1.7.1_note": "owner order 2026-08-12 00:36 (sim-first then probe): FADE_WHALE probe slot - fade-shaped 400k-1M prints from a side-pool the live book never sees (its candidate list is byte-identical). Sim promising but half-flipped; live fills decide. 1M+ excluded (negative, n=8).",
- "v1.7_note": "owner order 2026-08-11 21:52: confirmed-entry REVERTED off the live book (it cut fills ~7x - over-engineering toward never trading). Fade book buys immediately again, exactly as validated. Early-strength becomes an exploratory PARALLEL door (probe.early_strength, 5/day): the watcher stashes the same candidates and buys its own lot when one confirms - both doors get live fills and the ledger settles it. Probe roster widened to 7 options strategies at 5 fills/day each, plus OVERNIGHT and TURN_OF_MONTH shares probes (the two tested-positive outside-the-box strategies)."
+ "v1.7_note": "owner order 2026-08-11 21:52: confirmed-entry REVERTED off the live book (it cut fills ~7x - over-engineering toward never trading). Fade book buys immediately again, exactly as validated. Early-strength becomes an exploratory PARALLEL door (probe.early_strength, 5/day): the watcher stashes the same candidates and buys its own lot when one confirms - both doors get live fills and the ledger settles it. Probe roster widened to 7 options strategies at 5 fills/day each, plus OVERNIGHT and TURN_OF_MONTH shares probes (the two tested-positive outside-the-box strategies).",
+ "v1.8_note": "owner order 2026-08-14 22:53: DISCOVERY MODE - the router comes OFF the live book ('we should never let a system starve... still in discovery mode; loosen it; we dial in from the student and the results later'). Fade-shaped entries now fire on ALL days; every record carries router_state MILD/TREND so the evidence splits cleanly. The routed configuration keeps its nightly shadow stream (LIVE_SPEC/MILD books) - tightening later happens through the same virgin-day machinery, from data. Cost stated at decision time: unrouted measured -9..-28%/day this trend week; owner accepts on paper for data."
 }

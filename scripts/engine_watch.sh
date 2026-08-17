@@ -55,4 +55,23 @@ if [ "$AGE" -gt 35 ]; then
     alarm "FAILOVER ITSELF FAILED - open positions are UNMANAGED. Manual intervention needed."
 else
   echo "$(date -u +%FT%TZ) ok: heartbeat ${AGE} min"
+  # CRASH-NOT-DEAD (2026-08-17 KeyError day): crashed runs still push data, so the heartbeat
+  # stays fresh while every cycle dies mid-engine. The workflow stamps data/last_cycle_ok ONLY
+  # when Execute succeeds; fresh heartbeat + stale stamp = CRASHING. Page at 2 consecutive
+  # ticks (30 min), once per episode. NO failover - it would run the same crashing code.
+  CRASHF=/home/poller/.engine_watch_crash
+  OK_TS=$(git show origin/main:data/last_cycle_ok 2>/dev/null || echo "")
+  if [ -n "$OK_TS" ]; then
+    OK_EPOCH=$(date -u -d "$OK_TS" +%s 2>/dev/null || echo 0)
+    OK_AGE=$(( (NOW - OK_EPOCH) / 60 ))
+    if [ "$OK_EPOCH" -gt 0 ] && [ "$OK_AGE" -gt 35 ]; then
+      C=$(cat "$CRASHF" 2>/dev/null || echo 0); C=$((C+1)); echo "$C" > "$CRASHF"
+      echo "$(date -u +%FT%TZ) crash tick $C (last good cycle ${OK_AGE}m ago, heartbeat ${AGE}m)"
+      if [ "$C" -eq 2 ]; then
+        alarm "engine is CRASHING mid-cycle: pushes land (heartbeat ${AGE}m) but the last SUCCESSFUL cycle was ${OK_AGE}m ago. The trade path is dying on a code error - needs a session NOW. Failover NOT fired (same code would crash)."
+      fi
+    else
+      rm -f "$CRASHF" 2>/dev/null
+    fi
+  fi
 fi

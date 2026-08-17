@@ -77,7 +77,9 @@ jobs:
       - name: Mark cycle complete (crash sentinel - the VPS watchdog reads this; 2026-08-17
               KeyError day proved crashed runs still push data, keeping the heartbeat fresh)
         if: success()
-        run: date -u +%FT%TZ > data/last_cycle_ok
+        run: |
+          date -u +%FT%TZ > data/last_cycle_ok
+          echo "$GITHUB_SHA" >> data/last_cycle_ok   # last-good CODE version - the watchdog rolls back to this
       - name: Persist forensic logs to main
         if: always()
         run: |

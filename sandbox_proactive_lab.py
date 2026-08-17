@@ -1918,6 +1918,12 @@ def run_scheduled_cycle(mock=False):
                         allow_entries=not (brake_active or halt_active))
     except Exception as e:
         print(f"  vrp probe skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")
+    try:                                                     # MOMENTUM_ROT probe (top-5 3mo, 200d gate,
+        import momentum_probe                                # monthly shares rotation - fast-tracked
+        momentum_probe.cycle(creds,                          # owner order 2026-08-17)
+                             allow_entries=not (brake_active or halt_active))
+    except Exception as e:
+        print(f"  momentum probe skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")
     entered_list = []                                        # FADE v1.2: up to 2 clusters per cycle
     _open_fade = (sum(1 for r in _load_log_list() if r.get("book") == "FADE" and r.get("status") == "OPEN")
                   if fade_book.active() else 0)

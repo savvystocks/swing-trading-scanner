@@ -1157,7 +1157,7 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         min_ct = fade_book.spec().get("min_contracts", 1)
     if all((leg.get("contracts") or 0) < min_ct for leg in legs.values()):   # AFFORDABILITY GATE (real-money sim)
         return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
-                "reason": f"premium too rich for {min_ct}-contract min on ${LEG_BUDGET:.0f} budget (est >~$4.00/contract)",
+                "reason": f"premium too rich for {min_ct}-contract min on ${LEG_BUDGET:.0f} budget",
                 "status": "SKIPPED"}
     if resolve_real is None:
         resolve_real = all(creds)
@@ -1173,6 +1173,30 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         for name, leg in legs.items():
             sp = (leg.get("execution_cost") or {}).get("bid_ask_spread_pct")
             if isinstance(sp, (int, float)) and sp > cap:
+                try:                                  # SPREAD RETRY (owner 2026-08-17: INTC died on a
+                    import time as _t                 # 7.4% flicker quote, then the probe entered at a
+                    _cr = _paper_creds()              # tight one 30s later - one re-quote before
+                    if all(_cr) and leg.get("occ_symbol") and not probe:   # surrendering the trade
+                        _t.sleep(4)
+                        _rq = urllib.request.Request(
+                            "https://data.alpaca.markets/v1beta1/options/quotes/latest?symbols="
+                            + leg["occ_symbol"] + "&feed=indicative",
+                            headers={"APCA-API-KEY-ID": _cr[0], "APCA-API-SECRET-KEY": _cr[1]})
+                        with urllib.request.urlopen(_rq, timeout=15) as _r2:
+                            _q2 = (json.loads(_r2.read()).get("quotes") or {}).get(leg["occ_symbol"]) or {}
+                        _b2, _a2 = _q2.get("bp"), _q2.get("ap")
+                        if _b2 and _a2 and _a2 > 0 and (_a2 - _b2) / _a2 * 100 <= cap:
+                            _sp2 = round((_a2 - _b2) / _a2 * 100, 2)
+                            leg["execution_cost"] = {"bid": _b2, "ask": _a2,
+                                                     "bid_ask_spread_pct": _sp2,
+                                                     "source": "alpaca_quote_retry"}
+                            leg["entry_premium"] = _a2
+                            leg["limit_price"] = _a2
+                            leg["contracts"] = max(1, int(LEG_BUDGET // (_a2 * 100)))
+                            print(f"  spread retry SAVED {leg['occ_symbol']}: {sp:.1f}% -> {_sp2:.1f}%")
+                            continue
+                except Exception:
+                    pass
                 return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
                         "reason": f"spread_cap: real spread {sp:.1f}% > {cap:.1f}% cap ({name})",
                         "status": "SKIPPED"}

@@ -1694,8 +1694,8 @@ def reconcile_orphans(creds, params, positions=None, log=None):
             headers={"APCA-API-KEY-ID": creds[0], "APCA-API-SECRET-KEY": creds[1]})
         with urllib.request.urlopen(_rq, timeout=15) as _r:
             for _o in json.loads(_r.read()):
-                if _o.get("filled_at") and (_o.get("side") or "buy") == "buy":
-                    recent.add((_o.get("symbol") or "").upper())
+                if _o.get("filled_at"):                      # BOTH sides (2026-08-17: sell-side
+                    recent.add((_o.get("symbol") or "").upper())   # gap let our short puts be adopted)
     except Exception:
         pass                               # fail-open: no grace list -> old behavior
     adopted = []

@@ -50,8 +50,8 @@ def _quote(occ, creds):
         return None, None
 
 
-def _sell_put(occ, limit, creds):
-    body = json.dumps({"symbol": occ, "qty": "1", "side": "sell", "type": "limit",
+def _sell_put(occ, limit, creds, qty=1):
+    body = json.dumps({"symbol": occ, "qty": str(qty), "side": "sell", "type": "limit",
                        "limit_price": str(round(limit, 2)), "time_in_force": "day"}).encode()
     req = urllib.request.Request("https://paper-api.alpaca.markets/v2/orders", data=body,
                                  headers={"APCA-API-KEY-ID": creds[0], "APCA-API-SECRET-KEY": creds[1],
@@ -89,7 +89,7 @@ def weekly_cycle(creds):
                     settle = None
                 if settle is not None:
                     intrinsic = max(r["strike"] - settle, 0.0)
-                    pnl = (r["premium"] - intrinsic) * 100
+                    pnl = (r["premium"] - intrinsic) * 100 * (r.get("contracts") or 1)
                     r["status"] = "CLOSED"
                     r["settle"] = {"xsp": settle, "intrinsic": round(intrinsic, 2),
                                    "pnl_usd": round(pnl, 2), "at": now.isoformat()}
@@ -126,9 +126,11 @@ def weekly_cycle(creds):
     if not bid or bid <= 0.05:
         print(f"  putw: no usable bid for {occ} - skip this cycle")
         return
-    resp = _sell_put(occ, bid, creds)
+    _q = int(cfg.get("contracts", 1))
+    resp = _sell_put(occ, bid, creds, qty=_q)
     if resp and resp.get("id"):
-        log.append({"book": "PUTW", "trade_set_id": "putw" + resp["id"][:8], "ticker": "XSP",
+        log.append({"book": "PUTW", "contracts": _q,
+                    "trade_set_id": "putw" + resp["id"][:8], "ticker": "XSP",
                     "occ": occ, "strike": strike, "expiry": expiry.isoformat(),
                     "premium": bid, "order_id": resp["id"], "status": "OPEN",
                     "entry_ts_utc": now.isoformat(), "note": "green-day put-write leg v1"})

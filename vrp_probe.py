@@ -40,8 +40,8 @@ def _quote(occ, creds):
         return None, None
 
 
-def _sell(occ, limit, creds):
-    body = json.dumps({"symbol": occ, "qty": "1", "side": "sell", "type": "limit",
+def _sell(occ, limit, creds, qty=1):
+    body = json.dumps({"symbol": occ, "qty": str(qty), "side": "sell", "type": "limit",
                        "limit_price": str(round(limit, 2)), "time_in_force": "day"}).encode()
     req = urllib.request.Request("https://paper-api.alpaca.markets/v2/orders", data=body,
                                  headers={"APCA-API-KEY-ID": creds[0], "APCA-API-SECRET-KEY": creds[1],
@@ -83,7 +83,7 @@ def cycle(creds, allow_entries=True):
                 settle = None
             if settle is not None:
                 intrinsic = max(r["strike"] - settle, 0.0)
-                pnl = (r["premium"] - intrinsic) * 100
+                pnl = (r["premium"] - intrinsic) * 100 * (r.get("contracts") or 1)
                 r["status"] = "CLOSED"
                 r["settle"] = {"xsp": settle, "intrinsic": round(intrinsic, 2),
                                "pnl_usd": round(pnl, 2), "at": now.isoformat()}
@@ -112,9 +112,10 @@ def cycle(creds, allow_entries=True):
         occ = f"XSP{exp.strftime('%y%m%d')}P{int(strike * 1000):08d}"
         bid, ask = _quote(occ, creds)
         if bid and bid >= 0.05:
-            resp = _sell(occ, bid, creds)
+            _q = int(cfg.get("contracts", 1))
+            resp = _sell(occ, bid, creds, qty=_q)
             if resp and resp.get("id"):
-                log.append({"book": "PROBE", "probe_strategy": "VRP_DAILY",
+                log.append({"book": "PROBE", "probe_strategy": "VRP_DAILY", "contracts": _q,
                             "trade_set_id": "vrp" + resp["id"][:9], "ticker": "XSP",
                             "occ": occ, "strike": strike, "expiry": exp.isoformat(),
                             "premium": bid, "order_id": resp["id"], "status": "OPEN",

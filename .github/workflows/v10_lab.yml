@@ -74,6 +74,10 @@ jobs:
           PROACTIVE_MOCK: "0"        # capture REAL macro/GEX/alt metadata, not mock
           PROACTIVE_FLUSH: ${{ github.event.inputs.flush }}   # 'true' on a flush dispatch, empty otherwise
         run: python sandbox_proactive_lab.py
+      - name: Mark cycle complete (crash sentinel - the VPS watchdog reads this; 2026-08-17
+              KeyError day proved crashed runs still push data, keeping the heartbeat fresh)
+        if: success()
+        run: date -u +%FT%TZ > data/last_cycle_ok
       - name: Persist forensic logs to main
         if: always()
         run: |
@@ -81,7 +85,8 @@ jobs:
           git config user.email "noreply@github.com"
           git add -f proactive_sandbox_logs.json 2>/dev/null || true
           git add -f sandbox_ticker_cooloff.json 2>/dev/null || true
-          git add -f sandbox_watchlist.json 2>/dev/null || true   # early-strength watch state (ephemeral runners forget it otherwise)
+          git add -f sandbox_watchlist.json 2>/dev/null || true
+          git add -f data/last_cycle_ok 2>/dev/null || true   # early-strength watch state (ephemeral runners forget it otherwise)
           git add -f v10_tuning_advisory.md proactive_autopsy_log.md v10_tunable_parameters.json 2>/dev/null || true
           git add -f data/harvest_inbox/*.jsonl data/harvest_state.json 2>/dev/null || true   # harvest transport -> VPS poller (main)
           git add -A data/FLUSH_PENDING 2>/dev/null || true   # commit the one-time-flush sentinel removal

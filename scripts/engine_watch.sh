@@ -60,7 +60,8 @@ else
   # when Execute succeeds; fresh heartbeat + stale stamp = CRASHING. Page at 2 consecutive
   # ticks (30 min), once per episode. NO failover - it would run the same crashing code.
   CRASHF=/home/poller/.engine_watch_crash
-  OK_TS=$(git show origin/main:data/last_cycle_ok 2>/dev/null || echo "")
+  OK_TS=$(git show origin/main:data/last_cycle_ok 2>/dev/null | head -1 || echo "")
+  GOOD_SHA=$(git show origin/main:data/last_cycle_ok 2>/dev/null | sed -n 2p || echo "")
   if [ -n "$OK_TS" ]; then
     OK_EPOCH=$(date -u -d "$OK_TS" +%s 2>/dev/null || echo 0)
     OK_AGE=$(( (NOW - OK_EPOCH) / 60 ))
@@ -68,10 +69,27 @@ else
       C=$(cat "$CRASHF" 2>/dev/null || echo 0); C=$((C+1)); echo "$C" > "$CRASHF"
       echo "$(date -u +%FT%TZ) crash tick $C (last good cycle ${OK_AGE}m ago, heartbeat ${AGE}m)"
       if [ "$C" -eq 2 ]; then
-        alarm "engine is CRASHING mid-cycle: pushes land (heartbeat ${AGE}m) but the last SUCCESSFUL cycle was ${OK_AGE}m ago. The trade path is dying on a code error - needs a session NOW. Failover NOT fired (same code would crash)."
+        # AUTO-ROLLBACK (owner order 2026-08-17: days must never be wasted while he works).
+        # Revert engine CODE (root *.py + scripts/*.py) to the last SHA that completed a green
+        # cycle, commit forward, push. Once per episode; spec/data untouched; never force.
+        RB=/home/poller/.engine_watch_rolledback
+        if [ -n "$GOOD_SHA" ] && [ ! -f "$RB" ]; then
+          git pull -q --rebase -X theirs 2>/dev/null || true
+          if git checkout -q "$GOOD_SHA" -- "*.py" "scripts/" 2>/dev/null              && git -c user.name=watchdog -c user.email=watchdog@vps commit -qm "AUTO-ROLLBACK: engine code to last-good $GOOD_SHA (crash watchdog) [skip ci]"              && git push -q origin HEAD:main; then
+            echo rolled > "$RB"
+            alarm "engine was CRASHING (last good cycle ${OK_AGE}m ago) - AUTO-ROLLBACK executed: code reverted to last-good ${GOOD_SHA}. Cycles resume on proven code within 10 min. The bad change stays in git history for a code session."
+          else
+            git rebase --abort 2>/dev/null; git checkout -q -- . 2>/dev/null
+            alarm "engine is CRASHING and AUTO-ROLLBACK FAILED - manual session needed NOW. Last good cycle ${OK_AGE}m ago."
+          fi
+        elif [ -f "$RB" ]; then
+          alarm "engine STILL crashing after auto-rollback - the fault predates the last-good stamp or is environmental. Manual session needed NOW."
+        else
+          alarm "engine is CRASHING mid-cycle (last good ${OK_AGE}m ago) and no last-good SHA is stamped yet - manual session needed."
+        fi
       fi
     else
-      rm -f "$CRASHF" 2>/dev/null
+      rm -f "$CRASHF" /home/poller/.engine_watch_rolledback 2>/dev/null
     fi
   fi
 fi

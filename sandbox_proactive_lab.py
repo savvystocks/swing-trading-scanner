@@ -610,6 +610,8 @@ def audit_stale_orders(creds=None, max_minutes=None, orders=None):
 
 
 _WHALE_CANDS = []          # per-cycle side-pool of fade-shaped 400k-1M prints (FADE_WHALE probe only)
+_SR_BUDGET = 0             # spread-retry budget per cycle (2026-08-18: uncapped retries stretched
+                           # cycles past the run window and triggered a false-crash rollback)
 
 
 def _occ_matches_base(sym, base):
@@ -1176,7 +1178,9 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
                 try:                                  # SPREAD RETRY (owner 2026-08-17: INTC died on a
                     import time as _t                 # 7.4% flicker quote, then the probe entered at a
                     _cr = _paper_creds()              # tight one 30s later - one re-quote before
-                    if all(_cr) and leg.get("occ_symbol") and not probe:   # surrendering the trade
+                    global _SR_BUDGET                 # surrendering. BUDGETED: max 2 retries/cycle
+                    if all(_cr) and leg.get("occ_symbol") and not probe and _SR_BUDGET > 0:
+                        _SR_BUDGET -= 1
                         _t.sleep(4)
                         _rq = urllib.request.Request(
                             "https://data.alpaca.markets/v1beta1/options/quotes/latest?symbols="
@@ -1698,7 +1702,9 @@ def reconcile_orphans(creds, params, positions=None, log=None):
     log_list = log if log is not None else _load_log_list()
     known = set()
     for rec in log_list:
-        if rec.get("occ") and not isinstance(rec.get("legs"), dict):   # PUTW + VRP_DAILY bare-occ
+        if rec.get("occ") and not isinstance(rec.get("legs"), dict):   # PUTW/VRP/5K bare-occ
+            for _om in rec.get("occ_more") or []:
+                known.add((_om or "").upper())
             known.add(rec["occ"].upper())      # 2026-08-11 friendly-fire fix: PUTW records carry a
             continue                           # bare occ (no legs dict) - the reconciler adopted our
                                                # own short put 23 min after entry and the exit engine
@@ -1894,6 +1900,8 @@ def run_scheduled_cycle(mock=False):
         except Exception:
             pass
     engine_skips = {}                                        # school 1d: ticker -> skip-reason code, harvested
+    global _SR_BUDGET
+    _SR_BUDGET = 2                                           # spread-retry budget resets per cycle
     try:                                                     # EARLY-STRENGTH watchlist pass (fail-open;
         import early_strength                                # entries only, so HALT/brake skip it whole)
         import sandbox_proactive_lab as _selflab
@@ -1918,6 +1926,12 @@ def run_scheduled_cycle(mock=False):
                         allow_entries=not (brake_active or halt_active))
     except Exception as e:
         print(f"  vrp probe skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")
+    try:                                                     # 5K DEFINED-RISK probes (weekly XSP
+        import fivek_probes                                  # credit spread + condor, self-settling,
+        fivek_probes.cycle(creds,                            # owner order 2026-08-18)
+                           allow_entries=not (brake_active or halt_active))
+    except Exception as e:
+        print(f"  fivek probes skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")
     try:                                                     # MOMENTUM_ROT probe (top-5 3mo, 200d gate,
         import momentum_probe                                # monthly shares rotation - fast-tracked
         momentum_probe.cycle(creds,                          # owner order 2026-08-17)

@@ -35,7 +35,7 @@
  "v1.2.3_note": "2026-08-10: second affordability gate (contract calculator) now honors min_contracts 1 - the 08-08 fix only covered the entry check",
  "v1.3router_note": "owner order 2026-08-10: 3-leg sim verdict - the ROUTER (fade stands down when |spy_dist|>=1.5) is the winning addition: +$2,165 over fade-alone across 28 days, and all 4 virgin strong-green days were fade-negative. Pure exposure reduction, no new bet. Put-write leg HELD in lab (green-conditional +$908/59wk = direction right, magnitude ~cash; needs ATM-strike quote-level sim).",
  "putw": {
-  "enabled": true,
+  "enabled": false,
   "otm_pct": 2.0,
   "green_gate": true,
   "evidence": "2.1y real XSP quotes: green-only +$2,103/67wk 88% win; ALL +$2,710/109wk",
@@ -76,7 +76,7 @@
   },
   "purpose": "the WIDE experimental net: every feasible tested strategy trades live daily at $1k, up to 5 fills per strategy, all tagged PROBE + name; none of it touches fade evidence",
   "vrp": {
-   "enabled": true,
+   "enabled": false,
    "otm_pct": 2.5,
    "dte": 2,
    "max_open": 3,
@@ -96,5 +96,6 @@
  "v1.7.1_note": "owner order 2026-08-12 00:36 (sim-first then probe): FADE_WHALE probe slot - fade-shaped 400k-1M prints from a side-pool the live book never sees (its candidate list is byte-identical). Sim promising but half-flipped; live fills decide. 1M+ excluded (negative, n=8).",
  "v1.7_note": "owner order 2026-08-11 21:52: confirmed-entry REVERTED off the live book (it cut fills ~7x - over-engineering toward never trading). Fade book buys immediately again, exactly as validated. Early-strength becomes an exploratory PARALLEL door (probe.early_strength, 5/day): the watcher stashes the same candidates and buys its own lot when one confirms - both doors get live fills and the ledger settles it. Probe roster widened to 7 options strategies at 5 fills/day each, plus OVERNIGHT and TURN_OF_MONTH shares probes (the two tested-positive outside-the-box strategies).",
  "v1.8_note": "owner order 2026-08-14 22:53: DISCOVERY MODE - the router comes OFF the live book ('we should never let a system starve... still in discovery mode; loosen it; we dial in from the student and the results later'). Fade-shaped entries now fire on ALL days; every record carries router_state MILD/TREND so the evidence splits cleanly. The routed configuration keeps its nightly shadow stream (LIVE_SPEC/MILD books) - tightening later happens through the same virgin-day machinery, from data. Cost stated at decision time: unrouted measured -9..-28%/day this trend week; owner accepts on paper for data.",
- "v1.8.1_note": "owner order 2026-08-17 23:49: SCALE THE PREMIUM CORE - putw 1->3 contracts (evidence: 88% win weeks, +$2,103/67wk per contract), vrp 1->2 per sale. Stated tail: a crash week costs ~$2-3k per putw contract (paper; green-gate historically dodges the worst). Momentum probe disabled same order."
+ "v1.8.1_note": "owner order 2026-08-17 23:49: SCALE THE PREMIUM CORE - putw 1->3 contracts (evidence: 88% win weeks, +$2,103/67wk per contract), vrp 1->2 per sale. Stated tail: a crash week costs ~$2-3k per putw contract (paper; green-gate historically dodges the worst). Momentum probe disabled same order.",
+ "v1.8.2_note": "owner order 2026-08-18 16:19: PREMIUM CORE REMOVED - XSP short puts need ~$60k secured per contract, unusable until the 5k account compounds far higher. PUTW + VRP_DAILY disabled (open shorts self-settle at this week's expiries; no new entries). If premium income returns it returns as defined-risk credit SPREADS sized for the real account, corpus-validated first - evidence must match the instrument we would actually trade."
 }

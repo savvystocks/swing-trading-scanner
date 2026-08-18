@@ -136,6 +136,10 @@ def run_day(db, day_iso):
         "FADE_ATM": lambda m: fade(m) and tight(m) and band(m, 50000, 400000) and m.get("mny") is not None and m["mny"] < 1.0,
         "FADE_DP": lambda m: fade(m) and tight(m) and band(m, 50000, 400000) and m["dp"] >= 150,
         "MILD_ONLY": lambda m: fade(m) and tight(m) and band(m) and abs(m["sma"]) < 2.0 and abs(m["spy"]) < 1.5,
+        # PLACEBO arm (owner science-hardening 2026-08-18): picks pseudo-randomly by candidate-id
+        # hash - NO market logic. If the promotion machinery ever passes THIS book, the lab is
+        # hallucinating edges and every other verdict is suspect. Expected: ~0 mean forever.
+        "PLACEBO_RANDOM": lambda m: (hash(str(m.get("e")) + str(m.get("score"))) % 7) == 0,
     }
     # EARLY_CUT book (path-signature rule mined 2026-08-11): baseline entries, but cut at
     # <= -15% once >= 2h held. Second replay pass with the cut.

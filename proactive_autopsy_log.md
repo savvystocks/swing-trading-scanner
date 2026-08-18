@@ -3835,3 +3835,12 @@
 
 **Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 24.0.
 
+## Autopsy - NFLX (f95c7ea02ec4)
+- entered 2026-07-23T18:41:09.140Z | trigger regime_BULLISH_loose | exit CLOSE_EXPIRY | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +176.0% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 55.0 fed the squeeze.
+

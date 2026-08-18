@@ -2057,7 +2057,11 @@ def run_scheduled_cycle(mock=False):
                                           and ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
                 ("OPT_WINNER", lambda md, c: _shape(md, c) and _depth_lt(md, 3.0)
                                              and ((c or {}).get("total_premium") or 0) <= 250000),
-                ("FADE_WHALE", lambda md, c: _shape(md, c)),        # 400k-1M side-pool (owner ask
+                ("FADE_WHALE", lambda md, c: _shape(md, c)),
+                ("GEX_PIN", lambda md, c: abs((md.get("gex") or {}).get("distance_to_zero_gamma_pct")
+                                              or 9) < 0.3),   # owner 2026-08-18: untapped UW trigger
+                ("IV_EXTREME", lambda md, c: ((md.get("pemd") or {}).get("iv_rank_1y") or 50) >= 85
+                                             or ((md.get("pemd") or {}).get("iv_rank_1y") or 50) <= 10),        # 400k-1M side-pool (owner ask
                                                                     # 2026-08-12: sim +3.37 vs -0.47
                                                                     # day-mean, halves flipped - live
                                                                     # fills settle it)

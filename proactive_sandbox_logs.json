@@ -167349,16 +167349,50 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 45.2
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 101.9,
+          "mae_pct": -8.7,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-08-17T13:32:57.789Z",
+            "return_pct": 44.2
+          }
+        }
+      },
+      "mfe_pct": 101.9,
+      "mae_pct": -8.7,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 59.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "probe_strategy": "EXEC_BASELINE",
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "PYPL260918C00062500",
+        "closed_at": "2026-08-18T14:03:31.017Z",
+        "return_pct": 45.2,
+        "reason": "45.2% <= trail 81.5% (20% off peak MFE 101.9%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 101.9,
         "mae_pct": -8.7,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-08-17T13:32:57.789Z",
@@ -167370,6 +167404,11 @@
       {
         "order_id": "c5e8b821-c782-4cdc-830a-98653182b3a4",
         "at": "2026-08-17T13:32:57.789Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "f6db9412-2899-439d-ab8b-f2e44f6ca09b",
+        "at": "2026-08-18T14:03:31.017Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -169487,5 +169526,26 @@
       "PFE",
       "SPY"
     ]
+  },
+  {
+    "trade_set_id": "AUDIT-e0c66bf9",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-08-18T14:03:30.359Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "4a7d1ec8-968f-4e90-9d85-0dc13fec197b",
+        "symbol": "AMD260918C00030000",
+        "age_min": 33.4,
+        "limit_price": "1.5"
+      },
+      {
+        "order_id": "4e75bf44-d2f4-436d-801c-a34f22d16cf3",
+        "symbol": "AMD260918C00030000",
+        "age_min": 33.4,
+        "limit_price": "1.5"
+      }
+    ],
+    "status": "CANCELLED"
   }
 ]

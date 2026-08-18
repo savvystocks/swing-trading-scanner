@@ -3844,3 +3844,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 55.0 fed the squeeze.
 
+## Autopsy - PYPL (bc5ffda7632e)
+- entered 2026-08-14T14:38:54.231Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +45.2% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 59.0 fed the squeeze.
+

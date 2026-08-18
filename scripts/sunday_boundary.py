@@ -53,9 +53,16 @@ def tg(msg):
             pass
 
 
+def tg_or_log(msg):
+    if os.environ.get("BOUNDARY_SILENT") == "1":
+        print(msg)
+    else:
+        tg(msg)
+
+
 def main():
     if not os.path.exists(LEDGER):
-        tg("SUNDAY BOUNDARY: no shadow ledger yet - nothing to review.")
+        tg_or_log("SUNDAY BOUNDARY: no shadow ledger yet - nothing to review.")
         return
     days = [json.loads(l) for l in open(LEDGER, encoding="utf-8") if l.strip()]
     seen = {}
@@ -116,21 +123,131 @@ def main():
                          "fade cohort only and adds P(win) ranking to the lab.")
     except Exception:
         pass
+    # DEMOTION SYMMETRY (owner order 2026-08-18): every promoted key is re-checked on its
+    # NEXT 10 virgin days vs the same comparator and auto-reverted if the edge died.
+    try:
+        spec0 = json.load(open("fade_book_spec.json"))
+        chg = False
+        for ak in [k for k in spec0 if k.startswith("auto_")]:
+            av = spec0[ak]
+            if not isinstance(av, dict) or av.get("demoted"):
+                continue
+            pd0 = ak.replace("auto_", "")
+            b, vs0 = av.get("book"), av.get("vs", "BASELINE")
+            after = [(d["day"], d[b]["mean"]) for d in days
+                     if d["day"] > pd0 and (d.get(b) or {}).get("mean") is not None and d[b].get("n", 0) > 0]
+            cmpm = {d["day"]: (d.get(vs0) or {}).get("mean") for d in days
+                    if (d.get(vs0) or {}).get("mean") is not None}
+            dif = [x - cmpm[dd] for dd, x in after if dd in cmpm]
+            if len(dif) >= 10 and sum(dif) / len(dif) < 0:
+                for path, old in (av.get("prev") or {}).items():
+                    sect, key = path.split(".")
+                    spec0.setdefault(sect, {})[key] = old
+                av["demoted"] = str(datetime.now(timezone.utc).date())
+                chg = True
+                lines.append(f"DEMOTED {b}: post-promotion mean {sum(dif)/len(dif):+.2f} vs {vs0} "
+                             f"over {len(dif)}d - keys reverted (the ratchet turns both ways)")
+        if chg:
+            json.dump(spec0, open("fade_book_spec.json", "w"), indent=1)
+            subprocess.run("git add fade_book_spec.json && git commit -qm 'auto-boundary: demotion - "
+                           "promoted keys reverted per post-promotion evidence [skip ci]' && "
+                           "git pull -q --rebase -X ours && git push -q", shell=True)
+    except Exception as _de:
+        lines.append(f"demotion check skipped: {type(_de).__name__}")
+    # ANTI-RUBIKS-CUBE (owner question 2026-08-18 15:38): (a) every spec change RESTARTS all
+    # other hypotheses' evidence clocks - verdicts are earned against the system AS IT NOW IS,
+    # never against a configuration that no longer exists; (b) a key that just changed is
+    # frozen 14 calendar days - no oscillation. Changes therefore compound in SERIES.
+    last_chg = ""
+    frozen_keys = set()
+    try:
+        spec1 = json.load(open("fade_book_spec.json"))
+        cutoff = (datetime.now(timezone.utc).date() - __import__("datetime").timedelta(days=14)).isoformat()
+        for ak in [k for k in spec1 if k.startswith("auto_")]:
+            av = spec1[ak]
+            d0 = ak.replace("auto_", "")
+            dd0 = av.get("demoted") if isinstance(av, dict) else None
+            last_chg = max(last_chg, d0, dd0 or "")
+            if isinstance(av, dict) and (d0 >= cutoff or (dd0 or "") >= cutoff):
+                frozen_keys.update((av.get("keys") or {}).keys())
+    except Exception:
+        pass
+    if last_chg:
+        lines.append(f"evidence clock: restarted at last spec change {last_chg}; "
+                     f"{len(frozen_keys)} key(s) in cooldown")
     applied = []
+    traj = []
     for book, keys in MENU.items():
+        if any(k in frozen_keys for k in keys if not k.startswith("_")):
+            lines.append(f"{book}: COOLDOWN (touches a key changed <14d ago)")
+            continue
         if starving and book in RESTRICTIVE:
             lines.append(f"{book}: SKIPPED (throughput floor breach - no new restrictions while starving)")
             continue
         vs = keys.get("_vs", "BASELINE")
         pts = [(d["day"], d[book]["mean"]) for d in days
-               if d.get(book, {}).get("mean") is not None and d[book].get("n", 0) > 0]
-        if len(pts) < 10:
-            lines.append(f"{book}: {len(pts)}d traded - HOLD (needs 10)")
-            continue
-        m = sum(x for _, x in pts) / len(pts)
+               if d.get(book, {}).get("mean") is not None and d[book].get("n", 0) > 0
+               and d["day"] > last_chg]
         bmap = {d: v for d, v in ((dd["day"], (dd.get(vs) or {}).get("mean")) for dd in days)
                 if v is not None}
         rel = [x - bmap[d] for d, x in pts if d in bmap]
+        # SEQUENTIAL VERDICT (owner order 2026-08-18): SPRT on daily book-minus-comparator
+        # diffs (H1: +2pts/day). Decisive evidence passes from day 5; ambiguity falls back
+        # to the fixed 10-day bars; LLR <= -2.94 is an early honest reject.
+        llr = 0.0
+        if len(rel) >= 3:
+            mu = sum(rel) / len(rel)
+            var = sum((x - mu) ** 2 for x in rel) / max(len(rel) - 1, 1)
+            s2 = max(var, 25.0)
+            llr = sum(2.0 * (x - 1.0) for x in rel) / s2
+        if pts:
+            m = sum(x for _, x in pts) / len(pts)
+            _h = len(pts) // 2
+            _e0 = sum(x for _, x in pts[:_h]) / max(_h, 1)
+            _l0 = sum(x for _, x in pts[_h:]) / max(len(pts) - _h, 1)
+            traj.append(f"{datetime.now(timezone.utc).date()} {book}: {len(pts)}d mean {m:+.2f} "
+                        f"LLR {llr:+.2f} halves {_e0:+.1f}/{_l0:+.1f} vs {vs}")
+        if len(rel) >= 5 and llr >= 2.94 and pts:
+            _h = len(pts) // 2
+            _e1 = sum(x for _, x in pts[:_h]) / max(_h, 1)
+            _l1 = sum(x for _, x in pts[_h:]) / max(len(pts) - _h, 1)
+            if m > 0 and _e1 > 0 and _l1 > 0:
+                lines.append(f"{book}: SEQUENTIAL PASS at {len(pts)}d (LLR {llr:+.2f}) vs {vs}")
+                if (os.environ.get("BOUNDARY_REPORT_ONLY") == "1"
+                        and os.environ.get("BOUNDARY_SEQ_APPLY") != "1"):
+                    lines.append(f">>> {book} passes SEQUENTIALLY - application deferred (report-only)")
+                    continue          # owner order 2026-08-18 15:35: nightly runs set SEQ_APPLY -
+                                      # a proven edge calibrates THAT NIGHT, not on a weekday
+                if not applied:
+                    spec = json.load(open("fade_book_spec.json"))
+                    prev = {}
+                    for path, val in keys.items():
+                        if path.startswith("_"):
+                            continue
+                        sect, key = path.split(".")
+                        prev[path] = spec.get(sect, {}).get(key)
+                        spec.setdefault(sect, {})[key] = val
+                    spec[f"auto_{datetime.now(timezone.utc).date()}"] = {
+                        "book": book, "vs": vs, "prev": prev,
+                        "keys": {k: v for k, v in keys.items() if not k.startswith("_")},
+                        "mode": "sequential"}
+                    json.dump(spec, open("fade_book_spec.json", "w"), indent=1)
+                    subprocess.run("git add fade_book_spec.json && git commit -qm 'auto-boundary: "
+                                   + book + " promoted (sequential) [skip ci]' && "
+                                   "git pull -q --rebase -X ours && git push -q", shell=True)
+                    applied.append(book)
+                    lines.append(f">>> APPLIED {book} (sequential verdict)")
+                    tg(f"NIGHTLY PROMOTION: {book} proved its edge sequentially (LLR {llr:+.2f}, "
+                       f"{len(pts)}d) and the spec recalibrated NOW. Prior values stored; "
+                       f"demotion watch armed on its next 10 virgin days.")   # pages even in silent mode
+                continue
+        if len(rel) >= 5 and llr <= -2.94:
+            lines.append(f"{book}: SPRT REJECT at {len(pts)}d (LLR {llr:+.2f}) - losing vs {vs}")
+            continue
+        if len(pts) < 10:
+            lines.append(f"{book}: {len(pts)}d traded - HOLD (needs 10, LLR {llr:+.2f})")
+            continue
+        m = sum(x for _, x in pts) / len(pts)
         half = len(pts) // 2
         e = sum(x for _, x in pts[:half]) / max(half, 1)
         l2 = sum(x for _, x in pts[half:]) / max(len(pts) - half, 1)
@@ -149,14 +266,18 @@ def main():
             continue
         if ok and not applied:                  # apply at most ONE upgrade per Sunday
             spec = json.load(open("fade_book_spec.json"))
+            prev = {}
             for path, val in keys.items():
                 if path.startswith("_"):
                     continue                    # "_vs" is boundary metadata, never a spec key
                 sect, key = path.split(".")
+                prev[path] = spec.get(sect, {}).get(key)
                 spec.setdefault(sect, {})[key] = val
             v = spec.get("spec_version", "1.2")
             spec["spec_version"] = v + "+auto"
-            spec[f"auto_{datetime.now(timezone.utc).date()}"] = f"{book} passed pre-registered bars"
+            spec[f"auto_{datetime.now(timezone.utc).date()}"] = {
+                "book": book, "vs": vs, "prev": prev,
+                "keys": {k: v2 for k, v2 in keys.items() if not k.startswith("_")}, "mode": "fixed"}
             json.dump(spec, open("fade_book_spec.json", "w"), indent=1)
             subprocess.run("git add fade_book_spec.json && git commit -qm 'auto-boundary: "
                            + book + " promoted per pre-registered bars [skip ci]' && "
@@ -165,7 +286,32 @@ def main():
             lines.append(f">>> APPLIED {book} to the live spec (data-only change; engine reads it next cycle)")
     if not applied:
         lines.append("No upgrade passed its bars - spec unchanged. The grind continues honestly.")
-    tg("\n".join(lines))
+    # DEFERRAL AUDIT (owner order 2026-08-18): measured cost of the no-same-day-sell rule.
+    try:
+        _lg = json.load(open("proactive_sandbox_logs.json"))
+        _da = []
+        for r in _lg:
+            for ln2, pth in (r.get("leg_path") or {}).items():
+                if pth.get("pdt_deferred") and (r.get("leg_exits") or {}).get(ln2):
+                    fin = r["leg_exits"][ln2].get("return_pct")
+                    mfe = pth.get("mfe_pct")
+                    if fin is not None and mfe is not None:
+                        _da.append((r.get("ticker"), pth["pdt_deferred"], round(mfe - fin, 1), fin))
+        if _da:
+            _tot = sum(x[2] for x in _da)
+            lines.append(f"DEFERRAL AUDIT: {len(_da)} held-over exits; peak-vs-final giveback "
+                         f"{_tot:+.0f}pts total; worst: " +
+                         ", ".join(f"{t} {a} gave {g:+.0f} (final {f:+.0f}%)" for t, a, g, f in
+                                   sorted(_da, key=lambda x: -x[2])[:3]))
+    except Exception:
+        pass
+    try:
+        os.makedirs("reports/shadow_lab", exist_ok=True)
+        with open("reports/shadow_lab/trajectory.log", "a", encoding="utf-8") as _tf:
+            _tf.write(chr(10).join(traj) + chr(10))
+    except Exception:
+        pass
+    tg_or_log("\n".join(lines))
     print("\n".join(lines))
 
 

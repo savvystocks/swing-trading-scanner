@@ -188,9 +188,11 @@ def main():
             _l1 = sum(x for _, x in pts[_h:]) / max(len(pts) - _h, 1)
             if m > 0 and _e1 > 0 and _l1 > 0:
                 lines.append(f"{book}: SEQUENTIAL PASS at {len(pts)}d (LLR {llr:+.2f}) vs {vs}")
-                if os.environ.get("BOUNDARY_REPORT_ONLY") == "1":
+                if (os.environ.get("BOUNDARY_REPORT_ONLY") == "1"
+                        and os.environ.get("BOUNDARY_SEQ_APPLY") != "1"):
                     lines.append(f">>> {book} passes SEQUENTIALLY - application deferred (report-only)")
-                    continue
+                    continue          # owner order 2026-08-18 15:35: nightly runs set SEQ_APPLY -
+                                      # a proven edge calibrates THAT NIGHT, not on a weekday
                 if not applied:
                     spec = json.load(open("fade_book_spec.json"))
                     prev = {}
@@ -210,6 +212,9 @@ def main():
                                    "git pull -q --rebase -X ours && git push -q", shell=True)
                     applied.append(book)
                     lines.append(f">>> APPLIED {book} (sequential verdict)")
+                    tg(f"NIGHTLY PROMOTION: {book} proved its edge sequentially (LLR {llr:+.2f}, "
+                       f"{len(pts)}d) and the spec recalibrated NOW. Prior values stored; "
+                       f"demotion watch armed on its next 10 virgin days.")   # pages even in silent mode
                 continue
         if len(rel) >= 5 and llr <= -2.94:
             lines.append(f"{book}: SPRT REJECT at {len(pts)}d (LLR {llr:+.2f}) - losing vs {vs}")

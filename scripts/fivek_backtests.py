@@ -97,13 +97,13 @@ def main():
     legs_needed = []
     plan = []
     for ent, exp in weeks:
-        spot = xsp[ent] / 10.0
+        spot = xsp[ent]
         k1, k2 = round(spot * 0.98), round(spot * 0.96)
         k3, k4 = round(spot * 1.02), round(spot * 1.04)
         ed = date.fromisoformat(exp)
         row = {"ent": ent, "exp": exp, "spot": spot,
-               "p1": occ("XSP", ed, "P", k1), "p2": occ("XSP", ed, "P", k2),
-               "c1": occ("XSP", ed, "C", k3), "c2": occ("XSP", ed, "C", k4),
+               "p1": occ("SPY", ed, "P", k1), "p2": occ("SPY", ed, "P", k2),
+               "c1": occ("SPY", ed, "C", k3), "c2": occ("SPY", ed, "C", k4),
                "k": (k1, k2, k3, k4)}
         plan.append(row)
         legs_needed += [row["p1"], row["p2"], row["c1"], row["c2"]]
@@ -112,7 +112,7 @@ def main():
     naked, credit, condor = [], [], []
     skip = 0
     for r in plan:
-        S = xsp[r["exp"]] / 10.0
+        S = xsp[r["exp"]]
         k1, k2, k3, k4 = r["k"]
         pr = {n: (bars.get(r[n]) or {}).get(r["ent"]) for n in ("p1", "p2", "c1", "c2")}
         if not pr["p1"] or not pr["p2"]:
@@ -212,8 +212,8 @@ def main():
          "",
          "| strategy (1 lot) | periods | total P&L | win% | worst period | max drawdown |",
          "|---|---|---|---|---|---|",
-         stats_line("NAKED_PUT_W (reference)", naked),
-         stats_line("CREDIT_SPREAD_W", credit),
+         stats_line("NAKED_PUT_W SPY (reference)", naked),
+         stats_line("CREDIT_SPREAD_W SPY", credit),
          stats_line("CONDOR_W", condor),
          stats_line("WHEEL_CSP_F", wheel),
          "",

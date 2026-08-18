@@ -154,15 +154,40 @@ def main():
                            "git pull -q --rebase -X ours && git push -q", shell=True)
     except Exception as _de:
         lines.append(f"demotion check skipped: {type(_de).__name__}")
+    # ANTI-RUBIKS-CUBE (owner question 2026-08-18 15:38): (a) every spec change RESTARTS all
+    # other hypotheses' evidence clocks - verdicts are earned against the system AS IT NOW IS,
+    # never against a configuration that no longer exists; (b) a key that just changed is
+    # frozen 14 calendar days - no oscillation. Changes therefore compound in SERIES.
+    last_chg = ""
+    frozen_keys = set()
+    try:
+        spec1 = json.load(open("fade_book_spec.json"))
+        cutoff = (datetime.now(timezone.utc).date() - __import__("datetime").timedelta(days=14)).isoformat()
+        for ak in [k for k in spec1 if k.startswith("auto_")]:
+            av = spec1[ak]
+            d0 = ak.replace("auto_", "")
+            dd0 = av.get("demoted") if isinstance(av, dict) else None
+            last_chg = max(last_chg, d0, dd0 or "")
+            if isinstance(av, dict) and (d0 >= cutoff or (dd0 or "") >= cutoff):
+                frozen_keys.update((av.get("keys") or {}).keys())
+    except Exception:
+        pass
+    if last_chg:
+        lines.append(f"evidence clock: restarted at last spec change {last_chg}; "
+                     f"{len(frozen_keys)} key(s) in cooldown")
     applied = []
     traj = []
     for book, keys in MENU.items():
+        if any(k in frozen_keys for k in keys if not k.startswith("_")):
+            lines.append(f"{book}: COOLDOWN (touches a key changed <14d ago)")
+            continue
         if starving and book in RESTRICTIVE:
             lines.append(f"{book}: SKIPPED (throughput floor breach - no new restrictions while starving)")
             continue
         vs = keys.get("_vs", "BASELINE")
         pts = [(d["day"], d[book]["mean"]) for d in days
-               if d.get(book, {}).get("mean") is not None and d[book].get("n", 0) > 0]
+               if d.get(book, {}).get("mean") is not None and d[book].get("n", 0) > 0
+               and d["day"] > last_chg]
         bmap = {d: v for d, v in ((dd["day"], (dd.get(vs) or {}).get("mean")) for dd in days)
                 if v is not None}
         rel = [x - bmap[d] for d, x in pts if d in bmap]

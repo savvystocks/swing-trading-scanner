@@ -75,7 +75,10 @@ else
         RB=/home/poller/.engine_watch_rolledback
         if [ -n "$GOOD_SHA" ] && [ ! -f "$RB" ]; then
           git pull -q --rebase -X theirs 2>/dev/null || true
-          if git checkout -q "$GOOD_SHA" -- "*.py" "scripts/" 2>/dev/null              && git -c user.name=watchdog -c user.email=watchdog@vps commit -qm "AUTO-ROLLBACK: engine code to last-good $GOOD_SHA (crash watchdog) [skip ci]"              && git push -q origin HEAD:main; then
+          # 2026-08-18 mass-adoption fix: pin DATA files to origin before the rollback
+          # commit - a stale VPS working tree must never overwrite live trade records
+          git checkout -q origin/main -- proactive_sandbox_logs.json data/harvest_state.json sandbox_ticker_cooloff.json sandbox_watchlist.json 2>/dev/null || true
+          if git checkout -q "$GOOD_SHA" -- "*.py" "scripts/" 2>/dev/null              && git -c user.name=watchdog -c user.email=watchdog@vps commit -qm "AUTO-ROLLBACK: engine code to last-good $GOOD_SHA (crash watchdog) [skip ci]" -- "*.py" scripts/              && git push -q origin HEAD:main; then
             echo rolled > "$RB"
             alarm "engine was CRASHING (last good cycle ${OK_AGE}m ago) - AUTO-ROLLBACK executed: code reverted to last-good ${GOOD_SHA}. Cycles resume on proven code within 10 min. The bad change stays in git history for a code session."
           else

@@ -165585,7 +165585,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -1.3,
-        "mae_pct": -46.7,
+        "mae_pct": -48.0,
         "stage": "initial"
       }
     }
@@ -165682,7 +165682,7 @@
     },
     "leg_path": {
       "adopted_leg": {
-        "mfe_pct": 9.7,
+        "mfe_pct": 12.1,
         "mae_pct": -31.5,
         "stage": "initial"
       }
@@ -165959,7 +165959,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -0.3,
+        "mfe_pct": 2.6,
         "mae_pct": -32.1,
         "stage": "initial"
       }
@@ -168450,7 +168450,7 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 4.3,
-        "mae_pct": -15.9,
+        "mae_pct": -16.2,
         "stage": "initial"
       }
     }
@@ -168720,9 +168720,10 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 51.3,
+        "mfe_pct": 56.3,
         "mae_pct": -10.9,
-        "stage": "initial"
+        "stage": "initial",
+        "close_fails": 1
       }
     }
   },
@@ -168984,18 +168985,56 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -53.8
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 0.0,
+          "mae_pct": -53.8,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 0.0,
+      "mae_pct": -53.8,
+      "determining_factor": "Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 77.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "probe_strategy": "EXEC_BASELINE",
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "TQQQ260918C00080000",
+        "closed_at": "2026-08-18T14:13:14.918Z",
+        "return_pct": -53.8,
+        "reason": "-53.8% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 0.0,
-        "mae_pct": -48.7,
-        "stage": "initial"
+        "mae_pct": -53.8,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "5d789b3d-c8bb-4470-aa25-ab79cd18953f",
+        "at": "2026-08-18T14:13:14.918Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "210c743e8994",

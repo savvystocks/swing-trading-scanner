@@ -170442,7 +170442,15 @@
   },
   "exit": null,
   "status": "OPEN",
-  "buy_alert_delivered": true
+  "buy_alert_delivered": true,
+  "leg_exits": {},
+  "leg_path": {
+   "bearish_put": {
+    "mfe_pct": -5.1,
+    "mae_pct": -5.1,
+    "stage": "initial"
+   }
+  }
  },
  {
   "trade_set_id": "defa43e46866",
@@ -170698,12 +170706,282 @@
     "error": null,
     "submitted": true,
     "limit_price": 9.85,
-    "contracts": 1
+    "contracts": 1,
+    "ledger_terminal": "filled"
    }
   },
   "exit": null,
   "status": "OPEN",
   "buy_alert_delivered": true,
-  "probe_strategy": "CONSENSUS"
+  "probe_strategy": "CONSENSUS",
+  "leg_exits": {},
+  "leg_path": {
+   "bullish_call": {
+    "mfe_pct": -4.7,
+    "mae_pct": -4.7,
+    "stage": "initial"
+   }
+  }
+ },
+ {
+  "trade_set_id": "34d77f70c001",
+  "ticker": "NFLX",
+  "regime": "BEARISH",
+  "trigger": "regime_BEARISH_loose",
+  "book": "FADE",
+  "router_state": "MILD",
+  "entry_ts_utc": "2026-08-18T15:40:50.320Z",
+  "leg_budget_usd": 1000.0,
+  "execution_mode": "LIVE_PAPER",
+  "occ_resolution": "alpaca_real",
+  "ticker_guard": "clear",
+  "open_positions_checked": 22,
+  "params_snapshot": {
+   "regime_compass_bypass": true,
+   "max_bid_ask_spread_pct": 5.0,
+   "earnings_blackout_days": 3,
+   "alt_reddit_min_mentions": 10,
+   "alt_insider_min_dollar_value": 10000,
+   "portfolio_max_sector_concentration": 0.5,
+   "min_hold_hours": 24,
+   "take_profit_pct": 30,
+   "scale_out_pct": 50,
+   "break_even_pct": 0,
+   "trail_activate_pct": 50,
+   "trail_drawdown_pct": 20,
+   "stop_loss_pct": 50,
+   "expiry_exit_dte": 3,
+   "min_contracts": 2,
+   "one_position_per_underlying": true,
+   "max_contracts_per_ticker": 3,
+   "ticker_cooloff_hours": 4,
+   "stale_order_max_minutes": 30,
+   "daily_brake_stopouts": 3,
+   "daily_brake_loss_multiple": 2.0,
+   "brake_mode": "shadow",
+   "backstop_enabled": true,
+   "backstop_canary_occ": "FCEL260821C00022000",
+   "backstop_type": "stop",
+   "backstop_limit_buffer_pct": 25,
+   "backstop_min_delta": 0.01,
+   "close_fail_park_after": 5,
+   "scanner_min_premium": 25000,
+   "scanner_flow_limit": 600,
+   "scanner_premium_min": 0.3,
+   "scanner_premium_max": 4.0,
+   "harvest_topn": 20,
+   "harvest_random": 10,
+   "harvest_random_p": 0.007,
+   "harvest_daily_cap": 300,
+   "harvest_api_budget_per_day": 6000,
+   "harvest_calls_per_payload": 3,
+   "poller_chunk": 100,
+   "poller_runs_per_day": 26,
+   "scanner_barrier_up": 0.3,
+   "scanner_barrier_down": -0.5
+  },
+  "metadata": {
+   "entry_ts_utc": "2026-08-18T15:40:50.320Z",
+   "macro": {
+    "spot": 78.72,
+    "sma20": 73.7,
+    "distance_to_sma20_pct": 6.808,
+    "source": "alpaca"
+   },
+   "iv_term": {
+    "iv_front": 34.3,
+    "iv_back": 34.1,
+    "iv_ratio": 1.006,
+    "structure": "backwardation",
+    "source": "alpaca"
+   },
+   "gex": {
+    "net_gex": 1160406.1,
+    "zero_gamma_strike": 82.5,
+    "distance_to_zero_gamma_pct": -4.802,
+    "regime": "positive_gamma",
+    "source": "uw"
+   },
+   "alt_catalyst": {
+    "reddit_mention_delta_pct": -25.0,
+    "insider_10d_buy_usd": 0,
+    "insider_cluster_flag": false,
+    "source": "apewisdom+edgartools"
+   },
+   "technical": {
+    "atr": 2.27,
+    "atr_pct": 2.88,
+    "rvol_10min": 0.42,
+    "source": "alpaca"
+   },
+   "fundamentals": {
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "market_cap": 327577108480,
+    "short_pct_float": 2.23,
+    "short_ratio": 1.88,
+    "source": "yfinance"
+   },
+   "news": {
+    "headline_count": 8,
+    "latest_age_hours": 19.79,
+    "vader_compound": 0.254,
+    "news_type": "Earnings",
+    "top_headline": "Nvidia Is the Best S&P 500 Stock of the Past 10, 15, 20 Years \u2014 but 4 Stocks Beat It Over the Past 5 Years",
+    "source": "alpaca_news+vader"
+   },
+   "regime_stack": {
+    "ticker_dist_pct": 6.808,
+    "market_spy_dist_pct": 1.21,
+    "sector_etf": "XLC",
+    "sector_dist_pct": 1.015,
+    "sector_vs_market_spread": -0.195,
+    "source": "alpaca_bars"
+   },
+   "skew": {
+    "put_iv_25d": 32.5,
+    "call_iv_25d": 34.0,
+    "skew_ratio": 0.955,
+    "skew_bias": "balanced",
+    "delta_source": "greeks",
+    "source": "alpaca_snapshots"
+   },
+   "flow_aggression": {
+    "sweep_aggression_pct": 1.67,
+    "ask_sweep_prem": 436752.0,
+    "total_flow_prem": 26115294.0,
+    "source": "uw_flow"
+   },
+   "dark_pool": {
+    "distance_to_heaviest_dp_node_pct": -0.25,
+    "heaviest_node_price": 78.92,
+    "node_size": 315066.0,
+    "n_prints": 200,
+    "window_start": "2026-08-18T14:46:08Z",
+    "window_end": "2026-08-18T15:40:41Z",
+    "source": "uw_darkpool"
+   },
+   "pemd": {
+    "days_since_earnings": 33,
+    "post_earnings_iv_crush_flag": false,
+    "days_to_earnings": 63,
+    "next_earnings_date": "2026-10-20",
+    "iv_rank_1y": 28.12,
+    "last_earnings_date": "2026-07-16",
+    "source": "yfinance+uw"
+   },
+   "vrp": {
+    "realized_vol_20d": 31.93,
+    "front_iv": 34.3,
+    "vrp": 2.37,
+    "vrp_regime": "rich",
+    "source": "alpaca_bars"
+   },
+   "flow_persistence": {
+    "net_directional_prem": 4845145.0,
+    "flow_persistence_pct": 33.53,
+    "flow_direction": "bullish",
+    "closing_accel": -3970475.0,
+    "n_ticks": 131,
+    "source": "uw_net_prem_ticks"
+   },
+   "price_action": {
+    "nvi": 920.87,
+    "vwma_20": 73.27,
+    "rsi_5": 70.77,
+    "rsi_15": 65.99,
+    "gap_pct": 1.828,
+    "day_range": 3.493,
+    "candle_body": 0.471,
+    "dist_sma50": 5.449,
+    "source": "alpaca_bars"
+   },
+   "macro_context": {
+    "iv_term_skew": 0.2,
+    "vix_level": 15.92,
+    "execution_hour": 15,
+    "day_of_week": 1,
+    "sector_vs_spy": 0.218,
+    "source": "yfinance+alpaca"
+   },
+   "dealer_greeks": {
+    "net_dex": 36576556.0,
+    "net_vanna": 97696295.0,
+    "net_charm": -53370730.0,
+    "delta_imbalance": 1.648,
+    "source": "uw_greek_exposure"
+   },
+   "liquidity_and_slippage": {
+    "equity_spread_pct_of_ask": 0.038,
+    "bid": 78.65,
+    "ask": 78.68,
+    "bid_size": 800.0,
+    "ask_size": 300.0,
+    "obi": 0.4545,
+    "source": "alpaca_quote"
+   },
+   "relative_momentum": {
+    "rvol_20d": 0.4,
+    "gap_pct": 1.828,
+    "source": "alpaca_bars"
+   },
+   "float_mechanics": {
+    "short_pct_float": 2.23,
+    "float_shares": 4134750459,
+    "shares_short": 92202002,
+    "source": "yfinance"
+   },
+   "news_sentiment_score": 0.254,
+   "sweep_aggression_pct": 1.67,
+   "distance_to_zero_gamma_pct": -4.802,
+   "distance_to_heaviest_dp_node_pct": -0.25,
+   "days_since_earnings": 33,
+   "days_to_earnings": 63,
+   "post_earnings_iv_crush_flag": false,
+   "flow_persistence_pct": 33.53
+  },
+  "legs": {
+   "bearish_put": {
+    "structure": "LONG_PUT",
+    "occ_symbol": "NFLX260918P00076000",
+    "expiry": "2026-09-18",
+    "strike": 76.0,
+    "dte": 35,
+    "entry_premium": 1.73,
+    "limit_price": 1.73,
+    "contracts": 5,
+    "alloc_usd": 1000.0,
+    "illiquid": false,
+    "target_delta": -0.35,
+    "open_interest": "2276",
+    "occ_source": "alpaca_resolved",
+    "execution_cost": {
+     "bid": 1.7,
+     "ask": 1.73,
+     "bid_ask_spread_pct": 1.73,
+     "source": "alpaca_quote_retry"
+    },
+    "oi_change": {
+     "oi_today": 2474.0,
+     "oi_prev": 2276.0,
+     "oi_change": 198.0,
+     "source": "uw_historic"
+    }
+   }
+  },
+  "orders": {
+   "bearish_put": {
+    "status": "pending_new",
+    "order_id": "b0bc7901-6c7c-453e-974d-10c79a97aa07",
+    "error": null,
+    "submitted": true,
+    "limit_price": 1.73,
+    "contracts": 5,
+    "ledger_terminal": "filled"
+   }
+  },
+  "exit": null,
+  "status": "OPEN",
+  "buy_alert_delivered": true
  }
 ]

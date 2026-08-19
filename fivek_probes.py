@@ -102,6 +102,7 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now):
         s = _xsp_close_series()
         spot = float(s.iloc[-1])
     except Exception:
+        print(f"  fivek {strategy}: XSP spot fetch failed - no entry this cycle")
         return False
     exp = now.date() + timedelta(days=(4 - now.date().weekday()) % 7)
     if exp <= now.date():
@@ -114,12 +115,14 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now):
         legs_s.append(("C", round(spot * (1 + cfg.get("call_short", 2.0) / 100))))
         legs_l.append(("C", round(spot * (1 + cfg.get("call_long", 4.0) / 100))))
     if _held(_occ(exp, legs_s[0][0], legs_s[0][1]), creds):
-        return False                                # already entered (record may be in flight)
+        print(f"  fivek {strategy}: short leg already held at broker - skip (record in flight?)")
+        return False
     struct = {"short": [], "long": []}
     for cp, k in legs_l:                            # LONG wings first - never naked
         o = _occ(exp, cp, k)
         bid, ask = _quote(o, creds)
         if not ask or ask <= 0:
+            print(f"  fivek {strategy}: no ask on long wing {o} - structure aborted pre-order")
             return False
         resp = _order(o, "buy", ask, creds)
         if not (resp and resp.get("id")):

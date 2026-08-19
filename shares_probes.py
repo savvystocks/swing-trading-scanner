@@ -154,7 +154,7 @@ def cycle(creds, allow_entries=True):
         print(f"  shares probe: broker holds more {sym} than OPEN records claim - entry guard on")
     if allow_entries and open_ov is None and not ov_entered_today:
         mtc = _mins_to_close(creds)
-        if mtc is not None and mtc <= 25:          # the session's last ~2 cycles, whatever the close
+        if mtc is not None and mtc <= 40:          # last ~4 cycles (2026-08-19: queue churn ate the 25-min window)
             dirty = _enter("OVERNIGHT") or dirty   # (clock-derived: DST shifts and half-days included)
     if allow_entries and open_tom is None and today.day >= 25 and not tom_this_month:
         dirty = _enter("TURN_OF_MONTH") or dirty

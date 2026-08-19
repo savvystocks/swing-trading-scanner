@@ -43,6 +43,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: 'pip'             # 2026-08-19: dep install was ~2-4 min/cycle -> queue churn
+                                   # (24 cancelled runs today ate the OVERNIGHT window)
       - name: Install dependencies
         run: pip install -r requirements.txt -r requirements-sandbox.txt
       - name: Read owner halt flag (school 1e - snapshots repo, fail-open)

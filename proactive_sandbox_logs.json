@@ -170358,16 +170358,50 @@
     "ledger_terminal": "filled"
    }
   },
-  "exit": null,
-  "status": "OPEN",
+  "exit": {
+   "reason": "CLOSE_TRAIL",
+   "underlying_move_pct": 0.0,
+   "entry_slippage_pct": null,
+   "leg_returns_pct": {
+    "bullish_call": 103.1
+   },
+   "winner": "bullish_call",
+   "loser": "bullish_call",
+   "leg_path": {
+    "bullish_call": {
+     "mfe_pct": 132.0,
+     "mae_pct": -6.2,
+     "stage": "closed",
+     "close_fails": 0,
+     "scaled_out": {
+      "at": "2026-08-19T15:07:24.585Z",
+      "return_pct": 49.5
+     }
+    }
+   },
+   "mfe_pct": 132.0,
+   "mae_pct": -6.2,
+   "determining_factor": "Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.",
+   "tuning_recommendations": []
+  },
+  "status": "CLOSED",
   "buy_alert_delivered": true,
   "probe_strategy": "CONSENSUS",
-  "leg_exits": {},
+  "leg_exits": {
+   "bullish_call": {
+    "occ": "IBIT260918C00038000",
+    "closed_at": "2026-08-19T17:18:20.385Z",
+    "return_pct": 103.1,
+    "reason": "103.1% <= trail 105.6% (20% off peak MFE 132.0%)",
+    "action": "CLOSE_TRAIL",
+    "closed_ok": true
+   }
+  },
   "leg_path": {
    "bullish_call": {
     "mfe_pct": 132.0,
     "mae_pct": -6.2,
-    "stage": "trailing",
+    "stage": "closed",
     "close_fails": 0,
     "scaled_out": {
      "at": "2026-08-19T15:07:24.585Z",
@@ -170379,6 +170413,11 @@
    {
     "order_id": "1a2ba9c3-ea7a-4ae4-90be-da850e9c3b06",
     "at": "2026-08-19T15:07:24.585Z",
+    "ledger_terminal": "filled"
+   },
+   {
+    "order_id": "5964e01a-11b1-4171-bff2-948f863df7a5",
+    "at": "2026-08-19T17:18:20.385Z",
     "ledger_terminal": "filled"
    }
   ]

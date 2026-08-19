@@ -170287,11 +170287,23 @@
   "leg_exits": {},
   "leg_path": {
    "bullish_call": {
-    "mfe_pct": 14.4,
+    "mfe_pct": 49.5,
     "mae_pct": -6.2,
-    "stage": "initial"
+    "stage": "scaled",
+    "close_fails": 0,
+    "scaled_out": {
+     "at": "2026-08-19T15:07:24.585Z",
+     "return_pct": 49.5
+    }
    }
-  }
+  },
+  "exit_order_ids": [
+   {
+    "order_id": "1a2ba9c3-ea7a-4ae4-90be-da850e9c3b06",
+    "at": "2026-08-19T15:07:24.585Z",
+    "ledger_terminal": "filled"
+   }
+  ]
  },
  {
   "book": "PROBE",
@@ -173828,5 +173840,39 @@
    }
   ],
   "status": "CANCELLED"
+ },
+ {
+  "book": "PROBE",
+  "probe_strategy": "CREDIT_SPREAD_W",
+  "trade_set_id": "f5k08191507",
+  "ticker": "XSP",
+  "occ": "XSP260821P00757000",
+  "occ_more": [
+   "XSP260821P00742000"
+  ],
+  "structure": {
+   "short": [
+    {
+     "occ": "XSP260821P00757000",
+     "cp": "P",
+     "k": 757,
+     "prem": 0.19
+    }
+   ],
+   "long": [
+    {
+     "occ": "XSP260821P00742000",
+     "cp": "P",
+     "k": 742,
+     "prem": 0.1
+    }
+   ]
+  },
+  "expiry": "2026-08-21",
+  "contracts": 1,
+  "net_credit": 0.09,
+  "status": "OPEN",
+  "entry_ts_utc": "2026-08-19T15:07:26.534814+00:00",
+  "note": "5k defined-risk weekly (owner order 2026-08-18)"
  }
 ]

@@ -3898,3 +3898,12 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 170.0 worked against it.
 
+## Autopsy - XLE (ADOPT-a42db7df56)
+- entered 2026-08-18T13:32:57.519Z | trigger orphan_reconcile | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | +43.2% | WINNER |
+
+**Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
+

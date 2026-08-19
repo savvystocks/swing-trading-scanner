@@ -3871,3 +3871,21 @@
 
 **Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 59.0 worked against it.
 
+## Autopsy - F (ADOPT-6c84fe05eb)
+- entered 2026-08-18T19:04:24.300Z | trigger orphan_reconcile | exit CLOSE_EXPIRY | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | +92.1% | WINNER |
+
+**Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
+
+## Autopsy - F (ADOPT-a665eea323)
+- entered 2026-08-18T19:04:24.300Z | trigger orphan_reconcile | exit CLOSE_EXPIRY | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -86.9% | WINNER |
+
+**Determining factor:** Calendar FAILED (-87%): the range broke; IV term None (ratio None) hurt the spread.
+

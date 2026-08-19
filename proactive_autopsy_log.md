@@ -3889,12 +3889,12 @@
 
 **Determining factor:** Calendar FAILED (-87%): the range broke; IV term None (ratio None) hurt the spread.
 
-## Autopsy - FCEL (210c743e8994)
-- entered 2026-08-17T14:50:19.382Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+## Autopsy - PLTR (85dc79b2fa2c)
+- entered 2026-08-13T18:08:22.995Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
 
 | leg | structure | return % | verdict |
 |---|---|---|---|
-| Bullish (call) | LONG_CALL | -53.3% | WINNER |
+| Bullish (call) | LONG_CALL | -50.4% | WINNER |
 
-**Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 20.0 worked against it.
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 170.0 worked against it.
 

@@ -47,13 +47,16 @@ def replay(pts, e, stop=-50, trig=50, give=0.20):
 def run_day(db, day_iso):
     d0 = (date.fromisoformat(day_iso) - date(1970, 1, 1)).days
     lo, hi = d0 * 86400000, (d0 + 1) * 86400000
-    con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+    con = sqlite3.connect(f"file:{db}?mode=ro", uri=True, timeout=60)
     rows = con.execute(
         """select c.candidate_id, c.entry_ref, c.right, c.spread_pct, c.rule_score, c.features,
                   c.strike, c.underlying_last
            from candidates c join labels l on l.candidate_id=c.candidate_id
            where c.signal_ts_utc >= ? and c.signal_ts_utc < ? and l.outcome is not null
              and c.entry_ref > 0 and c.features != ''""", (lo, hi)).fetchall()
+    if not rows:
+        print(f"{day_iso}: no labeled rows readable (poller lock?) - NOT writing a null line")
+        return {"day": day_iso, "skipped": "empty-read"}
     meta = {}
     spy_signs = []
     for cid, e, right, spr, score, fj, _K, _S in rows:

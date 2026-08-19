@@ -169358,18 +169358,56 @@
     "ledger_terminal": "filled"
    }
   },
-  "exit": null,
-  "status": "OPEN",
+  "exit": {
+   "reason": "CLOSE_STOP_LOSS",
+   "underlying_move_pct": 0.0,
+   "entry_slippage_pct": null,
+   "leg_returns_pct": {
+    "bullish_call": -53.3
+   },
+   "winner": "bullish_call",
+   "loser": "bullish_call",
+   "leg_path": {
+    "bullish_call": {
+     "mfe_pct": -1.7,
+     "mae_pct": -53.3,
+     "stage": "closed",
+     "close_fails": 0
+    }
+   },
+   "mfe_pct": -1.7,
+   "mae_pct": -53.3,
+   "determining_factor": "Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 20.0 worked against it.",
+   "tuning_recommendations": []
+  },
+  "status": "CLOSED",
   "buy_alert_delivered": true,
   "probe_strategy": "CONSENSUS",
-  "leg_exits": {},
+  "leg_exits": {
+   "bullish_call": {
+    "occ": "FCEL260918C00023000",
+    "closed_at": "2026-08-19T14:09:25.811Z",
+    "return_pct": -53.3,
+    "reason": "-53.3% <= -50% hard stop",
+    "action": "CLOSE_STOP_LOSS",
+    "closed_ok": true
+   }
+  },
   "leg_path": {
    "bullish_call": {
     "mfe_pct": -1.7,
-    "mae_pct": -41.7,
-    "stage": "initial"
+    "mae_pct": -53.3,
+    "stage": "closed",
+    "close_fails": 0
    }
-  }
+  },
+  "exit_order_ids": [
+   {
+    "order_id": "ff15dfda-6e49-4cf9-8448-c0828336f017",
+    "at": "2026-08-19T14:09:25.811Z",
+    "ledger_terminal": "filled"
+   }
+  ]
  },
  {
   "book": "PUTW",

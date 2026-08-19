@@ -2584,3 +2584,9 @@ trade: winner=adopted_leg loser=adopted_leg | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - FCEL (210c743e8994) - 2026-08-19T14:09:26.493Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

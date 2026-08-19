@@ -198,7 +198,10 @@ def main():
         if len(rel) >= 3:
             mu = sum(rel) / len(rel)
             var = sum((x - mu) ** 2 for x in rel) / max(len(rel) - 1, 1)
-            s2 = max(var, 25.0)
+            s2 = max(var, 100.0)   # audit v2 repair 2026-08-19: sample variance from 5 days
+            # underestimates truth on exactly the lucky windows that false-promote
+            # (sim fingerprint: median s2 112 vs true 225 at false passes). Floor 100
+            # until the e-process rebuild makes the boundary variance-honest.
             llr = sum(2.0 * (x - 1.0) for x in rel) / s2
         if pts:
             m = sum(x for _, x in pts) / len(pts)

@@ -19,6 +19,7 @@ import subprocess
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
+import math
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(REPO)
@@ -41,6 +42,32 @@ MENU = {
     # SOFT_ROUTER (2026-08-12): widen the mild window 1.5 -> 2.5 if the middle rung earns it.
     "SOFT_ROUTER": {"entry.max_spy_dist_pct": 2.5, "_vs": "LIVE_SPEC"},
 }
+
+
+def tstat(diffs):
+    n = len(diffs)
+    if n < 3:
+        return 0.0
+    mu = sum(diffs) / n
+    sd = (sum((x - mu) ** 2 for x in diffs) / (n - 1)) ** 0.5
+    return mu / (sd / math.sqrt(n)) if sd > 0 else 0.0
+
+
+def placebo_thr(days_sub, bmap):
+    """Empirical 95th-pct t over 200 placebo books on the SAME days (lab v2.1). Fallback 1.83."""
+    ts = []
+    for p in range(200):
+        diffs = []
+        for d in days_sub:
+            pl = d.get("PL")
+            if pl and p < len(pl) and pl[p] is not None and d["day"] in bmap:
+                diffs.append(pl[p] - bmap[d["day"]])
+        if len(diffs) >= 5:
+            ts.append(tstat(diffs))
+    if len(ts) < 50:
+        return 1.83
+    ts.sort()
+    return ts[int(len(ts) * 0.95)]
 
 
 def tg(msg):
@@ -210,7 +237,10 @@ def main():
             _l0 = sum(x for _, x in pts[_h:]) / max(len(pts) - _h, 1)
             traj.append(f"{datetime.now(timezone.utc).date()} {book}: {len(pts)}d mean {m:+.2f} "
                         f"LLR {llr:+.2f} halves {_e0:+.1f}/{_l0:+.1f} vs {vs}")
-        if len(rel) >= 5 and llr >= 2.94 and pts:
+        _dsub = [dd for dd in days if dd["day"] in {p0 for p0, _ in pts}]
+        _thr = placebo_thr(_dsub, bmap)
+        _tb = tstat(rel)
+        if len(rel) >= 5 and llr >= 2.94 and _tb >= _thr and pts:
             _h = len(pts) // 2
             _e1 = sum(x for _, x in pts[:_h]) / max(_h, 1)
             _l1 = sum(x for _, x in pts[_h:]) / max(len(pts) - _h, 1)
@@ -254,8 +284,9 @@ def main():
         half = len(pts) // 2
         e = sum(x for _, x in pts[:half]) / max(half, 1)
         l2 = sum(x for _, x in pts[half:]) / max(len(pts) - half, 1)
-        ok = (m > 0 and rel and sum(rel) / len(rel) > 2.0 and e > 0 and l2 > 0)
-        lines.append(f"{book}: {len(pts)}d mean {m:+.2f}% vs {vs} {'PASS' if ok else 'HOLD'}")
+        ok = (m > 0 and rel and _tb >= _thr and e > 0 and l2 > 0)   # lab v2.1: t-unit bar vs
+        lines.append(f"{book}: {len(pts)}d mean {m:+.2f}% t {_tb:+.2f} vs placebo-thr "
+                     f"{_thr:.2f} ({vs}) {'PASS' if ok else 'HOLD'}")   # 200-placebo empirical null
         try:                                     # 2y corpus prior beside every verdict - ADVISORY
             pri = json.load(open("reports/research/historical_corpus_2026-08-13/corpus_priors.json"))
             cp = pri.get(book)

@@ -169,6 +169,13 @@ def run_day(db, day_iso):
     for name, pred in books.items():
         out[name] = sel(pred)
     out["EARLY_CUT"] = {"n": len(_bl), "mean": round(sum(_bl) / len(_bl), 2) if _bl else None}
+    # PLACEBO ARMY (lab v2.1, owner order 2026-08-19 01:36): 200 hash-seeded random books from
+    # the same day's real candidates - the empirical null the boundary judges every pass against.
+    _army = []
+    for _p in range(200):
+        _v = [res[c] for c in res if hash(f"{_p}:{c}") % 5 == 0]
+        _army.append(round(sum(_v) / len(_v), 2) if _v else None)
+    out["PL"] = _army
     # EXIT VARIANTS (registered 2026-08-12, owner: exploration was entry-only). LIVE_SPEC
     # cohort, five alternative exit rules replayed on the same stored bid paths. EXIT_STOP40
     # maps to the live exit.stop key (auto-promotable); the others are measurement until one

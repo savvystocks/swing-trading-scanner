@@ -168544,16 +168544,50 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_TRAIL",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 65.2
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 82.6,
+          "mae_pct": -34.2,
+          "stage": "closed",
+          "close_fails": 0,
+          "scaled_out": {
+            "at": "2026-08-19T13:33:04.963Z",
+            "return_pct": 37.7
+          }
+        }
+      },
+      "mfe_pct": 82.6,
+      "mae_pct": -34.2,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 100.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "probe_strategy": "EXEC_BASELINE",
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "GDX260918C00095000",
+        "closed_at": "2026-08-19T17:01:50.044Z",
+        "return_pct": 65.2,
+        "reason": "65.2% <= trail 66.1% (20% off peak MFE 82.6%)",
+        "action": "CLOSE_TRAIL",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 82.6,
         "mae_pct": -34.2,
-        "stage": "trailing",
+        "stage": "closed",
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-08-19T13:33:04.963Z",
@@ -168565,6 +168599,11 @@
       {
         "order_id": "d67fbefc-da69-4c39-8fed-0f37459cf8f5",
         "at": "2026-08-19T13:33:04.963Z",
+        "ledger_terminal": "filled"
+      },
+      {
+        "order_id": "e4441c0b-4bb0-4e1e-9f6e-cc5ad890c39c",
+        "at": "2026-08-19T17:01:50.044Z",
         "ledger_terminal": "filled"
       }
     ]
@@ -172356,7 +172395,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -2.6,
+        "mfe_pct": 0.0,
         "mae_pct": -32.5,
         "stage": "initial"
       }
@@ -174212,7 +174251,7 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": -1.5,
+        "mfe_pct": -3.0,
         "mae_pct": -3.0,
         "stage": "initial"
       }

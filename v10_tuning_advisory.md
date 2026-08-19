@@ -2596,3 +2596,9 @@ trade: winner=adopted_leg loser=adopted_leg | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - GDX (2b0b7ca64b6b) - 2026-08-19T17:01:50.642Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

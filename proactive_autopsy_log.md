@@ -3907,3 +3907,12 @@
 
 **Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
 
+## Autopsy - GDX (2b0b7ca64b6b)
+- entered 2026-08-17T14:12:58.782Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +65.2% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 100.0 fed the squeeze.
+

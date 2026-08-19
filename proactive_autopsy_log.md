@@ -3925,3 +3925,12 @@
 
 **Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
 
+## Autopsy - ETHA (e40ce1a4839c)
+- entered 2026-08-14T19:29:28.495Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +144.6% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; negative_gamma amplified the breakout.
+

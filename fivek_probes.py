@@ -160,6 +160,7 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now):
 
 def cycle(creds, allow_entries=True):
     cfg = _cfg()
+    print(f"  fivek: cycle cfg={'ok' if cfg else 'EMPTY'} creds={'ok' if creds and all(creds) else 'MISSING'} allow={allow_entries}")
     if not cfg or not creds or not all(creds):
         return
     import sandbox_proactive_lab as lab
@@ -178,6 +179,7 @@ def cycle(creds, allow_entries=True):
     if dirty:
         lab._save_log_list(log)
     if not allow_entries or now.hour < 15:
+        print(f"  fivek: entries gated (allow={allow_entries} hour={now.hour}) - settles only")
         return
     cs = cfg.get("credit_spread") or {}
     if cs.get("enabled") and "CREDIT_SPREAD_W" not in have:

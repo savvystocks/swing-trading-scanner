@@ -78,19 +78,12 @@ else
           # 2026-08-18 mass-adoption fix: pin DATA files to origin before the rollback
           # commit - a stale VPS working tree must never overwrite live trade records
           git checkout -q origin/main -- proactive_sandbox_logs.json data/harvest_state.json sandbox_ticker_cooloff.json sandbox_watchlist.json 2>/dev/null || true
-          if git checkout -q "$GOOD_SHA" -- "*.py" "scripts/" 2>/dev/null && ! git diff --cached --quiet -- "*.py" "scripts/" 2>/dev/null              && git -c user.name=watchdog -c user.email=watchdog@vps commit -qm "AUTO-ROLLBACK: engine code to last-good $GOOD_SHA (crash watchdog) [skip ci]" -- "*.py" scripts/              && git push -q origin HEAD:main; then
+          if git checkout -q "$GOOD_SHA" -- "*.py" "scripts/" 2>/dev/null              && git -c user.name=watchdog -c user.email=watchdog@vps commit -qm "AUTO-ROLLBACK: engine code to last-good $GOOD_SHA (crash watchdog) [skip ci]" -- "*.py" scripts/              && git push -q origin HEAD:main; then
             echo rolled > "$RB"
             alarm "engine was CRASHING (last good cycle ${OK_AGE}m ago) - AUTO-ROLLBACK executed: code reverted to last-good ${GOOD_SHA}. Cycles resume on proven code within 10 min. The bad change stays in git history for a code session."
           else
             git rebase --abort 2>/dev/null; git checkout -q -- . 2>/dev/null
-            if git diff --cached --quiet -- "*.py" "scripts/" 2>/dev/null; then
-              git reset -q HEAD 2>/dev/null; git checkout -q -- . 2>/dev/null
-              echo rolled > "$RB"
-              alarm "cycle completions are GAPPY (last good ${OK_AGE}m ago) but the CODE is unchanged since last-good - no rollback possible or needed. Likely run-queue churn; trades that filled are safe; watching."
-            else
-              git rebase --abort 2>/dev/null; git checkout -q -- . 2>/dev/null
-              alarm "engine is CRASHING and AUTO-ROLLBACK FAILED - manual session needed NOW. Last good cycle ${OK_AGE}m ago."
-            fi
+            alarm "engine is CRASHING and AUTO-ROLLBACK FAILED - manual session needed NOW. Last good cycle ${OK_AGE}m ago."
           fi
         elif [ -f "$RB" ]; then
           alarm "engine STILL crashing after auto-rollback - the fault predates the last-good stamp or is environmental. Manual session needed NOW."

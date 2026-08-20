@@ -56,11 +56,21 @@ def _order(occ, side, limit, creds):
 
 
 def _held(occ, creds):
-    req = urllib.request.Request(f"https://paper-api.alpaca.markets/v2/positions/{occ}",
-                                 headers={"APCA-API-KEY-ID": creds[0], "APCA-API-SECRET-KEY": creds[1]})
+    """Position OR pending order on this occ (2026-08-20: the 15:07 entry's short leg was
+    still an unfilled order at 15:16, so the position-only check let a double-entry through)."""
+    h = {"APCA-API-KEY-ID": creds[0], "APCA-API-SECRET-KEY": creds[1]}
     try:
+        req = urllib.request.Request(f"https://paper-api.alpaca.markets/v2/positions/{occ}", headers=h)
         with urllib.request.urlopen(req, timeout=15) as r:
-            return abs(float(json.loads(r.read()).get("qty") or 0)) > 0
+            if abs(float(json.loads(r.read()).get("qty") or 0)) > 0:
+                return True
+    except Exception:
+        pass
+    try:
+        req = urllib.request.Request(
+            "https://paper-api.alpaca.markets/v2/orders?status=open&limit=100", headers=h)
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return any((o.get("symbol") or "").upper() == occ.upper() for o in json.loads(r.read()))
     except Exception:
         return False
 

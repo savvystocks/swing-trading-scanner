@@ -166708,7 +166708,7 @@
         "mfe_pct": 104.3,
         "mae_pct": -23.4,
         "stage": "initial",
-        "close_fails": 4
+        "close_fails": 0
       }
     }
   },
@@ -168912,10 +168912,10 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 94.1,
+        "mfe_pct": 96.6,
         "mae_pct": -10.9,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -170734,17 +170734,55 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -50.6
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": -5.1,
+          "mae_pct": -50.6,
+          "stage": "closed",
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": -5.1,
+      "mae_pct": -50.6,
+      "determining_factor": "Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 60.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "SLV260918P00055000",
+        "closed_at": "2026-08-20T13:43:40.127Z",
+        "return_pct": -50.6,
+        "reason": "-50.6% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -5.1,
-        "mae_pct": -45.5,
-        "stage": "initial"
+        "mae_pct": -50.6,
+        "stage": "closed",
+        "close_fails": 0
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "e8ed774a-1177-44f4-abed-1e00b10cf4c3",
+        "at": "2026-08-20T13:43:40.127Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "defa43e46866",
@@ -171282,7 +171320,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 14.7,
-        "mae_pct": -37.1,
+        "mae_pct": -41.8,
         "stage": "initial"
       }
     }
@@ -171932,7 +171970,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -1.4,
-        "mae_pct": -24.0,
+        "mae_pct": -28.3,
         "stage": "initial"
       }
     }
@@ -172473,7 +172511,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -2.6,
+        "mfe_pct": 12.6,
         "mae_pct": -32.5,
         "stage": "initial"
       }
@@ -174330,7 +174368,7 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 10.6,
-        "mae_pct": -24.2,
+        "mae_pct": -27.3,
         "stage": "initial"
       }
     }
@@ -174600,7 +174638,7 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 98.1,
+        "mfe_pct": 105.7,
         "mae_pct": -3.8,
         "stage": "initial"
       }

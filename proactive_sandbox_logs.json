@@ -166721,7 +166721,7 @@
         "mfe_pct": 134.0,
         "mae_pct": -23.4,
         "stage": "initial",
-        "close_fails": 4
+        "close_fails": 0
       }
     }
   },
@@ -168928,7 +168928,7 @@
         "mfe_pct": 105.9,
         "mae_pct": -10.9,
         "stage": "initial",
-        "close_fails": 0
+        "close_fails": 1
       }
     }
   },
@@ -177377,5 +177377,267 @@
       }
     ],
     "status": "CANCELLED"
+  },
+  {
+    "trade_set_id": "fb26be8e942c",
+    "ticker": "SQQQ",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "book": "PROBE",
+    "router_state": "MILD",
+    "entry_ts_utc": "2026-08-20T18:54:44.800Z",
+    "leg_budget_usd": 1000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 36,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "FCEL260821C00022000",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-08-20T18:54:44.800Z",
+      "macro": {
+        "spot": 39.58,
+        "sma20": 40.29,
+        "distance_to_sma20_pct": -1.754,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 60.2,
+        "iv_back": 60.6,
+        "iv_ratio": 0.993,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 1758605.2,
+        "zero_gamma_strike": 36.0,
+        "distance_to_zero_gamma_pct": 9.045,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 200.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.68,
+        "atr_pct": 4.25,
+        "rvol_10min": 0.66,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 674.46,
+        "vader_compound": -0.01,
+        "news_type": "Unknown",
+        "top_headline": "QUICK SPARK: The First 2x Equal-Weight Nasdaq-100 ETF Has Arrived, Challenging Mega-Cap Dominance",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -1.754,
+        "market_spy_dist_pct": 0.336,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 56.5,
+        "call_iv_25d": 69.9,
+        "skew_ratio": 0.807,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 16.49,
+        "ask_sweep_prem": 1251880.0,
+        "total_flow_prem": 7592073.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 39.68,
+        "node_size": 643828.0,
+        "n_prints": 200,
+        "window_start": "2026-08-20T17:30:09Z",
+        "window_end": "2026-08-20T18:53:57Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 38.45,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 71.1,
+        "front_iv": 60.2,
+        "vrp": -10.9,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 1470268.0,
+        "flow_persistence_pct": 28.36,
+        "flow_direction": "bullish",
+        "closing_accel": 339367.0,
+        "n_ticks": 325,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 956.95,
+        "vwma_20": 40.33,
+        "rsi_5": 100.0,
+        "rsi_15": 34.86,
+        "gap_pct": 1.531,
+        "day_range": 2.577,
+        "candle_body": 0.451,
+        "dist_sma50": -0.891,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -0.4,
+        "vix_level": 16.02,
+        "execution_hour": 18,
+        "day_of_week": 3,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 8815216.0,
+        "net_vanna": 10355947.0,
+        "net_charm": -10572939.0,
+        "delta_imbalance": 2.882,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.025,
+        "bid": 39.58,
+        "ask": 39.59,
+        "bid_size": 9200.0,
+        "ask_size": 5900.0,
+        "obi": 0.2185,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.66,
+        "gap_pct": 1.531,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.01,
+      "sweep_aggression_pct": 16.49,
+      "distance_to_zero_gamma_pct": 9.045,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 28.36
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "SQQQ260918C00041000",
+        "expiry": "2026-09-18",
+        "strike": 41.0,
+        "dte": 35,
+        "entry_premium": 2.95,
+        "limit_price": 2.98,
+        "contracts": 3,
+        "alloc_usd": 1000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "1177",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.22,
+          "ask": 2.25,
+          "mid": 2.235,
+          "bid_ask_spread_pct": 1.342,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 1147.0,
+          "oi_prev": 1177.0,
+          "oi_change": -30.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "437ef5d9-1d56-461f-b2dc-07e55d46bdb7",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.98,
+        "contracts": 3
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "probe_strategy": "EXEC_BASELINE"
   }
 ]

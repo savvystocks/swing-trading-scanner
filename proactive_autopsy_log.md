@@ -3961,3 +3961,12 @@
 
 **Determining factor:** Bearish put FAILED (-1%, move 0.0%): no breakdown materialised; spot held above zero-gamma 345.0.
 
+## Autopsy - ETHA (2c781eeb3f42)
+- entered 2026-08-20T14:29:32.612Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +56.8% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+

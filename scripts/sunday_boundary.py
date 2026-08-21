@@ -44,6 +44,28 @@ MENU = {
 }
 
 
+def spawn_challengers(keys):
+    """Respawn the challenger ring around a newly promoted config (owner design 2026-08-21)."""
+    steps = {"entry.flow_max": 100000, "entry.flow_min": 20000, "entry.max_spy_dist_pct": 0.5,
+             "entry.max_depth_pct": 0.5, "entry.max_spread_pct": 0.5, "exit.stop": 5}
+    fmap = {"entry.flow_max": "band_hi", "entry.flow_min": "band_lo",
+            "entry.max_spy_dist_pct": "spy_max", "entry.max_spread_pct": "spr_max",
+            "exit.stop": "stop"}
+    books, menu = {}, {}
+    for path, val in keys.items():
+        if path.startswith("_") or path not in steps or not isinstance(val, (int, float)):
+            continue
+        for sgn in (-1, 1):
+            nv = round(val + sgn * steps[path], 2)
+            nm = "CH_" + path.split(".")[1][:8].upper() + "_" + str(nv).replace(".", "p").replace("-", "m")
+            if path in fmap:
+                books[nm] = {fmap[path]: nv}
+            menu[nm] = {path: nv, "_vs": "CHAMPION"}
+    if menu:
+        json.dump({"note": "ring respawned " + str(datetime.now(timezone.utc).date()),
+                   "books": books, "menu": menu}, open("challengers.json", "w"), indent=1)
+
+
 def tstat(diffs):
     n = len(diffs)
     if n < 3:
@@ -88,6 +110,10 @@ def tg_or_log(msg):
 
 
 def main():
+    try:                                              # challenger ring joins the judged menu
+        MENU.update(json.load(open("challengers.json")).get("menu") or {})
+    except Exception:
+        pass
     if not os.path.exists(LEDGER):
         tg_or_log("SUNDAY BOUNDARY: no shadow ledger yet - nothing to review.")
         return
@@ -265,8 +291,9 @@ def main():
                         "keys": {k: v for k, v in keys.items() if not k.startswith("_")},
                         "mode": "sequential"}
                     json.dump(spec, open("fade_book_spec.json", "w"), indent=1)
-                    subprocess.run("git add fade_book_spec.json && git commit -qm 'auto-boundary: "
-                                   + book + " promoted (sequential) [skip ci]' && "
+                    spawn_challengers(keys)
+                    subprocess.run("git add fade_book_spec.json challengers.json && git commit -qm "
+                                   "'auto-boundary: " + book + " promoted (sequential) [skip ci]' && "
                                    "git pull -q --rebase -X ours && git push -q", shell=True)
                     applied.append(book)
                     lines.append(f">>> APPLIED {book} (sequential verdict)")
@@ -313,8 +340,9 @@ def main():
                 "book": book, "vs": vs, "prev": prev,
                 "keys": {k: v2 for k, v2 in keys.items() if not k.startswith("_")}, "mode": "fixed"}
             json.dump(spec, open("fade_book_spec.json", "w"), indent=1)
-            subprocess.run("git add fade_book_spec.json && git commit -qm 'auto-boundary: "
-                           + book + " promoted per pre-registered bars [skip ci]' && "
+            spawn_challengers(keys)
+            subprocess.run("git add fade_book_spec.json challengers.json && git commit -qm "
+                           "'auto-boundary: " + book + " promoted per pre-registered bars [skip ci]' && "
                            "git pull -q --rebase -X ours && git push -q", shell=True)
             applied.append(book)
             lines.append(f">>> APPLIED {book} to the live spec (data-only change; engine reads it next cycle)")

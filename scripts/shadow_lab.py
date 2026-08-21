@@ -172,6 +172,39 @@ def run_day(db, day_iso):
     for name, pred in books.items():
         out[name] = sel(pred)
     out["EARLY_CUT"] = {"n": len(_bl), "mean": round(sum(_bl) / len(_bl), 2) if _bl else None}
+    # CHALLENGER PROTOCOL (owner design 2026-08-21): CHAMPION mirrors the LIVE spec nightly;
+    # challengers (challengers.json) are one-dial neighbors replayed on the same cohort.
+    try:
+        import fade_book as _fb
+        _e = _fb.spec().get("entry") or {}
+        _x = _fb.spec().get("exit") or {}
+        _td = _x.get("trail_drawdown", 20)
+        _cp = {"band_lo": _e.get("flow_min", 50000), "band_hi": _e.get("flow_max", 400000),
+               "spr_max": _e.get("max_spread_pct", 2.0), "spy_max": _e.get("max_spy_dist_pct", 99),
+               "stop": _x.get("stop", -50), "trig": _x.get("trail_activate", 50),
+               "give": _td / 100.0 if _td > 1 else _td}
+
+        def _cfilter(p):
+            return lambda m: (fade(m) and m["spr"] <= p.get("spr_max", _cp["spr_max"])
+                              and p.get("band_lo", _cp["band_lo"]) <= m["score"] <= p.get("band_hi", _cp["band_hi"])
+                              and abs(m["spy"]) < p.get("spy_max", _cp["spy_max"]))
+
+        def _ceval(p):
+            _f = _cfilter(p)
+            _cids = [c for c in res if _f(meta[c])]
+            _st = p.get("stop", _cp["stop"]); _tg = p.get("trig", _cp["trig"]); _gv = p.get("give", _cp["give"])
+            if (_st, _tg, _gv) == (_cp["stop"], _cp["trig"], _cp["give"]):
+                _vals = [res[c] for c in _cids]
+            else:
+                _vals = [replay(paths[c], meta[c]["e"], stop=_st, trig=_tg, give=_gv) for c in _cids]
+            return {"n": len(_vals), "mean": round(sum(_vals) / len(_vals), 2) if _vals else None}
+
+        out["CHAMPION"] = _ceval({})
+        if os.path.exists("challengers.json"):
+            for _nm, _p in (json.load(open("challengers.json")).get("books") or {}).items():
+                out[_nm] = _ceval(_p)
+    except Exception as _ce:
+        print(f"challenger eval skipped: {type(_ce).__name__}")
     # PLACEBO ARMY (lab v2.1, owner order 2026-08-19 01:36): 200 hash-seeded random books from
     # the same day's real candidates - the empirical null the boundary judges every pass against.
     _army = []

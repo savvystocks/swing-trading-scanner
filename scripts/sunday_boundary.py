@@ -64,6 +64,10 @@ def spawn_challengers(keys):
     if menu:
         json.dump({"note": "ring respawned " + str(datetime.now(timezone.utc).date()),
                    "books": books, "menu": menu}, open("challengers.json", "w"), indent=1)
+    # FULL SWEEP on promotion (owner order 2026-08-21 22:57): every variable at every figure,
+    # no assumptions - the finished sweep reseeds the ring with evidence-chosen challengers.
+    subprocess.Popen("nohup python3 scripts/variable_sweep.py --reseed >> "
+                     "/home/poller/sweep.log 2>&1 &", shell=True)
 
 
 def tstat(diffs):

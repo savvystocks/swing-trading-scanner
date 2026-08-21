@@ -3952,3 +3952,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 12.0 fed the squeeze.
 
+## Autopsy - IWM (73df81ff2dea)
+- entered 2026-08-12T19:40:14.809Z | trigger regime_BEARISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -1.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-1%, move 0.0%): no breakdown materialised; spot held above zero-gamma 345.0.
+

@@ -177530,18 +177530,56 @@
     "ledger_terminal": "filled"
    }
   },
-  "exit": null,
-  "status": "OPEN",
+  "exit": {
+   "reason": "CLOSE_STOP_LOSS",
+   "underlying_move_pct": 0.0,
+   "entry_slippage_pct": null,
+   "leg_returns_pct": {
+    "bearish_put": -50.0
+   },
+   "winner": "bearish_put",
+   "loser": "bearish_put",
+   "leg_path": {
+    "bearish_put": {
+     "mfe_pct": 5.0,
+     "mae_pct": -50.0,
+     "stage": "closed",
+     "close_fails": 0
+    }
+   },
+   "mfe_pct": 5.0,
+   "mae_pct": -50.0,
+   "determining_factor": "Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 30.0.",
+   "tuning_recommendations": []
+  },
+  "status": "CLOSED",
   "buy_alert_delivered": true,
   "probe_strategy": "CONSENSUS",
-  "leg_exits": {},
+  "leg_exits": {
+   "bearish_put": {
+    "occ": "QBTS260918P00018000",
+    "closed_at": "2026-08-21T19:50:04.239Z",
+    "return_pct": -50.0,
+    "reason": "-50.0% <= -50% hard stop",
+    "action": "CLOSE_STOP_LOSS",
+    "closed_ok": true
+   }
+  },
   "leg_path": {
    "bearish_put": {
     "mfe_pct": 5.0,
-    "mae_pct": -44.2,
-    "stage": "initial"
+    "mae_pct": -50.0,
+    "stage": "closed",
+    "close_fails": 0
    }
-  }
+  },
+  "exit_order_ids": [
+   {
+    "order_id": "d76dfe1f-d9db-4026-bf0f-e3f2d10b66f4",
+    "at": "2026-08-21T19:50:04.239Z",
+    "ledger_terminal": "filled"
+   }
+  ]
  },
  {
   "trade_set_id": "AUDIT-b5013d8c",
@@ -179308,7 +179346,7 @@
   "leg_path": {
    "bearish_put": {
     "mfe_pct": -1.9,
-    "mae_pct": -4.2,
+    "mae_pct": -12.5,
     "stage": "initial"
    }
   }
@@ -179579,7 +179617,7 @@
   "leg_path": {
    "bearish_put": {
     "mfe_pct": 1.0,
-    "mae_pct": -5.2,
+    "mae_pct": -18.6,
     "stage": "initial"
    }
   }
@@ -179903,7 +179941,7 @@
   "leg_path": {
    "adopted_leg": {
     "mfe_pct": 0.0,
-    "mae_pct": -4.8,
+    "mae_pct": -13.5,
     "stage": "initial"
    }
   },

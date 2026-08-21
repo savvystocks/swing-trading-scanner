@@ -175,9 +175,9 @@ def run_day(db, day_iso):
     # CHALLENGER PROTOCOL (owner design 2026-08-21): CHAMPION mirrors the LIVE spec nightly;
     # challengers (challengers.json) are one-dial neighbors replayed on the same cohort.
     try:
-        import fade_book as _fb
-        _e = _fb.spec().get("entry") or {}
-        _x = _fb.spec().get("exit") or {}
+        _spec = json.load(open("fade_book_spec.json"))
+        _e = _spec.get("entry") or {}
+        _x = _spec.get("exit") or {}
         _td = _x.get("trail_drawdown", 20)
         _cp = {"band_lo": _e.get("flow_min", 50000), "band_hi": _e.get("flow_max", 400000),
                "spr_max": _e.get("max_spread_pct", 2.0), "spy_max": _e.get("max_spy_dist_pct", 99),

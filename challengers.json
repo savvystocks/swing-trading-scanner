@@ -1,5 +1,5 @@
 {
- "note": "CHALLENGER PROTOCOL (owner design 2026-08-21): CHAMPION = live spec, read fresh nightly; each challenger differs by ONE dial and is judged vs CHAMPION under the full hardened bars. A winning challenger auto-promotes its dial; the ring is respawned around every new champion.",
+ "note": "CHALLENGER PROTOCOL (owner design 2026-08-21): CHAMPION = live spec, read fresh nightly; each challenger differs by ONE dial and is judged vs CHAMPION under the full hardened bars. A winning challenger auto-promotes its dial; the ring is respawned around every new champion. | SWEEP_PLATEAU added 2026-08-21: the 28,800-config sweep's stable region (80k floor, spread 1.5, mild<1.0; day-mean +8.0, halves +10.4/+5.9, plateau +6.78) as a PACKAGE challenger - multi-dial, so it earns as one unit vs CHAMPION under full hardened bars. Mined evidence, deflate accordingly.",
  "books": {
   "CH_SPREAD_1p5": {
    "spr_max": 1.5
@@ -18,6 +18,13 @@
   },
   "CH_GIVE_30": {
    "give": 0.3
+  },
+  "SWEEP_PLATEAU": {
+   "band_lo": 80000,
+   "band_hi": 400000,
+   "spr_max": 1.5,
+   "spy_max": 1.0,
+   "stop": -50
   }
  },
  "menu": {
@@ -35,6 +42,12 @@
   },
   "CH_FLOWLO_80k": {
    "entry.flow_min": 80000,
+   "_vs": "CHAMPION"
+  },
+  "SWEEP_PLATEAU": {
+   "entry.flow_min": 80000,
+   "entry.max_spread_pct": 1.5,
+   "entry.max_spy_dist_pct": 1.0,
    "_vs": "CHAMPION"
   }
  }

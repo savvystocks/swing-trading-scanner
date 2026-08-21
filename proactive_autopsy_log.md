@@ -3943,3 +3943,12 @@
 
 **Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 60.0.
 
+## Autopsy - WULF (41ada3692bff)
+- entered 2026-08-18T18:46:24.188Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +40.4% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 12.0 fed the squeeze.
+

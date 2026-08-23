@@ -82,7 +82,13 @@ RTHR = (1.0, 2.0, 3.0)
 def main():
     import numpy as np
     con = sqlite3.connect("file:data/uw_history.db?mode=ro", uri=True, timeout=60)
-    tks = [r[0] for r in con.execute("select distinct ticker from contracts_daily")]
+    # COVERAGE GATE (2026-08-23): the 262-ticker expansion is still pulling, so newly added names
+    # hold only recent days. Including them would stuff the 2026 walk-forward TEST period with
+    # names absent from TRAIN. Only tickers with a full 2y history (>=400 distinct days) qualify.
+    tks = [r[0] for r in con.execute("select ticker from contracts_daily group by ticker "
+                                     "having count(distinct day) >= 400")]
+    print(f"tickers with full 2y coverage: {len(tks)}", flush=True)
+    tkset = set(tks)
     sm = {t: smad(closes(t)) for t in tks}
     spyc = closes("SPY"); spy20 = smad(spyc)
     sd_ = sorted(spyc); s50 = {}; buf = []
@@ -101,7 +107,7 @@ def main():
                where total_premium between 30000 and 1000000 and ask_volume>bid_volume
                  and nbbo_ask is not null and nbbo_bid is not null and nbbo_ask>0
                order by day"""):
-        if occ in seen:
+        if occ in seen or t not in tkset:
             continue
         smd = (sm.get(t) or {}).get(day); sp = spy20.get(day); reg = s50.get(day)
         if smd is None or sp is None or reg is None:

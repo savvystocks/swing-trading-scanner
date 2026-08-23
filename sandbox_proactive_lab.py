@@ -411,8 +411,15 @@ def build_legs(ticker, md, regime="NEUTRAL", leg_budget=None, illiquid=None):
         # qualifying candidates died premium_too_rich today. Both gates now read the spec.
         min_ct = fade_book.spec().get("min_contracts", 1)
     illiquid = illiquid or set()
-    call_k, put_k = round(spot * 1.04, 1), round(spot * 0.96, 1)
-    cp, pp = _est_premium(spot, call_k, iv_f, 35, "call"), _est_premium(spot, put_k, iv_f, 35, "put")
+    # STRUCTURE (2026-08-23): the archive's only learnable non-flow edge is WHICH CONTRACT we buy
+    # (delta/DTE), not which print we follow. Spec-gated; defaults are byte-identical to the
+    # historical behaviour (4% OTM, 35 DTE) so this is inert until evidence sets the values.
+    _st = (fade_book.spec().get("structure") or {}) if fade_book.active() else {}
+    _otm = _st.get("otm_pct", 4.0) if _st.get("enabled") else 4.0
+    _dte = int(_st.get("dte", 35)) if _st.get("enabled") else 35
+    call_k = round(spot * (1 + _otm / 100.0), 1)
+    put_k = round(spot * (1 - _otm / 100.0), 1)
+    cp, pp = _est_premium(spot, call_k, iv_f, _dte, "call"), _est_premium(spot, put_k, iv_f, _dte, "put")
     front, back = _est_premium(spot, spot, iv_f, 14, "call"), _est_premium(spot, spot, iv_b, 45, "call")
     cal_debit = round(back - front, 2)
 
@@ -431,8 +438,8 @@ def build_legs(ticker, md, regime="NEUTRAL", leg_budget=None, illiquid=None):
                 "illiquid": (name in illiquid) or qty <= 0, **extra}
 
     all_legs = {
-        "bullish_call": leg("bullish_call", "LONG_CALL", "call", call_k, 35, cp, target_delta=CALL_DELTA),
-        "bearish_put": leg("bearish_put", "LONG_PUT", "put", put_k, 35, pp, target_delta=PUT_DELTA),
+        "bullish_call": leg("bullish_call", "LONG_CALL", "call", call_k, _dte, cp, target_delta=CALL_DELTA),
+        "bearish_put": leg("bearish_put", "LONG_PUT", "put", put_k, _dte, pp, target_delta=PUT_DELTA),
     }
     cal_occ_f, _ = _occ(ticker, 14, "call", round(spot, 1))
     cal_occ_b, exp_b = _occ(ticker, 45, "call", round(spot, 1))

@@ -143,8 +143,23 @@ def main():
         recs = json.load(open("proactive_sandbox_logs.json", encoding="utf-8"))
         import datetime as _dt
         wk_ago = (_dt.date.today() - _dt.timedelta(days=7)).isoformat()
-        fills = sum(1 for r in recs if r.get("book") == "FADE" and (r.get("entry_ts_utc") or "") >= wk_ago)
+        _legs = ["FADE"] + list((json.load(open("fade_book_spec.json")).get("probe") or {}).get("promoted") or [])
+        fills_by = {lg: 0 for lg in _legs}
+        for r in recs:
+            if (r.get("entry_ts_utc") or "") < wk_ago:
+                continue
+            if r.get("book") in fills_by:
+                fills_by[r.get("book")] += 1
+            elif r.get("book") == "PROBE" and r.get("probe_strategy") in fills_by:
+                fills_by[r.get("probe_strategy")] += 1
+        fills = fills_by.get("FADE", 0)
         quals = sum(d.get("BASELINE", {}).get("n") or 0 for d in days if d["day"] >= wk_ago)
+        _breached = [lg for lg, f in fills_by.items() if f < 3] if quals >= 15 else []
+        if _breached:
+            starving = True
+            if len(_breached) > 1 or _breached != ["FADE"]:
+                lines.append(f"THROUGHPUT (per-leg): breach on {_breached} - promoted legs must "
+                             "trade; restrictive promotions blocked until throughput recovers")
         if fills < 3 and quals >= 15:
             starving = True
             lines.append(f"THROUGHPUT FLOOR BREACH: {fills} fills vs {quals} qualifying this week - "
@@ -215,20 +230,45 @@ def main():
     # other hypotheses' evidence clocks - verdicts are earned against the system AS IT NOW IS,
     # never against a configuration that no longer exists; (b) a key that just changed is
     # frozen 14 calendar days - no oscillation. Changes therefore compound in SERIES.
-    last_chg = ""
+    # PER-KEY EVIDENCE CLOCKS (Friday batch, owner order 2026-08-23): a spec change now
+    # resets ONLY the candidates whose keys it touched. Markers carrying a "keys" dict are
+    # per-key; markers without keys stay BLANKET (the 2026-08-19 reset is the last blanket
+    # one ever paid). The audit found the old global clock wiped every book's virgin days on
+    # any change - the court never saw more than ~4 consecutive days. Fixed at zero
+    # specificity cost: an unchanged candidate keeps its accrued evidence.
+    blanket_chg = ""
+    key_chg = {}
     frozen_keys = set()
+    _spec1 = {}
     try:
-        spec1 = json.load(open("fade_book_spec.json"))
-        cutoff = (datetime.now(timezone.utc).date() - __import__("datetime").timedelta(days=14)).isoformat()
-        for ak in [k for k in spec1 if k.startswith("auto_")]:
-            av = spec1[ak]
+        _spec1 = json.load(open("fade_book_spec.json"))
+        for ak in [k for k in _spec1 if k.startswith("auto_")]:
+            av = _spec1[ak] if isinstance(_spec1[ak], dict) else {}
             d0 = ak.replace("auto_", "")
-            dd0 = av.get("demoted") if isinstance(av, dict) else None
-            last_chg = max(last_chg, d0, dd0 or "")
-            if isinstance(av, dict) and (d0 >= cutoff or (dd0 or "") >= cutoff):
-                frozen_keys.update((av.get("keys") or {}).keys())
+            dd0 = av.get("demoted") or ""
+            mk = list((av.get("keys") or {}).keys())
+            if mk:
+                for k in mk:
+                    key_chg[k] = max(key_chg.get(k, ""), d0, dd0)
+            else:
+                blanket_chg = max(blanket_chg, d0, dd0)
+            try:
+                from datetime import date as _dt2
+                if (_dt2.today() - _dt2.fromisoformat(max(d0, dd0 or d0))).days < 14:
+                    frozen_keys.update(mk)
+            except Exception:
+                pass
     except Exception:
         pass
+
+    def _clock(keys):
+        c = blanket_chg
+        for k in keys:
+            if not k.startswith("_"):
+                c = max(c, key_chg.get(k, ""))
+        return c
+
+    last_chg = blanket_chg      # legacy readers (demotion audit lines) see the blanket clock
     if last_chg:
         lines.append(f"evidence clock: restarted at last spec change {last_chg}; "
                      f"{len(frozen_keys)} key(s) in cooldown")
@@ -290,6 +330,82 @@ def main():
                 promoted.add(st_)
     except Exception as _pp:
         lines.append(f"probe-promotion check skipped: {type(_pp).__name__}")
+    # SENTINEL COURT (Friday batch): judge the known-edge synthetic books with the SAME
+    # machinery as real candidates. Their pass/kill times are the court's published operating
+    # characteristics; any machinery change must keep P8/P24/N20 inside their windows.
+    try:
+        _sents = ["SENTINEL_P2", "SENTINEL_P8", "SENTINEL_P24", "SENTINEL_N20",
+                  "SENTINEL_C1", "SENTINEL_C2", "SENTINEL_C3", "SENTINEL_C4"]
+        _sfile = os.path.join("reports", "shadow_lab", "sentinels.jsonl")
+        _prior_pass = set()
+        if os.path.exists(_sfile):
+            for _l in open(_sfile, encoding="utf-8"):
+                try:
+                    _j = json.loads(_l)
+                    if _j.get("verdict") in ("PASS", "KILL"):
+                        _prior_pass.add(_j["book"])
+                except Exception:
+                    pass
+        _bmap_s = {d["day"]: (d.get("BASELINE") or {}).get("mean") for d in days
+                   if (d.get("BASELINE") or {}).get("mean") is not None}
+        _snew = []
+        for _sb in _sents:
+            _pts = [(d["day"], d[_sb]["mean"]) for d in days
+                    if d.get(_sb, {}).get("mean") is not None and d["day"] in _bmap_s]
+            if not _pts:
+                continue
+            _rel = [x - _bmap_s[d] for d, x in _pts]
+            _mu = sum(_rel) / len(_rel)
+            _var = sum((x - _mu) ** 2 for x in _rel) / max(len(_rel) - 1, 1)
+            _llr = sum(2.0 * (x - 1.0) for x in _rel) / max(_var, 100.0)
+            _ds = [dd for dd in days if dd["day"] in {p0 for p0, _ in _pts}]
+            _th = placebo_thr(_ds, _bmap_s)
+            _tb2 = tstat(_rel)
+            _m2 = sum(x for _, x in _pts) / len(_pts)
+            _h2 = len(_pts) // 2
+            _ok = (len(_rel) >= 5 and _llr >= 2.94 and _tb2 >= _th and _m2 > 0 and _h2 > 0
+                   and sum(x for _, x in _pts[:_h2]) / max(_h2, 1) > 0
+                   and sum(x for _, x in _pts[_h2:]) / max(len(_pts) - _h2, 1) > 0)
+            _kill = len(_rel) >= 5 and _llr <= -2.94
+            _vd = "PASS" if _ok else ("KILL" if _kill else "accruing")
+            if _vd in ("PASS", "KILL") and _sb in _prior_pass:
+                _vd = "settled"
+            _snew.append({"run": str(datetime.now(timezone.utc).date()), "book": _sb,
+                          "days": len(_pts), "llr": round(_llr, 2), "t": round(_tb2, 2),
+                          "thr": round(_th, 2), "verdict": _vd})
+            lines.append(f"SENTINEL {_sb}: {len(_pts)}d LLR {_llr:+.2f} t {_tb2:+.2f} "
+                         f"thr {_th:.2f} -> {_vd}")
+        if _snew:
+            os.makedirs(os.path.dirname(_sfile), exist_ok=True)
+            with open(_sfile, "a", encoding="utf-8") as _f:
+                for _j in _snew:
+                    _f.write(json.dumps(_j) + chr(10))
+    except Exception as _se:
+        lines.append(f"sentinel court skipped: {type(_se).__name__}")
+
+    # EVIDENCE ODOMETER (Friday batch): accrued judgeable days per candidate - the one number
+    # that says whether the learning loop is running. If accrued days stop growing, the lab
+    # is not learning regardless of how good the strategies are.
+    try:
+        lines.append("--- EVIDENCE ODOMETER ---")
+        for book, keys in MENU.items():
+            _ck2 = _clock(keys)
+            _tot = sum(1 for d in days if d.get(book, {}).get("mean") is not None)
+            _acc = sum(1 for d in days if d.get(book, {}).get("mean") is not None
+                       and d["day"] > _ck2)
+            if _tot:
+                lines.append(f"  {book}: {_acc} judgeable d (clock {_ck2 or 'epoch'}, "
+                             f"{_tot - _acc} behind clock)")
+        _bf = os.path.join("reports", "shadow_lab", "breaker.jsonl")
+        if os.path.exists(_bf):
+            _bl = [json.loads(x) for x in open(_bf, encoding="utf-8") if x.strip()]
+            if _bl:
+                lines.append(f"  fade bear-regime days available in 2026: "
+                             f"{_bl[-1].get('bear_days_2026', '?')} "
+                             f"(fade evidence accrues ONLY on these)")
+    except Exception as _oe:
+        lines.append(f"odometer skipped: {type(_oe).__name__}")
+
     applied = []
     traj = []
     for book, keys in MENU.items():
@@ -300,9 +416,10 @@ def main():
             lines.append(f"{book}: SKIPPED (throughput floor breach - no new restrictions while starving)")
             continue
         vs = keys.get("_vs", "BASELINE")
+        _ck = _clock(keys)
         pts = [(d["day"], d[book]["mean"]) for d in days
                if d.get(book, {}).get("mean") is not None and d[book].get("n", 0) > 0
-               and d["day"] > last_chg]
+               and d["day"] > _ck]
         bmap = {d: v for d, v in ((dd["day"], (dd.get(vs) or {}).get("mean")) for dd in days)
                 if v is not None}
         rel = [x - bmap[d] for d, x in pts if d in bmap]

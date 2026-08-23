@@ -218,6 +218,18 @@ def run_day(db, day_iso):
         _v = [res[c] for c in res if hash(f"{_p}:{c}") % 5 == 0]
         _army.append(round(sum(_v) / len(_v), 2) if _v else None)
     out["PL"] = _army
+    # SENTINELS (Friday batch, owner order 2026-08-23): synthetic books with KNOWN injected
+    # edges walked through the SAME court nightly - the court's measured operating
+    # characteristics. P2 = documented-insensitivity control (a $20/day trickle at our scale,
+    # expected to never promote - that is honest, not broken). P8 must promote within ~6-9
+    # weeks of accrued days, P24 (fade-bear class) within ~3, N20 must be killed within ~2.
+    # C1-C4 are drift-free twins (local false-pass controls). Shadow only - never touch spec.
+    _sent = {"SENTINEL_P2": 2.0, "SENTINEL_P8": 8.0, "SENTINEL_P24": 24.0,
+             "SENTINEL_N20": -20.0, "SENTINEL_C1": 0.0, "SENTINEL_C2": 0.0,
+             "SENTINEL_C3": 0.0, "SENTINEL_C4": 0.0}
+    for _sn, _dr in _sent.items():
+        _v = [res[c] for c in res if hash(_sn + ":" + str(c)) % 5 == 0]
+        out[_sn] = {"n": len(_v), "mean": round(sum(_v) / len(_v) + _dr, 2) if _v else None}
     # EXIT VARIANTS (registered 2026-08-12, owner: exploration was entry-only). LIVE_SPEC
     # cohort, five alternative exit rules replayed on the same stored bid paths. EXIT_STOP40
     # maps to the live exit.stop key (auto-promotable); the others are measurement until one

@@ -232,6 +232,64 @@ def main():
     if last_chg:
         lines.append(f"evidence clock: restarted at last spec change {last_chg}; "
                      f"{len(frozen_keys)} key(s) in cooldown")
+    # PROBE-TO-LIVE PROMOTION (owner order 2026-08-23): a PRIORITY probe strategy whose LIVE
+    # fills beat the EXEC_BASELINE control on the hardened bar auto-graduates to a recognised
+    # live leg (marked promoted, prioritised, paged). Paper size stays $1k until the real-money
+    # gate; probation + demotion still apply. Turns "tested positive -> promoted" into a rung.
+    try:
+        spec_p = json.load(open("fade_book_spec.json"))
+        prio = (spec_p.get("probe") or {}).get("priority") or []
+        promoted = set((spec_p.get("probe") or {}).get("promoted") or [])
+        recs_p = json.load(open("proactive_sandbox_logs.json", encoding="utf-8"))
+        by_strat = {}
+        for r in recs_p:
+            st_ = r.get("probe_strategy")
+            if r.get("book") != "PROBE" or not st_:
+                continue
+            day = (r.get("entry_ts_utc") or "")[:10]
+            ret = None
+            for le in (r.get("leg_exits") or {}).values():
+                if le.get("return_pct") is not None:
+                    ret = le["return_pct"]; break
+            if r.get("settle") and r["settle"].get("pnl_usd") is not None:
+                ret = (r["settle"]["pnl_usd"] / 1000.0) * 100
+            if day and ret is not None:
+                by_strat.setdefault(st_, {}).setdefault(day, []).append(ret)
+
+        def daymeans(strat):
+            return {d: sum(v) / len(v) for d, v in (by_strat.get(strat) or {}).items()}
+
+        ctrl = daymeans("EXEC_BASELINE")
+        for st_ in prio:
+            if st_ in promoted:
+                continue
+            dm = daymeans(st_)
+            shared = sorted(d for d in dm if d in ctrl)
+            if len(shared) < 8:
+                lines.append(f"PROBE {st_}: {len(shared)}/8 live virgin days vs control - HOLD")
+                continue
+            diffs = [dm[d] - ctrl[d] for d in shared]
+            own = [dm[d] for d in shared]
+            t = tstat(diffs)
+            h = len(own) // 2
+            ok = (sum(own) / len(own) > 0 and t >= 1.8
+                  and sum(own[:h]) / max(h, 1) > 0 and sum(own[h:]) / max(len(own) - h, 1) > 0)
+            lines.append(f"PROBE {st_}: {len(shared)}d live vs control t {t:+.2f} {'PROMOTE' if ok else 'HOLD'}")
+            if ok and os.environ.get("BOUNDARY_REPORT_ONLY") != "1":
+                spec_p.setdefault("probe", {}).setdefault("promoted", []).append(st_)
+                spec_p[f"promo_{datetime.now(timezone.utc).date()}"] = {
+                    "strategy": st_, "days": len(shared), "t": round(t, 2),
+                    "note": "probe->live leg; paper size unchanged; probation armed"}
+                json.dump(spec_p, open("fade_book_spec.json", "w"), indent=1)
+                subprocess.run("git add fade_book_spec.json && git commit -qm "
+                               "'auto-boundary: probe " + st_ + " PROMOTED to live leg [skip ci]' && "
+                               "git pull -q --rebase -X ours && git push -q", shell=True)
+                tg(f"PROBE PROMOTION: {st_} beat the control on {len(shared)} live virgin days "
+                   f"(t {t:+.2f}) - graduated to a recognised live leg, prioritised. Paper size "
+                   f"unchanged; probation armed; real sizing waits for the capital gate.")
+                promoted.add(st_)
+    except Exception as _pp:
+        lines.append(f"probe-promotion check skipped: {type(_pp).__name__}")
     applied = []
     traj = []
     for book, keys in MENU.items():

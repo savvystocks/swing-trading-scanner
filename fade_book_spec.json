@@ -6,7 +6,8 @@
   "flow_max": 400000,
   "direction": "contra_trend_and_spy",
   "max_spread_pct": 2.0,
-  "max_spy_dist_pct": 99.0
+  "max_spy_dist_pct": 99.0,
+  "regime_router": true
  },
  "exit": {
   "scale_out": null,
@@ -136,5 +137,6 @@
   "mode": "release",
   "demoted": "2026-08-19"
  },
- "v2.2_note": "owner order 2026-08-23: REGIME TRUTH from the 2y archive - fade is a BEAR leg (+32 t3.5 bear, -16.6 t-8.4 bull; it was never dead, just tested in a bull window), consensus/follow are BULL/mild legs. FOLLOW_CALLS (buy aggressively-bought calls) is positive+significant in ALL regimes (+32/+12/+14, t>3 each; bear thin=63 dip-days, no true bear in sample). Added FOLLOW_CALLS + CONSENSUS_CALLS as PRIORITY probes to earn live virgin evidence. Next: regime router (fade in downtrends, consensus/follow in up/flat) = the real system. UW stays - both legs need the flow feed."
+ "v2.2_note": "owner order 2026-08-23: REGIME TRUTH from the 2y archive - fade is a BEAR leg (+32 t3.5 bear, -16.6 t-8.4 bull; it was never dead, just tested in a bull window), consensus/follow are BULL/mild legs. FOLLOW_CALLS (buy aggressively-bought calls) is positive+significant in ALL regimes (+32/+12/+14, t>3 each; bear thin=63 dip-days, no true bear in sample). Added FOLLOW_CALLS + CONSENSUS_CALLS as PRIORITY probes to earn live virgin evidence. Next: regime router (fade in downtrends, consensus/follow in up/flat) = the real system. UW stays - both legs need the flow feed.",
+ "v2.3_note": "owner order 2026-08-23: REGIME ROUTER built + enabled. fade_book.spy_regime() (SPY vs 50d SMA, daily-cached, fail-open) gates the live fade shape to BEAR regimes only - it stands down in BULL/MILD where the 2y archive proved it loses (-16.6 t-8.4 bull). Purely subtractive (removes known-negative bull exposure; worst case a missed trade). Ends fade discovery-mode for bull/mild. The BULL/MILD leg (FOLLOW_CALLS/CONSENSUS_CALLS) rides as priority probes earning virgin days; it promotes into the router bull-slot once live-proven (~early Sep). REGIME_SWITCH shadow book proves the full switched system nightly."
 }

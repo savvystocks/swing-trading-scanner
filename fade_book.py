@@ -6,9 +6,39 @@ every hook below is inert and the engine is byte-identical to the incumbent path
 """
 import json
 import os
+import urllib.request
+from datetime import datetime, timezone
 
 _SPEC_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fade_book_spec.json")
 _SPEC = None
+_REGIME = {"date": None, "val": None}     # daily cache: SPY regime by 50d SMA (fail-open)
+
+
+def spy_regime():
+    """BULL / MILD / BEAR from SPY vs its 50-day SMA (same measure as the 2026-08-23 regime
+    backtest: bear<-2%, bull>+2%). Cached per UTC date; fail-OPEN (None) on any error so the
+    router never blocks trading on a data hiccup. Reads paper creds from env."""
+    today = datetime.now(timezone.utc).date().isoformat()
+    if _REGIME["date"] == today:
+        return _REGIME["val"]
+    val = None
+    try:
+        k1 = os.environ.get("ALPACA_PAPER_API_KEY"); k2 = os.environ.get("ALPACA_PAPER_SECRET_KEY")
+        if k1 and k2:
+            u = ("https://data.alpaca.markets/v2/stocks/bars?symbols=SPY&timeframe=1Day"
+                 "&start=2026-04-01&limit=120&adjustment=split&feed=iex")
+            req = urllib.request.Request(u, headers={"APCA-API-KEY-ID": k1, "APCA-API-SECRET-KEY": k2})
+            with urllib.request.urlopen(req, timeout=12) as r:
+                bars = (json.loads(r.read()).get("bars") or {}).get("SPY") or []
+            cl = [b["c"] for b in bars]
+            if len(cl) >= 50:
+                sma50 = sum(cl[-50:]) / 50
+                dist = (cl[-1] / sma50 - 1) * 100
+                val = "BEAR" if dist < -2 else ("BULL" if dist > 2 else "MILD")
+    except Exception:
+        val = None
+    _REGIME["date"], _REGIME["val"] = today, val
+    return val
 
 
 def spec():
@@ -48,6 +78,13 @@ def direction(md, candidate):
         return None
     if sma * side < 0 and spy * side < 0:
         e = spec().get("entry") or {}
+        if e.get("regime_router"):
+            # 2026-08-23 archive regime split: fade is a BEAR leg (+32 t3.5 bear, -16.6 t-8.4
+            # bull). Stand fade DOWN outside a bear regime - purely subtractive (worst case a
+            # missed trade, never a wrong-direction one). Fail-open: unknown regime -> allow.
+            rg = spy_regime()
+            if rg in ("BULL", "MILD"):
+                return None
         md_ = e.get("max_depth_pct")
         if isinstance(md_, (int, float)) and abs(sma) >= md_:
             return None                       # depth cap (spec-driven; None = no cap)

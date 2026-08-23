@@ -90,6 +90,7 @@ def run_day(db, day_iso):
         vals = [res[c] for c in res if pred(meta[c])]
         return {"n": len(vals), "mean": round(sum(vals) / len(vals), 2) if vals else None}
 
+    _day_bull = (sum(spy_signs) / len(spy_signs)) > 0 if spy_signs else True  # regime proxy
     fade = lambda m: m["sma"] * m["side"] < 0 and m["spy"] * m["side"] < 0
     tight = lambda m: m["spr"] <= 2.0
     band = lambda m, lo=50000, hi=250000: lo <= m["score"] <= hi
@@ -139,6 +140,11 @@ def run_day(db, day_iso):
         "FADE_ATM": lambda m: fade(m) and tight(m) and band(m, 50000, 400000) and m.get("mny") is not None and m["mny"] < 1.0,
         "FADE_DP": lambda m: fade(m) and tight(m) and band(m, 50000, 400000) and m["dp"] >= 150,
         "MILD_ONLY": lambda m: fade(m) and tight(m) and band(m) and abs(m["sma"]) < 2.0 and abs(m["spy"]) < 1.5,
+        # REGIME_SWITCH (2026-08-23): the switched system - consensus shape on bull-ish days,
+        # fade shape on bear-ish days. The candidate for the live regime router.
+        "REGIME_SWITCH": lambda m: (tight(m) and band(m, 50000, 400000) and (
+            (m["sma"] * m["side"] > 0 and m["spy"] * m["side"] > 0) if _day_bull
+            else (m["sma"] * m["side"] < 0 and m["spy"] * m["side"] < 0))),
         # PLACEBO arm (owner science-hardening 2026-08-18): picks pseudo-randomly by candidate-id
         # hash - NO market logic. If the promotion machinery ever passes THIS book, the lab is
         # hallucinating edges and every other verdict is suspect. Expected: ~0 mean forever.

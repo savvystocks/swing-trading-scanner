@@ -3997,12 +3997,12 @@
 
 **Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 85.0.
 
-## Autopsy - PURR (acac7374b9c0)
-- entered 2026-08-20T14:37:37.833Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+## Autopsy - SMCI (8850707ba7ac)
+- entered 2026-08-21T15:23:47.893Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
 
 | leg | structure | return % | verdict |
 |---|---|---|---|
-| Bullish (call) | LONG_CALL | +42.3% | WINNER |
+| Bullish (call) | LONG_CALL | -50.4% | WINNER |
 
-**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 37.0 worked against it.
 

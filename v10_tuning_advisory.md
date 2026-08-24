@@ -2656,7 +2656,7 @@ trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
-## Tuning Advisory - PURR (acac7374b9c0) - 2026-08-24T15:01:49.515Z
+## Tuning Advisory - SMCI (8850707ba7ac) - 2026-08-24T15:11:32.728Z
 trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 
 Recommendations:

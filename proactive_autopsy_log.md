@@ -3988,3 +3988,12 @@
 
 **Determining factor:** Bullish call FAILED (-32%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 31.0 worked against it.
 
+## Autopsy - KO (7a83e7ae3bf4)
+- entered 2026-08-20T13:52:12.211Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.7% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 85.0.
+

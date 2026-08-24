@@ -2189,9 +2189,51 @@ def flush_positions(creds):
 # ----------------------------------------------------------------------------
 # Local demo (single ticker)
 # ----------------------------------------------------------------------------
+def _assert_log_integrity():
+    """FAIL-CLOSED log guard (2026-08-24 incident: a persist race spliced two log versions into
+    invalid JSON; the engine's 'unreadable = empty' fallback then adopted the ENTIRE book as 29
+    orphans). An unreadable or missing log now means the engine is BLIND, not flat: try to
+    restore the newest parseable version from git history, else halt the cycle loudly (nonzero
+    exit -> no sentinel stamp -> watchdog pages). Never trade on a log we cannot read."""
+    try:
+        data = json.load(open(LOG_PATH, encoding="utf-8"))
+        if isinstance(data, list):
+            return True
+        raise ValueError("log root is not a list")
+    except FileNotFoundError as e:
+        err = f"missing ({e})"
+    except Exception as e:
+        err = f"unparseable ({type(e).__name__})"
+    print(f"LOG INTEGRITY FAILURE: {LOG_PATH} {err} - attempting git-history recovery")
+    try:
+        import subprocess as _sp
+        _sp.run("git fetch --deepen=20 origin main", shell=True, capture_output=True, timeout=120)
+        shas = _sp.run(f"git log --format=%H -12 -- {LOG_PATH}", shell=True,
+                       capture_output=True, text=True, timeout=60).stdout.split()
+        for sha in shas:
+            raw = _sp.run(f"git show {sha}:{LOG_PATH}", shell=True,
+                          capture_output=True, text=True, timeout=60).stdout
+            try:
+                data = json.loads(raw)
+                if isinstance(data, list) and data:
+                    open(LOG_PATH, "w", encoding="utf-8").write(raw)
+                    print(f"LOG RECOVERED from {sha[:8]} ({len(data)} records) - cycle continues")
+                    _notify(f"<b>LOG RECOVERED</b>\ncorrupt {LOG_PATH} restored from git {sha[:8]} "
+                            f"({len(data)} records); trading continues")
+                    return True
+            except Exception:
+                continue
+    except Exception as re:
+        print(f"recovery attempt failed: {type(re).__name__}")
+    _notify(f"<b>CYCLE HALTED - LOG UNREADABLE</b>\n{LOG_PATH} {err} and no parseable version "
+            "in git history. Engine is blind; refusing to trade or adopt. Investigate.")
+    sys.exit(3)
+
+
 def main():
     if os.environ.get("PROACTIVE_FLUSH") == "true" or "--flush" in sys.argv:   # one-time reset (dispatch -f flush=true)
         return flush_positions(_paper_creds())
+    _assert_log_integrity()
     if os.environ.get("GITHUB_ACTIONS") == "true":
         try:
             if _maybe_flush_pending(_paper_creds()):

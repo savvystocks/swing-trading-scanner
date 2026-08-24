@@ -96,7 +96,20 @@ jobs:
           git add -A data/FLUSH_PENDING 2>/dev/null || true   # commit the one-time-flush sentinel removal
           if git diff --cached --quiet; then echo "no new sandbox data"; exit 0; fi
           git commit -m "sandbox lab data [skip ci]"
+          # JSON VALIDATION GATE (2026-08-24 incident: a rebase -X splice pushed syntactically
+          # invalid JSON; the next run's 'unreadable=empty' fallback mass-adopted the whole
+          # book). NEVER push an unparseable log - rebuild via the resolver or fail loudly.
+          validate_log() {
+            python -c "import json,sys; d=json.load(open('proactive_sandbox_logs.json')); sys.exit(0 if isinstance(d,list) else 1)"
+          }
           for i in 1 2 3 4 5; do
+            if ! validate_log; then
+              echo "log INVALID before push (attempt $i) - rebuilding with resolver"
+              python scripts/merge_logs.py || git checkout origin/main -- proactive_sandbox_logs.json
+              validate_log || { echo "PERSIST ABORTED - could not produce valid JSON"; exit 1; }
+              git add -f proactive_sandbox_logs.json
+              git commit --amend --no-edit
+            fi
             git push origin HEAD:main && break
             echo "push rejected - rebasing onto sandbox, attempt $i"
             if ! git pull --rebase --autostash origin main; then
@@ -111,4 +124,5 @@ jobs:
             fi
             sleep 2
           done
+          validate_log || { echo "PERSIST ABORTED - final state invalid, NOT pushing"; exit 1; }
           git push origin HEAD:main || { echo "PERSIST FAILED - trade records NOT on main"; exit 1; }

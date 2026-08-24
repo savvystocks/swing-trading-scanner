@@ -3979,3 +3979,12 @@
 
 **Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 30.0.
 
+## Autopsy - HIMS (ff2585e7f5c1)
+- entered 2026-08-20T15:27:22.862Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -31.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-32%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 31.0 worked against it.
+

@@ -185479,12 +185479,285 @@
     "error": null,
     "submitted": true,
     "limit_price": 1.28,
-    "contracts": 7
+    "contracts": 7,
+    "ledger_terminal": "filled"
    }
   },
   "exit": null,
   "status": "OPEN",
   "buy_alert_delivered": true,
-  "probe_strategy": "EXEC_BASELINE"
+  "probe_strategy": "EXEC_BASELINE",
+  "leg_exits": {},
+  "leg_path": {
+   "bullish_call": {
+    "mfe_pct": 2.4,
+    "mae_pct": 2.4,
+    "stage": "initial",
+    "last_ret": 2.4
+   }
+  }
+ },
+ {
+  "trade_set_id": "e39e479a71f8",
+  "ticker": "SPCX",
+  "regime": "BULLISH",
+  "trigger": "regime_BULLISH_loose",
+  "book": "PROBE",
+  "router_state": "MILD",
+  "entry_ts_utc": "2026-08-25T16:44:43.060Z",
+  "leg_budget_usd": 1000.0,
+  "execution_mode": "LIVE_PAPER",
+  "occ_resolution": "alpaca_real",
+  "ticker_guard": "clear",
+  "open_positions_checked": 32,
+  "params_snapshot": {
+   "regime_compass_bypass": true,
+   "max_bid_ask_spread_pct": 5.0,
+   "earnings_blackout_days": 3,
+   "alt_reddit_min_mentions": 10,
+   "alt_insider_min_dollar_value": 10000,
+   "portfolio_max_sector_concentration": 0.5,
+   "min_hold_hours": 24,
+   "take_profit_pct": 30,
+   "scale_out_pct": 50,
+   "break_even_pct": 0,
+   "trail_activate_pct": 50,
+   "trail_drawdown_pct": 20,
+   "stop_loss_pct": 50,
+   "expiry_exit_dte": 3,
+   "min_contracts": 2,
+   "one_position_per_underlying": true,
+   "max_contracts_per_ticker": 3,
+   "ticker_cooloff_hours": 4,
+   "stale_order_max_minutes": 30,
+   "daily_brake_stopouts": 3,
+   "daily_brake_loss_multiple": 2.0,
+   "brake_mode": "shadow",
+   "backstop_enabled": true,
+   "backstop_canary_occ": "",
+   "backstop_type": "stop",
+   "backstop_limit_buffer_pct": 25,
+   "backstop_min_delta": 0.01,
+   "close_fail_park_after": 5,
+   "scanner_min_premium": 25000,
+   "scanner_flow_limit": 600,
+   "scanner_premium_min": 0.3,
+   "scanner_premium_max": 4.0,
+   "harvest_topn": 20,
+   "harvest_random": 10,
+   "harvest_random_p": 0.007,
+   "harvest_daily_cap": 300,
+   "harvest_api_budget_per_day": 6000,
+   "harvest_calls_per_payload": 3,
+   "poller_chunk": 100,
+   "poller_runs_per_day": 26,
+   "scanner_barrier_up": 0.3,
+   "scanner_barrier_down": -0.5,
+   "backstop_note": "2026-08-25: canary GRADUATED (was pinned to FCEL260821C00022000, which expired 2026-08-21 - backstops were armed on ZERO positions since). Ford -87% autopsy: no broker stop + unquotable option = unmanaged decay to expiry. Backstops now arm on ALL eligible open legs from day 2 (same ratchet/fill-capture machinery the canary proved). Broker-side stops protect precisely the positions the engine cannot price."
+  },
+  "metadata": {
+   "entry_ts_utc": "2026-08-25T16:44:43.060Z",
+   "macro": {
+    "spot": 138.28,
+    "sma20": 130.12,
+    "distance_to_sma20_pct": 6.268,
+    "source": "alpaca"
+   },
+   "iv_term": {
+    "iv_front": 57.6,
+    "iv_back": 56.8,
+    "iv_ratio": 1.014,
+    "structure": "backwardation",
+    "source": "alpaca"
+   },
+   "gex": {
+    "net_gex": 6340.0,
+    "zero_gamma_strike": 450.0,
+    "distance_to_zero_gamma_pct": -225.427,
+    "regime": "positive_gamma",
+    "source": "uw"
+   },
+   "alt_catalyst": {
+    "reddit_mention_delta_pct": -13.2,
+    "insider_10d_buy_usd": 0,
+    "insider_cluster_flag": false,
+    "source": "apewisdom+edgartools"
+   },
+   "technical": {
+    "atr": 9.24,
+    "atr_pct": 6.68,
+    "rvol_10min": 0.28,
+    "source": "alpaca"
+   },
+   "fundamentals": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "market_cap": 1820360441856,
+    "short_pct_float": 3.3,
+    "short_ratio": 2.85,
+    "source": "yfinance"
+   },
+   "news": {
+    "headline_count": 8,
+    "latest_age_hours": 0.44,
+    "vader_compound": -0.086,
+    "news_type": "Earnings",
+    "top_headline": "SpaceX Posts On X \"Introducing Starbase, Louisiana \u2013 a high-cadence launch site that will enable Starship to open a pathway to the stars for",
+    "source": "alpaca_news+vader"
+   },
+   "regime_stack": {
+    "ticker_dist_pct": 6.268,
+    "market_spy_dist_pct": 0.11,
+    "sector_etf": "XLI",
+    "sector_dist_pct": -2.328,
+    "sector_vs_market_spread": -2.438,
+    "source": "alpaca_bars"
+   },
+   "skew": {
+    "put_iv_25d": 56.8,
+    "call_iv_25d": 58.0,
+    "skew_ratio": 0.98,
+    "skew_bias": "balanced",
+    "delta_source": "greeks",
+    "source": "alpaca_snapshots"
+   },
+   "flow_aggression": {
+    "sweep_aggression_pct": 4.39,
+    "ask_sweep_prem": 1365150.0,
+    "total_flow_prem": 31107742.0,
+    "source": "uw_flow"
+   },
+   "dark_pool": {
+    "distance_to_heaviest_dp_node_pct": 0.0,
+    "heaviest_node_price": 138.28,
+    "node_size": 202634.0,
+    "n_prints": 200,
+    "window_start": "2026-08-25T16:22:49Z",
+    "window_end": "2026-08-25T16:40:55Z",
+    "source": "uw_darkpool"
+   },
+   "pemd": {
+    "days_since_earnings": 21,
+    "post_earnings_iv_crush_flag": false,
+    "days_to_earnings": 70,
+    "next_earnings_date": "2026-11-03",
+    "iv_rank_1y": 42.75,
+    "last_earnings_date": "2026-08-04",
+    "source": "yfinance+uw"
+   },
+   "vrp": {
+    "realized_vol_20d": 103.02,
+    "front_iv": 57.6,
+    "vrp": -45.42,
+    "vrp_regime": "cheap",
+    "source": "alpaca_bars"
+   },
+   "flow_persistence": {
+    "net_directional_prem": 9188800.0,
+    "flow_persistence_pct": 18.6,
+    "flow_direction": "bullish",
+    "closing_accel": -2859105.0,
+    "n_ticks": 192,
+    "source": "uw_net_prem_ticks"
+   },
+   "price_action": {
+    "nvi": 898.87,
+    "vwma_20": 130.32,
+    "rsi_5": 35.73,
+    "rsi_15": 56.2,
+    "gap_pct": 1.526,
+    "day_range": 2.603,
+    "candle_body": 0.339,
+    "dist_sma50": -1.817,
+    "source": "alpaca_bars"
+   },
+   "macro_context": {
+    "iv_term_skew": 0.8,
+    "vix_level": 15.49,
+    "execution_hour": 16,
+    "day_of_week": 1,
+    "sector_vs_spy": -2.412,
+    "source": "yfinance+alpaca"
+   },
+   "dealer_greeks": {
+    "net_dex": 1078361.0,
+    "net_vanna": 83033032.0,
+    "net_charm": -33992858.0,
+    "delta_imbalance": 1.02,
+    "source": "uw_greek_exposure"
+   },
+   "liquidity_and_slippage": {
+    "equity_spread_pct_of_ask": 0.065,
+    "bid": 138.35,
+    "ask": 138.44,
+    "bid_size": 100.0,
+    "ask_size": 100.0,
+    "obi": 0.0,
+    "source": "alpaca_quote"
+   },
+   "relative_momentum": {
+    "rvol_20d": 0.28,
+    "gap_pct": 1.526,
+    "source": "alpaca_bars"
+   },
+   "float_mechanics": {
+    "short_pct_float": 3.3,
+    "float_shares": 1156042101,
+    "shares_short": 207781764,
+    "source": "yfinance"
+   },
+   "news_sentiment_score": -0.086,
+   "sweep_aggression_pct": 4.39,
+   "distance_to_zero_gamma_pct": -225.427,
+   "distance_to_heaviest_dp_node_pct": 0.0,
+   "days_since_earnings": 21,
+   "days_to_earnings": 70,
+   "post_earnings_iv_crush_flag": false,
+   "flow_persistence_pct": 18.6
+  },
+  "legs": {
+   "bullish_call": {
+    "structure": "LONG_CALL",
+    "occ_symbol": "SPCX260925C00144000",
+    "expiry": "2026-09-25",
+    "strike": 144.0,
+    "dte": 35,
+    "entry_premium": 9.87,
+    "limit_price": 9.97,
+    "contracts": 1,
+    "alloc_usd": 1000.0,
+    "illiquid": false,
+    "target_delta": 0.35,
+    "open_interest": "48",
+    "occ_source": "alpaca_resolved",
+    "execution_cost": {
+     "bid": 6.78,
+     "ask": 6.91,
+     "mid": 6.845,
+     "bid_ask_spread_pct": 1.899,
+     "source": "alpaca_quote"
+    },
+    "oi_change": {
+     "oi_today": 54.0,
+     "oi_prev": 48.0,
+     "oi_change": 6.0,
+     "source": "uw_historic"
+    }
+   }
+  },
+  "orders": {
+   "bullish_call": {
+    "status": "pending_new",
+    "order_id": "e214152f-06af-4141-92e8-2be394dd9901",
+    "error": null,
+    "submitted": true,
+    "limit_price": 9.97,
+    "contracts": 1
+   }
+  },
+  "exit": null,
+  "status": "OPEN",
+  "buy_alert_delivered": true,
+  "probe_strategy": "QUIET_TAPE"
  }
 ]

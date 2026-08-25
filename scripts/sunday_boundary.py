@@ -167,8 +167,9 @@ def main():
                          "newest gate first (funnel skip-reasons name the killer).")
         else:
             lines.append(f"throughput: {fills} fills / {quals} qualifying this week - ok")
-    except Exception:
-        pass
+    except Exception as _tf:
+        lines.append("THROUGHPUT FLOOR DISABLED this run (" + type(_tf).__name__ + ") - the "
+                     "never-starve guard did not execute; investigate if it repeats")
     # META-MODEL TRIGGER (owner order 2026-08-11): when the labeled fade cohort reaches 500,
     # page loudly - the selection-brain training session unlocks (code-level, needs a session).
     try:
@@ -206,8 +207,21 @@ def main():
                 continue
             pd0 = ak.replace("auto_", "")
             b, vs0 = av.get("book"), av.get("vs", "BASELINE")
-            after = [(d["day"], d[b]["mean"]) for d in days
-                     if d["day"] > pd0 and (d.get(b) or {}).get("mean") is not None and d[b].get("n", 0) > 0]
+            # succession fix (audit finding #8): after promotion the ring respawns and the
+            # promoted book's named stream can vanish from the ledger - but CHAMPION replays
+            # the LIVE spec nightly, which post-promotion IS the promoted config. Fall back
+            # to CHAMPION days so the 10-day demotion watch can never go structurally blind.
+            after = []
+            for d in days:
+                if d["day"] <= pd0:
+                    continue
+                row = d.get(b) if ((d.get(b) or {}).get("mean") is not None
+                                   and (d.get(b) or {}).get("n", 0) > 0) else None
+                if row is None:
+                    row = (d.get("CHAMPION") if ((d.get("CHAMPION") or {}).get("mean") is not None
+                                                 and (d.get("CHAMPION") or {}).get("n", 0) > 0) else None)
+                if row is not None:
+                    after.append((d["day"], row["mean"]))
             cmpm = {d["day"]: (d.get(vs0) or {}).get("mean") for d in days
                     if (d.get(vs0) or {}).get("mean") is not None}
             dif = [x - cmpm[dd] for dd, x in after if dd in cmpm]
@@ -456,6 +470,19 @@ def main():
                     lines.append(f">>> {book} passes SEQUENTIALLY - application deferred (report-only)")
                     continue          # owner order 2026-08-18 15:35: nightly runs set SEQ_APPLY -
                                       # a proven edge calibrates THAT NIGHT, not on a weekday
+                # LIVE-WIRED WHITELIST (audit finding #9): refuse to promote a key the engine
+                # does not actually read - a decorative promotion looks like a calibration but
+                # changes nothing, poisoning the evidence clock it restarts.
+                LIVE_WIRED = {"entry.flow_min", "entry.flow_max", "entry.max_spread_pct",
+                              "entry.max_spy_dist_pct", "entry.max_depth_pct",
+                              "entry.regime_router", "exit.stop", "exit.max_hold_days",
+                              "exit.early_cut_hours", "exit.early_cut_below",
+                              "exit.trail_activate", "exit.trail_drawdown"}
+                _unwired = [k for k in keys if not k.startswith("_") and k not in LIVE_WIRED]
+                if _unwired:
+                    lines.append(">>> " + book + " PASSES but touches non-live-wired key(s) "
+                                 + str(_unwired) + " - promotion REFUSED until the key is wired")
+                    continue
                 if not applied:
                     spec = json.load(open("fade_book_spec.json"))
                     prev = {}

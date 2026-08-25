@@ -145,4 +145,11 @@ def exit_overrides():
     if isinstance(x.get("early_cut_hours"), (int, float)) and isinstance(x.get("early_cut_below"), (int, float)):
         out["early_cut_hours"] = x["early_cut_hours"]
         out["early_cut_below"] = x["early_cut_below"]
+    # trail keys wired 2026-08-25 (audit finding #9: they existed in the spec but the live
+    # trail read only v10 params - the court could have "promoted" them with zero effect,
+    # poisoning evidence with a change that never happened)
+    if isinstance(x.get("trail_activate"), (int, float)):
+        out["trail_activate"] = x["trail_activate"]
+    if isinstance(x.get("trail_drawdown"), (int, float)):
+        out["trail_drawdown"] = x["trail_drawdown"]
     return out

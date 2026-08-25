@@ -1035,6 +1035,14 @@ def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage=
     trig = params.get("trail_activate_pct", 50)
     trail = params.get("trail_drawdown_pct", 20) / 100.0
     min_hold = params.get("min_hold_hours", 24)
+    if book == "FADE":
+        # spec-driven trail (2026-08-25): fade_book_spec exit.trail_activate/.trail_drawdown
+        # now actually steer the live trail; current spec values (50/20) equal the params
+        # defaults, so behaviour is unchanged until the court promotes a different value.
+        _ovt = fade_book.exit_overrides()
+        trig = _ovt.get("trail_activate", trig)
+        if "trail_drawdown" in _ovt:
+            trail = _ovt["trail_drawdown"] / 100.0
     if stage == "initial":
         if ret <= -stop:
             return {**base, "action": "CLOSE_STOP_LOSS", "stage": "closed", "reason": f"{ret}% <= -{stop}% hard stop"}
@@ -1366,6 +1374,29 @@ def manage_open_positions(creds, params, positions=None):
                 # position gone -> did the broker-side stop (current OR a superseded id) fire? reconcile.
                 if _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs):
                     dirty = True
+                    continue
+                # UNTRACKED-LEG COUNTER (audit finding #10): a position that vanished with NO
+                # backstop record (expired worthless / manually closed / never filled) used to
+                # stay OPEN forever, silently skipped every cycle. After 5 consecutive
+                # position-less cycles, book an honest CLOSE_UNTRACKED at the last seen return
+                # (worst-known if none) so the record leaves the open set.
+                _pth = rec.setdefault("leg_path", {}).setdefault(leg_name, {})
+                _mc = _pth["missing_cycles"] = _pth.get("missing_cycles", 0) + 1
+                if _mc >= 5:
+                    _lr = _pth.get("last_ret", _pth.get("mae_pct", -100.0))
+                    rec["leg_exits"][leg_name] = {
+                        "occ": occ, "closed_at": _now_iso_ms(), "return_pct": _lr,
+                        "reason": ("UNTRACKED: no broker position for " + str(_mc)
+                                   + " cycles and no backstop fill - booked at last seen "
+                                   + str(_lr) + "%"),
+                        "action": "CLOSE_UNTRACKED", "closed_ok": True}
+                    _notify("<b>TIDY-UP: closed untracked leg</b> " + str(rec.get("ticker"))
+                            + " " + str(occ) + chr(10)
+                            + "Plain English: the broker no longer shows this position (likely "
+                            + "expired or closed outside my view). I booked it at its last seen "
+                            + "value (" + str(_lr) + "%) so the records match reality. "
+                            + "No action needed.")
+                dirty = True
                 continue
             entry_px = float(p.get("avg_entry_price") or 0)
             plpc = p.get("unrealized_plpc")
@@ -1377,6 +1408,8 @@ def manage_open_positions(creds, params, positions=None):
             path = rec.setdefault("leg_path", {}).setdefault(leg_name, {"mfe_pct": ret_pct, "mae_pct": ret_pct, "stage": "initial"})
             path["mfe_pct"] = round(max(path["mfe_pct"], ret_pct), 1)   # Max Favorable Excursion (trade path)
             path["mae_pct"] = round(min(path["mae_pct"], ret_pct), 1)   # Max Adverse Excursion
+            path["last_ret"] = round(ret_pct, 1)
+            path.pop("missing_cycles", None)                             # position visible again
             dirty = True                                                 # persist the running path every cycle
             dec = manage_exit(rec["entry_ts_utc"], ret_pct, params, expiry_iso=_occ_expiry(occ),
                               stage=path.get("stage", "initial"), mfe_pct=path["mfe_pct"],

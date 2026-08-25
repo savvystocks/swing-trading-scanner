@@ -4051,3 +4051,30 @@
 
 **Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 82.5.
 
+## Autopsy - XLE (ADOPT-dfac226acd)
+- entered 2026-08-18T19:04:24.300Z | trigger orphan_reconcile | exit CLOSE_UNTRACKED | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | +0.0% | WINNER |
+
+**Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
+
+## Autopsy - SMCI (8850707ba7ac)
+- entered 2026-08-21T15:23:47.893Z | trigger regime_BULLISH_loose | exit CLOSE_UNTRACKED | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -48.2% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-48%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 37.0 worked against it.
+
+## Autopsy - QUBT (ADOPT-99b58950cc)
+- entered 2026-08-24T15:28:16.247Z | trigger orphan_reconcile | exit CLOSE_UNTRACKED | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -52.3% | WINNER |
+
+**Determining factor:** Calendar FAILED (-52%): the range broke; IV term None (ratio None) hurt the spread.
+

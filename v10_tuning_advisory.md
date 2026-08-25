@@ -2692,3 +2692,21 @@ trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - XLE (ADOPT-dfac226acd) - 2026-08-25T14:44:28.272Z
+trade: winner=adopted_leg loser=adopted_leg | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - SMCI (8850707ba7ac) - 2026-08-25T14:44:29.711Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - QUBT (ADOPT-99b58950cc) - 2026-08-25T14:44:30.467Z
+trade: winner=adopted_leg loser=adopted_leg | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

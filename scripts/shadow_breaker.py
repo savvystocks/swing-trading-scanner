@@ -33,8 +33,10 @@ def spy_regime_series():
     k2 = os.environ.get("ALPACA_PAPER_SECRET_KEY")
     if not (k1 and k2):
         return {}
+    from datetime import timedelta
+    _start = (date.today() - timedelta(days=400)).isoformat()   # rolling (audit 2026-08-25)
     u = ("https://data.alpaca.markets/v2/stocks/bars?symbols=SPY&timeframe=1Day"
-         "&start=2026-01-01&limit=400&adjustment=split&feed=iex")
+         f"&start={_start}&limit=400&adjustment=split&feed=iex")
     try:
         req = urllib.request.Request(u, headers={"APCA-API-KEY-ID": k1, "APCA-API-SECRET-KEY": k2})
         with urllib.request.urlopen(req, timeout=20) as r:

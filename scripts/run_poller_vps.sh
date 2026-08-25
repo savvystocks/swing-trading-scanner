@@ -19,9 +19,19 @@ LOG="$REPO/data/poller.log"
   set +a
   [ -f "$REPO/.venv/bin/activate" ] && . "$REPO/.venv/bin/activate"
   python poller.py --once
+  RC=$?
   # cross-watching (owner decision 28): every poller run pings healthchecks.io; silence -> email.
   # HEALTHCHECK_URL lives in .harvest_env (owner-created check). No-op when unset.
-  [ -n "${HEALTHCHECK_URL:-}" ] && curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL" >/dev/null 2>&1
+  # SILENT-GAP AUDIT 2026-08-25: the ping used to fire UNCONDITIONALLY - a poller crashing
+  # every run still looked alive to the dead-man monitor. Success pings the check; failure
+  # pings its /fail endpoint so healthchecks alerts on the FIRST crash, not never.
+  if [ -n "${HEALTHCHECK_URL:-}" ]; then
+    if [ "$RC" -eq 0 ]; then
+      curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL" >/dev/null 2>&1
+    else
+      curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL/fail" >/dev/null 2>&1
+    fi
+  fi
 } >> "$LOG" 2>&1
 if [ "$(stat -c%s "$LOG" 2>/dev/null || echo 0)" -gt 5242880 ]; then
   mv -f "$LOG" "$LOG.1"

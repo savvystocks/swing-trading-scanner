@@ -1271,10 +1271,12 @@ def _skip_code(reason):
 def _append_log(record):
     data = []
     if os.path.exists(LOG_PATH):
-        try:
-            data = json.load(open(LOG_PATH, encoding="utf-8"))
-        except Exception:
-            data = []
+        # FAIL-CLOSED (silent-gap audit 2026-08-25): the old fallback (unreadable -> [])
+        # would then WRITE data+[record], replacing the whole book with one record. A file
+        # that exists but will not parse mid-cycle is real corruption - crash loudly (the
+        # run-failure telegram fires) instead of destroying the book. Startup already
+        # validated the file via _assert_log_integrity.
+        data = json.load(open(LOG_PATH, encoding="utf-8"))
     data.append(record)
     json.dump(data, open(LOG_PATH, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
 
@@ -1291,10 +1293,10 @@ def _rewrite_last(record):
 def _load_log_list():
     if not os.path.exists(LOG_PATH):
         return []
-    try:
-        return json.load(open(LOG_PATH, encoding="utf-8"))
-    except Exception:
-        return []
+    # FAIL-CLOSED (silent-gap audit 2026-08-25): unreadable used to mean "empty book" -> the
+    # reconciler adopted every broker position as an orphan. Parse failure now raises; the
+    # cycle aborts with the loud run-failure telegram instead of trading blind.
+    return json.load(open(LOG_PATH, encoding="utf-8"))
 
 
 def _save_log_list(data):

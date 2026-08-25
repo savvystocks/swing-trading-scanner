@@ -75,8 +75,34 @@ def load(path=PARAMS_PATH):
         return dict(DEFAULTS)
     try:
         d = json.load(open(path, encoding="utf-8"))
-    except Exception:
+    except Exception as e:
+        # FAIL-LOUD (silent-gap audit 2026-08-25): an EXISTING-but-unparseable params file used
+        # to silently serve DEFAULTS - where backstop_enabled=False, i.e. one bad hand-edit
+        # disarmed every broker backstop with zero trace. Now: recover the last committed
+        # version from git; if that also fails, serve DEFAULTS but SCREAM.
         d = {}
+        try:
+            import subprocess
+            raw = subprocess.run(f"git show origin/main:{os.path.basename(path)}", shell=True,
+                                 capture_output=True, text=True, timeout=30,
+                                 cwd=os.path.dirname(os.path.abspath(path)) or ".").stdout
+            d = json.loads(raw)
+            print(f"PARAMS RECOVERED from origin/main after parse failure ({type(e).__name__})")
+        except Exception:
+            print(f"PARAMS UNREADABLE ({type(e).__name__}) and git recovery failed - "
+                  "serving DEFAULTS (backstops OFF) THIS CYCLE ONLY")
+        try:
+            import urllib.parse, urllib.request
+            tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+            if tok and chat:
+                _msg = ("SETTINGS FILE UNREADABLE - v10_tunable_parameters.json failed to parse. "
+                        + ("Recovered the last saved version from git; trading continues normally."
+                           if d else "Recovery failed too - running on built-in defaults this cycle "
+                           "(broker backstops OFF). Needs a look."))
+                urllib.request.urlopen("https://api.telegram.org/bot" + tok + "/sendMessage?" +
+                                       urllib.parse.urlencode({"chat_id": chat, "text": _msg}), timeout=10)
+        except Exception:
+            pass
     out = dict(DEFAULTS)
     out.update(d if isinstance(d, dict) else {})
     return out

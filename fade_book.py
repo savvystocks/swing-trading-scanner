@@ -7,7 +7,7 @@ every hook below is inert and the engine is byte-identical to the incumbent path
 import json
 import os
 import urllib.request
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 _SPEC_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fade_book_spec.json")
 _SPEC = None
@@ -25,12 +25,20 @@ def spy_regime():
     try:
         k1 = os.environ.get("ALPACA_PAPER_API_KEY"); k2 = os.environ.get("ALPACA_PAPER_SECRET_KEY")
         if k1 and k2:
+            # rolling window (silent-gap audit 2026-08-25: a pinned start=2026-04-01 with
+            # limit=120 would FREEZE the regime forever from ~Sep 21 - Alpaca returns the
+            # first 120 bars ascending, so the window must roll with the calendar)
+            _start = (datetime.now(timezone.utc).date() - timedelta(days=180)).isoformat()
             u = ("https://data.alpaca.markets/v2/stocks/bars?symbols=SPY&timeframe=1Day"
-                 "&start=2026-04-01&limit=120&adjustment=split&feed=iex")
+                 f"&start={_start}&limit=200&adjustment=split&feed=iex")
             req = urllib.request.Request(u, headers={"APCA-API-KEY-ID": k1, "APCA-API-SECRET-KEY": k2})
             with urllib.request.urlopen(req, timeout=12) as r:
                 bars = (json.loads(r.read()).get("bars") or {}).get("SPY") or []
             cl = [b["c"] for b in bars]
+            # staleness guard: a regime computed from old bars is worse than no regime
+            if bars and (datetime.now(timezone.utc).date()
+                         - date.fromisoformat(bars[-1]["t"][:10])).days > 5:
+                cl = []
             if len(cl) >= 50:
                 sma50 = sum(cl[-50:]) / 50
                 dist = (cl[-1] / sma50 - 1) * 100
@@ -47,8 +55,28 @@ def spec():
         try:
             with open(_SPEC_PATH, encoding="utf-8") as f:
                 _SPEC = json.load(f)
-        except Exception:
-            _SPEC = {"status": "OFF"}
+        except Exception as e:
+            # FAIL-LOUD (silent-gap audit 2026-08-25): corrupt spec used to masquerade as a
+            # deliberate status=OFF - the whole book silently reverted to V10 behaviour,
+            # including the owner's no-same-day-sell rule. OFF remains the SAFE state, but
+            # now it screams. One telegram per process (module cache = once per cycle).
+            _SPEC = {"status": "OFF", "_load_error": repr(e)[:200]}
+            print(f"FADE SPEC UNREADABLE ({type(e).__name__}) - engine falling back to OFF-state")
+            try:
+                import urllib.parse
+                import urllib.request
+                tok = os.environ.get("TELEGRAM_BOT_TOKEN")
+                chat = os.environ.get("TELEGRAM_CHAT_ID")
+                if tok and chat:
+                    urllib.request.urlopen(
+                        "https://api.telegram.org/bot" + tok + "/sendMessage?" +
+                        urllib.parse.urlencode({"chat_id": chat, "text":
+                            "SPEC FILE UNREADABLE - the strategy rulebook failed to load, so the "
+                            "engine fell back to its safe OFF state for this cycle (no fade entries, "
+                            "default exits). This needs a look: fade_book_spec.json is corrupt."}),
+                        timeout=10)
+            except Exception:
+                pass
     return _SPEC
 
 

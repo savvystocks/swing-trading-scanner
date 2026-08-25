@@ -1771,8 +1771,10 @@ def reconcile_orphans(creds, params, positions=None, log=None):
         adopted.append(occ)
     if adopted:
         _save_log_list(log_list)
-        _notify(f"<b>ADOPTED {len(adopted)} orphan position(s)</b>: {', '.join(adopted[:6])} - "
-                f"reconstructed OPEN records; the exit engine + one-per-underlying now see them")
+        _notify(f"<b>TIDY-UP: re-linked {len(adopted)} position(s)</b> ({', '.join(adopted[:6])})\n"
+                f"Plain English: the broker showed positions my notebook had no record of (usually "
+                f"after a data hiccup). I re-created the records so their exits are managed again. "
+                f"No money moved; nothing needed from you.")
     return adopted
 
 
@@ -1849,8 +1851,12 @@ def run_scheduled_cycle(mock=False):
             _append_log(marker)
             if (marker["open_records_no_position"] != prev.get("open_records_no_position")
                     or marker["positions_no_record"] != prev.get("positions_no_record")):
-                _notify(f"<b>RECONCILE</b> records-without-position {marker['open_records_no_position']} | "
-                        f"positions-without-record {marker['positions_no_record']} (changed vs last)")
+                _notify(f"<b>BOOKKEEPING CHECK</b>: my records vs the broker's differ - "
+                        f"{marker['open_records_no_position']} record(s) with no matching position, "
+                        f"{marker['positions_no_record']} position(s) with no record yet.\n"
+                        f"Plain English: a routine cross-check (usually a fill still settling or a "
+                        f"just-closed leg). It self-resolves within a cycle or two; only worth a look "
+                        f"if the same numbers repeat all day. No action needed.")
     except Exception as e:
         print(f"reconcile marker skipped (fail-open): {type(e).__name__}")
 

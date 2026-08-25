@@ -159,7 +159,19 @@ def main():
                  "Sunday bars. If it beats BASELINE on >=10 virgin days, you'll be paged for "
                  "the one manual gate: the reviewed session that wires it into live entries.")
     print("\n".join(lines))
-    tg("\n".join(lines))
+    # PLAIN-ENGLISH wrapper (owner 2026-08-25: telegram messages must explain themselves)
+    try:
+        _verdict = ("learning something real" if auc >= 0.60
+                    else ("a hint of skill, not proven" if auc >= 0.53 else "still guessing"))
+        head = ["THE STUDENT (nightly training report)",
+                "What this is: a small AI that studies every trade the system watched and tries",
+                "to learn which setups win. It does NOT trade - it only advises, and it must",
+                "prove itself on live days like every other strategy.",
+                f"Tonight's score: {auc:.2f} (0.50 = coin-flip guessing, 1.00 = perfect) - {_verdict}.",
+                "", "Technical detail:", ""]
+        tg("\n".join(head + lines))
+    except Exception:
+        tg("\n".join(lines))
 
 
 if __name__ == "__main__":

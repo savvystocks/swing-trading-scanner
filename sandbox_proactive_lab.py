@@ -1016,6 +1016,15 @@ def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage=
         try:
             dte = (date.fromisoformat(expiry_iso) - now.date()).days
             if dte <= params.get("expiry_exit_dte", 3):
+                # STOP OUTRANKS EXPIRY (2026-08-25, Ford -87% autopsy): a leg already through
+                # its stop must close AS a stop - the expiry label was masking beyond-stop
+                # losses in the books and let the stop machinery believe it never fired.
+                _st = abs(params.get("stop_loss_pct", 50))
+                if book == "FADE":
+                    _st = fade_book.exit_overrides().get("stop", _st)
+                if ret <= -_st:
+                    return {**base, "action": "CLOSE_STOP_LOSS", "stage": "closed",
+                            "reason": f"{ret}% <= -{_st}% hard stop (caught at {dte}d to expiry)"}
                 return {**base, "action": "CLOSE_EXPIRY", "stage": "closed",
                         "reason": f"{dte}d to expiry -> close before decay/assignment"}
         except Exception:

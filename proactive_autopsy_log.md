@@ -4015,3 +4015,30 @@
 
 **Determining factor:** Bullish call FAILED (-52%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 23.0 worked against it.
 
+## Autopsy - SLV (87719989e2da)
+- entered 2026-08-20T14:38:34.417Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -17.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-17%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 60.0 worked against it.
+
+## Autopsy - XSP (ADOPT-2d8e4c0eb5)
+- entered 2026-08-24T19:58:57.966Z | trigger orphan_reconcile | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -50.0% | WINNER |
+
+**Determining factor:** Calendar FAILED (-50%): the range broke; IV term None (ratio None) hurt the spread.
+
+## Autopsy - XSP (ADOPT-d852642d1d)
+- entered 2026-08-24T19:58:57.966Z | trigger orphan_reconcile | exit CLOSE_EXPIRY | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | +47.6% | WINNER |
+
+**Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
+

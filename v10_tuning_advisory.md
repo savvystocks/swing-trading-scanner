@@ -2668,3 +2668,21 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
 ---
+## Tuning Advisory - SLV (87719989e2da) - 2026-08-25T13:33:25.569Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - XSP (ADOPT-2d8e4c0eb5) - 2026-08-25T13:33:26.499Z
+trade: winner=adopted_leg loser=adopted_leg | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - XSP (ADOPT-d852642d1d) - 2026-08-25T13:33:27.364Z
+trade: winner=adopted_leg loser=adopted_leg | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

@@ -908,6 +908,7 @@ def manage_backstops(creds, params, positions=None, log=None):
         if o.get("type") in ("stop", "stop_limit") and o.get("side") == "sell":
             stops_by_sym[(o.get("symbol") or "").upper()] = o
     actions, dirty = [], False
+    _bs_notes, _bs_fails = [], []
     for rec in log_list:
         if rec.get("status") != "OPEN" or not isinstance(rec.get("legs"), dict):
             continue
@@ -934,8 +935,11 @@ def manage_backstops(creds, params, positions=None, log=None):
             if existing:
                 cur_px = float(existing.get("stop_price") or 0)
                 cur_qty = abs(int(float(existing.get("qty") or 0)))
-                if abs(cur_px - level) < params.get("backstop_min_delta", 0.01) and cur_qty == qty:
-                    continue                                      # already resting at the right level/qty
+                _md = max(params.get("backstop_min_delta", 0.10), 0.02 * level)
+                if abs(cur_px - level) < _md and cur_qty == qty:
+                    continue                                      # already resting close enough (damped
+                                                                  # 2026-08-25: 0.01 delta caused 13
+                                                                  # cancel/replace cycles per symbol/day)
                 if not _cancel_order(existing.get("id"), creds):  # ratchet move: cancel must be ACCEPTED
                     continue                                      # (else keep the old stop live; retry next cycle)
                 _capture_backstop_fill(rec, leg_name, occ, creds, log_list, [])   # book a partial fill on it
@@ -958,11 +962,23 @@ def manage_backstops(creds, params, positions=None, log=None):
             actions.append({"occ": occ, "stop": level, "qty": qty, "status": status, "err": err})
             stg = path.get("stage", "initial")
             armed_new = existing is None                          # no stop was RESTING before this submit -> first arm, or a re-arm
-            stage_moved = bool(prev.get("stage")) and prev.get("stage") != stg   # after a rejected/vanished stop (so the real arm always alerts)
-            if live and (armed_new or stage_moved):               # Telegram only when a stop actually rests, on arm / stage ratchet (not every level nudge)
-                _notify(f"<b>BACKSTOP {'ARMED' if armed_new else 'RATCHETED->' + stg}</b> {occ} "
-                        f"sell {params.get('backstop_type', 'stop')} @ {level} x{qty} ({stg}) -> {status}")
+            stage_moved = bool(prev.get("stage")) and prev.get("stage") != stg
+            if live and (armed_new or stage_moved):
+                _bs_notes.append(f"{occ} @ {level}")              # batched: one telegram per cycle,
+                                                                  # not one per position (owner 2026-08-25:
+                                                                  # "why has the telegram armed all day")
+            elif live is None or not live:
+                _bs_fails.append(occ)
             dirty = True
+    if _bs_notes:
+        _extra = f" ({len(_bs_fails)} could not arm - will retry)" if _bs_fails else ""
+        _notify(f"<b>SAFETY STOPS SET: {len(_bs_notes)} position(s)</b>{_extra}\n"
+                f"Plain English: resting sell-stops now sit at the broker under these positions, "
+                f"so they are protected even if my engine goes blind. Routine - no action needed. "
+                f"({', '.join(_bs_notes[:5])}{'...' if len(_bs_notes) > 5 else ''})")
+    elif _bs_fails:
+        _notify(f"<b>SAFETY STOPS: {len(_bs_fails)} could not arm</b> - will retry next cycle "
+                f"({', '.join(_bs_fails[:4])})")
     if dirty:
         _save_log_list(log_list)
     return actions

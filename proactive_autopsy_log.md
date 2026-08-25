@@ -4042,3 +4042,12 @@
 
 **Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
 
+## Autopsy - NFLX (34d77f70c001)
+- entered 2026-08-18T15:40:50.320Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -51.2% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 82.5.
+

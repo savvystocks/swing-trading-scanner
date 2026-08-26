@@ -4096,3 +4096,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 62.5 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - IBIT (66e07a5a525f)
+- entered 2026-08-19T17:27:36.727Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +347.6% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+

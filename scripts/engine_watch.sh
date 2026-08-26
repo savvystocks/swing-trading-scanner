@@ -45,16 +45,43 @@ rm -f "$BLINDF" 2>/dev/null
 LAST=$(git log -1 --format=%ct origin/main 2>/dev/null || echo 0)
 NOW=$(date -u +%s)
 AGE=$(( (NOW - LAST) / 60 ))
+FAILF=/home/poller/.engine_watch_failover_mode
 if [ "$AGE" -gt 35 ]; then
   alarm "engine heartbeat is ${AGE} min old during market hours - cycles are NOT completing (GHA timeout / dispatcher down / platform incident). Running VPS FULL FAILOVER cycle now (entries+exits+harvest)."
+  # FAILOVER-MODE (2026-08-26 GitHub outage): stay engaged - covering cycles run EVERY 15-min
+  # tick until a real GHA cycle lands, instead of once per 35-min staleness episode. The
+  # crash counter is cleared: staleness during an outage is explained, not a code crash.
+  touch "$FAILF"
+  rm -f /home/poller/.engine_watch_crash 2>/dev/null
   # FAILOVER (2026-08-06): exits-only engine pass on this box - manages open positions while
   # GHA is dead; its push refreshes the heartbeat, which quiets this alarm until stale again.
-  git pull -q --rebase -X theirs 2>/dev/null || true
+  timeout 90 git pull -q --rebase -X theirs 2>/dev/null || true    # 2026-08-26: a TOTAL github
+                                       # outage must not hang the failover on its own pull
   . ./.venv/bin/activate 2>/dev/null || true
-  python scripts/engine_failover_exits.py >> /home/poller/engine_failover.log 2>&1 || \
+  python -u scripts/engine_failover_exits.py >> /home/poller/engine_failover.log 2>&1 || \
     alarm "FAILOVER ITSELF FAILED - open positions are UNMANAGED. Manual intervention needed."
 else
   echo "$(date -u +%FT%TZ) ok: heartbeat ${AGE} min"
+  # FAILOVER-MODE continuation (2026-08-26): while engaged, run a covering cycle every tick
+  # and stand down (with a recovery page) only when a REAL GHA persist lands fresh.
+  if [ -f "$FAILF" ]; then
+    LASTMSG=$(git log -1 --format=%s origin/main 2>/dev/null || echo "")
+    if [ "$LASTMSG" = "sandbox lab data [skip ci]" ] && [ "$AGE" -le 20 ]; then
+      rm -f "$FAILF"
+      alarm "GitHub Actions RECOVERED - normal engine cycles resumed; VPS failover standing down. No action needed."
+    else
+      if ! pgrep -f engine_failover_exits >/dev/null 2>&1; then
+        echo "$(date -u +%FT%TZ) failover-mode: covering cycle (GHA still down)"
+        timeout 90 git pull -q --rebase -X theirs 2>/dev/null || true
+        . ./.venv/bin/activate 2>/dev/null || true
+        FAILOVER_QUIET=1 python -u scripts/engine_failover_exits.py >> /home/poller/engine_failover.log 2>&1 || \
+          alarm "FAILOVER ITSELF FAILED - open positions are UNMANAGED. Manual intervention needed."
+      else
+        echo "$(date -u +%FT%TZ) failover-mode: covering cycle still running"
+      fi
+      exit 0
+    fi
+  fi
   # CRASH-NOT-DEAD (2026-08-17 KeyError day): crashed runs still push data, so the heartbeat
   # stays fresh while every cycle dies mid-engine. The workflow stamps data/last_cycle_ok ONLY
   # when Execute succeeds; fresh heartbeat + stale stamp = CRASHING. Page at 2 consecutive

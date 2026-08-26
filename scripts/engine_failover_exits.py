@@ -44,6 +44,12 @@ def main(check_only=False):
     # when the heartbeat is >35 min stale, so GHA and VPS never trade simultaneously.)
     rec = lab.run_scheduled_cycle(mock=False)
     print(f"full failover cycle complete: entered={'yes: ' + rec['ticker'] if rec else 'none'}")
+    # STAMP THE GOOD-CYCLE SENTINEL (2026-08-26 GitHub outage): a completed failover cycle IS
+    # a good cycle. Without this, failover pushes kept the heartbeat fresh while the sentinel
+    # went stale - the exact crash-not-dead signature - and the watchdog counted toward a
+    # FALSE auto-rollback of healthy code while the real fault was GitHub's outage.
+    sh("date -u +%FT%TZ > data/last_cycle_ok && git rev-parse HEAD >> data/last_cycle_ok")
+    sh("git add data/last_cycle_ok 2>/dev/null")
     sh("git add -A data/harvest_inbox proactive_sandbox_logs.json sandbox_ticker_cooloff.json 2>/dev/null")
     st = sh("git status --porcelain --untracked-files=no")
     if st:
@@ -52,6 +58,8 @@ def main(check_only=False):
         print("records pushed (heartbeat refreshed)")
     try:
         tok = os.environ.get("TELEGRAM_BOT_TOKEN"); chat = os.environ.get("TELEGRAM_CHAT_ID")
+        if os.environ.get("FAILOVER_QUIET"):        # continuation ticks in failover-mode: no page
+            tok = None
         if tok and chat:
             import urllib.request, urllib.parse
             msg = (f"ENGINE FAILOVER (VPS): GHA heartbeat stale - ran FULL cycle (entries+exits+harvest). "

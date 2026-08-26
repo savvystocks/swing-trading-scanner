@@ -4078,3 +4078,12 @@
 
 **Determining factor:** Calendar FAILED (-52%): the range broke; IV term None (ratio None) hurt the spread.
 
+## Autopsy - EEM (db3ab5832357)
+- entered 2026-08-20T19:45:52.039Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.6% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 72.5.
+

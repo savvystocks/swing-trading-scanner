@@ -141,11 +141,20 @@ def main():
                 return stop
         return (path[-1] / e - 1) * 100 if path else None
 
+    # FULL VIEW (owner 2026-08-25: "no shortcuts"): every decisive verdict, both signs -
+    # the bear edges AND the mild/bull verdicts (incl. fade's negative one that justifies
+    # the router). reg = (lo, hi) SPY-vs-50d band, None = unbounded.
     cohorts = {
-        "FADE_LIVE_bear": {"reg_lt": -2.0, "band": (50000, 400000), "spr": 2.0, "dmax": 1.01,
-                           "stop": -50.0, "trig": 50.0, "give": 0.20},
-        "SWEEP_DEEPBEAR": {"reg_lt": -3.0, "band": (50000, 1000000), "spr": 2.0, "dmax": 0.30,
-                           "stop": -60.0, "trig": 80.0, "give": 0.20},
+        "FADE_LIVE_bear":  {"shape": "fade", "reg": (None, -2.0), "band": (50000, 400000),
+                            "spr": 2.0, "dmax": 1.01, "stop": -50.0, "trig": 50.0, "give": 0.20},
+        "SWEEP_DEEPBEAR":  {"shape": "fade", "reg": (None, -3.0), "band": (50000, 1000000),
+                            "spr": 2.0, "dmax": 0.30, "stop": -60.0, "trig": 80.0, "give": 0.20},
+        "FADE_mild_bull":  {"shape": "fade", "reg": (-2.0, None), "band": (50000, 400000),
+                            "spr": 2.0, "dmax": 1.01, "stop": -50.0, "trig": 50.0, "give": 0.20},
+        "CONSENSUS_CALLS": {"shape": "cons_calls", "reg": (-2.0, None), "band": (50000, 400000),
+                            "spr": 2.0, "dmax": 1.01, "stop": -50.0, "trig": 50.0, "give": 0.20},
+        "FOLLOW_CALLS":    {"shape": "follow_calls", "reg": (-2.0, None), "band": (50000, 400000),
+                            "spr": 2.0, "dmax": 1.01, "stop": -50.0, "trig": 50.0, "give": 0.20},
     }
     rows = con.execute(
         """select ticker,option_symbol,day,total_premium,ask_volume,bid_volume,delta,
@@ -155,7 +164,26 @@ def main():
              and delta is not null order by day""").fetchall()
     out = {k: {"daily": [], "hourly": [], "kinds": defaultdict(int)} for k in cohorts}
     seen = {k: set() for k in cohorts}
+    bar_cache = {}
+    CACHE_MAX = 512            # 2026-08-26: unbounded cache OOM-killed the first run at 29.4k
     n_req = 0
+    # CHECKPOINT (2026-08-26): every scored trade appends here; a restart skips done work.
+    ckpt_path = "reports/research/precise_partial.jsonl"
+    done_ck = set()
+    if os.path.exists(ckpt_path):
+        for _l in open(ckpt_path, encoding="utf-8"):
+            try:
+                _j = json.loads(_l)
+                done_ck.add((_j["ck"], _j["occ"]))
+                out[_j["ck"]]["daily"].append((_j["day"], _j["rd"]))
+                if _j.get("rh") is not None:
+                    out[_j["ck"]]["hourly"].append((_j["day"], _j["rh"]))
+                out[_j["ck"]]["kinds"][_j.get("kind", "?")] += 1
+                seen[_j["ck"]].add(_j["occ"])
+            except Exception:
+                continue
+        print(f"checkpoint: resuming past {len(done_ck)} scored trades", flush=True)
+    ckpt = open(ckpt_path, "a", encoding="utf-8")
     for t, occ, day, prem, av, bv, dl, bid, ask in rows:
         if t not in tkset:
             continue
@@ -163,14 +191,26 @@ def main():
         if smd is None or sp is None or reg is None:
             continue
         side = 1 if occ[-9] == "C" else -1
-        if not (smd * side < 0 and sp * side < 0):
-            continue
+        is_fade = smd * side < 0 and sp * side < 0
+        is_cons = smd * side > 0 and sp * side > 0
         mid = (bid + ask) / 2.0
         sprd = (ask - bid) / mid * 100 if mid > 0 else 99.0
         for ck, c in cohorts.items():
             if occ in seen[ck]:
                 continue
-            if reg >= c["reg_lt"] or not (c["band"][0] <= prem <= c["band"][1]):
+            sh = c["shape"]
+            if sh == "fade" and not is_fade:
+                continue
+            if sh == "cons_calls" and not (is_cons and side > 0):
+                continue
+            if sh == "follow_calls" and side <= 0:
+                continue
+            rlo, rhi = c["reg"]
+            if rlo is not None and reg < rlo:
+                continue
+            if rhi is not None and reg >= rhi:
+                continue
+            if not (c["band"][0] <= prem <= c["band"][1]):
                 continue
             if sprd > c["spr"] or abs(float(dl)) >= c["dmax"]:
                 continue
@@ -181,17 +221,28 @@ def main():
             rd = replay_daily(dpath, ask, c["stop"], c["trig"], c["give"])
             if rd is not None:
                 out[ck]["daily"].append((day, rd))
-            start = (date.fromisoformat(day) + timedelta(days=1)).isoformat()
-            end = min(date.fromisoformat(day) + timedelta(days=65), date(2026, 8, 24)).isoformat()
-            hb = opt_bars(occ, start, end)
-            n_req += 1
-            if n_req % 25 == 0:
-                print(f"{n_req} contracts pulled...", flush=True)
-            time.sleep(0.31)                       # 200 req/min budget
+            if (ck, occ) in done_ck:
+                continue
+            if occ in bar_cache:
+                hb = bar_cache[occ]
+            else:
+                start = (date.fromisoformat(day) + timedelta(days=1)).isoformat()
+                end = min(date.fromisoformat(day) + timedelta(days=65), date(2026, 8, 24)).isoformat()
+                hb = opt_bars(occ, start, end)
+                if len(bar_cache) >= CACHE_MAX:
+                    bar_cache.pop(next(iter(bar_cache)))
+                bar_cache[occ] = hb
+                n_req += 1
+                if n_req % 200 == 0:
+                    print(f"{n_req} contracts pulled...", flush=True)
+                time.sleep(0.31)                   # 200 req/min budget
             rh, kind = replay_hourly(hb, ask, c["stop"], c["trig"], c["give"])
             out[ck]["kinds"][kind] += 1
             if rh is not None:
                 out[ck]["hourly"].append((day, rh))
+            ckpt.write(json.dumps({"ck": ck, "occ": occ, "day": day, "rd": rd,
+                                   "rh": rh, "kind": kind}) + "\n")
+            ckpt.flush()
 
     L = ["# PRECISE REPLAY - 2026-08-25 (hourly Alpaca bars vs daily archive closes)", "",
          "Same contracts, same entry (archive ask), same exit rules. HOURLY sees intraday stop",

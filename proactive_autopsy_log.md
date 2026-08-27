@@ -4168,3 +4168,12 @@
 
 **Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
 
+## Autopsy - CCL (ADOPT-a4fad51ecb)
+- entered 2026-08-20T16:09:46.197Z | trigger orphan_reconcile | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -50.0% | WINNER |
+
+**Determining factor:** Calendar FAILED (-50%): the range broke; IV term None (ratio None) hurt the spread.
+

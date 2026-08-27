@@ -398,6 +398,14 @@ def _occ(ticker, dte, right, strike):
     return f"{ticker.upper()[:6]}{ymd}{rc}{k}", expiry.isoformat()
 
 
+# DIP_CONVEXITY (owner order 2026-08-27, everything-sweep winner: bear + long-DTE calls +
+# wide exits beat the same-day pool by +35-52 pts/day, t 4.6-7.5, both years). Per-probe
+# structure/exit overrides; threaded via the same global-swap idiom as LEG_BUDGET.
+PROBE_STRUCT = {"DIP_CONVEXITY": {"otm_pct": 2.0, "dte": 50}}
+PROBE_EXITS = {"DIP_CONVEXITY": {"stop": 70.0, "trig": 80.0, "give": 0.30}}
+_ACTIVE_PROBE = {"name": None}
+
+
 def build_legs(ticker, md, regime="NEUTRAL", leg_budget=None, illiquid=None):
     spot = md["macro"]["spot"]
     iv_f, iv_b = md["iv_term"]["iv_front"], md["iv_term"]["iv_back"]
@@ -417,6 +425,10 @@ def build_legs(ticker, md, regime="NEUTRAL", leg_budget=None, illiquid=None):
     _st = (fade_book.spec().get("structure") or {}) if fade_book.active() else {}
     _otm = _st.get("otm_pct", 4.0) if _st.get("enabled") else 4.0
     _dte = int(_st.get("dte", 35)) if _st.get("enabled") else 35
+    _pst = PROBE_STRUCT.get(_ACTIVE_PROBE["name"] or "")
+    if _pst:                                  # probe-specific contract shape (DIP_CONVEXITY:
+        _otm = _pst.get("otm_pct", _otm)      # near-money, ~50 DTE - time for the bounce)
+        _dte = int(_pst.get("dte", _dte))
     call_k = round(spot * (1 + _otm / 100.0), 1)
     put_k = round(spot * (1 - _otm / 100.0), 1)
     cp, pp = _est_premium(spot, call_k, iv_f, _dte, "call"), _est_premium(spot, put_k, iv_f, _dte, "put")
@@ -866,16 +878,18 @@ def _retire_stop(rec, leg_name, occ, creds, log, closed_legs):
     return False                                         # still active / partially_filled -> retry next cycle
 
 
-def _backstop_level(entry_px, stage, peak_mfe, params):
+def _backstop_level(entry_px, stage, peak_mfe, params, probe=None):
     """The ratchet: initial -> the -50% hard-stop level; scaled -> break-even; trailing -> 20% off
     the peak MFE. Absolute premium (broker stop_price), floored at $0.01. Mirrors manage_exit so the
     resting stop and the cron exit can never disagree on the level."""
+    _pex = PROBE_EXITS.get(probe or "")
     if stage == "scaled":
         pct = params.get("break_even_pct", 0)
     elif stage == "trailing":
-        pct = (peak_mfe or 0.0) * (1 - params.get("trail_drawdown_pct", 20) / 100.0)
+        _gv = (_pex["give"] * 100.0) if _pex else params.get("trail_drawdown_pct", 20)
+        pct = (peak_mfe or 0.0) * (1 - _gv / 100.0)
     else:
-        pct = -abs(params.get("stop_loss_pct", 50))
+        pct = -abs(_pex["stop"]) if _pex else -abs(params.get("stop_loss_pct", 50))
     return max(0.01, round(entry_px * (1 + pct / 100.0), 2))
 
 
@@ -930,7 +944,8 @@ def manage_backstops(creds, params, positions=None, log=None):
             if qty < 1 or entry_px <= 0:
                 continue
             path = (rec.get("leg_path") or {}).get(leg_name) or {}
-            level = _backstop_level(entry_px, path.get("stage", "initial"), path.get("mfe_pct"), params)
+            level = _backstop_level(entry_px, path.get("stage", "initial"), path.get("mfe_pct"),
+                                    params, probe=rec.get("probe_strategy"))
             existing = stops_by_sym.get(sym)
             if existing:
                 cur_px = float(existing.get("stop_price") or 0)
@@ -1013,7 +1028,7 @@ def _note_close_failure(rec, path, leg_name, occ, params, creds=None):
             f"retries stop; auto-resolves at expiry {_occ_expiry(occ)}")
 
 
-def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage="initial", mfe_pct=None, book=None):
+def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage="initial", mfe_pct=None, book=None, probe=None):
     """Strategy-B tiered exit STATE MACHINE (per leg). Stages:
       initial  -> hard stop at -stop_loss_pct (overrides 24h); SCALE_OUT_50 at +take_profit_pct
                   (gated by the 24h hold) -> sell half, arm the break-even shield.
@@ -1038,6 +1053,8 @@ def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage=
                 _st = abs(params.get("stop_loss_pct", 50))
                 if book == "FADE":
                     _st = fade_book.exit_overrides().get("stop", _st)
+                if probe in PROBE_EXITS:
+                    _st = abs(PROBE_EXITS[probe]["stop"])
                 if ret <= -_st:
                     return {**base, "action": "CLOSE_STOP_LOSS", "stage": "closed",
                             "reason": f"{ret}% <= -{_st}% hard stop (caught at {dte}d to expiry)"}
@@ -1059,6 +1076,11 @@ def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage=
         trig = _ovt.get("trail_activate", trig)
         if "trail_drawdown" in _ovt:
             trail = _ovt["trail_drawdown"] / 100.0
+    if probe in PROBE_EXITS:                  # DIP_CONVEXITY wide exits (stop -70/trig 80/give 30):
+        _pex = PROBE_EXITS[probe]             # the -50 stop sat inside bear whipsaw range and cost
+        stop = abs(_pex.get("stop", stop))    # a third of the measured edge (hourly library)
+        trig = _pex.get("trig", trig)
+        trail = _pex.get("give", trail)
     if stage == "initial":
         if ret <= -stop:
             return {**base, "action": "CLOSE_STOP_LOSS", "stage": "closed", "reason": f"{ret}% <= -{stop}% hard stop"}
@@ -1429,7 +1451,7 @@ def manage_open_positions(creds, params, positions=None):
             dirty = True                                                 # persist the running path every cycle
             dec = manage_exit(rec["entry_ts_utc"], ret_pct, params, expiry_iso=_occ_expiry(occ),
                               stage=path.get("stage", "initial"), mfe_pct=path["mfe_pct"],
-                              book=rec.get("book"))
+                              book=rec.get("book"), probe=rec.get("probe_strategy"))
             if (dec.get("action") not in (None, "HOLD") and fade_book.no_same_day_exit()
                     and str(rec.get("entry_ts_utc", ""))[:10] == datetime.now(timezone.utc).date().isoformat()):
                 path["pdt_deferred"] = dec["action"]              # owner hold rule (2026-08-12): no
@@ -2135,6 +2157,10 @@ def run_scheduled_cycle(mock=False):
                                               or 9) < 0.3),   # owner 2026-08-18: untapped UW trigger
                 ("IV_EXTREME", lambda md, c: ((md.get("pemd") or {}).get("iv_rank_1y") or 50) >= 85
                                              or ((md.get("pemd") or {}).get("iv_rank_1y") or 50) <= 10),
+                ("DIP_CONVEXITY", lambda md, c: fade_book.spy_regime() == "BEAR"
+                                                and (c or {}).get("flow_type") == "call"),
+                                             # everything-sweep winner 2026-08-27: bear-regime
+                                             # long-DTE calls, wide exits; +35-52/day vs pool
                 ("FOLLOW_CALLS", lambda md, c: (c or {}).get("flow_type") == "call"),   # archive winner
                                              # 2026-08-23: buy aggressively-bought calls, all regimes -
                                              # +32/+12/+14 bear/mild/bull, t>3 each (thin bear). The one
@@ -2160,12 +2186,15 @@ def run_scheduled_cycle(mock=False):
                         if t.upper() in _open_tk:
                             continue            # never stack a probe on any book's open underlying
                         try:
+                            _ACTIVE_PROBE["name"] = _pname
                             rec = enter_proactive_set(t, None, mock=mock, candidate=c,
                                                       dry_run=not live, positions=positions,
                                                       open_orders=open_orders, probe=True,
                                                       probe_filter=_pf)
                         except Exception:
                             continue
+                        finally:
+                            _ACTIVE_PROBE["name"] = None
                         if rec and not rec.get("skipped"):
                             rec["book"] = "PROBE"
                             rec["probe_strategy"] = _pname

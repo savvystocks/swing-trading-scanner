@@ -60,7 +60,8 @@
    "GEX_PIN",
    "IV_EXTREME",
    "FOLLOW_CALLS",
-   "CONSENSUS_CALLS"
+   "CONSENSUS_CALLS",
+   "DIP_CONVEXITY"
   ],
   "whale": {
    "flow_min": 400000,
@@ -114,7 +115,19 @@
    "note": "5k defined-risk weeklies (owner 2026-08-18): XSP structures, 1 lot, self-settling; max loss = width - credit (~$1.2k put side)"
   },
   "priority": [],
-  "priority_note": "FOLLOW_CALLS/CONSENSUS_CALLS were promoted to priority on VWAP-priced evidence (+15.9/+19.4). The executable restudy the same day cut them to +1.50 (t 0.71) and +0.69 (t 0.24) once entry-at-ask/exit-on-bid and the <=2% spread filter are applied - noise. Demoted to ordinary probes; they still trade and can still earn promotion on LIVE evidence."
+  "priority_note": "FOLLOW_CALLS/CONSENSUS_CALLS were promoted to priority on VWAP-priced evidence (+15.9/+19.4). The executable restudy the same day cut them to +1.50 (t 0.71) and +0.69 (t 0.24) once entry-at-ask/exit-on-bid and the <=2% spread filter are applied - noise. Demoted to ordinary probes; they still trade and can still earn promotion on LIVE evidence.",
+  "dip_convexity": {
+   "evidence": "everything-sweep 2026-08-27 (169,685 trades, hourly paths, paired-vs-pool): bear-regime long-DTE calls with stop-70/trig80/give30 beat the same-day pool by +35-52 pts/day at t 4.6-7.5, both years, both halves. Caveats: two bear episodes only; exits priced near mid; ~$700 loser cost per $1k slot.",
+   "structure": {
+    "otm_pct": 2.0,
+    "dte": 50
+   },
+   "exits": {
+    "stop": -70,
+    "trail_activate": 80,
+    "trail_drawdown": 30
+   }
+  }
  },
  "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal.",
  "v1.7.1_note": "owner order 2026-08-12 00:36 (sim-first then probe): FADE_WHALE probe slot - fade-shaped 400k-1M prints from a side-pool the live book never sees (its candidate list is byte-identical). Sim promising but half-flipped; live fills decide. 1M+ excluded (negative, n=8).",

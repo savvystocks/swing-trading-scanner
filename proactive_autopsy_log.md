@@ -4159,3 +4159,12 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 270.0 worked against it.
 
+## Autopsy - NVDA (ADOPT-4fe2fc7b3f)
+- entered 2026-08-12T14:27:49.642Z | trigger orphan_reconcile | exit CLOSE_UNTRACKED | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | +72.6% | WINNER |
+
+**Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
+

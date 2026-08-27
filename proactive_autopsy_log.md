@@ -4123,3 +4123,30 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 15.0 worked against it.
 
+## Autopsy - SPY (405abaeed5e8)
+- entered 2026-08-12T14:36:33.339Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -57.3% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-57%, move 0.0%): no breakdown materialised; spot held above zero-gamma 780.0.
+
+## Autopsy - DRAM (bc519b055049)
+- entered 2026-08-18T17:48:20.620Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -62.6% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-63%, move 0.0%): no breakdown materialised; spot held above zero-gamma 60.0.
+
+## Autopsy - SQQQ (fb26be8e942c)
+- entered 2026-08-20T18:54:44.800Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -52.6% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 36.0 worked against it.
+

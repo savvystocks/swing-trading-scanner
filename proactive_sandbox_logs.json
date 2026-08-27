@@ -166880,8 +166880,8 @@
         "mfe_pct": 297.9,
         "mae_pct": -23.4,
         "stage": "initial",
-        "close_fails": 4,
-        "last_ret": 175.5
+        "close_fails": 0,
+        "last_ret": 171.3
       }
     },
     "backstop": {
@@ -169115,8 +169115,8 @@
         "mfe_pct": 159.7,
         "mae_pct": -10.9,
         "stage": "initial",
-        "close_fails": 0,
-        "last_ret": 79.0
+        "close_fails": 1,
+        "last_ret": 75.6
       }
     },
     "backstop": {
@@ -170364,7 +170364,7 @@
         "mfe_pct": 17.1,
         "mae_pct": -45.9,
         "stage": "initial",
-        "last_ret": -40.7
+        "last_ret": -44.4
       }
     },
     "backstop": {
@@ -172052,7 +172052,7 @@
         "mae_pct": -36.2,
         "stage": "initial",
         "close_fails": 2,
-        "last_ret": -34.3
+        "last_ret": -36.2
       }
     },
     "leg_exits": {},
@@ -176300,7 +176300,7 @@
         "mfe_pct": 13.3,
         "mae_pct": -47.5,
         "stage": "initial",
-        "last_ret": 4.2
+        "last_ret": -10.0
       }
     },
     "backstop": {
@@ -177015,8 +177015,8 @@
         "mfe_pct": 179.0,
         "mae_pct": -21.9,
         "stage": "initial",
-        "close_fails": 0,
-        "last_ret": 137.1
+        "close_fails": 1,
+        "last_ret": 132.4
       }
     },
     "leg_exits": {},
@@ -179125,17 +179125,51 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -58.4
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 11.7,
+          "mae_pct": -58.4,
+          "stage": "closed",
+          "last_ret": -58.4,
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 11.7,
+      "mae_pct": -58.4,
+      "determining_factor": "Bullish call FAILED (-58%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 27.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "probe_strategy": "QUIET_TAPE",
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "PINS260918C00024000",
+        "closed_at": "2026-08-27T19:54:00.558Z",
+        "return_pct": -58.4,
+        "reason": "-58.4% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 11.7,
-        "mae_pct": -45.5,
-        "stage": "initial",
-        "last_ret": -42.9
+        "mae_pct": -58.4,
+        "stage": "closed",
+        "last_ret": -58.4,
+        "close_fails": 0
       }
     },
     "backstop": {
@@ -179150,9 +179184,17 @@
         "stage": "initial",
         "at": "2026-08-25T13:33:38.769Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "retired": true
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "49b2459d-754a-460f-bd8a-a695a757b51a",
+        "at": "2026-08-27T19:54:00.558Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "db3ab5832357",
@@ -179531,7 +179573,7 @@
         "mfe_pct": 20.8,
         "mae_pct": -41.6,
         "stage": "initial",
-        "last_ret": 9.1
+        "last_ret": 10.4
       }
     },
     "leg_exits": {},
@@ -180810,7 +180852,7 @@
         "mfe_pct": 27.8,
         "mae_pct": -46.8,
         "stage": "initial",
-        "last_ret": -41.2
+        "last_ret": -43.1
       }
     },
     "backstop": {
@@ -181579,7 +181621,7 @@
         "mfe_pct": -2.0,
         "mae_pct": -40.6,
         "stage": "initial",
-        "last_ret": -23.8
+        "last_ret": -24.8
       }
     },
     "backstop": {
@@ -185379,7 +185421,7 @@
         "mfe_pct": 36.2,
         "mae_pct": -17.1,
         "stage": "scaled",
-        "last_ret": 32.4,
+        "last_ret": 24.8,
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-08-27T17:53:55.716Z",
@@ -185681,7 +185723,7 @@
         "mfe_pct": 8.9,
         "mae_pct": -19.1,
         "stage": "initial",
-        "last_ret": 5.5
+        "last_ret": 4.7
       }
     },
     "backstop": {
@@ -186257,7 +186299,7 @@
         "mfe_pct": 6.5,
         "mae_pct": -25.2,
         "stage": "initial",
-        "last_ret": -11.5
+        "last_ret": -4.3
       }
     },
     "backstop": {
@@ -186923,7 +186965,7 @@
         "mfe_pct": -2.5,
         "mae_pct": -23.8,
         "stage": "initial",
-        "last_ret": -16.2
+        "last_ret": -17.5
       }
     }
   },
@@ -187196,7 +187238,7 @@
         "mfe_pct": 5.3,
         "mae_pct": -6.0,
         "stage": "initial",
-        "last_ret": -2.0
+        "last_ret": -4.3
       }
     }
   },
@@ -187469,7 +187511,7 @@
         "mfe_pct": 4.8,
         "mae_pct": -8.2,
         "stage": "initial",
-        "last_ret": 4.8
+        "last_ret": 1.4
       }
     }
   },
@@ -187742,7 +187784,7 @@
         "mfe_pct": -6.0,
         "mae_pct": -20.2,
         "stage": "initial",
-        "last_ret": -20.2
+        "last_ret": -16.7
       }
     }
   },
@@ -187796,7 +187838,7 @@
         "mfe_pct": 7.1,
         "mae_pct": -8.9,
         "stage": "initial",
-        "last_ret": 5.4
+        "last_ret": 1.8
       }
     },
     "leg_exits": {},
@@ -188344,7 +188386,7 @@
         "mfe_pct": 2.0,
         "mae_pct": -11.2,
         "stage": "initial",
-        "last_ret": -11.2
+        "last_ret": -10.2
       }
     }
   }

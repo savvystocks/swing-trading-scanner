@@ -4249,3 +4249,12 @@
 
 **Determining factor:** Bullish call FAILED (-13%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 62.0 worked against it.
 
+## Autopsy - APLD (ADOPT-bbbeaef3c4)
+- entered 2026-08-21T19:34:57.130Z | trigger orphan_reconcile | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -52.0% | WINNER |
+
+**Determining factor:** Calendar FAILED (-52%): the range broke; IV term None (ratio None) hurt the spread.
+

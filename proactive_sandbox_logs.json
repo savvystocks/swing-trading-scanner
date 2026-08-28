@@ -166880,8 +166880,8 @@
         "mfe_pct": 297.9,
         "mae_pct": -23.4,
         "stage": "initial",
-        "close_fails": 0,
-        "last_ret": 114.9
+        "close_fails": 1,
+        "last_ret": 93.6
       }
     },
     "backstop": {
@@ -169115,8 +169115,8 @@
         "mfe_pct": 159.7,
         "mae_pct": -10.9,
         "stage": "initial",
-        "close_fails": 1,
-        "last_ret": 68.1
+        "close_fails": 2,
+        "last_ret": 70.6
       }
     },
     "backstop": {
@@ -172086,7 +172086,7 @@
         "mae_pct": -48.1,
         "stage": "initial",
         "close_fails": 2,
-        "last_ret": -48.1
+        "last_ret": -46.5
       }
     },
     "leg_exits": {},
@@ -172754,7 +172754,7 @@
         "mae_pct": -28.8,
         "stage": "initial",
         "close_fails": 1,
-        "last_ret": 23.5
+        "last_ret": 27.9
       }
     },
     "backstop": {
@@ -177049,8 +177049,8 @@
         "mfe_pct": 179.0,
         "mae_pct": -21.9,
         "stage": "initial",
-        "close_fails": 1,
-        "last_ret": 114.3
+        "close_fails": 2,
+        "last_ret": 109.5
       }
     },
     "leg_exits": {},
@@ -179647,7 +179647,7 @@
         "mfe_pct": 20.8,
         "mae_pct": -41.6,
         "stage": "initial",
-        "last_ret": -31.2
+        "last_ret": -33.8
       }
     },
     "leg_exits": {},
@@ -180639,7 +180639,7 @@
         "mfe_pct": 12.5,
         "mae_pct": -29.4,
         "stage": "initial",
-        "last_ret": -23.4
+        "last_ret": -22.6
       }
     },
     "backstop": {
@@ -180924,9 +180924,9 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 27.8,
-        "mae_pct": -48.7,
+        "mae_pct": -49.3,
         "stage": "initial",
-        "last_ret": -47.2
+        "last_ret": -49.3
       }
     },
     "backstop": {
@@ -181249,7 +181249,7 @@
   {
     "trade_set_id": "ADOPT-bbbeaef3c4",
     "ticker": "APLD",
-    "status": "OPEN",
+    "status": "CLOSED",
     "entry_ts_utc": "2026-08-21T19:34:57.130Z",
     "adopted": true,
     "adopted_from": {
@@ -181299,13 +181299,46 @@
         "last_ret": -48.5
       }
     },
-    "leg_exits": {},
-    "exit": null,
+    "leg_exits": {
+      "adopted_leg": {
+        "occ": "APLD260918C00028000",
+        "closed_at": "2026-08-28T15:10:37.00292098Z",
+        "return_pct": -52.0,
+        "filled_qty": 3,
+        "reason": "broker backstop filled 3 @ 1.1",
+        "action": "CLOSE_BACKSTOP",
+        "closed_ok": true
+      }
+    },
+    "exit": {
+      "reason": "CLOSE_BACKSTOP",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "adopted_leg": -52.0
+      },
+      "winner": "adopted_leg",
+      "loser": "adopted_leg",
+      "leg_path": {
+        "adopted_leg": {
+          "mfe_pct": 27.1,
+          "mae_pct": -49.3,
+          "stage": "initial",
+          "last_ret": -48.5
+        }
+      },
+      "mfe_pct": 27.1,
+      "mae_pct": -49.3,
+      "determining_factor": "Calendar FAILED (-52%): the range broke; IV term None (ratio None) hurt the spread.",
+      "tuning_recommendations": []
+    },
     "backstop": {
       "adopted_leg": {
         "order_id": "c3e3cc8f-7eac-4139-8862-c804abc15750",
         "prior_order_ids": [],
-        "reconciled_ids": [],
+        "reconciled_ids": [
+          "c3e3cc8f-7eac-4139-8862-c804abc15750"
+        ],
         "stop_price": 1.15,
         "qty": 3,
         "entry_px": 2.29,
@@ -181313,7 +181346,8 @@
         "stage": "initial",
         "at": "2026-08-25T13:33:42.757Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "reconciled": true
       }
     }
   },
@@ -181695,7 +181729,7 @@
         "mfe_pct": -2.0,
         "mae_pct": -41.6,
         "stage": "initial",
-        "last_ret": -33.7
+        "last_ret": -34.7
       }
     },
     "backstop": {
@@ -186183,7 +186217,7 @@
         "mfe_pct": 23.5,
         "mae_pct": -18.8,
         "stage": "initial",
-        "last_ret": -14.1
+        "last_ret": -15.3
       }
     },
     "backstop": {
@@ -186471,7 +186505,7 @@
         "mfe_pct": 8.6,
         "mae_pct": -25.2,
         "stage": "initial",
-        "last_ret": 5.8
+        "last_ret": 4.3
       }
     },
     "backstop": {
@@ -187137,7 +187171,7 @@
         "mfe_pct": 11.2,
         "mae_pct": -23.8,
         "stage": "initial",
-        "last_ret": -10.0
+        "last_ret": 1.2
       }
     },
     "backstop": {
@@ -187425,7 +187459,7 @@
         "mfe_pct": 5.3,
         "mae_pct": -22.5,
         "stage": "initial",
-        "last_ret": -22.5
+        "last_ret": -21.2
       }
     },
     "backstop": {
@@ -187713,7 +187747,7 @@
         "mfe_pct": 32.7,
         "mae_pct": -11.6,
         "stage": "initial",
-        "last_ret": 29.9
+        "last_ret": 31.3
       }
     },
     "backstop": {
@@ -188384,7 +188418,7 @@
         "mfe_pct": 2.7,
         "mae_pct": -27.9,
         "stage": "initial",
-        "last_ret": -17.7
+        "last_ret": -20.4
       }
     },
     "backstop": {

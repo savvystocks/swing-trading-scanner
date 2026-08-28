@@ -102,7 +102,9 @@
     "enabled": true,
     "otm_short": 2.0,
     "otm_long": 4.0,
-    "evidence": "2.5y SPY backtest: +$2,302/114wk, 88% win, worst wk -$929, maxDD -$1,584 (keeps 60% of naked-put P&L at 1/4 the tail)"
+    "evidence": "2.5y SPY backtest: +$2,302/114wk, 88% win, worst wk -$929, maxDD -$1,584 (keeps 60% of naked-put P&L at 1/4 the tail)",
+    "regime_gate": true,
+    "regime_evidence": "regime playbook 2026-08-25 (real SPY nbbo, weekly settles): MILD +$64/wk t+4.5 win94% | BULL +$9 noise | BEAR -$140/wk worst -$923 -> stand down in BEAR only"
    },
    "condor": {
     "enabled": false,
@@ -114,8 +116,12 @@
    },
    "note": "5k defined-risk weeklies (owner 2026-08-18): XSP structures, 1 lot, self-settling; max loss = width - credit (~$1.2k put side)"
   },
-  "priority": [],
-  "priority_note": "FOLLOW_CALLS/CONSENSUS_CALLS were promoted to priority on VWAP-priced evidence (+15.9/+19.4). The executable restudy the same day cut them to +1.50 (t 0.71) and +0.69 (t 0.24) once entry-at-ask/exit-on-bid and the <=2% spread filter are applied - noise. Demoted to ordinary probes; they still trade and can still earn promotion on LIVE evidence.",
+  "priority": [
+   "CONSENSUS",
+   "CREDIT_SPREAD_W",
+   "DIP_CONVEXITY"
+  ],
+  "priority_note": "Friday window 2026-08-28: the promotion rung tracks probe.priority - it was EMPTY since the calls demotion, so nothing was on the promotion track (court exposed it: rung printed no candidates). CONSENSUS (live front-runner), CREDIT_SPREAD_W (income leg, accrues in every regime), DIP_CONVEXITY (sweep winner, accrues in bear) now tracked - 8+ live days beating the control auto-promotes, probation armed.",
   "dip_convexity": {
    "evidence": "everything-sweep 2026-08-27 (169,685 trades, hourly paths, paired-vs-pool): bear-regime long-DTE calls with stop-70/trig80/give30 beat the same-day pool by +35-52 pts/day at t 4.6-7.5, both years, both halves. Caveats: two bear episodes only; exits priced near mid; ~$700 loser cost per $1k slot.",
    "structure": {

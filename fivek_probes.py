@@ -193,7 +193,20 @@ def cycle(creds, allow_entries=True):
         return
     cs = cfg.get("credit_spread") or {}
     if cs.get("enabled") and "CREDIT_SPREAD_W" not in have:
-        _enter("CREDIT_SPREAD_W", True, cs, creds, lab, log, now)
+        # REGIME GATE (Friday window 2026-08-28, regime playbook on real SPY quotes): put credit
+        # spreads are a MILD-market specialist (+$64/wk t+4.5, 94% win) that BLEEDS in bear
+        # (-$140/wk, worst -$923). Stand down in BEAR; trade MILD+BULL. Fail-open: unknown
+        # regime -> allow (a missed income week beats a blocked settle path never).
+        _rg = None
+        try:
+            import fade_book
+            _rg = fade_book.spy_regime()
+        except Exception:
+            pass
+        if cs.get("regime_gate", True) and _rg == "BEAR":
+            print("  fivek: credit spread stands down (BEAR regime - playbook gate)")
+        else:
+            _enter("CREDIT_SPREAD_W", True, cs, creds, lab, log, now)
         log = lab._load_log_list()
     co = cfg.get("condor") or {}
     if co.get("enabled") and "CONDOR_W" not in have:

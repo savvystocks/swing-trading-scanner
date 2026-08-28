@@ -4240,3 +4240,12 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 11.5 worked against it.
 
+## Autopsy - SLV (74a0cdab89cf)
+- entered 2026-08-25T16:16:38.052Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -12.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-13%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 62.0 worked against it.
+

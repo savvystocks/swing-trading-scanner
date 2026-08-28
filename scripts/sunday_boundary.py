@@ -314,6 +314,12 @@ def main():
             return {d: sum(v) / len(v) for d, v in (by_strat.get(strat) or {}).items()}
 
         ctrl = daymeans("EXEC_BASELINE")
+        if not prio:
+            # 2026-08-28 (owner catch): the track sat EMPTY for 4 days after a demotion cleared
+            # it - the rung ran nightly checking nothing, silently. An empty promotion track is
+            # a state the owner must always see, never infer.
+            lines.append("PROMOTION TRACK EMPTY - no probe is being tracked toward "
+                         "auto-promotion (probe.priority has no entries)")
         for st_ in prio:
             if st_ in promoted:
                 continue

@@ -4195,3 +4195,48 @@
 
 **Determining factor:** Bullish call FAILED (-58%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 27.0 worked against it.
 
+## Autopsy - AAPL (90a96cd38e67)
+- entered 2026-08-18T14:33:48.368Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -45.1% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-45%, move 0.0%): no breakdown materialised; spot held above zero-gamma 310.0.
+
+## Autopsy - GDX (de66ad1eea94)
+- entered 2026-08-20T17:02:13.881Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -51.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 98.0.
+
+## Autopsy - NKE (ac2b38209c40)
+- entered 2026-08-25T14:14:40.618Z | trigger regime_BEARISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +0.0% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 39.5 -> negative-gamma slide, no positive catalyst.
+
+## Autopsy - CCL (c1c3c7e0f56c)
+- entered 2026-08-27T17:17:28.533Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -51.2% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 25.0 worked against it.
+
+## Autopsy - MARA (d53c3999dbf6)
+- entered 2026-08-27T18:36:09.307Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 11.5 worked against it.
+

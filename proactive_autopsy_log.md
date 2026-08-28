@@ -4258,3 +4258,12 @@
 
 **Determining factor:** Calendar FAILED (-52%): the range broke; IV term None (ratio None) hurt the spread.
 
+## Autopsy - ETHA (e7376425620f)
+- entered 2026-08-24T15:04:55.303Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.5% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 16.0 worked against it.
+

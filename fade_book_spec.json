@@ -61,7 +61,8 @@
    "IV_EXTREME",
    "FOLLOW_CALLS",
    "CONSENSUS_CALLS",
-   "DIP_CONVEXITY"
+   "DIP_CONVEXITY",
+   "BULL_DIP"
   ],
   "whale": {
    "flow_min": 400000,
@@ -119,7 +120,8 @@
   "priority": [
    "CONSENSUS",
    "CREDIT_SPREAD_W",
-   "DIP_CONVEXITY"
+   "DIP_CONVEXITY",
+   "BULL_DIP"
   ],
   "priority_note": "Friday window 2026-08-28: the promotion rung tracks probe.priority - it was EMPTY since the calls demotion, so nothing was on the promotion track (court exposed it: rung printed no candidates). CONSENSUS (live front-runner), CREDIT_SPREAD_W (income leg, accrues in every regime), DIP_CONVEXITY (sweep winner, accrues in bear) now tracked - 8+ live days beating the control auto-promotes, probation armed.",
   "dip_convexity": {
@@ -133,6 +135,9 @@
     "trail_activate": 80,
     "trail_drawdown": 30
    }
+  },
+  "bull_dip": {
+   "evidence": "bull battery 2026-08-28 (hourly library, entry-at-ask, spr<=2): ticker below its 20d SMA while SPY >2% above its 50d, calls, live exits = +11.2%/day t+5.86 across 240 days n=6797, halves +15/+7; wide exits +14.7 t+5.22. Unlike the bear edge, NOT episode-concentrated - 240 ordinary bull days."
   }
  },
  "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal.",

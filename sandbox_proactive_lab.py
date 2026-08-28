@@ -2157,6 +2157,13 @@ def run_scheduled_cycle(mock=False):
                                               or 9) < 0.3),   # owner 2026-08-18: untapped UW trigger
                 ("IV_EXTREME", lambda md, c: ((md.get("pemd") or {}).get("iv_rank_1y") or 50) >= 85
                                              or ((md.get("pemd") or {}).get("iv_rank_1y") or 50) <= 10),
+                ("BULL_DIP", lambda md, c: fade_book.spy_regime() == "BULL"
+                                           and isinstance((md.get("macro") or {}).get("distance_to_sma20_pct"), (int, float))
+                                           and (md.get("macro") or {}).get("distance_to_sma20_pct") < 0
+                                           and (c or {}).get("flow_type") == "call"),
+                                             # bull battery 2026-08-28: ticker dip + market BULL
+                                             # + calls = +11.2%/day t+5.86 over 240 days, both
+                                             # halves positive - the bull book's anchor candidate
                 ("DIP_CONVEXITY", lambda md, c: fade_book.spy_regime() == "BEAR"
                                                 and (c or {}).get("flow_type") == "call"),
                                              # everything-sweep winner 2026-08-27: bear-regime

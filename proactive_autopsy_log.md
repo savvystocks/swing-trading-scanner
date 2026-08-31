@@ -4276,3 +4276,39 @@
 
 **Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 230.0.
 
+## Autopsy - ONDS (ADOPT-4414efbb7b)
+- entered 2026-08-21T13:32:51.402Z | trigger orphan_reconcile | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -54.5% | WINNER |
+
+**Determining factor:** Calendar FAILED (-54%): the range broke; IV term None (ratio None) hurt the spread.
+
+## Autopsy - TE (b1bf58428da7)
+- entered 2026-08-21T18:15:56.545Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -18.2% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-18%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 2.0 worked against it.
+
+## Autopsy - SOFI (b0557c065485)
+- entered 2026-08-25T16:25:35.494Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -97.6% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-98%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 20.0 worked against it.
+
+## Autopsy - IBIT (520e14d24d9a)
+- entered 2026-08-27T18:26:27.911Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -52.4% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-52%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 44.0 worked against it.
+

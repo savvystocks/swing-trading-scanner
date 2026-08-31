@@ -103,6 +103,7 @@ def main():
     res = defaultdict(list)      # (shape, side, regime, exit) -> [(day, ret)]
     seen = set()
     n_true = 0
+    FUNNEL = {'spr': 0, 'pr': 0, 'nxt': 0, 'e': 0}
     for t, occ, day, prem, bid, ask, dl in src.execute(
             """select ticker, option_symbol, day, total_premium, nbbo_bid, nbbo_ask, delta
                from contracts_daily
@@ -117,18 +118,22 @@ def main():
         mid = (bid + ask) / 2.0
         if mid <= 0 or (ask - bid) / mid * 100 > 2.0:
             continue
+        FUNNEL['spr'] += 1
         pts = prints.get((occ, day))
         if not pts:
             continue                            # true-trigger retest: only print-covered trades
+        FUNNEL['pr'] += 1
         rows_ = cur.execute("select ts, h, l, c from bars where occ=? order by ts", (occ,)).fetchall()
         today_after = [(h, l, c) for ts_, h, l, c in rows_
                        if ts_[:10] == day and ts_[11:19] > pts[11:19]]
         nxt = [(h, l, c) for ts_, h, l, c in rows_ if ts_[:10] > day]
         if len(nxt) < 3:
             continue
+        FUNNEL['nxt'] += 1
         e = today_after[0][2] if today_after else ask     # true entry; fallback EOD ask
         if e <= 0:
             continue
+        FUNNEL['e'] += 1
         seen.add(occ)
         n_true += 1
         side = 1 if occ[-9] == "C" else -1
@@ -146,7 +151,7 @@ def main():
             res[(shape, sidenm, "all", exn)].append((day, r))
             if shape == "MIX" and smd < 0 and side > 0:          # dip quadrant, any regime
                 res[("DIP_Q", "C", regnm, exn)].append((day, r))
-    print(f"true-trigger trades scored: {n_true}", flush=True)
+    print(f"true-trigger trades scored: {n_true} | funnel {FUNNEL}", flush=True)
 
     L = ["# GRAND RETEST - 2026-08-31 (TRUE-TRIGGER entries, 330k print timestamps)", "",
          f"{n_true} trades entered at the first hourly close AFTER the real print (live-engine",

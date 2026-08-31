@@ -330,11 +330,22 @@ def main():
                 continue
             diffs = [dm[d] - ctrl[d] for d in shared]
             own = [dm[d] for d in shared]
-            t = tstat(diffs)
+            # OWNER UPGRADE 2026-08-31 ("is the control right when it caught a monster?"):
+            # (a) SYMMETRIC TRIM - with 8+ shared days, drop the single best AND worst diff
+            #     day before the t-test. Removes the control's jackpot AND the strategy's own,
+            #     so the bar measures CONSISTENCY, not who got lucky once. Never one-sided.
+            # (b) ABSOLUTE FLOOR - skill alone is not enough; the strategy's own day-mean must
+            #     clear a worth-the-capital floor (spec probe.promotion_floor_day_mean, default
+            #     +3%/day on its traded days ~ the owner's 3-6%/month ladder at probe scale).
+            tdiffs = sorted(diffs)[1:-1] if len(diffs) >= 8 else diffs
+            t = tstat(tdiffs)
+            floor = float((spec_p.get("probe") or {}).get("promotion_floor_day_mean", 3.0))
             h = len(own) // 2
-            ok = (sum(own) / len(own) > 0 and t >= 1.8
+            ok = (sum(own) / len(own) >= floor and t >= 1.8 and sum(tdiffs) / max(len(tdiffs), 1) > 0
                   and sum(own[:h]) / max(h, 1) > 0 and sum(own[h:]) / max(len(own) - h, 1) > 0)
-            lines.append(f"PROBE {st_}: {len(shared)}d live vs control t {t:+.2f} {'PROMOTE' if ok else 'HOLD'}")
+            lines.append(f"PROBE {st_}: {len(shared)}d vs control t {t:+.2f} (trimmed) "
+                         f"own-mean {sum(own)/len(own):+.1f} (floor {floor:+.0f}) "
+                         f"{'PROMOTE' if ok else 'HOLD'}")
             if ok and os.environ.get("BOUNDARY_REPORT_ONLY") != "1":
                 spec_p.setdefault("probe", {}).setdefault("promoted", []).append(st_)
                 spec_p[f"promo_{datetime.now(timezone.utc).date()}"] = {

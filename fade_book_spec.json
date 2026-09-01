@@ -51,7 +51,6 @@
   "roster": [
    "EXEC_BASELINE",
    "FADE_UNROUTED",
-   "CONSENSUS",
    "DP_HEAVY",
    "FADE_DP",
    "OPT_WINNER",
@@ -63,7 +62,8 @@
    "DIP_CONF_MILD",
    "FOLLOW_CALLS",
    "CONSENSUS_CALLS",
-   "PUT_DEBIT_W (fivek weekly)"
+   "PUT_DEBIT_W (fivek weekly)",
+   "BULL_DIP_X"
   ],
   "whale": {
    "flow_min": 400000,
@@ -126,14 +126,14 @@
    }
   },
   "priority": [
-   "CONSENSUS",
    "CREDIT_SPREAD_W",
    "DIP_CONVEXITY",
    "BULL_DIP",
    "CONSENSUS_CALLS",
    "FOLLOW_CALLS",
    "DIP_CONF_MILD",
-   "PUT_DEBIT_W"
+   "PUT_DEBIT_W",
+   "BULL_DIP_X"
   ],
   "priority_note": "owner order 2026-09-01 (ship the grid): the full 3x3 grid is tracked - one strategy per regime cell plus structure. Bear cell 2 is the FADE book itself (above this track). More candidates = more luck-chances vs one control; the placebo army + sentinels measure exactly that, bar v2 (symmetric trim + floor) unchanged.",
   "dip_convexity": {
@@ -152,11 +152,15 @@
    "evidence": "bull battery 2026-08-28 (hourly library, entry-at-ask, spr<=2): ticker below its 20d SMA while SPY >2% above its 50d, calls, live exits = +11.2%/day t+5.86 across 240 days n=6797, halves +15/+7; wide exits +14.7 t+5.22. Unlike the bear edge, NOT episode-concentrated - 240 ordinary bull days."
   },
   "dip_conf_mild": {
-   "evidence": "grand retest 2026-08-31 true-trigger: MILD + ticker<20d + SPY<20d + calls = +11.3%/day t2.43 full-band. SPLIT 2026-09-01: the edge lives in EXPENSIVE trigger contracts (ask>4, prem 50-400k): +21.2%/day t+4.31 halves +16/+26, measured ON THE TRIGGER CONTRACT ITSELF; cheap live band +4.0 t0.67 noise. ADVERSARIAL CATCH same day: probes buy a synthesized affordable structure, not the trigger contract - shipping the pool alone would bank evidence the backtest never measured. Probe DORMANT until the trigger-contract execution path ships (IN-FLIGHT); _PRICEY_CANDS pool already collecting at scan time.",
+   "evidence": "grand retest 2026-08-31 true-trigger: MILD + ticker<20d + SPY<20d + calls = +11.3%/day t2.43 full-band. SPLIT 2026-09-01: the edge lives in EXPENSIVE trigger contracts (ask>4, prem 50-400k): +21.2%/day t+4.31 halves +16/+26, measured ON THE TRIGGER CONTRACT. Panel-corrected build shipped same night: the probe buys THE trigger contract itself (1 contract, alert ask 4-9, via _PROBE_CONTRACT override in build_legs), live-quoted + spread-capped at entry like any leg. HONESTY NOTE: live cohort filters are per-ALERT (premium band, ask-side aggressor, spread) vs the backtest DAILY aggregates - an approximation; the live virgin days are the verdict on it.",
    "added": "2026-09-01"
   },
-  "roster_note": "QUIET_TAPE culled 2026-09-01: -$1,005 era, no positive stretch",
-  "promotion_floor_week_mean": 5.0
+  "roster_note": "QUIET_TAPE culled 2026-09-01 (-$1,005 era). CONSENSUS culled 2026-09-01: 8/8-day promotion case CLOSED at the boundary - own-mean -20.4%/day vs +3 floor, trimmed t +0.13 vs control (zero edge); superseded by CONSENSUS_CALLS.",
+  "promotion_floor_week_mean": 5.0,
+  "bull_dip_x": {
+   "evidence": "bull_expensive test 2026-09-01 (CONSENSUS replacement, owner cull+replace): BULL regime + ticker<20d + calls, EXPENSIVE trigger contracts (ask 4-9, prem 50-400k, aggressor, spr<=2), true-trigger entries ON the contract: wide exits +40.8%/day t+5.17 (86d, n=366, halves +74/+8); live exits +18.8 t+3.06; cheap band only +7.0 t+1.5. No SPY-conf gate (thin in bull). Trades the trigger contract verbatim via _PROBE_CONTRACT, wide exits via PROBE_EXITS. CAVEAT: front-loaded halves (+74/+8) - bull-era decay risk is real; the +8 second half still clears the floor. CONTRADICTION FLAG (tuner full grid, same night): differently-sampled grid (per-occ first-qualifying-day by symbol order, n=186) shows pricey bull-dip halves +44/-4 and NO PASS - the +40.8 halves +74/+8 (by-day sampling, n=366) may be sampling-sensitive. Probe stays (paper; live virgin days arbitrate) but promotion bar must see this note.",
+   "added": "2026-09-01"
+  }
  },
  "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal.",
  "v1.7.1_note": "owner order 2026-08-12 00:36 (sim-first then probe): FADE_WHALE probe slot - fade-shaped 400k-1M prints from a side-pool the live book never sees (its candidate list is byte-identical). Sim promising but half-flipped; live fills decide. 1M+ excluded (negative, n=8).",

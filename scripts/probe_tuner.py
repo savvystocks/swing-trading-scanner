@@ -107,7 +107,8 @@ def build_rows():
                order by option_symbol"""):
         if occ in done or t not in tks:
             continue
-        done.add(occ)
+        # done is marked only when a row is WRITTEN (first run marked it here, which discarded
+        # any occ whose first-by-symbol day failed a gate - 13.5k rows instead of ~30k)
         smd = (sm.get(t) or {}).get(day); reg = s50.get(day); sp = spy20.get(day)
         if smd is None or reg is None or sp is None:
             continue
@@ -126,6 +127,7 @@ def build_rows():
         e = today_after[0][2] if today_after else ask
         if e <= 0:
             continue
+        done.add(occ)
         rets = []
         for (st, tg, gv) in EXITS:
             r = replay_true(today_after, nxt, e, st, tg, gv)

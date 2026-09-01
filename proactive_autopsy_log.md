@@ -4330,3 +4330,21 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 23.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - FISV (ADOPT-3360b38bdc)
+- entered 2026-08-21T17:55:18.831Z | trigger orphan_reconcile | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -58.6% | WINNER |
+
+**Determining factor:** Calendar FAILED (-59%): the range broke; IV term None (ratio None) hurt the spread.
+
+## Autopsy - SLV (03957a2f5afb)
+- entered 2026-08-28T16:54:51.965Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -51.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 62.0 worked against it.
+

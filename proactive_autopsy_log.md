@@ -4357,3 +4357,12 @@
 
 **Determining factor:** Calendar FAILED (-50%): the range broke; IV term None (ratio None) hurt the spread.
 
+## Autopsy - GLD (5441e2a32ae7)
+- entered 2026-08-13T16:24:21.675Z | trigger regime_BULLISH_loose | exit CLOSE_UNTRACKED | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -28.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-29%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 406.0 worked against it.
+

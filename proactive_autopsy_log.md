@@ -4348,3 +4348,12 @@
 
 **Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 62.0 worked against it.
 
+## Autopsy - BAC (ADOPT-1b3b82673c)
+- entered 2026-08-27T17:34:00.663Z | trigger orphan_reconcile | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -50.0% | WINNER |
+
+**Determining factor:** Calendar FAILED (-50%): the range broke; IV term None (ratio None) hurt the spread.
+

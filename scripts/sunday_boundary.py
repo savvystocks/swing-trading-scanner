@@ -325,15 +325,34 @@ def main():
             # a state the owner must always see, never infer.
             lines.append("PROMOTION TRACK EMPTY - no probe is being tracked toward "
                          "auto-promotion (probe.priority has no entries)")
+        def weekmeans(dmap):
+            w = {}
+            for d, v in dmap.items():
+                iso = datetime.fromisoformat(d).isocalendar()
+                w.setdefault(f"{iso[0]}-W{iso[1]:02d}", []).append(v)
+            return {k: sum(v) / len(v) for k, v in w.items()}
+
         for st_ in prio:
             if st_ in promoted:
                 continue
             dm = daymeans(st_)
-            shared = sorted(d for d in dm if d in ctrl)
+            # WEEKLY-CADENCE COURT (owner 2026-09-01): _W structures trade once a week by
+            # construction, so day-shared accrual starved them (~1 shared day/week = months to
+            # the bar). They are judged on shared ISO WEEKS against the control's week-mean -
+            # same n>=8, same trim, same t>=1.8, same both-halves; only the unit and the floor
+            # (weekly key, default 5.0) change. Cadence-matched, not bar-lowered.
+            wk = st_.endswith("_W")
+            if wk:
+                dm = weekmeans(dm)
+                ctrl_u = weekmeans(ctrl)
+            else:
+                ctrl_u = ctrl
+            unit = "weeks" if wk else "days"
+            shared = sorted(d for d in dm if d in ctrl_u)
             if len(shared) < 8:
-                lines.append(f"PROBE {st_}: {len(shared)}/8 live virgin days vs control - HOLD")
+                lines.append(f"PROBE {st_}: {len(shared)}/8 live virgin {unit} vs control - HOLD")
                 continue
-            diffs = [dm[d] - ctrl[d] for d in shared]
+            diffs = [dm[d] - ctrl_u[d] for d in shared]
             own = [dm[d] for d in shared]
             # OWNER UPGRADE 2026-08-31 ("is the control right when it caught a monster?"):
             # (a) SYMMETRIC TRIM - with 8+ shared days, drop the single best AND worst diff
@@ -344,11 +363,12 @@ def main():
             #     +3%/day on its traded days ~ the owner's 3-6%/month ladder at probe scale).
             tdiffs = sorted(diffs)[1:-1] if len(diffs) >= 8 else diffs
             t = tstat(tdiffs)
-            floor = float((spec_p.get("probe") or {}).get("promotion_floor_day_mean", 3.0))
+            floor = (float((spec_p.get("probe") or {}).get("promotion_floor_week_mean", 5.0)) if wk
+                     else float((spec_p.get("probe") or {}).get("promotion_floor_day_mean", 3.0)))
             h = len(own) // 2
             ok = (sum(own) / len(own) >= floor and t >= 1.8 and sum(tdiffs) / max(len(tdiffs), 1) > 0
                   and sum(own[:h]) / max(h, 1) > 0 and sum(own[h:]) / max(len(own) - h, 1) > 0)
-            lines.append(f"PROBE {st_}: {len(shared)}d vs control t {t:+.2f} (trimmed) "
+            lines.append(f"PROBE {st_}: {len(shared)}{unit[0]} vs control t {t:+.2f} (trimmed) "
                          f"own-mean {sum(own)/len(own):+.1f} (floor {floor:+.0f}) "
                          f"{'PROMOTE' if ok else 'HOLD'}")
             if ok and os.environ.get("BOUNDARY_REPORT_ONLY") != "1":

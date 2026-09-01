@@ -629,6 +629,10 @@ def audit_stale_orders(creds=None, max_minutes=None, orders=None):
 
 
 _WHALE_CANDS = []          # per-cycle side-pool of fade-shaped 400k-1M prints (FADE_WHALE probe only)
+_PRICEY_CANDS = []         # per-cycle side-pool of EXPENSIVE-CONTRACT triggers (ask $4-15, premium
+                           # 50-400k) - the split test 2026-09-01 located the dip edge here
+                           # (+21.2%/day t+4.31, halves +16/+26); the $4 affordability cap had made
+                           # this cohort invisible. Probes only; the live book never reads it.
 _SR_BUDGET = 0             # spread-retry budget per cycle (2026-08-18: uncapped retries stretched
                            # cycles past the run window and triggered a false-crash rollback)
 
@@ -1663,12 +1667,23 @@ def scan_candidates(params, limit=None):
     index_roots = {"SPX", "SPXW", "SPXPM", "NDX", "NDXP", "RUT", "RUTW", "VIX", "VIXW",
                    "XSP", "DJX", "OEX", "XEO", "MRUT", "NANOS", "VVIX"}
     agg = {}
+    aggx = {}                                       # expensive-contract triggers (probe side-pool)
     for r in rows:
         t = (r.get("ticker") or "").upper()
         if not t or t in index_roots:               # drop index / non-equity underlyings up front
             continue
         pc = _num(r.get("price"))                   # per-contract option premium (the affordability signal)
         if pc is None or not (prem_lo <= pc <= prem_hi):    # AFFORDABILITY AT SOURCE ($0.30-$4.00 -> $800/2ct)
+            if pc is not None and 4.00 < pc <= 15.00:
+                ax = aggx.setdefault(t, {"ticker": t, "call_prem": 0.0, "put_prem": 0.0,
+                                         "underlying_price": _num(r.get("underlying_price")),
+                                         "min_contract_premium": pc})
+                ax["min_contract_premium"] = min(ax["min_contract_premium"], pc)
+                px = _num(r.get("total_premium")) or 0.0
+                if (r.get("type") or "").lower() == "call":
+                    ax["call_prem"] += px
+                elif (r.get("type") or "").lower() == "put":
+                    ax["put_prem"] += px
             continue
         a = agg.setdefault(t, {"ticker": t, "call_prem": 0.0, "put_prem": 0.0,
                                "underlying_price": _num(r.get("underlying_price")), "min_contract_premium": pc})
@@ -1694,6 +1709,14 @@ def scan_candidates(params, limit=None):
                  if (_pw.get("flow_min") or 400000) # probe buys them live; the FADE list below stays
                  < (c.get("total_premium") or 0) <= (_pw.get("flow_max") or 1000000)],
                 key=lambda x: x["total_premium"], reverse=True)
+        global _PRICEY_CANDS
+        _px = []
+        for a in aggx.values():
+            a["flow_type"] = "call" if a["call_prem"] >= a["put_prem"] else "put"
+            a["total_premium"] = round(a["call_prem"] + a["put_prem"], 0)
+            if 50000 <= a["total_premium"] <= 400000:    # the tested inband_expensive cell exactly
+                _px.append(a)
+        _PRICEY_CANDS = sorted(_px, key=lambda x: x["total_premium"], reverse=True)[:8]
         cands = fade_book.flow_band(cands)          # byte-identical for the live book
     cands.sort(key=lambda x: x["total_premium"], reverse=True)
     return cands
@@ -2147,7 +2170,8 @@ def run_scheduled_cycle(mock=False):
                 ("FADE_UNROUTED", lambda md, c: _shape(md, c)),             # fade shape, router ignored
                 ("CONSENSUS", lambda md, c: not _shape(md, c)),             # the inverse arm, live
                 ("DP_HEAVY", lambda md, c: ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
-                ("QUIET_TAPE", lambda md, c: ((md.get("technical") or {}).get("rvol_10min") or 9) < 0.8),
+                # QUIET_TAPE culled 2026-09-01 (owner Friday-queue pulled forward): -$1,005 over its
+                # era, no positive stretch - roster slot freed for the grid probes.
                 ("FADE_DP", lambda md, c: _shape(md, c)
                                           and ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
                 ("OPT_WINNER", lambda md, c: _shape(md, c) and _depth_lt(md, 3.0)
@@ -2220,11 +2244,14 @@ def run_scheduled_cycle(mock=False):
                         break                       # 2 probes per cycle max - spread across the day
                     if _pcount.get(_pname, 0) >= _per:
                         continue
-                    _pool = (_WHALE_CANDS[:8] if _pname in ("FADE_WHALE", "DIP_CONF_MILD")
+                    _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
+                             else [] if _pname == "DIP_CONF_MILD"
                              else candidates[2:12])   # skim BELOW the fade book's 2-per-cycle picks
-                             # DIP_CONF_MILD reads the whale pool (2026-09-01 split test): in the
-                             # standard 50-400k/cheap-contract band its edge is NOISE (+4.0 t0.7);
-                             # the reachable edge is 400k-1M flow (+17.3/day t1.9, halves +28/+7)
+                             # DIP_CONF_MILD is DORMANT until the trigger-contract execution path
+                             # ships (adversarial panel 2026-09-01): its +21.2/day t4.31 cell was
+                             # measured on the EXPENSIVE TRIGGER CONTRACT itself, but probes buy a
+                             # synthesized cheap structure - trading that here would bank promotion
+                             # evidence the backtest never measured. No fills beat mislabeled fills.
                     for c in _pool:
                         if _att >= 6:
                             break

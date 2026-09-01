@@ -53,7 +53,6 @@
    "FADE_UNROUTED",
    "CONSENSUS",
    "DP_HEAVY",
-   "QUIET_TAPE",
    "FADE_DP",
    "OPT_WINNER",
    "FADE_WHALE",
@@ -63,7 +62,8 @@
    "DIP_CONVEXITY",
    "DIP_CONF_MILD",
    "FOLLOW_CALLS",
-   "CONSENSUS_CALLS"
+   "CONSENSUS_CALLS",
+   "PUT_DEBIT_W (fivek weekly)"
   ],
   "whale": {
    "flow_min": 400000,
@@ -152,9 +152,11 @@
    "evidence": "bull battery 2026-08-28 (hourly library, entry-at-ask, spr<=2): ticker below its 20d SMA while SPY >2% above its 50d, calls, live exits = +11.2%/day t+5.86 across 240 days n=6797, halves +15/+7; wide exits +14.7 t+5.22. Unlike the bear edge, NOT episode-concentrated - 240 ordinary bull days."
   },
   "dip_conf_mild": {
-   "evidence": "grand retest 2026-08-31 true-trigger: MILD + ticker<20d + SPY<20d + calls = +11.3%/day t2.43 full-band. SPLIT TEST 2026-09-01 (adversarial catch): the edge is NOT in the live scan band - 50-400k cheap contracts = +4.0 t0.67 NOISE; it concentrates in expensive contracts (ask>4: +21.2 t4.31, scan-unreachable) and whale flow 400k-1M (+17.3 t1.91 live-exit, halves +28/+7). Probe therefore reads the WHALE pool, the strongest reachable variant. QUEUED (Friday): scan passthrough for expensive-contract triggers to reach the t4.3 cell.",
+   "evidence": "grand retest 2026-08-31 true-trigger: MILD + ticker<20d + SPY<20d + calls = +11.3%/day t2.43 full-band. SPLIT 2026-09-01: the edge lives in EXPENSIVE trigger contracts (ask>4, prem 50-400k): +21.2%/day t+4.31 halves +16/+26, measured ON THE TRIGGER CONTRACT ITSELF; cheap live band +4.0 t0.67 noise. ADVERSARIAL CATCH same day: probes buy a synthesized affordable structure, not the trigger contract - shipping the pool alone would bank evidence the backtest never measured. Probe DORMANT until the trigger-contract execution path ships (IN-FLIGHT); _PRICEY_CANDS pool already collecting at scan time.",
    "added": "2026-09-01"
-  }
+  },
+  "roster_note": "QUIET_TAPE culled 2026-09-01: -$1,005 era, no positive stretch",
+  "promotion_floor_week_mean": 5.0
  },
  "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal.",
  "v1.7.1_note": "owner order 2026-08-12 00:36 (sim-first then probe): FADE_WHALE probe slot - fade-shaped 400k-1M prints from a side-pool the live book never sees (its candidate list is byte-identical). Sim promising but half-flipped; live fills decide. 1M+ excluded (negative, n=8).",

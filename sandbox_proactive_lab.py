@@ -404,12 +404,29 @@ def _occ(ticker, dte, right, strike):
 PROBE_STRUCT = {"DIP_CONVEXITY": {"otm_pct": 2.0, "dte": 50}}
 PROBE_EXITS = {"DIP_CONVEXITY": {"stop": 70.0, "trig": 80.0, "give": 0.30}}
 _ACTIVE_PROBE = {"name": None}
+_PROBE_CONTRACT = {"c": None}   # trigger-contract override (DIP_CONF_MILD): when set, build_legs
+                                # returns THE contract the expensive-flow trigger printed on
+                                # instead of synthesizing one - the panel catch of 2026-09-01:
+                                # evidence must be earned on the instrument the backtest measured
 
 
 def build_legs(ticker, md, regime="NEUTRAL", leg_budget=None, illiquid=None):
     spot = md["macro"]["spot"]
     iv_f, iv_b = md["iv_term"]["iv_front"], md["iv_term"]["iv_back"]
     per_leg = LEG_BUDGET if leg_budget is None else leg_budget
+    _pcx = _PROBE_CONTRACT.get("c")
+    if _pcx and (_pcx.get("ticker") or "").upper() == ticker.upper() and _pcx.get("occ"):
+        _ask0 = _pcx.get("alert_ask") or 5.0
+        try:
+            _dte0 = max(1, (date.fromisoformat(str(_pcx["expiry"])) - date.today()).days)
+        except Exception:
+            _dte0 = 30
+        return {"bullish_call": {"structure": "LONG_CALL", "occ_symbol": _pcx["occ"],
+                                 "expiry": str(_pcx.get("expiry")), "strike": _pcx.get("strike"),
+                                 "dte": _dte0, "entry_premium": _ask0,
+                                 "limit_price": round(_ask0 * 1.01, 2), "contracts": 1,
+                                 "alloc_usd": per_leg, "illiquid": False,
+                                 "target_delta": CALL_DELTA, "trigger_contract": True}}
     # ^ resolved at CALL time, not def time: a default bound at import froze the probe roster's
     #   LEG_BUDGET swap out of sizing (probe.size_usd was silently decorative)
     min_ct = load_params().get("min_contracts", 2)
@@ -629,7 +646,7 @@ def audit_stale_orders(creds=None, max_minutes=None, orders=None):
 
 
 _WHALE_CANDS = []          # per-cycle side-pool of fade-shaped 400k-1M prints (FADE_WHALE probe only)
-_PRICEY_CANDS = []         # per-cycle side-pool of EXPENSIVE-CONTRACT triggers (ask $4-15, premium
+_PRICEY_CANDS = []         # per-cycle side-pool of EXPENSIVE-CONTRACT triggers (ask $4-9, premium
                            # 50-400k) - the split test 2026-09-01 located the dip edge here
                            # (+21.2%/day t+4.31, halves +16/+26); the $4 affordability cap had made
                            # this cohort invisible. Probes only; the live book never reads it.
@@ -1133,6 +1150,12 @@ def _resolve_legs_occ(ticker, legs, creds):
         if name not in legs:
             continue
         leg = legs[name]
+        if leg.get("trigger_contract"):
+            # panel blocker 2026-09-01: resolution would OVERWRITE the trigger occ with
+            # Alpaca's nearest-strike pick (weekly-expiry ties resolve arbitrarily) - the
+            # contract identity IS the strategy; the UW occ is already a real OCC symbol.
+            leg["occ_source"] = "uw_trigger_verbatim"
+            continue
         r = resolve_occ(ticker, right, leg["strike"], leg["dte"], creds)
         if r and r.get("occ_symbol"):
             leg.update({"occ_symbol": r["occ_symbol"], "strike": r["strike"], "expiry": r["expiration"],
@@ -1231,6 +1254,36 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         resolve_real = all(creds)
     if resolve_real:
         _resolve_legs_occ(ticker, legs, creds)                 # real OCCs; unresolved -> fail-open skip
+    for _tn, _tl in legs.items():
+        if not _tl.get("trigger_contract"):
+            continue
+        # TRIGGER-LEG LIVE REPRICING (panel 2026-09-01): the alert ask can be minutes stale and
+        # the probe is excluded from the spread-retry repricer, so this leg gets its own quote
+        # pass - FAIL-CLOSED: no live quote, live spread > 2%, or live ask outside the tested
+        # $4-10 band -> SKIP (an unproven probe never submits a stale-priced order; entry_ref
+        # honesty demands the real ask).
+        _lb = _la = None
+        try:
+            _cr3 = _paper_creds()
+            _rq3 = urllib.request.Request(
+                "https://data.alpaca.markets/v1beta1/options/quotes/latest?symbols="
+                + _tl["occ_symbol"] + "&feed=indicative",
+                headers={"APCA-API-KEY-ID": _cr3[0], "APCA-API-SECRET-KEY": _cr3[1]})
+            with urllib.request.urlopen(_rq3, timeout=15) as _r3:
+                _q3 = (json.loads(_r3.read()).get("quotes") or {}).get(_tl["occ_symbol"]) or {}
+            _lb, _la = _q3.get("bp"), _q3.get("ap")
+        except Exception:
+            pass
+        if not (_lb and _la and 0 < _lb <= _la and (_la - _lb) / _la * 100 <= 2.0 and 4.0 <= _la <= 9.9):
+            return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
+                    "reason": "trigger_contract fail-closed: no live quote / crossed / spread>2% / ask outside 4-9.9",
+                    "status": "SKIPPED"}
+        _tl["entry_premium"] = _la
+        _tl["limit_price"] = round(round(_la * 1.01 * 20) / 20, 2)   # nickel increment; caps at $10.00 = the $1k budget
+        _tl["contracts"] = 1
+        _tl["execution_cost"] = {"bid": _lb, "ask": _la,
+                                 "bid_ask_spread_pct": round((_la - _lb) / _la * 100, 2),
+                                 "source": "alpaca_quote_trigger"}
     # SPREAD CAP (governed change 2026-07-25, owner-approved at the Sunday boundary; supersedes
     # decision 33's advisory-only status): the existing max_bid_ask_spread_pct now GATES on the REAL
     # Alpaca quote at OCC resolution. Evidence: monotone spread-bucket decay on 24k graded rows
@@ -1674,16 +1727,34 @@ def scan_candidates(params, limit=None):
             continue
         pc = _num(r.get("price"))                   # per-contract option premium (the affordability signal)
         if pc is None or not (prem_lo <= pc <= prem_hi):    # AFFORDABILITY AT SOURCE ($0.30-$4.00 -> $800/2ct)
-            if pc is not None and 4.00 < pc <= 15.00:
-                ax = aggx.setdefault(t, {"ticker": t, "call_prem": 0.0, "put_prem": 0.0,
-                                         "underlying_price": _num(r.get("underlying_price")),
-                                         "min_contract_premium": pc})
-                ax["min_contract_premium"] = min(ax["min_contract_premium"], pc)
-                px = _num(r.get("total_premium")) or 0.0
-                if (r.get("type") or "").lower() == "call":
-                    ax["call_prem"] += px
-                elif (r.get("type") or "").lower() == "put":
-                    ax["put_prem"] += px
+            # EXPENSIVE-TRIGGER pool (2026-09-01, panel-corrected build): keep the CONTRACT
+            # IDENTITY, not a ticker aggregate - the +21.2/day t4.31 cell was measured on the
+            # trigger contract itself, so that is what the probe must buy. Faithful filters at
+            # alert level: calls, ask $4-9 (1 contract fits the $1k probe budget with drift
+            # room), per-alert premium 50-400k in-band, ask-side aggressor, spread <= 2%.
+            if pc is not None and 4.00 < pc <= 9.00 and (r.get("type") or "").lower() == "call":
+                _tp = _num(r.get("total_premium")) or 0.0
+                _asp = _num(r.get("total_ask_side_prem")) or 0.0
+                _bsp = _num(r.get("total_bid_side_prem")) or 0.0
+                _qb, _qa = _num(r.get("bid")), _num(r.get("ask"))
+                try:
+                    # DTE floor 7 (panel 2026-09-01): shorter expiries are structurally
+                    # unmanageable here - no-same-day-exit defers every exit on entry day and
+                    # backstops arm next day, so a 0-2 DTE leg could expire ungated. The
+                    # backtest's next-session exits implied survival past entry day anyway.
+                    _exp_ok = (date.fromisoformat(str(r.get("expiry"))) - date.today()).days >= 7
+                except Exception:
+                    _exp_ok = False
+                if (50000 <= _tp <= 400000 and _asp > _bsp and r.get("option_chain")
+                        and _exp_ok and _num(r.get("strike")) is not None
+                        and _qb and _qa and _qa > 0 and (_qa - _qb) / _qa * 100 <= 2.0):
+                    _prev = aggx.get(t)
+                    if not _prev or _tp > _prev["total_premium"]:
+                        aggx[t] = {"ticker": t, "flow_type": "call", "total_premium": _tp,
+                                   "underlying_price": _num(r.get("underlying_price")),
+                                   "min_contract_premium": pc, "occ": r.get("option_chain"),
+                                   "expiry": r.get("expiry"), "strike": _num(r.get("strike")),
+                                   "alert_ask": _qa}
             continue
         a = agg.setdefault(t, {"ticker": t, "call_prem": 0.0, "put_prem": 0.0,
                                "underlying_price": _num(r.get("underlying_price")), "min_contract_premium": pc})
@@ -1710,13 +1781,7 @@ def scan_candidates(params, limit=None):
                  < (c.get("total_premium") or 0) <= (_pw.get("flow_max") or 1000000)],
                 key=lambda x: x["total_premium"], reverse=True)
         global _PRICEY_CANDS
-        _px = []
-        for a in aggx.values():
-            a["flow_type"] = "call" if a["call_prem"] >= a["put_prem"] else "put"
-            a["total_premium"] = round(a["call_prem"] + a["put_prem"], 0)
-            if 50000 <= a["total_premium"] <= 400000:    # the tested inband_expensive cell exactly
-                _px.append(a)
-        _PRICEY_CANDS = sorted(_px, key=lambda x: x["total_premium"], reverse=True)[:8]
+        _PRICEY_CANDS = sorted(aggx.values(), key=lambda x: x["total_premium"], reverse=True)[:8]
         cands = fade_book.flow_band(cands)          # byte-identical for the live book
     cands.sort(key=lambda x: x["total_premium"], reverse=True)
     return cands
@@ -2244,14 +2309,18 @@ def run_scheduled_cycle(mock=False):
                         break                       # 2 probes per cycle max - spread across the day
                     if _pcount.get(_pname, 0) >= _per:
                         continue
+                    _rg_need = {"BULL_DIP": "BULL", "DIP_CONVEXITY": "BEAR", "DIP_CONF_MILD": "MILD"}.get(_pname)
+                    if _rg_need and fade_book.spy_regime() != _rg_need:
+                        continue            # candidate-independent regime gate checked BEFORE the
+                                            # sensor sweep (panel 2026-09-01: evaluating it inside
+                                            # enter_proactive_set burned the whole attempt budget
+                                            # on wrong-regime days); spy_regime is cached per day
                     _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
-                             else [] if _pname == "DIP_CONF_MILD"
+                             else _PRICEY_CANDS[:8] if _pname == "DIP_CONF_MILD"
                              else candidates[2:12])   # skim BELOW the fade book's 2-per-cycle picks
-                             # DIP_CONF_MILD is DORMANT until the trigger-contract execution path
-                             # ships (adversarial panel 2026-09-01): its +21.2/day t4.31 cell was
-                             # measured on the EXPENSIVE TRIGGER CONTRACT itself, but probes buy a
-                             # synthesized cheap structure - trading that here would bank promotion
-                             # evidence the backtest never measured. No fills beat mislabeled fills.
+                             # DIP_CONF_MILD buys THE TRIGGER CONTRACT via _PROBE_CONTRACT (panel-
+                             # corrected 2026-09-01): the +21.2/day t4.31 cell was measured on the
+                             # expensive contract itself, so the live evidence is earned on it too
                     for c in _pool:
                         if _att >= 6:
                             break
@@ -2260,6 +2329,10 @@ def run_scheduled_cycle(mock=False):
                             continue            # never stack a probe on any book's open underlying
                         try:
                             _ACTIVE_PROBE["name"] = _pname
+                            if _pname == "DIP_CONF_MILD":
+                                if not (c or {}).get("occ"):
+                                    continue
+                                _PROBE_CONTRACT["c"] = c
                             _att += 1
                             rec = enter_proactive_set(t, None, mock=mock, candidate=c,
                                                       dry_run=not live, positions=positions,
@@ -2269,6 +2342,7 @@ def run_scheduled_cycle(mock=False):
                             continue
                         finally:
                             _ACTIVE_PROBE["name"] = None
+                            _PROBE_CONTRACT["c"] = None
                         if rec and not rec.get("skipped"):
                             rec["book"] = "PROBE"
                             rec["probe_strategy"] = _pname

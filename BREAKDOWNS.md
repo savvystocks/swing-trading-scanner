@@ -244,6 +244,20 @@ and grepped for a commit message wording ("student weekly report") that had evol
 both alarmed nightly on healthy systems. Fixed in landing_watch.sh. Lesson: when a
 monitored artifact is replaced, update every watchdog that expected the old one.
 
+2026-09-01 - ROTATION SENSOR-COST BLOWUP (same-day regression of the grid deploy). From
+17:40Z every engine run timed out and was cancelled by its successor - the 08-19/08-20
+churn class - and no cycle completed for ~1.5h. Root cause: the new roster rotation walked
+afternoon start indices into rare-filter probes; every candidate attempt runs a FULL sensor
+sweep before its filter can reject, so pools of never-entering probes burned 10 attempts
+each and cycle time blew past the dispatch interval. Head-first ordering had hidden this
+cost for weeks (broad head probes entered within a few attempts and broke the loop).
+Detected by the end-of-day status pull (cancelled-run pattern + stale good-cycle stamp);
+morning runs were fast because morning start indices landed on broad probes. Fix same
+evening: per-cycle attempt budget (6) restoring the pre-rotation cost envelope while
+rotation keeps deciding who leads. Lesson: any reordering of a loop whose early exit
+bounded a hidden cost must be shipped WITH an explicit budget on that cost - and a deploy
+is not "verified" after its first green cycle when its behavior varies by hour.
+
 2026-09-01 - NEAR-MISSES CAUGHT IN ADVERSARIAL REVIEW (never fired; the review gate is the
 fix). Shipping the 3x3 grid, the 5-lens panel confirmed four defects pre-push:
 (1) hour%14 rotation could never reach roster indices 7-12 - market hours span only 7-8

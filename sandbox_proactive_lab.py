@@ -2205,9 +2205,18 @@ def run_scheduled_cycle(mock=False):
                 _order = [_ROSTER[0]] + _rest[_rot:] + _rest[:_rot]
             except Exception:
                 _order = list(_ROSTER)
+            # ATTEMPT BUDGET (hotfix 2026-09-01 19:0x UTC): every enter_proactive_set attempt costs
+            # a full sensor sweep whether or not the filter passes. Head-first ordering hid that -
+            # broad probes at the head entered within a few attempts and the loop broke. Rotation
+            # exposed it: afternoon start indices land on rare-filter probes whose pools burn 10
+            # attempts each without entering, cycle time blew past the dispatch interval, and every
+            # run from 17:40Z was cancelled by its successor (the 08-19/08-20 churn class). Budget
+            # caps the cycle at the pre-rotation cost envelope; rotation still decides who goes
+            # first, so tail probes keep their lead slots - they just can't bankrupt the cycle.
+            _att = 0
             try:
                 for _pname, _pf in _order:
-                    if _cyc >= 2 or _tot >= _tot_cap:
+                    if _cyc >= 2 or _tot >= _tot_cap or _att >= 6:
                         break                       # 2 probes per cycle max - spread across the day
                     if _pcount.get(_pname, 0) >= _per:
                         continue
@@ -2217,11 +2226,14 @@ def run_scheduled_cycle(mock=False):
                              # standard 50-400k/cheap-contract band its edge is NOISE (+4.0 t0.7);
                              # the reachable edge is 400k-1M flow (+17.3/day t1.9, halves +28/+7)
                     for c in _pool:
+                        if _att >= 6:
+                            break
                         t = c["ticker"]
                         if t.upper() in _open_tk:
                             continue            # never stack a probe on any book's open underlying
                         try:
                             _ACTIVE_PROBE["name"] = _pname
+                            _att += 1
                             rec = enter_proactive_set(t, None, mock=mock, candidate=c,
                                                       dry_run=not live, positions=positions,
                                                       open_orders=open_orders, probe=True,

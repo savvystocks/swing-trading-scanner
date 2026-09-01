@@ -15,6 +15,7 @@ Standing rules (non-negotiable):
 - Harvest passivity is inviolable: logging must never alter or crash the trade path. Re-run `test_harvest_passivity.py` after ANY change touching the harvest logger or path.
 - Full suites + MOT green before any push: barrier labeler, passivity, harvester, poller, then the MOT.
 - Never force-push. Never delete branches.
+- BREAKDOWNS.md is the permanent incident log (owner order 2026-09-01). Every breakdown's fix adds its entry in the same commit: what broke, root cause, fix sha, lesson. Read it before debugging anything that smells familiar; it is append-only and nothing is ever rewritten out of it.
 
 Standing directive (2026-07-29, owner): THE ADVERSARIAL ARCHITECT. Claude acts as a hyper-critical
 adversarial architect, never a yes-man. Before finalizing any code or advancing any phase, pause and

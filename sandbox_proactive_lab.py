@@ -2168,6 +2168,16 @@ def run_scheduled_cycle(mock=False):
                                                 and (c or {}).get("flow_type") == "call"),
                                              # everything-sweep winner 2026-08-27: bear-regime
                                              # long-DTE calls, wide exits; +35-52/day vs pool
+                ("DIP_CONF_MILD", lambda md, c: fade_book.spy_regime() == "MILD"
+                                                and isinstance((md.get("macro") or {}).get("distance_to_sma20_pct"), (int, float))
+                                                and (md.get("macro") or {}).get("distance_to_sma20_pct") < 0
+                                                and isinstance((md.get("regime_stack") or {}).get("market_spy_dist_pct"), (int, float))
+                                                and (md.get("regime_stack") or {}).get("market_spy_dist_pct") < 0
+                                                and (c or {}).get("flow_type") == "call"),
+                                             # grand retest 2026-08-31 (true-trigger): ticker dip
+                                             # + SPY<20d confirmation in MILD = +11.3%/day t2.43;
+                                             # WITHOUT the SPY gate the same trade is -5.4/day -
+                                             # the confirmation IS the strategy (3x3 middle cell)
                 ("FOLLOW_CALLS", lambda md, c: (c or {}).get("flow_type") == "call"),   # archive winner
                                              # 2026-08-23: buy aggressively-bought calls, all regimes -
                                              # +32/+12/+14 bear/mild/bull, t>3 each (thin bear). The one
@@ -2180,14 +2190,32 @@ def run_scheduled_cycle(mock=False):
             _cyc = 0
             _keep = LEG_BUDGET
             LEG_BUDGET = float(_pc.get("size_usd") or 1000)
+            # ROTATION (owner order 2026-09-01, ship-the-grid): the roster used to fill head-first
+            # every cycle, so tail probes (FOLLOW_CALLS onward) never saw a slot. Start point now
+            # rotates over the non-control roster, seeded by DAY-OF-MONTH + UTC HOUR: market hours
+            # alone span only 7-8 values, which mod 14 can never reach start indices 7-12 (the
+            # adversarial panel's catch) - the day term walks the base so every index leads within
+            # days. EXEC_BASELINE is NOT rotated: it keeps its pre-change head slot EVERY cycle up
+            # to its daily cap, because the promotion court's control day-means must keep the same
+            # sampling density and time-of-day mix they were built on - thinning the control mid-
+            # experiment would quietly change the bar for all tracked strategies.
             try:
-                for _pname, _pf in _ROSTER:
+                _rest = [x for x in _ROSTER if x[0] != "EXEC_BASELINE"]
+                _rot = (int(_today[8:10]) + int(_now_iso_ms()[11:13])) % len(_rest)
+                _order = [_ROSTER[0]] + _rest[_rot:] + _rest[:_rot]
+            except Exception:
+                _order = list(_ROSTER)
+            try:
+                for _pname, _pf in _order:
                     if _cyc >= 2 or _tot >= _tot_cap:
                         break                       # 2 probes per cycle max - spread across the day
                     if _pcount.get(_pname, 0) >= _per:
                         continue
-                    _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
+                    _pool = (_WHALE_CANDS[:8] if _pname in ("FADE_WHALE", "DIP_CONF_MILD")
                              else candidates[2:12])   # skim BELOW the fade book's 2-per-cycle picks
+                             # DIP_CONF_MILD reads the whale pool (2026-09-01 split test): in the
+                             # standard 50-400k/cheap-contract band its edge is NOISE (+4.0 t0.7);
+                             # the reachable edge is 400k-1M flow (+17.3/day t1.9, halves +28/+7)
                     for c in _pool:
                         t = c["ticker"]
                         if t.upper() in _open_tk:

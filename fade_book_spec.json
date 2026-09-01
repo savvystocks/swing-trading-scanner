@@ -59,10 +59,11 @@
    "FADE_WHALE",
    "GEX_PIN",
    "IV_EXTREME",
-   "FOLLOW_CALLS",
-   "CONSENSUS_CALLS",
+   "BULL_DIP",
    "DIP_CONVEXITY",
-   "BULL_DIP"
+   "DIP_CONF_MILD",
+   "FOLLOW_CALLS",
+   "CONSENSUS_CALLS"
   ],
   "whale": {
    "flow_min": 400000,
@@ -115,15 +116,26 @@
     "call_long": 4.0,
     "evidence": "2.5y SPY backtest: -$3,020/89wk (call side donates bull-market upside) - FAILED, never traded live"
    },
-   "note": "5k defined-risk weeklies (owner 2026-08-18): XSP structures, 1 lot, self-settling; max loss = width - credit (~$1.2k put side)"
+   "note": "5k defined-risk weeklies (owner 2026-08-18): XSP structures, 1 lot, self-settling; max loss = width - credit (~$1.2k put side)",
+   "put_debit": {
+    "enabled": true,
+    "otm_short": 4.0,
+    "otm_long": 1.0,
+    "evidence": "NONE - structural hypothesis only (3x3 bear cell 3, owner order 2026-09-01). Buy 1%-OTM put / sell 4%-OTM put weekly on XSP, BEAR regime only (fail-closed). The grand retest showed no bear-put edge on flow candidates; this tests the defined-risk index version. Tracked in priority with zero prior - it must earn everything live.",
+    "added": "2026-09-01"
+   }
   },
   "priority": [
    "CONSENSUS",
    "CREDIT_SPREAD_W",
    "DIP_CONVEXITY",
-   "BULL_DIP"
+   "BULL_DIP",
+   "CONSENSUS_CALLS",
+   "FOLLOW_CALLS",
+   "DIP_CONF_MILD",
+   "PUT_DEBIT_W"
   ],
-  "priority_note": "Friday window 2026-08-28: the promotion rung tracks probe.priority - it was EMPTY since the calls demotion, so nothing was on the promotion track (court exposed it: rung printed no candidates). CONSENSUS (live front-runner), CREDIT_SPREAD_W (income leg, accrues in every regime), DIP_CONVEXITY (sweep winner, accrues in bear) now tracked - 8+ live days beating the control auto-promotes, probation armed.",
+  "priority_note": "owner order 2026-09-01 (ship the grid): the full 3x3 grid is tracked - one strategy per regime cell plus structure. Bear cell 2 is the FADE book itself (above this track). More candidates = more luck-chances vs one control; the placebo army + sentinels measure exactly that, bar v2 (symmetric trim + floor) unchanged.",
   "dip_convexity": {
    "evidence": "everything-sweep 2026-08-27 (169,685 trades, hourly paths, paired-vs-pool): bear-regime long-DTE calls with stop-70/trig80/give30 beat the same-day pool by +35-52 pts/day at t 4.6-7.5, both years, both halves. Caveats: two bear episodes only; exits priced near mid; ~$700 loser cost per $1k slot.",
    "structure": {
@@ -138,6 +150,10 @@
   },
   "bull_dip": {
    "evidence": "bull battery 2026-08-28 (hourly library, entry-at-ask, spr<=2): ticker below its 20d SMA while SPY >2% above its 50d, calls, live exits = +11.2%/day t+5.86 across 240 days n=6797, halves +15/+7; wide exits +14.7 t+5.22. Unlike the bear edge, NOT episode-concentrated - 240 ordinary bull days."
+  },
+  "dip_conf_mild": {
+   "evidence": "grand retest 2026-08-31 true-trigger: MILD + ticker<20d + SPY<20d + calls = +11.3%/day t2.43 full-band. SPLIT TEST 2026-09-01 (adversarial catch): the edge is NOT in the live scan band - 50-400k cheap contracts = +4.0 t0.67 NOISE; it concentrates in expensive contracts (ask>4: +21.2 t4.31, scan-unreachable) and whale flow 400k-1M (+17.3 t1.91 live-exit, halves +28/+7). Probe therefore reads the WHALE pool, the strongest reachable variant. QUEUED (Friday): scan passthrough for expensive-contract triggers to reach the t4.3 cell.",
+   "added": "2026-09-01"
   }
  },
  "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal.",

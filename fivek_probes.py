@@ -130,6 +130,9 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now):
     struct = {"short": [], "long": []}
     for cp, k in legs_l:                            # LONG wings first - never naked
         o = _occ(exp, cp, k)
+        if _held(o, creds):
+            print(f"  fivek {strategy}: long wing {o} already held at broker - skip")
+            return False
         bid, ask = _quote(o, creds)
         if not ask or ask <= 0:
             print(f"  fivek {strategy}: no ask on long wing {o} - structure aborted pre-order")
@@ -149,6 +152,28 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now):
             break
         struct["short"].append({"occ": o, "cp": cp, "k": k, "prem": bid})
     if not struct["short"]:
+        # WINGS-ONLY record (adversarial review 2026-09-01): a filled long with a failed short
+        # used to vanish - no record, so the weekly gate never armed and every later cycle
+        # re-bought the long. Worst under put_debit, where the long is the expensive near-ATM
+        # leg and BEAR (its only regime) is when short bids go thin. Logging it blocks the
+        # weekly re-entry, prices the legs at expiry, and keeps the reconciler seeing every occ.
+        if struct["long"]:
+            cost = -sum(l["prem"] for l in struct["long"])
+            log.append({"book": "PROBE", "probe_strategy": strategy,
+                        "trade_set_id": "f5k" + now.strftime("%m%d%H%M"), "ticker": "XSP",
+                        "occ": struct["long"][0]["occ"],
+                        "occ_more": [l["occ"] for l in struct["long"][1:]],
+                        "structure": struct, "expiry": exp.isoformat(), "contracts": 1,
+                        "net_credit": round(cost, 2), "status": "OPEN",
+                        "entry_ts_utc": now.isoformat(),
+                        "note": "INCOMPLETE - long wings only, short leg failed; logged to stop re-entry"})
+            lab._save_log_list(log)
+            print(f"  PROBE[{strategy}] INCOMPLETE - short failed, wings logged (${cost * 100:+.0f})")
+            try:
+                lab._notify(f"<b>PROBE {strategy}</b> INCOMPLETE - long wings held, short leg failed; "
+                            f"recorded, no re-entry this week")
+            except Exception:
+                pass
         return False
     credit = sum(l["prem"] for l in struct["short"]) - sum(l["prem"] for l in struct["long"])
     log.append({"book": "PROBE", "probe_strategy": strategy,
@@ -180,7 +205,7 @@ def cycle(creds, allow_entries=True):
     dirty = False
     have = set()
     for r in log:
-        if r.get("probe_strategy") not in ("CREDIT_SPREAD_W", "CONDOR_W"):
+        if r.get("probe_strategy") not in ("CREDIT_SPREAD_W", "CONDOR_W", "PUT_DEBIT_W"):
             continue
         if (r.get("entry_ts_utc") or "") >= week0:
             have.add(r["probe_strategy"])
@@ -191,18 +216,17 @@ def cycle(creds, allow_entries=True):
     if not allow_entries or now.hour < 15:
         print(f"  fivek: entries gated (allow={allow_entries} hour={now.hour}) - settles only")
         return
+    _rg = None
+    try:
+        _rg = fade_book.spy_regime()
+    except Exception:
+        pass
     cs = cfg.get("credit_spread") or {}
     if cs.get("enabled") and "CREDIT_SPREAD_W" not in have:
         # REGIME GATE (Friday window 2026-08-28, regime playbook on real SPY quotes): put credit
         # spreads are a MILD-market specialist (+$64/wk t+4.5, 94% win) that BLEEDS in bear
         # (-$140/wk, worst -$923). Stand down in BEAR; trade MILD+BULL. Fail-open: unknown
         # regime -> allow (a missed income week beats a blocked settle path never).
-        _rg = None
-        try:
-            import fade_book
-            _rg = fade_book.spy_regime()
-        except Exception:
-            pass
         if cs.get("regime_gate", True) and _rg == "BEAR":
             print("  fivek: credit spread stands down (BEAR regime - playbook gate)")
         else:
@@ -211,3 +235,16 @@ def cycle(creds, allow_entries=True):
     co = cfg.get("condor") or {}
     if co.get("enabled") and "CONDOR_W" not in have:
         _enter("CONDOR_W", False, co, creds, lab, log, now)
+        log = lab._load_log_list()
+    # PUT_DEBIT_W (owner order 2026-09-01, 3x3 grid bear cell): BUY the near put, sell the far
+    # put = defined-risk bearish weekly. otm_long < otm_short in cfg flips _enter's k1/k2 into
+    # debit orientation; long wing still bought first (never naked). UNPROVEN by backtest -
+    # enters as a structural hypothesis; regime-gated the OPPOSITE way to the credit spread
+    # (fires ONLY in BEAR, where the credit spread stands down). Fail-CLOSED on unknown regime:
+    # an unproven directional bet does not get the benefit of a data hiccup.
+    pd_ = cfg.get("put_debit") or {}
+    if pd_.get("enabled") and "PUT_DEBIT_W" not in have:
+        if _rg == "BEAR":
+            _enter("PUT_DEBIT_W", True, pd_, creds, lab, log, now)
+        else:
+            print(f"  fivek: put debit stands down (regime {_rg or 'unknown'} - BEAR-only grid cell)")

@@ -154,7 +154,12 @@ def main():
                 fills_by[r.get("probe_strategy")] += 1
         fills = fills_by.get("FADE", 0)
         quals = sum(d.get("BASELINE", {}).get("n") or 0 for d in days if d["day"] >= wk_ago)
-        _breached = [lg for lg, f in fills_by.items() if f < 3] if quals >= 15 else []
+        # the _W fivek legs are weekly-cadence and regime-gated: at most 1 fill/week, often
+        # legitimately 0 - a promoted one under the daily >=3 floor would false-page every
+        # Sunday and block restrictive promotions forever. The floor measures the daily
+        # engine's funnel; weekly structures are exempt.
+        _breached = ([lg for lg, f in fills_by.items() if not lg.endswith("_W") and f < 3]
+                     if quals >= 15 else [])
         if _breached:
             starving = True
             if len(_breached) > 1 or _breached != ["FADE"]:

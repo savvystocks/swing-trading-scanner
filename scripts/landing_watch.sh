@@ -20,7 +20,9 @@ else
     grep -q "=== ${TODAY_ISO}" "$REPO/data/poller.log" 2>/dev/null || MISS+=("poller: no run logged today")
     ls "$SNAP"/harvest_${TODAY_C}_*.db.gz >/dev/null 2>&1 || MISS+=("nightly DB backup: no snapshot file for today (21:30 job)")
     git -C "$SNAP" pull --rebase --autostash -q origin main 2>/dev/null
-    [ -f "$SNAP/archiver/$TODAY_ISO/manifest.json" ] || MISS+=("archiver: no day folder/manifest for today")
+    # 2026-09-01: the manifest workflow died Aug 5 and was replaced by the 21:30 snapshot
+    # push (checked above and by archiver_watch.sh) - the manifest check alarmed nightly on a
+    # retired artifact. The snapshot IS the archive now; no second file to demand.
   fi
   # integrity gate runs 22:05 Tue-Sat
   if [ "$DOW" -ge 2 ] && [ "$DOW" -le 6 ]; then
@@ -31,7 +33,7 @@ else
   [ "$AGE" -lt 2700 ] || MISS+=("telegram command poller: state stale ${AGE}s - the /halt channel may be dead")
   # Monday: the Sunday brain chain must have landed
   if [ "$DOW" -eq 1 ]; then
-    git -C "$REPO" log --since="36 hours ago" --oneline 2>/dev/null | grep -q "student weekly report"       || MISS+=("Sunday brain chain: no student weekly commit within 36h - the week has no verdict")
+    git -C "$REPO" log --since="36 hours ago" --oneline 2>/dev/null | grep -qi "weekly report"       || MISS+=("Sunday brain chain: no student weekly commit within 36h - the week has no verdict")
   fi
 fi
 

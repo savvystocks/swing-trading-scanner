@@ -219,6 +219,12 @@ def _alpaca_atm_iv(ticker, spot, dte_min, dte_max, creds):
 def iv_term_structure(ticker, spot, mock, creds=None):
     if not mock and creds and all(creds) and spot:
         iv_f = _alpaca_atm_iv(ticker, spot, CAL_FRONT_DTE[0], CAL_FRONT_DTE[1], creds)   # 10-15d front
+        if not iv_f:
+            # CALENDAR GEOMETRY (found 2026-09-02): the 10-15d window spans only SIX days - the
+            # one window in the system narrower than a week - so from a Wednesday it contains no
+            # Friday at all and every Friday-only-expiry name read "degenerate", starving entries
+            # system-wide one weekday per week. Widen once to 7-18d (always spans a Friday).
+            iv_f = _alpaca_atm_iv(ticker, spot, 7, 18, creds)
         iv_b = _alpaca_atm_iv(ticker, spot, CAL_BACK_DTE[0], CAL_BACK_DTE[1], creds)     # 35-45d back
         if iv_f and iv_b:
             ratio = round(iv_f / iv_b, 3)

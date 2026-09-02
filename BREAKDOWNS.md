@@ -242,6 +242,20 @@ waste class - audit what else spends the same currency; (2) zero-activity states
 announce themselves (the 08-04 absence-alarm lesson, relearned at probe scope); (3) the
 same cycle must never pay twice for the same discovery.
 
+2026-09-02 (root, found via the new visibility line) - THE WEDNESDAY BLIND SPOT. The
+"degenerate" names weren't degenerate: CRWD/DELL/BIIB/KKR read iv=unavailable because the
+front-IV probe window (10-15 DTE) spans only SIX days - the one window in the system
+narrower than a week - so from a Wednesday it contains no Friday at all, and every
+Friday-only-expiry equity failed metadata. Structural: the engine went blind for normal
+stocks one weekday per week, since the window constants shipped. QQQ/SPY survived (daily
+expiries), which disguised it as ticker flakiness. Live-verified same hour: CRWD front IV
+None on 10-15d, 50.1 back - healthy on the widened window. Fix: iv_term_structure widens
+once to 7-18d when the front window comes back empty (7+ days always spans a Friday);
+suites+MOT green. Lessons: (1) any date-window constant must be >= 7 days wide or justify
+why not; (2) when "bad data" clusters on a weekday, suspect calendar geometry before
+provider flakiness; (3) the 08-04 lesson compounds - the absence-alarm that was missing
+here (probe visibility line, shipped hours earlier) is what exposed a bug that predates it.
+
 2026-08-31 - GRAND RETEST SCORED ZERO (transient). First run scored 0 trades; instrumented
 rerun scored 33,386 with every funnel gate healthy; cause never reproduced. Lesson kept:
 instrument the funnel BEFORE debugging by hypothesis - counters localized the problem

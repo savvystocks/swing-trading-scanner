@@ -402,7 +402,27 @@ def _occ(ticker, dte, right, strike):
 # wide exits beat the same-day pool by +35-52 pts/day, t 4.6-7.5, both years). Per-probe
 # structure/exit overrides; threaded via the same global-swap idiom as LEG_BUDGET.
 PROBE_STRUCT = {"DIP_CONVEXITY": {"otm_pct": 2.0, "dte": 50}}
-PROBE_EXITS = {"DIP_CONVEXITY": {"stop": 70.0, "trig": 80.0, "give": 0.30}}
+PROBE_EXITS = {"DIP_CONVEXITY": {"stop": 70.0, "trig": 80.0, "give": 0.30},
+               "BULL_DIP_X": {"stop": 70.0, "trig": 80.0, "give": 0.30}}
+               # BULL_DIP_X wide exits: bull expensive-trigger test 2026-09-01 - wide +40.8/day
+               # t5.17 (86d, n=366, halves +74/+8) vs live-exit +18.8 t3.06 (halves +38/-0);
+               # the convexity needs the room, same as DIP_CONVEXITY
+
+
+def _tuned(name, kind):
+    """DYNAMIC TUNING (owner order 2026-09-01): per-strategy buy/sell config from spec
+    probe.tuning.<name>.<kind>, written only by the damped weekly applier (tuner_apply.py,
+    Friday window). Fallback is the hardcoded default - absent/corrupt spec keys change
+    NOTHING (fail-open to current behavior; the 08-24 lesson says never let bad state
+    masquerade, so only a well-formed dict overrides)."""
+    try:
+        v = ((fade_book.spec().get("probe") or {}).get("tuning") or {}).get(name or "")
+        v = (v or {}).get(kind)
+        if isinstance(v, dict) and v:
+            return v
+    except Exception:
+        pass
+    return (PROBE_STRUCT if kind == "struct" else PROBE_EXITS).get(name or "")
 _ACTIVE_PROBE = {"name": None}
 _PROBE_CONTRACT = {"c": None}   # trigger-contract override (DIP_CONF_MILD): when set, build_legs
                                 # returns THE contract the expensive-flow trigger printed on
@@ -442,7 +462,7 @@ def build_legs(ticker, md, regime="NEUTRAL", leg_budget=None, illiquid=None):
     _st = (fade_book.spec().get("structure") or {}) if fade_book.active() else {}
     _otm = _st.get("otm_pct", 4.0) if _st.get("enabled") else 4.0
     _dte = int(_st.get("dte", 35)) if _st.get("enabled") else 35
-    _pst = PROBE_STRUCT.get(_ACTIVE_PROBE["name"] or "")
+    _pst = _tuned(_ACTIVE_PROBE["name"], "struct")
     if _pst:                                  # probe-specific contract shape (DIP_CONVEXITY:
         _otm = _pst.get("otm_pct", _otm)      # near-money, ~50 DTE - time for the bounce)
         _dte = int(_pst.get("dte", _dte))
@@ -903,7 +923,7 @@ def _backstop_level(entry_px, stage, peak_mfe, params, probe=None):
     """The ratchet: initial -> the -50% hard-stop level; scaled -> break-even; trailing -> 20% off
     the peak MFE. Absolute premium (broker stop_price), floored at $0.01. Mirrors manage_exit so the
     resting stop and the cron exit can never disagree on the level."""
-    _pex = PROBE_EXITS.get(probe or "")
+    _pex = _tuned(probe, "exits")
     if stage == "scaled":
         pct = params.get("break_even_pct", 0)
     elif stage == "trailing":
@@ -1074,8 +1094,9 @@ def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage=
                 _st = abs(params.get("stop_loss_pct", 50))
                 if book == "FADE":
                     _st = fade_book.exit_overrides().get("stop", _st)
-                if probe in PROBE_EXITS:
-                    _st = abs(PROBE_EXITS[probe]["stop"])
+                _pex0 = _tuned(probe, "exits")
+                if _pex0:
+                    _st = abs(_pex0["stop"])
                 if ret <= -_st:
                     return {**base, "action": "CLOSE_STOP_LOSS", "stage": "closed",
                             "reason": f"{ret}% <= -{_st}% hard stop (caught at {dte}d to expiry)"}
@@ -1097,10 +1118,10 @@ def manage_exit(entry_ts_iso, ret_pct, params, now=None, expiry_iso=None, stage=
         trig = _ovt.get("trail_activate", trig)
         if "trail_drawdown" in _ovt:
             trail = _ovt["trail_drawdown"] / 100.0
-    if probe in PROBE_EXITS:                  # DIP_CONVEXITY wide exits (stop -70/trig 80/give 30):
-        _pex = PROBE_EXITS[probe]             # the -50 stop sat inside bear whipsaw range and cost
-        stop = abs(_pex.get("stop", stop))    # a third of the measured edge (hourly library)
-        trig = _pex.get("trig", trig)
+    _pex = _tuned(probe, "exits")             # per-strategy exits: spec probe.tuning override,
+    if _pex:                                  # hardcoded default fallback (DIP_CONVEXITY wide:
+        stop = abs(_pex.get("stop", stop))    # the -50 stop sat inside bear whipsaw range and
+        trig = _pex.get("trig", trig)         # cost a third of the measured edge)
         trail = _pex.get("give", trail)
     if stage == "initial":
         if ret <= -stop:
@@ -2233,7 +2254,9 @@ def run_scheduled_cycle(mock=False):
             _ROSTER = [
                 ("EXEC_BASELINE", None),                                    # pure execution data
                 ("FADE_UNROUTED", lambda md, c: _shape(md, c)),             # fade shape, router ignored
-                ("CONSENSUS", lambda md, c: not _shape(md, c)),             # the inverse arm, live
+                # CONSENSUS culled 2026-09-01 (owner): 8/8-day case closed at the boundary -
+                # own-mean -20.4%/day vs +3 floor, trimmed t vs control +0.13 (zero edge).
+                # Superseded by CONSENSUS_CALLS (the calls-only refinement, tracked).
                 ("DP_HEAVY", lambda md, c: ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
                 # QUIET_TAPE culled 2026-09-01 (owner Friday-queue pulled forward): -$1,005 over its
                 # era, no positive stretch - roster slot freed for the grid probes.
@@ -2271,6 +2294,13 @@ def run_scheduled_cycle(mock=False):
                                              # 2026-08-23: buy aggressively-bought calls, all regimes -
                                              # +32/+12/+14 bear/mild/bull, t>3 each (thin bear). The one
                                              # candidate positive & significant in every regime. PRIORITY.
+                ("BULL_DIP_X", lambda md, c: isinstance((md.get("macro") or {}).get("distance_to_sma20_pct"), (int, float))
+                                             and (md.get("macro") or {}).get("distance_to_sma20_pct") < 0
+                                             and (c or {}).get("flow_type") == "call"),
+                                             # CONSENSUS's replacement (owner cull+replace order
+                                             # 2026-09-01): BULL regime (pre-checked below) + ticker
+                                             # dip + THE expensive trigger contract, wide exits.
+                                             # bull_expensive test: +40.8%/day t+5.17, 86d, n=366
                 ("CONSENSUS_CALLS", lambda md, c: (not _shape(md, c)) and (c or {}).get("flow_type") == "call"),  # 400k-1M side-pool (owner ask
                                                                     # 2026-08-12: sim +3.37 vs -0.47
                                                                     # day-mean, halves flipped - live
@@ -2309,14 +2339,15 @@ def run_scheduled_cycle(mock=False):
                         break                       # 2 probes per cycle max - spread across the day
                     if _pcount.get(_pname, 0) >= _per:
                         continue
-                    _rg_need = {"BULL_DIP": "BULL", "DIP_CONVEXITY": "BEAR", "DIP_CONF_MILD": "MILD"}.get(_pname)
+                    _rg_need = {"BULL_DIP": "BULL", "BULL_DIP_X": "BULL", "DIP_CONVEXITY": "BEAR",
+                                "DIP_CONF_MILD": "MILD"}.get(_pname)
                     if _rg_need and fade_book.spy_regime() != _rg_need:
                         continue            # candidate-independent regime gate checked BEFORE the
                                             # sensor sweep (panel 2026-09-01: evaluating it inside
                                             # enter_proactive_set burned the whole attempt budget
                                             # on wrong-regime days); spy_regime is cached per day
                     _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
-                             else _PRICEY_CANDS[:8] if _pname == "DIP_CONF_MILD"
+                             else _PRICEY_CANDS[:8] if _pname in ("DIP_CONF_MILD", "BULL_DIP_X")
                              else candidates[2:12])   # skim BELOW the fade book's 2-per-cycle picks
                              # DIP_CONF_MILD buys THE TRIGGER CONTRACT via _PROBE_CONTRACT (panel-
                              # corrected 2026-09-01): the +21.2/day t4.31 cell was measured on the
@@ -2327,9 +2358,15 @@ def run_scheduled_cycle(mock=False):
                         t = c["ticker"]
                         if t.upper() in _open_tk:
                             continue            # never stack a probe on any book's open underlying
+                        if engine_skips.get(t) in ("metadata_unavailable", "spread_cap"):
+                            continue            # the fade loop already paid the sensor sweep and found
+                                                # this ticker dead THIS cycle - re-attempting it burned
+                                                # the whole 6-attempt budget on degenerate names and
+                                                # starved every probe (found 2026-09-02: 5 of the top
+                                                # 10 were metadata-dead; zero probe entries all day)
                         try:
                             _ACTIVE_PROBE["name"] = _pname
-                            if _pname == "DIP_CONF_MILD":
+                            if _pname in ("DIP_CONF_MILD", "BULL_DIP_X"):
                                 if not (c or {}).get("occ"):
                                     continue
                                 _PROBE_CONTRACT["c"] = c
@@ -2353,6 +2390,10 @@ def run_scheduled_cycle(mock=False):
                             _tot += 1
                             _cyc += 1
                             break
+                if _cyc == 0:
+                    print(f"  probes: 0 entries this cycle - {_att} of 6 attempts used, "
+                          f"{len(candidates)} candidates, regime {fade_book.spy_regime()} "
+                          f"(a starved cycle must say so, never sit silent - 2026-09-02)")
             finally:
                 LEG_BUDGET = _keep
     except Exception as _pe:

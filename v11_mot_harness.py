@@ -369,6 +369,7 @@ check(1, "new edge sensors fail-open full-keyed null (mock)",
       and all(k in md_new["dark_pool"] for k in EXPECTED["dark_pool"])
       and all(k in md_new["pemd"] for k in EXPECTED["pemd"])
       and all(k in md_new["vrp"] for k in EXPECTED["vrp"]))
+_wipe()   # occ guard 2026-09-02: a prior AMD mock entry would collide - each check gets fresh state
 recX = lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=True)
 try:
     rX = lab.run_trade_autopsy(recX, {"bullish_call": -70.0}, exit_reason="t", underlying_move_pct=-6.0)
@@ -684,6 +685,7 @@ check(5, "AUTOPSY message: ticker+winner+factor", "PLTR" in am and "bullish_call
 _onote = lab._notify
 cap = []
 lab._notify = lambda text: (cap.append(text), True)[1]
+_wipe()   # occ guard: fresh state so the mock AMD occ is not already tracked
 lab.enter_proactive_set("AMD", None, mock=True, candidate={"flow_type": "call"}, dry_run=False)   # live -> BUY fires
 buy_fired = any(t.startswith("<b>BUY") for t in cap)
 _wipe()
@@ -699,7 +701,7 @@ sell_fired = any(t.startswith("<b>SELL") for t in cap)
 autopsy_fired = any(t.startswith("<b>AUTOPSY") for t in cap)
 dg = lab.daily_digest()
 lab._notify = _onote
-check(5, "BUY alert fires on live entry", buy_fired)
+check(5, "BUY alert fires on live entry", buy_fired, "buy_fired=" + str(buy_fired))
 check(5, "SELL + AUTOPSY alerts fire through the close chain", sell_fired and autopsy_fired, f"sell={sell_fired} autopsy={autopsy_fired}")
 check(5, "daily_digest builds a summary block", isinstance(dg, str) and "SANDBOX DIGEST" in dg)
 
@@ -1000,7 +1002,7 @@ lab.collect_metadata = lambda t, mock=False: {"macro": {"spot": 100.0, "source":
                                               "iv_term": {"iv_front": 0.5, "source": "mock"},
                                               "pemd": {}, "entry_ts_utc": _now_iso}
 lab.classify_regime = lambda md, c=None: "BULL_TREND"
-lab.ticker_blocked = lambda t, p, prm, open_orders=None, log=None: (False, "")
+lab.ticker_blocked = lambda t, p, prm, *a, **k: (False, "")
 def _legs_with_spread(sp):
     return {"bullish_call": {"structure": "LONG_CALL", "occ_symbol": "SC260821C00010000",
                              "expiry": "2026-08-21", "strike": 10.0, "entry_premium": 1.0,
@@ -1010,14 +1012,18 @@ lab.build_legs = lambda t, md, r, illiquid=None: _legs_with_spread(12.0)
 _r16a = lab.enter_proactive_set("SC", None, mock=True, dry_run=True, resolve_real=False)
 lab.build_legs = lambda t, md, r, illiquid=None: _legs_with_spread(3.0)
 _r16b = lab.enter_proactive_set("SC", None, mock=True, dry_run=True, resolve_real=False)
+_wipe()   # occ guard: _r16b entered this occ; fail-open check needs a clean slate
 lab.build_legs = lambda t, md, r, illiquid=None: _legs_with_spread(None)
 _r16c = lab.enter_proactive_set("SC", None, mock=True, dry_run=True, resolve_real=False)
+_r16d = lab.enter_proactive_set("SC", None, mock=True, dry_run=True, resolve_real=False)
 lab.collect_metadata, lab.classify_regime, lab.build_legs, lab.ticker_blocked = _ocm, _ocr, _obl, _otb
 lab._notify = _onp16
 check(6, "spread cap: real spread 12% > 5% cap -> SKIPPED with spread_cap reason",
       _r16a.get("skipped") and "spread_cap" in _r16a.get("reason", ""), str(_r16a.get("reason"))[:70])
 check(6, "spread cap: 3% spread passes the 5% cap (entry proceeds)", not _r16b.get("skipped"))
-check(6, "spread cap: missing spread NEVER blocks (fail-open)", not _r16c.get("skipped"))
+check(6, "spread cap: missing spread NEVER blocks (fail-open)", not _r16c.get("skipped"), str(_r16c.get("reason"))[:90])
+check(6, "occ guard: second entry on a held contract SKIPS (one record per contract, ever)",
+      _r16d.get("skipped") and "occ_collision" in str(_r16d.get("reason")), str(_r16d.get("reason"))[:70])
 check(6, "spread cap: skip reason maps to harvest code 'spread_cap'",
       lab._skip_code(_r16a.get("reason", "")) == "spread_cap")
 

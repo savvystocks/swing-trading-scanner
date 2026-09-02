@@ -242,6 +242,20 @@ waste class - audit what else spends the same currency; (2) zero-activity states
 announce themselves (the 08-04 absence-alarm lesson, relearned at probe scope); (3) the
 same cycle must never pay twice for the same discovery.
 
+2026-09-02 (evening) - PUSHED ON A RED MOT (process breakdown, self-inflicted, corrected
+within the hour). The throughput-trio commit went to main while the MOT was FAILING: the
+push command piped the suite script through tail, so the shell chain read tail's exit code
+(0) instead of the script's (1) - the gate ran, failed, and was overridden by plumbing. A
+second slip compounded it: the previous background suite run's result was never checked
+before editing further. The failures themselves proved to be the new ONE-RECORD-PER-
+CONTRACT invariant working correctly against harness fixtures that reused a mock contract
+across sequential entries (plus one stale stub signature); engine code was sound, fixtures
+were updated, and the invariant is now itself a certified MOT check (dim 6, 129/129).
+Lessons: (1) NEVER pipe the gate - run the suite, check ITS exit code, THEN commit;
+(2) a background gate run must be read before the next edit lands on top of it; (3) when a
+new invariant breaks old tests, suspect the tests are asserting the old world - but only
+after proving it, never as the first assumption.
+
 2026-09-02 (root, found via the new visibility line) - THE WEDNESDAY BLIND SPOT. The
 "degenerate" names weren't degenerate: CRWD/DELL/BIIB/KKR read iv=unavailable because the
 front-IV probe window (10-15 DTE) spans only SIX days - the one window in the system

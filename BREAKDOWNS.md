@@ -228,6 +228,20 @@ stamp the good-cycle sentinel (false-rollback countdown) and didn't cover every 
 
 ## September 2026
 
+2026-09-02 - PROBE ENTRY DROUGHT, DAY ONE OF THE FIXED ROTATION (zero entries, zero
+telegrams, cycles green). The 6-attempt budget (shipped 09-01 to stop the churn class) was
+exhausted every cycle by DEGENERATE candidates: 5 of the scan's top 10 tickers had dead
+metadata (no IV / non-optionable class), each costing a full failed sensor sweep in the
+probe loop even though the fade loop had ALREADY discovered and skipped them the same
+cycle. Compounding failure of visibility: probe-loop skips print nothing, so eight green
+cycles produced zero entries in total silence - the owner noticed via missing telegrams.
+Fix a6419e58: probes skip tickers the cycle already found metadata-dead or spread-dead
+(free reuse of engine_skips), and a zero-entry probe cycle now prints its attempt count.
+Lessons: (1) a budget shipped to bound one cost must not be exhaustible by an unrelated
+waste class - audit what else spends the same currency; (2) zero-activity states must
+announce themselves (the 08-04 absence-alarm lesson, relearned at probe scope); (3) the
+same cycle must never pay twice for the same discovery.
+
 2026-08-31 - GRAND RETEST SCORED ZERO (transient). First run scored 0 trades; instrumented
 rerun scored 33,386 with every funnel gate healthy; cause never reproduced. Lesson kept:
 instrument the funnel BEFORE debugging by hypothesis - counters localized the problem
@@ -272,3 +286,17 @@ can't reach (cheap-band reality: +4.0 t0.7 noise); re-pointed at the whale pool
 (+17.3/day t1.9 reachable). Lesson: backtest cohorts must be checked against the LIVE
 FUNNEL's actual reach before a probe ships; adversarial review before push catches what
 suites cannot.
+
+2026-09-01 (evening) - INSTRUMENT-MISMATCH near-miss on the pricey pool (panel catch #5,
+caught pre-push). The first pricey-pool build handed DIP_CONF_MILD ticker-level triggers,
+but probes buy an engine-SYNTHESIZED cheap structure - so its live fills would have accrued
+promotion evidence labeled with a +21.2/day t4.31 cell that was measured on the EXPENSIVE
+TRIGGER CONTRACT itself (often landing in the same cheap band the split graded noise).
+Pure data-honesty corruption: wrong instrument, wrong cohort filters (no aggressor, no
+spread, calls+puts mixed), silently credited to the tested cell. Fix same night: the pool
+keeps contract identity (occ, expiry, strike, alert ask; aggressor + spread + band filters
+at alert level) and a _PROBE_CONTRACT override makes build_legs return THE trigger contract
+(1 contract, live-quoted, spread-capped downstream like any leg). Lesson: a probe's
+evidence must be earned on the instrument the backtest measured - "same ticker" is not
+"same trade"; this gap exists latently for every synthesized-structure probe, so their
+evidence blocks must never cite trigger-contract backtests as if equivalent.

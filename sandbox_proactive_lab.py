@@ -672,6 +672,8 @@ def audit_stale_orders(creds=None, max_minutes=None, orders=None):
 
 
 _WHALE_CANDS = []          # per-cycle side-pool of fade-shaped 400k-1M prints (FADE_WHALE probe only)
+_FULL_CANDS = []           # per-cycle snapshot of the FULL premium band (50k-1M) before the fade
+                           # book's flow_band cut - the calls-family probes' tested band
 _PRICEY_CANDS = []         # per-cycle side-pool of EXPENSIVE-CONTRACT triggers (ask $4-9, premium
                            # 50-400k) - the split test 2026-09-01 located the dip edge here
                            # (+21.2%/day t+4.31, halves +16/+26); the $4 affordability cap had made
@@ -687,7 +689,7 @@ def _occ_matches_base(sym, base):
     return sym == base or (sym.startswith(base) and sym[len(base):len(base) + 1].isdigit())
 
 
-def ticker_blocked(ticker, positions, params, open_orders=None, now=None, log=None):
+def ticker_blocked(ticker, positions, params, open_orders=None, now=None, log=None, probe=False):
     """Entry guard. TIER B (owner decision 21): ONE POSITION PER UNDERLYING - a hard block that
     SUPERSEDES max_contracts_per_ticker (the old cap is kept only as a subordinated belt-and-braces
     ceiling below). Exemptions, from the 2026-07-06 audit: broker positions with NO OPEN tracking
@@ -699,6 +701,20 @@ def ticker_blocked(ticker, positions, params, open_orders=None, now=None, log=No
         tracked = set()
         for rec in log:
             if rec.get("status") == "OPEN":                    # PARKED / FLUSHED / CLOSED never block
+                if probe and rec.get("book") != "PROBE":
+                    # CROSS-BOOK SOFTENING (owner 2026-09-02): a $1k probe is no longer blocked by a
+                    # DIFFERENT book's old position on the same name - July/August legacies were
+                    # throttling discovery on exactly the names where flow concentrates (7 of 16
+                    # candidates blocked on 09-02). Probes still block on other PROBES (below) and on
+                    # any book's RECENT entry (<=5 days) - same-week entries can synthesize the same
+                    # contract, and two records on one occ is the double-claim disease.
+                    ts = str(rec.get("entry_ts_utc") or "")[:10]
+                    try:
+                        from datetime import date as _d
+                        if ts and (_d.today() - _d.fromisoformat(ts)).days > 5:
+                            continue
+                    except Exception:
+                        pass
                 for occ in _record_leg_occs(rec).values():
                     tracked.add((occ or "").upper())
         for p in positions or []:
@@ -1226,7 +1242,7 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
     creds = _paper_creds()
     if positions is None:
         positions = get_open_positions(creds) if all(creds) else []
-    blocked, why = ticker_blocked(ticker, positions, params, open_orders=open_orders)
+    blocked, why = ticker_blocked(ticker, positions, params, open_orders=open_orders, probe=probe)
     if blocked:
         return {"trade_set_id": None, "ticker": ticker, "skipped": True, "reason": why, "status": "SKIPPED"}
 
@@ -1311,6 +1327,27 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         _tl["execution_cost"] = {"bid": _lb, "ask": _la,
                                  "bid_ask_spread_pct": round((_la - _lb) / _la * 100, 2),
                                  "source": "alpaca_quote_trigger"}
+    # ONE RECORD PER CONTRACT, EVER (panel blocker 2026-09-02): no entry may target an occ that any
+    # OPEN record tracks or the broker already holds - two records on one merged position means
+    # either one's exit liquidates both and the backstops fight over one stop. This is the absolute
+    # guard; the book-level ticker rules above are exposure policy, not collision protection.
+    _occ_taken = set()
+    try:
+        for _r0 in _load_log_list():
+            if _r0.get("status") == "OPEN":
+                for _o0 in _record_leg_occs(_r0).values():
+                    if _o0:
+                        _occ_taken.add(_o0.upper())
+        for _p0 in positions or []:
+            _occ_taken.add((_p0.get("symbol") or "").upper())
+    except Exception:
+        _occ_taken = set()
+    for _lg in legs.values():
+        for _ok in (_lg.get("occ_symbol"), _lg.get("front_occ"), _lg.get("back_occ")):
+            if _ok and _ok.upper() in _occ_taken:
+                return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
+                        "reason": f"occ_collision: {_ok} already held/tracked - one record per contract, ever",
+                        "status": "SKIPPED"}
     # SPREAD CAP (governed change 2026-07-25, owner-approved at the Sunday boundary; supersedes
     # decision 33's advisory-only status): the existing max_bid_ask_spread_pct now GATES on the REAL
     # Alpaca quote at OCC resolution. Evidence: monotone spread-bucket decay on 24k graded rows
@@ -1809,6 +1846,15 @@ def scan_candidates(params, limit=None):
                 key=lambda x: x["total_premium"], reverse=True)
         global _PRICEY_CANDS
         _PRICEY_CANDS = sorted(aggx.values(), key=lambda x: x["total_premium"], reverse=True)[:8]
+        global _FULL_CANDS
+        _FULL_CANDS = sorted([c for c in cands
+                              if 50000 <= (c.get("total_premium") or 0) <= 1000000],
+                             key=lambda x: x["total_premium"], reverse=True)[:12]
+        # ^ ceiling at 1M: the tested band ends there (panel 2026-09-02 - unbounded, mega-name
+        # aggregates above 1M would occupy the head slots on a cohort the tuner never measured)
+        # ^ snapshot BEFORE the flow_band cut: the tuner's full grid (39.5k contracts) put the
+        # calls family's strongest cells in the FULL 50k-1M premium band (t+4.1 to +5.2, 270d)
+        # vs weaker in the 50-400k slice - the probes that tested full-band trade full-band
         cands = fade_book.flow_band(cands)          # byte-identical for the live book
     cands.sort(key=lambda x: x["total_premium"], reverse=True)
     return cands
@@ -2240,7 +2286,12 @@ def run_scheduled_cycle(mock=False):
             global LEG_BUDGET
             _today = _now_iso_ms()[:10]
             _plog = _load_log_list()
-            _open_tk = {(r.get("ticker") or "").upper() for r in _plog if r.get("status") == "OPEN"}
+            _recent_cut = (datetime.now(timezone.utc) - timedelta(days=5)).date().isoformat()
+            _open_tk = {(r.get("ticker") or "").upper() for r in _plog if r.get("status") == "OPEN"
+                        and (r.get("book") == "PROBE"
+                             or (r.get("entry_ts_utc") or "")[:10] >= _recent_cut)}
+            # cross-book softening (owner 2026-09-02): probes block on other PROBES and on any
+            # book's RECENT (<=5d) entry; old legacy positions no longer freeze discovery names
             _pcount = {}                       # _plog is loaded AFTER this cycle's fade entries, so
             for _pr in _plog:                  # _open_tk sees them - no same-cycle duplicate underlying
                 if _pr.get("book") == "PROBE" and (_pr.get("entry_ts_utc") or "")[:10] == _today:
@@ -2283,7 +2334,11 @@ def run_scheduled_cycle(mock=False):
                                              # + calls = +11.2%/day t+5.86 over 240 days, both
                                              # halves positive - the bull book's anchor candidate
                 ("DIP_CONVEXITY", lambda md, c: fade_book.spy_regime() == "BEAR"
+                                                and isinstance((md.get("regime_stack") or {}).get("market_spy_dist_pct"), (int, float))
+                                                and (md.get("regime_stack") or {}).get("market_spy_dist_pct") < 0
                                                 and (c or {}).get("flow_type") == "call"),
+                                                # + SPY<20d confirmation (tuner 2026-09-01: spyconf
+                                                # wide +29.5/day t2.89 vs fullband -7 first half)
                                              # everything-sweep winner 2026-08-27: bear-regime
                                              # long-DTE calls, wide exits; +35-52/day vs pool
                 ("DIP_CONF_MILD", lambda md, c: fade_book.spy_regime() == "MILD"
@@ -2330,6 +2385,14 @@ def run_scheduled_cycle(mock=False):
                 _order = [_ROSTER[0]] + _rest[_rot:] + _rest[:_rot]
             except Exception:
                 _order = list(_ROSTER)
+            _mkt20 = None
+            try:
+                import sandbox_v11_sensors as _sv
+                _mkt20 = _sv._sma_distance("SPY")
+            except Exception:
+                pass
+            _CALLS_ONLY = {"FOLLOW_CALLS", "CONSENSUS_CALLS", "BULL_DIP", "BULL_DIP_X",
+                           "DIP_CONF_MILD", "DIP_CONVEXITY"}
             # ATTEMPT BUDGET (hotfix 2026-09-01 19:0x UTC): every enter_proactive_set attempt costs
             # a full sensor sweep whether or not the filter passes. Head-first ordering hid that -
             # broad probes at the head entered within a few attempts and the loop broke. Rotation
@@ -2352,8 +2415,13 @@ def run_scheduled_cycle(mock=False):
                                             # sensor sweep (panel 2026-09-01: evaluating it inside
                                             # enter_proactive_set burned the whole attempt budget
                                             # on wrong-regime days); spy_regime is cached per day
+                    if _pname in ("DIP_CONVEXITY", "DIP_CONF_MILD") and not (
+                            isinstance(_mkt20, (int, float)) and _mkt20 < 0):
+                        continue            # their SPY<20d confirmation is market-level - hoisted
+                                            # here so 50d/20d divergence days can't burn the budget
                     _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
                              else _PRICEY_CANDS[:8] if _pname in ("DIP_CONF_MILD", "BULL_DIP_X")
+                             else _FULL_CANDS[:10] if _pname in ("FOLLOW_CALLS", "CONSENSUS_CALLS")
                              else candidates[2:12])   # skim BELOW the fade book's 2-per-cycle picks
                              # DIP_CONF_MILD buys THE TRIGGER CONTRACT via _PROBE_CONTRACT (panel-
                              # corrected 2026-09-01): the +21.2/day t4.31 cell was measured on the
@@ -2364,6 +2432,10 @@ def run_scheduled_cycle(mock=False):
                         t = c["ticker"]
                         if t.upper() in _open_tk:
                             continue            # never stack a probe on any book's open underlying
+                        if _pname in _CALLS_ONLY and (c or {}).get("flow_type") != "call":
+                            continue            # candidate-level hypothesis check is FREE - never pay
+                                                # a sensor sweep to learn a put isn't a call (panel
+                                                # 2026-09-02: put-flow names were burning the budget)
                         if engine_skips.get(t) in ("metadata_unavailable", "spread_cap"):
                             continue            # the fade loop already paid the sensor sweep and found
                                                 # this ticker dead THIS cycle - re-attempting it burned

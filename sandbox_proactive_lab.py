@@ -2386,6 +2386,9 @@ def run_scheduled_cycle(mock=False):
                         finally:
                             _ACTIVE_PROBE["name"] = None
                             _PROBE_CONTRACT["c"] = None
+                        if rec and rec.get("skipped") and rec.get("reason") not in (
+                                "probe_filter: candidate does not match this probe slot's hypothesis",):
+                            print(f"  probe[{_pname}] skip {t}: {str(rec.get('reason'))[:70]}")
                         if rec and not rec.get("skipped"):
                             rec["book"] = "PROBE"
                             rec["probe_strategy"] = _pname

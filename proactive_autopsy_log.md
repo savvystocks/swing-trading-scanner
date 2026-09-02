@@ -4366,3 +4366,21 @@
 
 **Determining factor:** Bullish call FAILED (-29%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 406.0 worked against it.
 
+## Autopsy - PLTR (9f5c5892d954)
+- entered 2026-08-28T17:47:58.264Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -62.1% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-62%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 180.0 worked against it.
+
+## Autopsy - RKT (cfa5a767b33a)
+- entered 2026-08-28T17:57:52.131Z | trigger regime_BEARISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +0.0% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 14.5 -> negative-gamma slide, no positive catalyst.
+

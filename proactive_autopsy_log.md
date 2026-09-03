@@ -4384,3 +4384,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 14.5 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - CHWY (5faebdd8370d)
+- entered 2026-08-20T14:36:09.491Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -62.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-62%, move 0.0%): no breakdown materialised; spot held above zero-gamma 24.0.
+

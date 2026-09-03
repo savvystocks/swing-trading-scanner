@@ -1197,7 +1197,7 @@ def _resolve_legs_occ(ticker, legs, creds):
             # panel blocker 2026-09-01: resolution would OVERWRITE the trigger occ with
             # Alpaca's nearest-strike pick (weekly-expiry ties resolve arbitrarily) - the
             # contract identity IS the strategy; the UW occ is already a real OCC symbol.
-            leg["occ_source"] = "uw_trigger_verbatim"
+            leg.setdefault("occ_source", "uw_trigger_verbatim")   # afford_fallback keeps its label
             continue
         r = resolve_occ(ticker, right, leg["strike"], leg["dte"], creds)
         if r and r.get("occ_symbol"):

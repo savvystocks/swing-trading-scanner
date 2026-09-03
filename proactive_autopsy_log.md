@@ -4411,3 +4411,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 64.0 fed the squeeze.
 
+## Autopsy - IBIT (bdd741128c5e)
+- entered 2026-08-31T15:35:13.735Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +41.4% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+

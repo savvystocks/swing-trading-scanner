@@ -891,7 +891,43 @@
     "NVDA261218C00250000",
     "SLV281215C00059000",
     "NVDA261120C00275000",
-    "NVDA260904C00227500"
+    "NVDA260904C00227500",
+    "BE280121P00200000",
+    "NVDA261016C00245000",
+    "NVDA260918C00225000",
+    "RCL270917P00230000",
+    "CRCL261016C00120000",
+    "WDC261218P00350000",
+    "FSLR280121C00260000",
+    "SNDK260904P01560000",
+    "NFLX270617P00086000",
+    "SNDK260911C01800000",
+    "INTC270115C00120000",
+    "SOXX270115P00400000",
+    "ENPH280121C00035000",
+    "GLD260918C00440000",
+    "RARE261016P00015000",
+    "MSTR260911C00170000",
+    "EWY261218P00170000",
+    "DINO261016P00110000",
+    "FDX261016C00330000",
+    "HPQ261016P00030000",
+    "CRCL261016P00110000",
+    "AVGO260904P00355000",
+    "NVDA260904C00235000",
+    "MSFT260904C00512500",
+    "SOXL260911C00120000",
+    "SNOW260918C00365000",
+    "SPCX260911P00150000",
+    "AVGO260918P00370000",
+    "SOXX260918P00500000",
+    "HOOD261016P00130000",
+    "QQQ260903C00717000",
+    "EEM260918P00063000",
+    "NOW270115C00195000",
+    "SPY270617C00780000",
+    "CRM261002P00265000",
+    "NVDA260904P00235000"
   ],
   "tickers": {
     "TSLA": {
@@ -25053,10 +25089,170 @@
       "days_to_earnings": 46,
       "post_earnings_iv_crush_flag": false,
       "flow_persistence_pct": 17.66
+    },
+    "HPQ": {
+      "entry_ts_utc": "2026-09-03T17:55:37.901Z",
+      "macro": {
+        "spot": 32.25,
+        "sma20": 30.13,
+        "distance_to_sma20_pct": 7.047,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 36.9,
+        "iv_back": 42.7,
+        "iv_ratio": 0.864,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 323608.8,
+        "zero_gamma_strike": 33.0,
+        "distance_to_zero_gamma_pct": -2.326,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 100.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 1.35,
+        "atr_pct": 4.17,
+        "rvol_10min": 0.58,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Computer Hardware",
+        "market_cap": 29087268864,
+        "short_pct_float": 10.35,
+        "short_ratio": 5.39,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 102.4,
+        "vader_compound": -0.005,
+        "news_type": "Earnings",
+        "top_headline": "Consumer Tech (Aug. 24-28): Nvidia Q2 Earnings, Salesforce Rally, Trump Tariff Fears Rise & More",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 7.047,
+        "market_spy_dist_pct": 0.55,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 0.093,
+        "sector_vs_market_spread": -0.457,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 47.1,
+        "call_iv_25d": 42.5,
+        "skew_ratio": 1.108,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 2.95,
+        "ask_sweep_prem": 132840.0,
+        "total_flow_prem": 4496254.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.5,
+        "heaviest_node_price": 32.41,
+        "node_size": 397205.0,
+        "n_prints": 59,
+        "window_start": "2026-09-03T11:42:34Z",
+        "window_end": "2026-09-03T17:54:56Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 8,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 82,
+        "next_earnings_date": "2026-11-24",
+        "iv_rank_1y": 46.72,
+        "last_earnings_date": "2026-08-26",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 50.59,
+        "front_iv": 36.9,
+        "vrp": -13.69,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -2227901.0,
+        "flow_persistence_pct": 71.9,
+        "flow_direction": "bearish",
+        "closing_accel": -1224861.0,
+        "n_ticks": 264,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 850.41,
+        "vwma_20": 30.13,
+        "rsi_5": 86.51,
+        "rsi_15": 54.31,
+        "gap_pct": -1.219,
+        "day_range": 3.442,
+        "candle_body": 0.577,
+        "dist_sma50": 19.352,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -5.8,
+        "vix_level": 14.52,
+        "execution_hour": 17,
+        "day_of_week": 3,
+        "sector_vs_spy": -1.74,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 10140450.0,
+        "net_vanna": 2300357.0,
+        "net_charm": 1549891.0,
+        "delta_imbalance": 4.069,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.062,
+        "bid": 32.25,
+        "ask": 32.27,
+        "bid_size": 700.0,
+        "ask_size": 600.0,
+        "obi": 0.0769,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.56,
+        "gap_pct": -1.219,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 10.35,
+        "float_shares": 898445325,
+        "shares_short": 81142372,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": -0.005,
+      "sweep_aggression_pct": 2.95,
+      "distance_to_zero_gamma_pct": -2.326,
+      "distance_to_heaviest_dp_node_pct": -0.5,
+      "days_since_earnings": 8,
+      "days_to_earnings": 82,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 71.9
     }
   },
-  "payload_count": 151,
-  "topn_count": 324,
+  "payload_count": 152,
+  "topn_count": 333,
   "random_count": 4,
   "backoff_429": false,
   "cap_today": 300,

@@ -228,6 +228,23 @@ stamp the good-cycle sentinel (false-rollback countdown) and didn't cover every 
 
 ## September 2026
 
+2026-09-03 - THE BULL-DAY AFFORDABILITY DROUGHT (zero buy signals all day; owner caught it
+again by silence). First BULL-regime day since the grid shipped: flow concentrated in
+mega-cap names (AVGO, DELL, SOXL, QQQ), and every probe's SYNTHESIZED contract (4%-OTM /
+35-DTE on $300-500 underlyings) priced $12-20 - over the $1k budget's $10 ceiling - so all
+six attempts died premium_too_rich, cycle after cycle. Structural mismatch, visible only on
+big-cap days: the scan's affordability filter vets the TRIGGER contract ($0.30-4.00), then
+the engine discards that identity and builds a contract the budget cannot buy. The affordable
+contract existed on every one of those candidates all day. Fix: affordability identity kept
+per side at scan (cheapest in-band contract's occ/ask/expiry, DTE>=7), and when a probe's
+synthesized legs fail the budget it buys THE trigger contract through the panel-hardened
+verbatim path (resolution skip, fail-closed live repricing with a widened 0.30 floor via
+band_lo, occ-collision guard, nickel limits). Lessons: (1) when a filter vets object A and
+the engine then trades object B, every property the filter guaranteed silently stops being
+true - trade what you vetted; (2) each regime's first live day IS a test day - MILD's first
+day found the sensor drought, BULL's first day found this; BEAR's first day will find its
+own, plan to watch it; (3) the visibility line paid again - diagnosis took minutes, not hours.
+
 2026-09-02 - PROBE ENTRY DROUGHT, DAY ONE OF THE FIXED ROTATION (zero entries, zero
 telegrams, cycles green). The 6-attempt budget (shipped 09-01 to stop the churn class) was
 exhausted every cycle by DEGENERATE candidates: 5 of the scan's top 10 tickers had dead

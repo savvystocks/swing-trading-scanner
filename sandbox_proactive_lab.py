@@ -1290,9 +1290,34 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         # contract aligns the live universe with the tested one.
         min_ct = fade_book.spec().get("min_contracts", 1)
     if all((leg.get("contracts") or 0) < min_ct for leg in legs.values()):   # AFFORDABILITY GATE (real-money sim)
-        return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
-                "reason": f"premium too rich for {min_ct}-contract min on ${LEG_BUDGET:.0f} budget",
-                "status": "SKIPPED"}
+        # TRIGGER-CONTRACT FALLBACK (2026-09-03: the BULL/mega-cap drought - every synthesized
+        # 4%-OTM/35-DTE contract on $300-500 underlyings priced over the $1k probe ceiling and
+        # the whole day entered nothing). The candidate's own trigger contract passed the scan's
+        # affordability filter, so a PROBE buys THAT instead - through the panel-hardened
+        # verbatim path (resolution skip, fail-closed live repricing, occ guard, nickel limits).
+        _ft = (candidate or {}).get("flow_type")
+        _af = (candidate or {}).get("afford_put" if _ft == "put" else "afford_call") if probe else None
+        _fell = False
+        if _af and _af.get("occ") and 0.30 <= (_af.get("ask") or 0) <= 9.9:
+            try:
+                _dte_af = max(1, (date.fromisoformat(str(_af["expiry"])) - date.today()).days)
+            except Exception:
+                _dte_af = 0
+            if _dte_af >= 7:
+                _nm = "bearish_put" if _ft == "put" else "bullish_call"
+                legs = {_nm: {"structure": "LONG_PUT" if _ft == "put" else "LONG_CALL",
+                              "occ_symbol": _af["occ"], "expiry": str(_af["expiry"]),
+                              "strike": _af.get("strike"), "dte": _dte_af,
+                              "entry_premium": _af["ask"],
+                              "limit_price": round(round(_af["ask"] * 1.01 * 20) / 20, 2),
+                              "contracts": 1, "alloc_usd": LEG_BUDGET, "illiquid": False,
+                              "trigger_contract": True, "band_lo": 0.30,
+                              "occ_source": "afford_fallback"}}
+                _fell = True
+        if not _fell:
+            return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
+                    "reason": f"premium too rich for {min_ct}-contract min on ${LEG_BUDGET:.0f} budget",
+                    "status": "SKIPPED"}
     if resolve_real is None:
         resolve_real = all(creds)
     if resolve_real:
@@ -1317,9 +1342,11 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
             _lb, _la = _q3.get("bp"), _q3.get("ap")
         except Exception:
             pass
-        if not (_lb and _la and 0 < _lb <= _la and (_la - _lb) / _la * 100 <= 2.0 and 4.0 <= _la <= 9.9):
+        _blo = _tl.get("band_lo", 4.0)      # pricey-pool probes keep their tested $4 floor; the
+                                            # affordability fallback admits the scan's own 0.30+
+        if not (_lb and _la and 0 < _lb <= _la and (_la - _lb) / _la * 100 <= 2.0 and _blo <= _la <= 9.9):
             return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
-                    "reason": "trigger_contract fail-closed: no live quote / crossed / spread>2% / ask outside 4-9.9",
+                    "reason": f"trigger_contract fail-closed: no live quote / crossed / spread>2% / ask outside {_blo}-9.9",
                     "status": "SKIPPED"}
         _tl["entry_premium"] = _la
         _tl["limit_price"] = round(round(_la * 1.01 * 20) / 20, 2)   # nickel increment; caps at $10.00 = the $1k budget
@@ -1823,6 +1850,20 @@ def scan_candidates(params, limit=None):
         a = agg.setdefault(t, {"ticker": t, "call_prem": 0.0, "put_prem": 0.0,
                                "underlying_price": _num(r.get("underlying_price")), "min_contract_premium": pc})
         a["min_contract_premium"] = min(a["min_contract_premium"], pc)
+        # AFFORDABILITY IDENTITY (2026-09-03 fix): keep the cheapest in-band contract PER SIDE so
+        # a probe whose synthesized contract prices over the $1k budget (mega-cap bull days) can
+        # buy THE trigger contract instead of nothing - it passed this very price filter.
+        _rtyp = (r.get("type") or "").lower()
+        _akey = "afford_call" if _rtyp == "call" else "afford_put" if _rtyp == "put" else None
+        if _akey and r.get("option_chain"):
+            try:
+                from datetime import date as _dt
+                _dok = (_dt.fromisoformat(str(r.get("expiry"))) - _dt.today()).days >= 7
+            except Exception:
+                _dok = False
+            if _dok and (a.get(_akey) is None or pc < a[_akey]["ask"]):
+                a[_akey] = {"occ": r["option_chain"], "ask": pc,
+                            "expiry": str(r.get("expiry")), "strike": _num(r.get("strike"))}
         prem = _num(r.get("total_premium")) or 0.0
         if (r.get("type") or "").lower() == "call":
             a["call_prem"] += prem

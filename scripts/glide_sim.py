@@ -249,5 +249,9 @@ def simulate():
 
 
 if __name__ == "__main__":
-    build_fine()
-    simulate()
+    import sys as _s
+    if len(_s.argv) > 1 and _s.argv[1] == "build":
+        build_fine()          # weekly cron: refresh the fine grid only (resume-safe)
+    else:
+        build_fine()
+        simulate()

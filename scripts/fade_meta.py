@@ -42,16 +42,62 @@ def tg(msg):
             pass
 
 
+def _vol_ivx_join(rows):
+    """VOL+IVX training-time features (owner order 2026-09-03, ablation-validated: rv20
+    CONFIRMED on the 2-year replication, IVX CONFIRMED on stability). rv20 = underlying 20d
+    close-to-close vol ENDING D-1 (no leak); oi_chg = prev_oi delta from the archive (known
+    at open). Memory-bounded joins (the 09-03 OOM lesson): only needed tickers/pairs kept.
+    Fail-open: any miss -> NaN features, the model imputes."""
+    import time
+    import urllib.request as _uq
+    H = {"APCA-API-KEY-ID": os.environ.get("ALPACA_PAPER_API_KEY", ""),
+         "APCA-API-SECRET-KEY": os.environ.get("ALPACA_PAPER_SECRET_KEY", "")}
+    tks = sorted({r[8] for r in rows if r[8]})
+    rv = {}
+    for t in tks:
+        u = (f"https://data.alpaca.markets/v2/stocks/bars?symbols={t}&timeframe=1Day"
+             "&start=2024-05-01&end=2026-12-31&limit=10000&adjustment=split&feed=iex")
+        c = {}
+        for _ in range(2):
+            try:
+                with _uq.urlopen(_uq.Request(u, headers=H), timeout=30) as r_:
+                    c = {x["t"][:10]: x["c"] for x in (json.loads(r_.read()).get("bars") or {}).get(t) or []}
+                break
+            except Exception:
+                time.sleep(2)
+        ds = sorted(c)
+        for i, dd in enumerate(ds):
+            win = [c[ds[k]] / c[ds[k - 1]] - 1 for k in range(max(1, i - 20), i)]
+            if len(win) >= 10:
+                mu = sum(win) / len(win)
+                rv[(t, dd)] = (sum((z - mu) ** 2 for z in win) / (len(win) - 1)) ** 0.5 * 100
+    oic = {}
+    try:
+        need = {(r[9], date.fromordinal(date(1970, 1, 1).toordinal() + r[6]).isoformat())
+                for r in rows if r[9]}
+        occs = {occ for occ, _ in need}
+        src = sqlite3.connect("file:data/uw_history.db?mode=ro", uri=True, timeout=60)
+        for occ, day, oi, poi in src.execute(
+                "select option_symbol, day, open_interest, prev_oi from contracts_daily"):
+            if occ in occs and (occ, day) in need and poi is not None:
+                oic[(occ, day)] = poi        # prev_oi LEVEL only: day-D close OI leaks post-entry
+                                             # info, so no same-day delta - at-entry-known values only
+    except Exception:
+        pass
+    return rv, oic
+
+
 def cohort(db="data/harvest.db", wide=False):
     con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
     rows = con.execute(
         """select c.candidate_id, c.entry_ref, c.right, c.spread_pct, c.rule_score, c.features,
-                  cast(c.signal_ts_utc/86400000 as int), l.realized_return
+                  cast(c.signal_ts_utc/86400000 as int), l.realized_return, c.ticker, c.occ_symbol
            from candidates c join labels l on l.candidate_id=c.candidate_id
            where l.outcome is not null and l.realized_return is not null
              and c.entry_ref>0 and c.features!=''""").fetchall()
+    rv, oic = _vol_ivx_join(rows)
     X, y, days, cids = [], [], [], []
-    for cid, e, right, spr, score, fj, day, ret in rows:
+    for cid, e, right, spr, score, fj, day, ret, tkr, occ in rows:
         try:
             f = json.loads(fj)
         except Exception:
@@ -69,6 +115,12 @@ def cohort(db="data/harvest.db", wide=False):
             v = (f.get(blk) or {}).get(key)
             vec.append(float(v) if isinstance(v, (int, float)) else float("nan"))
         vec.append(float(side))
+        _iso = date.fromordinal(date(1970, 1, 1).toordinal() + day).isoformat()
+        _rv = rv.get((tkr, _iso)); _po = oic.get((occ, _iso))
+        _ivf = (f.get("iv_term") or {}).get("iv_front")
+        vec.append(float(_rv) if isinstance(_rv, (int, float)) else float("nan"))     # VOL: rv20
+        vec.append(float(_po) if isinstance(_po, (int, float)) else float("nan"))     # IVX: prev_oi
+        vec.append(float(_ivf) if isinstance(_ivf, (int, float)) else float("nan"))   # IVX: iv level
         if wide:                              # WIDE student: whole funnel; shape/spread/size are
             vec.append(float(spr or 99))      # FEATURES here, not filters (owner order 2026-08-15)
             vec.append(float(score or 0))

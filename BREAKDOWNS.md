@@ -365,3 +365,14 @@ up to 30k at 22:30) so both stages progress every day; one-shot catch-up chain S
 tuner_apply on the fresh corpus. Lesson: a dataset with a rolling purpose must have a
 rolling window - and monitors must alert on DATA FRESHNESS (max(day) vs today), not on
 process exit codes; every process here exited 0 every night while the data quietly died.
+
+2026-09-04 (evening) - FRIDAY CHAIN TRIPPED ON AN UNCOMMITTED SCRIPT: the 21:45 UTC tuning
+chain died at step one because hourly_library.py was added to the cron line while the script
+itself existed only in the local working tree - never committed, so the VPS checkout had
+nothing to run, and the && chain silently skipped the glide build and tuner_apply with it.
+Caught within minutes because the relaunched chain was being watched live; fixed same night
+(script committed after a green gate, chain relaunched manually). Lesson: a cron edit and
+every script it references land in the SAME push - a cron line is a promise the repo has to
+keep. The freshness sentinel (shipped tonight) now alarms on the missing-artifact symptom
+(tuner_apply.log absent after a Friday), and the registry rule in its docstring makes the
+pairing explicit: any new cron or data store ships with its sentinel row in the same commit.

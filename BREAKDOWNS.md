@@ -384,10 +384,14 @@ corpus jsonl files without committing, and interactive sessions scp files in - e
 worktree carries modified tracked files, and every pull-first cron (git pull --rebase refuses
 a dirty tree) dies silently at its first command with no log line, because the log redirect
 sits on the python step the chain never reaches. The archive freeze hid inside the same
-silence. Fix c114215b: probe_tuner_rows.jsonl and glide_fine_rows.jsonl untracked and
-gitignored (VPS-local rebuildable research data - a growing file must never be tracked on a
-box where crons pull), pull-retry added to cron lines, and session discipline: staged work is
-committed or reverted before any :00 cron boundary. Proven same night: 22:00 boundary ran
-clean for the first time since Sep 1. Lesson: on a pull-first box, one dirty tracked file
-silently kills EVERY downstream cron - and the freshness sentinel's schedule checks now catch
-the symptom class within one night instead of three.
+silence. Fix, three layers: (1) c114215b untracks + gitignores probe_tuner_rows.jsonl and
+glide_fine_rows.jsonl (VPS-local rebuildable research data - a growing file must never be
+tracked on a box where crons pull); (2) --autostash added to every cron git pull, because the
+BOUNDARY COURT ITSELF legitimately dirties tracked court files (sentinels.jsonl,
+trajectory.log) at 22:00 that evening_persist only commits at 22:45 - the design depends on
+pulls tolerating that 45-minute window, and plain --rebase never did; (3) pull-retry on the
+cron lines plus session discipline: staged work is committed or reverted before any :00 cron
+boundary. Proven same night: the 22:00 boundary ran clean for the first time since Sep 1 and
+the 22:10 student pulled through the dirty court window on autostash. Lesson: on a pull-first
+box one dirty tracked file silently kills EVERY downstream cron; the freshness sentinel's
+schedule checks now catch the symptom class within one night instead of three.

@@ -4456,3 +4456,12 @@
 
 **Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 84.0.
 
+## Autopsy - AVGO (99acfbd7cbc8)
+- entered 2026-09-04T18:57:15.667Z | trigger regime_BEARISH_loose | exit CLOSE_UNTRACKED | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -100.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-100%, move 0.0%): no breakdown materialised; spot held above zero-gamma 480.0.
+

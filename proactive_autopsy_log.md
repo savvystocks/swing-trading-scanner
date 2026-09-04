@@ -4447,3 +4447,12 @@
 
 **Determining factor:** Bearish put FAILED (-39%, move 0.0%): no breakdown materialised; spot held above zero-gamma 220.0.
 
+## Autopsy - CRWV (c242f0909525)
+- entered 2026-08-28T16:35:03.901Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.4% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 84.0.
+

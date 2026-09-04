@@ -13,7 +13,7 @@
   "scale_out": null,
   "trail_activate": 50,
   "trail_drawdown": 20,
-  "stop": -50,
+  "stop": -40,
   "no_same_day_exit": true
  },
  "v1.7.2_note": "owner order 2026-08-12 18:48: no same-calendar-day sells anywhere (broker day-trade flags) - managed exits defer to next day (leg_path.pdt_deferred marks them), backstops arm from day 2, /flatten exempt. Overnight holds (close->open) are NOT day trades and stay allowed. Fat-tail cost accepted and stated: a day-one collapse cannot be cut until tomorrow.",
@@ -27,7 +27,7 @@
  ],
  "activated_utc": "2026-08-05T16:56Z",
  "activation": "owner explicit yes (counted trial); paper only; life bar day_clustered_t",
- "spec_version": "1.8-discovery",
+ "spec_version": "1.8-discovery+auto",
  "v1.1_note": "owner order 2026-08-05 17:34 UTC: capacity 3->5 on paper; signal/filters/exits unchanged; dip-day cluster drawdown risk accepted and measured",
  "v1.2_note": "owner order 2026-08-05 17:38 UTC: 2 entries/cycle when slots free; cooloff waived for FADE (replay cohort had none); concentration guard = max 2 FADE entries per ticker per day",
  "min_contracts": 1,
@@ -189,5 +189,16 @@
   "dte": 35,
   "evidence": "2026-08-23 executable restudy (ask-in/bid-out, 2y archive): NO delta/DTE cell is positive under tradeable spreads (<=2%). The +20.2% low-delta/long-DTE cell found on VWAP pricing had median spread 5.9% and only 9.4% tradeable - a wide-spread illusion. Mechanism wired and left INERT (defaults = historical 4% OTM / 35 DTE)."
  },
- "v2.4_note": "owner order 2026-08-23: EXECUTABLE-PRICE HONESTY PASS. Every archive result today (edge-mine's 9 'robust' survivors, grand backtest's 45, the delta/DTE structure winner) was priced VWAP->VWAP and is SUPERSEDED. Rebased on the project rule (entry at ask, outcomes on bid) and filtered to tradeable spreads, the 2-year archive contains exactly ONE positive strategy: FADE IN A BEAR/DIP REGIME, +24.4% day-mean t+2.49 (n=1462), halves +27/+40. Fade in bull is -21.1% t-8.38. This VALIDATES the regime router shipped hours earlier (v2.3) on the honest metric - it is now the most important component in the system. Consequences: structure filter NOT enabled; FOLLOW_CALLS/CONSENSUS_CALLS demoted from priority; UW feed retained (fade-in-bear needs it). Known cost: bear regimes were ~13% of the last 2 years, so the honest system trades RARELY - low volume is the price of the only real edge. Caveat: the 63 'bear' days are corrections within a bull, not a true bear."
+ "v2.4_note": "owner order 2026-08-23: EXECUTABLE-PRICE HONESTY PASS. Every archive result today (edge-mine's 9 'robust' survivors, grand backtest's 45, the delta/DTE structure winner) was priced VWAP->VWAP and is SUPERSEDED. Rebased on the project rule (entry at ask, outcomes on bid) and filtered to tradeable spreads, the 2-year archive contains exactly ONE positive strategy: FADE IN A BEAR/DIP REGIME, +24.4% day-mean t+2.49 (n=1462), halves +27/+40. Fade in bull is -21.1% t-8.38. This VALIDATES the regime router shipped hours earlier (v2.3) on the honest metric - it is now the most important component in the system. Consequences: structure filter NOT enabled; FOLLOW_CALLS/CONSENSUS_CALLS demoted from priority; UW feed retained (fade-in-bear needs it). Known cost: bear regimes were ~13% of the last 2 years, so the honest system trades RARELY - low volume is the price of the only real edge. Caveat: the 63 'bear' days are corrections within a bull, not a true bear.",
+ "auto_2026-09-04": {
+  "book": "EXIT_STOP40",
+  "vs": "LIVE_SPEC",
+  "prev": {
+   "exit.stop": -50
+  },
+  "keys": {
+   "exit.stop": -40
+  },
+  "mode": "fixed"
+ }
 }

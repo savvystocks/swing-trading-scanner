@@ -1,79 +1,21 @@
 {
- "note": "CHALLENGER PROTOCOL (owner design 2026-08-21): CHAMPION = live spec, read fresh nightly; each challenger differs by ONE dial and is judged vs CHAMPION under the full hardened bars. A winning challenger auto-promotes its dial; the ring is respawned around every new champion. | SWEEP_PLATEAU added 2026-08-21: the 28,800-config sweep's stable region (80k floor, spread 1.5, mild<1.0; day-mean +8.0, halves +10.4/+5.9, plateau +6.78) as a PACKAGE challenger - multi-dial, so it earns as one unit vs CHAMPION under full hardened bars. Mined evidence, deflate accordingly.",
+ "note": "ring respawned 2026-09-04",
  "books": {
-  "CH_SPREAD_1p5": {
-   "spr_max": 1.5
+  "CH_STOP_m45": {
+   "stop": -45
   },
-  "CH_SPREAD_2p5": {
-   "spr_max": 2.5
-  },
-  "CH_FLOWLO_30k": {
-   "band_lo": 30000
-  },
-  "CH_FLOWLO_80k": {
-   "band_lo": 80000
-  },
-  "CH_GIVE_10": {
-   "give": 0.1
-  },
-  "CH_GIVE_30": {
-   "give": 0.3
-  },
-  "SWEEP_PLATEAU": {
-   "band_lo": 80000,
-   "band_hi": 400000,
-   "spr_max": 1.5,
-   "spy_max": 1.0,
-   "stop": -50
-  },
-  "SWEEP_DEEPBEAR": {
-   "band_lo": 50000,
-   "band_hi": 1000000,
-   "spr_max": 2.0,
-   "stop": -60
-  },
-  "HOURLY_WIDE": {
-   "stop": -70,
-   "trig": 80,
-   "give": 0.3
+  "CH_STOP_m35": {
+   "stop": -35
   }
  },
  "menu": {
-  "CH_SPREAD_1p5": {
-   "entry.max_spread_pct": 1.5,
+  "CH_STOP_m45": {
+   "exit.stop": -45,
    "_vs": "CHAMPION"
   },
-  "CH_SPREAD_2p5": {
-   "entry.max_spread_pct": 2.5,
-   "_vs": "CHAMPION"
-  },
-  "CH_FLOWLO_30k": {
-   "entry.flow_min": 30000,
-   "_vs": "CHAMPION"
-  },
-  "CH_FLOWLO_80k": {
-   "entry.flow_min": 80000,
-   "_vs": "CHAMPION"
-  },
-  "SWEEP_PLATEAU": {
-   "entry.flow_min": 80000,
-   "entry.max_spread_pct": 1.5,
-   "entry.max_spy_dist_pct": 1.0,
-   "_vs": "CHAMPION"
-  },
-  "SWEEP_DEEPBEAR": {
-   "entry.flow_max": 1000000,
-   "exit.stop": -60,
-   "exit.trail_activate": 80,
-   "_vs": "CHAMPION"
-  },
-  "HOURLY_WIDE": {
-   "exit.stop": -70,
-   "exit.trail_activate": 80,
-   "exit.trail_drawdown": 30,
+  "CH_STOP_m35": {
+   "exit.stop": -35,
    "_vs": "CHAMPION"
   }
- },
- "note_2026_08_23": "mega-sweep winner (59,292 configs, executable pricing, null bar 2.24 vs real best t 5.17): FADE/deep-bear(-3%)/50k-1M/delta<0.30/stop-60/trig80/give20 = +67.8% day-mean. NOT APPLIED: the stress test found it rests on 2 episodes only (Mar-Apr 2025, Mar-Apr 2026), episode-n too small for significance. It loses at the START of corrections and wins on the V-shaped BOUNCE (worst days -47% early, best +354% late) - untested in a grinding bear. Registered as a challenger to earn live evidence. Live spread cap 2.0 CONFIRMED better than 3.0.",
- "note_2026_08_27": "everything-sweep winner (28,440 configs, 169,685 trades, hourly paths, paired-vs-pool scoring): in bear/deepbear the wide exit (stop-70/trig80/give30) on long-dated calls beat the same-day pool by +35-52 pts/day at t 4.6-7.5, both years, both halves. Since the live FADE book trades ONLY in bear (router), the wide-exit keys ARE its bear config - registered for live evidence. The long-DTE contract preference needs the Friday-window probe build (DIP_CONVEXITY)."
+ }
 }

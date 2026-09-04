@@ -4420,3 +4420,21 @@
 
 **Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
 
+## Autopsy - TQQQ (ADOPT-3875b8211d)
+- entered 2026-08-18T16:50:42.371Z | trigger orphan_reconcile | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | -65.9% | WINNER |
+
+**Determining factor:** Calendar FAILED (-66%): the range broke; IV term None (ratio None) hurt the spread.
+
+## Autopsy - PLTR (9c2f60cbf8a1)
+- entered 2026-09-03T17:39:45.509Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -57.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-58%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 185.0 worked against it.
+

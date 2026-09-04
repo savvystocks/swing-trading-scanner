@@ -71,6 +71,19 @@ CHECKS = [
     ("uw pull log", "schedule", H + "/uw_pull.log", (22, 30, DAILY), "EVIDENCE"),
     ("uw prints log", "schedule", H + "/prints.log", (0, 15, DAILY), "EVIDENCE"),
     ("friday tuner chain", "schedule", H + "/tuner_apply.log", (21, 45, {4}), "EVIDENCE"),
+    # -- v1.1 (registry sweep 2026-09-04): failure modes mtime checks cannot see
+    ("repo push sync", "push_sync", ".", None, "COURT"),
+    ("off-box snapshot repo", "git_commit", H + "/harvest-snapshots", (21, 30, WEEKDAYS), "TRADE"),
+    ("student models (VPS dir)", "schedule", "reports/fade_meta", (22, 30, WEEKDAYS), "COURT"),
+    ("shadow ledger content day", "jsonl_day", "reports/shadow_lab/ledger.jsonl", 3, "COURT"),
+    ("api telemetry day", "data_day", "data/harvest.db", ("select max(day) from api_telemetry", 2), "MONITOR"),
+    ("bid path day", "data_day", "data/harvest.db",
+     ("select date(cast(substr(cast(max(poll_ts_utc) as text),1,10) as int), 'unixepoch') from bid_path", 2), "TRADE"),
+    ("same-day db backup", "schedule", "data/harvest_backups", (20, 30, WEEKDAYS), "MONITOR"),
+    ("spec parses", "json_ok", "fade_book_spec.json", None, "TRADE"),
+    ("challengers parses", "json_ok", "challengers.json", None, "COURT"),
+    ("governor weekly reports", "mtime", "reports/governor", 240.0, "COURT"),
+    ("expired legs still open", "expired_open", "proactive_sandbox_logs.json", 1, "TRADE"),
 ]
 
 
@@ -122,6 +135,63 @@ def main():
                 if behind > max_td:
                     stale.append(f"[{crit}] {name}: newest data {str(v)[:10]} - "
                                  f"{behind} trading days behind (max {max_td})")
+                else:
+                    fresh += 1
+            elif kind == "push_sync":
+                import subprocess
+                sb = subprocess.run(["git", "-C", target, "status", "-sb"],
+                                    capture_output=True, text=True).stdout.splitlines()
+                if sb and "ahead" in sb[0]:
+                    stale.append(f"[{crit}] {name}: unpushed commits ({sb[0].strip()}) - "
+                                 "push credential or network dead; court artifacts frozen on origin")
+                else:
+                    fresh += 1
+            elif kind == "git_commit":
+                import subprocess
+                ct = subprocess.run(["git", "-C", target, "log", "-1", "--format=%ct"],
+                                    capture_output=True, text=True).stdout.strip()
+                exp = last_expected(spec[0], spec[1], spec[2], now)
+                if exp and datetime.fromtimestamp(int(ct), tz=timezone.utc) < exp:
+                    stale.append(f"[{crit}] {name}: last commit "
+                                 f"{datetime.fromtimestamp(int(ct), tz=timezone.utc):%a %d %H:%M}, "
+                                 f"expected {exp:%a %d %H:%M} UTC")
+                else:
+                    fresh += 1
+            elif kind == "jsonl_day":
+                tail = open(target, "rb").readlines()[-80:]
+                days = []
+                for ln in tail:
+                    try:
+                        d = json.loads(ln).get("day")
+                        if d:
+                            days.append(str(d)[:10])
+                    except Exception:
+                        pass
+                behind = trading_days_behind(max(days), today) if days else 999
+                if behind > spec:
+                    stale.append(f"[{crit}] {name}: newest content day "
+                                 f"{max(days) if days else '?'} - {behind} trading days behind")
+                else:
+                    fresh += 1
+            elif kind == "json_ok":
+                json.load(open(target, encoding="utf-8"))
+                fresh += 1
+            elif kind == "expired_open":
+                import re
+                bad = []
+                for r in json.load(open(target, encoding="utf-8")):
+                    if r.get("status") != "OPEN":
+                        continue
+                    for lg in (r.get("legs") or {}).values():
+                        for o in (lg.get("occ_symbol"), lg.get("front_occ"), lg.get("back_occ")):
+                            m = re.search(r"(\d{6})[CP]\d{8}$", o or "")
+                            if m:
+                                ed = datetime.strptime(m.group(1), "%y%m%d").date()
+                                if ed < today and trading_days_behind(ed.isoformat(), today) > spec:
+                                    bad.append(o)
+                if bad:
+                    stale.append(f"[{crit}] {name}: {len(bad)} expired contract(s) still OPEN "
+                                 f"({', '.join(bad[:3])}) - settle/exit machinery broken")
                 else:
                     fresh += 1
             else:

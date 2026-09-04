@@ -76,7 +76,12 @@ def main():
     print(f"cohort contract-days to pull: {len(todo)}; budget used today "
           f"{used_today(con)}/{DAILY_BUDGET}", flush=True)
     n = 0
+    d0 = date.today()
     for d, occ in todo:
+        if date.today() != d0:
+            print("UTC day rolled - stop; the new budget belongs to the new day's crons", flush=True)
+            break               # crossing midnight let one session eat two days' budgets and
+                                # starve every other puller (2026-09-04)
         if used_today(con) >= DAILY_BUDGET:
             print("budget cap reached - resuming next UTC day", flush=True)
             break

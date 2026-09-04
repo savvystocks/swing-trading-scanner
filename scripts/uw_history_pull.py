@@ -46,7 +46,10 @@ TICKERS = ("SPY QQQ IWM NVDA TSLA AAPL MSFT AMZN META GOOGL AMD SLV GLD TLT COIN
            "TTD ROKU SPOT PINS SNAP RDDT DUOL "
            "IONQ RGTI ARQQ QUBT "
            "USO UNG BNO XOP OIH URA LIT REMX COPX SILJ NUGT DUST JNUG").split()
-START, END = date(2024, 9, 3), date(2026, 8, 21)
+START = date(2024, 9, 3)
+END = date.today() - timedelta(days=1)  # ROLLING - a hardcoded END froze the archive at 08-21
+                                        # and every corpus downstream went silently stale while
+                                        # 30k calls/night backfilled ancient days (2026-09-04)
 
 
 def init():
@@ -108,7 +111,12 @@ def main():
     todo = [(dd, t) for dd in reversed(days) for t in TICKERS if (dd, t) not in done]
     print(f"todo {len(todo)} ticker-days; budget used today {used_today(con)}/{DAILY_BUDGET}", flush=True)
     n_calls = 0
+    d0 = date.today()
     for dd, t in todo:
+        if date.today() != d0:
+            print("UTC day rolled - stop; the new budget belongs to the new day's crons", flush=True)
+            break               # crossing midnight let one session eat two days' budgets and
+                                # starve every other puller (2026-09-04)
         if used_today(con) >= DAILY_BUDGET:
             print("daily budget reached - resume tomorrow", flush=True)
             break

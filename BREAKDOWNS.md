@@ -345,3 +345,23 @@ at alert level) and a _PROBE_CONTRACT override makes build_legs return THE trigg
 evidence must be earned on the instrument the backtest measured - "same ticker" is not
 "same trade"; this gap exists latently for every synthesized-structure probe, so their
 evidence blocks must never cite trigger-contract backtests as if equivalent.
+
+2026-09-04 - FROZEN ARCHIVE WINDOW: the UW history puller's END date was HARDCODED at
+2026-08-21, so the archive (contracts_daily, flow_prints) silently stopped advancing on
+Aug 20 while the nightly crons kept burning the full 30k-call budget backfilling ever-older
+ticker-days inside the frozen window. Every corpus downstream - probe_tuner rows, the glide
+fine grid, tuner_apply's evidence - was two weeks stale, which means tonight's "first
+automatic tuning pass" would have judged strategies on zero new data and the Friday chain
+would have HOLD-spammed forever. A second interacting defect hid it: pull sessions crossing
+UTC midnight kept spending into the NEW day's budget (used_today() re-reads date.today()
+per iteration), so the history puller's 22:30 session alternately ate two days' budgets and
+left its next session 0 calls - the log's repeating "0 calls / budget 30000/30000" blocks
+read like normal budget discipline instead of a starvation symptom. Found 2026-09-04 21:20
+while verifying why the Friday tuner refresh left no trace. Fix (same commit): END is now
+computed at runtime as yesterday; both pullers stop at the UTC day roll so a session can
+never spend the next day's budget; cron budgets partitioned (prints 12k at 00:15, history
+up to 30k at 22:30) so both stages progress every day; one-shot catch-up chain Saturday
+03:30 UTC re-pulls Aug 22-Sep 4 recent-first then reruns probe_tuner + glide build +
+tuner_apply on the fresh corpus. Lesson: a dataset with a rolling purpose must have a
+rolling window - and monitors must alert on DATA FRESHNESS (max(day) vs today), not on
+process exit codes; every process here exited 0 every night while the data quietly died.

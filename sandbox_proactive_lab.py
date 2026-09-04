@@ -1886,11 +1886,11 @@ def scan_candidates(params, limit=None):
                  < (c.get("total_premium") or 0) <= (_pw.get("flow_max") or 1000000)],
                 key=lambda x: x["total_premium"], reverse=True)
         global _PRICEY_CANDS
-        _PRICEY_CANDS = sorted(aggx.values(), key=lambda x: x["total_premium"], reverse=True)[:8]
+        _PRICEY_CANDS = sorted(aggx.values(), key=lambda x: x["total_premium"], reverse=True)[:14]
         global _FULL_CANDS
         _FULL_CANDS = sorted([c for c in cands
                               if 50000 <= (c.get("total_premium") or 0) <= 1000000],
-                             key=lambda x: x["total_premium"], reverse=True)[:12]
+                             key=lambda x: x["total_premium"], reverse=True)[:20]
         # ^ ceiling at 1M: the tested band ends there (panel 2026-09-02 - unbounded, mega-name
         # aggregates above 1M would occupy the head slots on a cohort the tuner never measured)
         # ^ snapshot BEFORE the flow_band cut: the tuner's full grid (39.5k contracts) put the
@@ -2445,7 +2445,7 @@ def run_scheduled_cycle(mock=False):
             _att = 0
             try:
                 for _pname, _pf in _order:
-                    if _cyc >= 2 or _tot >= _tot_cap or _att >= 6:
+                    if _cyc >= 2 or _tot >= _tot_cap or _att >= 10:
                         break                       # 2 probes per cycle max - spread across the day
                     if _pcount.get(_pname, 0) >= _per:
                         continue
@@ -2461,14 +2461,14 @@ def run_scheduled_cycle(mock=False):
                         continue            # their SPY<20d confirmation is market-level - hoisted
                                             # here so 50d/20d divergence days can't burn the budget
                     _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
-                             else _PRICEY_CANDS[:8] if _pname in ("DIP_CONF_MILD", "BULL_DIP_X")
-                             else _FULL_CANDS[:10] if _pname in ("FOLLOW_CALLS", "CONSENSUS_CALLS")
+                             else _PRICEY_CANDS[:14] if _pname in ("DIP_CONF_MILD", "BULL_DIP_X")
+                             else _FULL_CANDS[:16] if _pname in ("FOLLOW_CALLS", "CONSENSUS_CALLS")
                              else candidates[2:12])   # skim BELOW the fade book's 2-per-cycle picks
                              # DIP_CONF_MILD buys THE TRIGGER CONTRACT via _PROBE_CONTRACT (panel-
                              # corrected 2026-09-01): the +21.2/day t4.31 cell was measured on the
                              # expensive contract itself, so the live evidence is earned on it too
                     for c in _pool:
-                        if _att >= 6:
+                        if _att >= 10:
                             break
                         t = c["ticker"]
                         if t.upper() in _open_tk:

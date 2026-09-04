@@ -376,3 +376,18 @@ every script it references land in the SAME push - a cron line is a promise the 
 keep. The freshness sentinel (shipped tonight) now alarms on the missing-artifact symptom
 (tuner_apply.log absent after a Friday), and the registry rule in its docstring makes the
 pairing explicit: any new cron or data store ships with its sentinel row in the same commit.
+
+2026-09-04 (late) - NIGHTLY BOUNDARY SILENT 3 NIGHTS (Sep 2-4): trajectory_nightly.log froze
+at Sep 1 22:14; the 22:00 SEQ_APPLY court simply did not run. Root cause found only after two
+same-night near-repeats: research crons (probe_tuner, glide_sim build) APPEND to tracked
+corpus jsonl files without committing, and interactive sessions scp files in - either way the
+worktree carries modified tracked files, and every pull-first cron (git pull --rebase refuses
+a dirty tree) dies silently at its first command with no log line, because the log redirect
+sits on the python step the chain never reaches. The archive freeze hid inside the same
+silence. Fix c114215b: probe_tuner_rows.jsonl and glide_fine_rows.jsonl untracked and
+gitignored (VPS-local rebuildable research data - a growing file must never be tracked on a
+box where crons pull), pull-retry added to cron lines, and session discipline: staged work is
+committed or reverted before any :00 cron boundary. Proven same night: 22:00 boundary ran
+clean for the first time since Sep 1. Lesson: on a pull-first box, one dirty tracked file
+silently kills EVERY downstream cron - and the freshness sentinel's schedule checks now catch
+the symptom class within one night instead of three.

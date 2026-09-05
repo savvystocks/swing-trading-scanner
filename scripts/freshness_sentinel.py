@@ -38,10 +38,10 @@ DAILY = {0, 1, 2, 3, 4, 5, 6}
 CHECKS = [
     # -- trade path: the engine and its lifelines
     ("engine last_cycle_ok", "schedule", "data/last_cycle_ok", (20, 30, WEEKDAYS), "TRADE"),
-    ("engine records log", "schedule", "proactive_sandbox_logs.json", (20, 30, WEEKDAYS), "TRADE"),
+    ("engine records log", "schedule", "proactive_sandbox_logs.json", (19, 30, WEEKDAYS), "TRADE"),
     ("harvest poller log", "schedule", "data/poller.log", (21, 0, WEEKDAYS), "TRADE"),
-    ("harvest state", "schedule", "data/harvest_state.json", (20, 30, WEEKDAYS), "TRADE"),
-    ("engine watch log", "schedule", H + "/engine_watch.log", (21, 0, WEEKDAYS), "TRADE"),
+    ("harvest state", "schedule", "data/harvest_state.json", (19, 30, WEEKDAYS), "TRADE"),
+    ("engine watch log", "schedule", H + "/engine_watch.log", (19, 30, WEEKDAYS), "TRADE"),
     ("telegram commands log", "mtime", H + "/telegram_commands.log", 100.0, "MONITOR"),
     # -- harvest data: labels and candidates must track the market
     ("harvest candidates day", "data_day", "data/harvest.db",
@@ -79,12 +79,12 @@ CHECKS = [
     ("api telemetry day", "data_day", "data/harvest.db", ("select max(day) from api_telemetry", 2), "MONITOR"),
     ("bid path day", "data_day", "data/harvest.db",
      ("select date(cast(substr(cast(max(poll_ts_utc) as text),1,10) as int), 'unixepoch') from bid_path", 2), "TRADE"),
-    ("same-day db backup", "schedule", "data/harvest_backups", (20, 30, WEEKDAYS), "MONITOR"),
+    ("same-day db backup", "schedule", "data/harvest_backups", (19, 30, WEEKDAYS), "MONITOR"),
     ("spec parses", "json_ok", "fade_book_spec.json", None, "TRADE"),
     ("challengers parses", "json_ok", "challengers.json", None, "COURT"),
     ("governor weekly reports", "mtime", "reports/governor", 240.0, "COURT"),
     ("expired legs still open", "expired_open", "proactive_sandbox_logs.json", 1, "TRADE"),
-    ("ghost open records", "ghost_open", "proactive_sandbox_logs.json", 15, "TRADE"),
+    ("ghost open records", "ghost_open", "proactive_sandbox_logs.json", 10, "TRADE"),
 ]
 
 

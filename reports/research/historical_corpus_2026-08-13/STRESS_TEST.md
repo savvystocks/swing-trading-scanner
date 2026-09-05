@@ -1,6 +1,6 @@
 # Historical corpus stress-test - built overnight 2026-08-13
 
-Corpus: 7895 replayable proxy candidates (20 liquid tickers, Sep-2024 to Jul-2026,
+Corpus: 8100 replayable proxy candidates (20 liquid tickers, Sep-2024 to Jul-2026,
 free Alpaca hourly option bars). PROXY caveats: trigger = contract-day premium turnover
 in-band (not real sweeps); entry = next session's first hourly open (signal known EOD);
 trade-price paths, not bid quotes; no spread screen. HAIRCUT column = 2% round-trip cost.
@@ -8,46 +8,46 @@ Nothing here shortcuts the 10-virgin-day bar - this is regime stress-testing, no
 
 | slice | n/days | day-mean raw | haircut | halves |
 |---|---|---|---|---|
-| FADE mild in-band (live analogue) | 1161/247d | +19.12% (t=1.61) | +16.74% | +25.4 / +12.9 |
-| FADE mild whale 400k-1M | 376/190d | +2.65% (t=0.65) | +0.59% | +0.9 / +4.4 |
-| FADE trend days (router blocks) | 1519/217d | +1.62% (t=0.47) | -0.41% | +6.1 / -2.8 |
-| CONSENSUS trend days (leg candidate) | 2018/222d | +5.39% (t=2.51) | +3.28% | +2.3 / +8.5 |
-| CONSENSUS mild days | 1849/256d | +3.98% (t=1.64) | +1.90% | +8.9 / -0.9 |
+| FADE mild in-band (live analogue) | 1185/247d | +19.22% (t=1.62) | +16.83% | +25.3 / +13.2 |
+| FADE mild whale 400k-1M | 391/193d | +1.93% (t=0.48) | -0.11% | -0.6 / +4.5 |
+| FADE trend days (router blocks) | 1556/217d | +1.26% (t=0.37) | -0.77% | +6.0 / -3.4 |
+| CONSENSUS trend days (leg candidate) | 2061/222d | +5.03% (t=2.37) | +2.93% | +2.3 / +7.7 |
+| CONSENSUS mild days | 1920/256d | +3.43% (t=1.42) | +1.36% | +8.0 / -1.2 |
 
 ## By period - FADE mild in-band vs CONSENSUS trend
 | period | fade mild | consensus trend |
 |---|---|---|
-| 2024H2 | +38.32% (283/71d t=0.96) | -4.70% (398/49d t=-1.1) |
-| 2025H1+ | +22.33% (150/36d t=1.53) | +7.40% (807/86d t=2.31) |
-| 2025H2+ | +10.22% (514/95d t=1.93) | +2.74% (251/28d t=0.42) |
-| 2026 | +5.08% (214/45d t=0.79) | +12.10% (562/59d t=2.71) |
+| 2024H2 | +38.15% (290/71d t=0.95) | -4.51% (404/49d t=-1.06) |
+| 2025H1+ | +21.97% (155/36d t=1.51) | +6.81% (828/86d t=2.15) |
+| 2025H2+ | +10.69% (523/95d t=2.05) | +2.31% (254/28d t=0.36) |
+| 2026 | +5.14% (217/45d t=0.8) | +11.65% (575/59d t=2.63) |
 
 ## Every-day coverage (owner ask 2026-08-13: green AND red days, all strategies)
 | slice | n/days | day-mean raw | haircut | halves |
 |---|---|---|---|---|
-| EXEC_BASELINE (any shape, any day) | 5939/479d | +5.65% (t=3.73) | +3.54% | +8.3 / +3.0 |
-| EXEC_BASELINE green days | 3376/267d | +4.51% (t=2.4) | +2.42% | +7.7 / +1.4 |
-| EXEC_BASELINE red days | 2563/212d | +7.08% (t=2.86) | +4.94% | +9.5 / +4.6 |
-| FADE mild GREEN days | 622/129d | +7.78% (t=1.61) | +5.62% | +2.1 / +13.3 |
-| FADE mild RED days | 539/118d | +31.53% (t=1.3) | +28.90% | +50.6 / +12.4 |
-| CONSENSUS trend GREEN (calls w/ uptrend) | 1238/133d | +6.07% (t=2.41) | +3.95% | +5.8 / +6.3 |
-| CONSENSUS trend RED (puts w/ downtrend) | 780/89d | +4.38% (t=1.15) | +2.29% | -3.0 / +11.6 |
-| MIXED shape (neither fade nor consensus) | 972/388d | +8.64% (t=2.19) | +6.46% | +21.8 / -4.6 |
-| CALLS only, green days | 2453/266d | +6.79% (t=3.13) | +4.66% | +9.1 / +4.5 |
-| PUTS only, red days | 1588/212d | +13.07% (t=0.97) | +10.80% | +28.9 / -2.7 |
+| EXEC_BASELINE (any shape, any day) | 6091/479d | +5.38% (t=3.61) | +3.27% | +8.0 / +2.7 |
+| EXEC_BASELINE green days | 3455/267d | +4.19% (t=2.28) | +2.10% | +7.2 / +1.2 |
+| EXEC_BASELINE red days | 2636/212d | +6.88% (t=2.8) | +4.75% | +9.5 / +4.2 |
+| FADE mild GREEN days | 634/129d | +7.82% (t=1.65) | +5.66% | +1.7 / +13.9 |
+| FADE mild RED days | 551/118d | +31.68% (t=1.3) | +29.04% | +50.9 / +12.4 |
+| CONSENSUS trend GREEN (calls w/ uptrend) | 1259/133d | +5.49% (t=2.21) | +3.38% | +5.9 / +5.1 |
+| CONSENSUS trend RED (puts w/ downtrend) | 802/89d | +4.34% (t=1.14) | +2.25% | -2.9 / +11.4 |
+| MIXED shape (neither fade nor consensus) | 987/390d | +8.41% (t=2.14) | +6.24% | +21.8 / -5.0 |
+| CALLS only, green days | 2512/266d | +5.90% (t=2.8) | +3.79% | +8.5 / +3.3 |
+| PUTS only, red days | 1634/212d | +13.00% (t=0.96) | +10.74% | +28.9 / -2.9 |
 
 ## EARLY_STRENGTH confirmation on FADE mild in-band (enter only after +5..15% rise)
 | mode | n/days | day-mean raw | haircut | halves |
 |---|---|---|---|---|
-| immediate entry (live mode) | 1161/247d | +19.12% (t=1.61) | +16.74% | +25.4 / +12.9 |
-| confirmed entry (early-strength) | 277/146d | +18.02% (t=2.63) | +15.66% | +13.3 / +22.7 |
+| immediate entry (live mode) | 1185/247d | +19.22% (t=1.62) | +16.83% | +25.3 / +13.2 |
+| confirmed entry (early-strength) | 282/147d | +18.08% (t=2.66) | +15.72% | +13.6 / +22.5 |
 
 ## Exit variants on FADE mild in-band (raw)
 | exit rule | n/days | day-mean raw | haircut | halves |
 |---|---|---|---|---|
-| live trail50/20 stop-50 | 1161/247d | +19.12% (t=1.61) | +16.74% | +25.4 / +12.9 |
-| stop -40 | 1161/247d | +20.18% (t=1.7) | +17.77% | +28.6 / +11.8 |
-| tight trail 10% | 1161/247d | +16.65% (t=1.42) | +14.32% | +22.8 / +10.5 |
-| early trail trig30 | 1161/247d | +17.33% (t=1.47) | +14.98% | +24.0 / +10.7 |
-| take-profit +80 | 1161/247d | +9.89% (t=2.24) | +7.69% | +7.4 / +12.4 |
-| time-stop ~3 sessions | 1161/247d | +16.50% (t=1.39) | +14.17% | +24.0 / +9.0 |
+| live trail50/20 stop-50 | 1185/247d | +19.22% (t=1.62) | +16.83% | +25.3 / +13.2 |
+| stop -40 | 1185/247d | +20.07% (t=1.7) | +17.66% | +28.4 / +11.8 |
+| tight trail 10% | 1185/247d | +16.82% (t=1.43) | +14.49% | +22.8 / +10.9 |
+| early trail trig30 | 1185/247d | +17.42% (t=1.48) | +15.07% | +23.9 / +11.0 |
+| take-profit +80 | 1185/247d | +10.52% (t=2.38) | +8.31% | +7.5 / +13.5 |
+| time-stop ~3 sessions | 1185/247d | +16.37% (t=1.38) | +14.04% | +23.7 / +9.1 |

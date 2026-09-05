@@ -74,7 +74,7 @@ CHECKS = [
     # -- v1.1 (registry sweep 2026-09-04): failure modes mtime checks cannot see
     ("repo push sync", "push_sync", ".", None, "COURT"),
     ("off-box snapshot repo", "git_commit", H + "/harvest-snapshots", (21, 30, WEEKDAYS), "TRADE"),
-    ("student models (VPS dir)", "schedule", "reports/fade_meta", (22, 30, WEEKDAYS), "COURT"),
+    ("student models (VPS)", "newest_file_day", "reports/fade_meta/model_*.json", 2, "COURT"),
     ("shadow ledger content day", "jsonl_day", "reports/shadow_lab/ledger.jsonl", 3, "COURT"),
     ("api telemetry day", "data_day", "data/harvest.db", ("select max(day) from api_telemetry", 2), "MONITOR"),
     ("bid path day", "data_day", "data/harvest.db",
@@ -84,6 +84,7 @@ CHECKS = [
     ("challengers parses", "json_ok", "challengers.json", None, "COURT"),
     ("governor weekly reports", "mtime", "reports/governor", 240.0, "COURT"),
     ("expired legs still open", "expired_open", "proactive_sandbox_logs.json", 1, "TRADE"),
+    ("ghost open records", "ghost_open", "proactive_sandbox_logs.json", 15, "TRADE"),
 ]
 
 
@@ -173,6 +174,17 @@ def main():
                                  f"{max(days) if days else '?'} - {behind} trading days behind")
                 else:
                     fresh += 1
+            elif kind == "newest_file_day":
+                import glob as _g
+                import re as _re
+                ds = [m.group(0) for f in _g.glob(target)
+                      for m in [_re.search(r"\d{4}-\d{2}-\d{2}", os.path.basename(f))] if m]
+                behind = trading_days_behind(max(ds), today) if ds else 999
+                if behind > spec:
+                    stale.append(f"[{crit}] {name}: newest file {max(ds) if ds else '?'} - "
+                                 f"{behind} trading days behind (max {spec})")
+                else:
+                    fresh += 1
             elif kind == "json_ok":
                 json.load(open(target, encoding="utf-8"))
                 fresh += 1
@@ -192,6 +204,25 @@ def main():
                 if bad:
                     stale.append(f"[{crit}] {name}: {len(bad)} expired contract(s) still OPEN "
                                  f"({', '.join(bad[:3])}) - settle/exit machinery broken")
+                else:
+                    fresh += 1
+            elif kind == "ghost_open":
+                ghosts = []
+                for r in json.load(open(target, encoding="utf-8")):
+                    if r.get("status") != "OPEN":
+                        continue
+                    ets = (r.get("entry_ts_utc") or r.get("timestamp") or "")[:10]
+                    if not ets or trading_days_behind(ets, today) <= spec:
+                        continue
+                    has_occ = any("occ" in kk and isinstance(vv, str) and vv
+                                  for lg in (r.get("legs") or {}).values() if isinstance(lg, dict)
+                                  for kk, vv in lg.items())
+                    if not has_occ:
+                        ghosts.append(f"{r.get('probe_strategy') or r.get('set_type')}/{r.get('ticker')}@{ets}")
+                if ghosts:
+                    stale.append(f"[{crit}] {name}: {len(ghosts)} OPEN record(s) aged >{spec} trading "
+                                 f"days with NO leg occs - unsettleable ghosts no exit sweep can "
+                                 f"reach ({', '.join(ghosts[:4])})")
                 else:
                     fresh += 1
             else:

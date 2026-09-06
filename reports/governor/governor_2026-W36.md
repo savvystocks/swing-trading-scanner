@@ -17,4 +17,4 @@ Demotions are automatic and immediate; promotions to LIVE require the owner to s
 
 ## Measurement-lane trigger (report-only)
 
-- Measurement-lane trigger: trigger not met. NOT MET - tight fills 163 >= floor 10; organic fills already cover where the school trades. fills by bucket={'med2-8': 178, 'tight<2': 163, 'wide8-20': 149, 'vwide>=20': 162}; school selects={'med2-8': 2215, 'tight<2': 1798, 'wide8-20': 410, 'vwide>=20': 66} [top-quintile-by-blend proxy (no TAKEs)]. Report-only; activation stays owner-gated (LIVE_GATE.md).
+- Measurement-lane trigger: trigger not met. NOT MET - tight fills 175 >= floor 10; organic fills already cover where the school trades. fills by bucket={'med2-8': 204, 'tight<2': 175, 'wide8-20': 154, 'vwide>=20': 162}; school selects={'med2-8': 2425, 'tight<2': 2115, 'wide8-20': 437, 'vwide>=20': 78} [top-quintile-by-blend proxy (no TAKEs)]. Report-only; activation stays owner-gated (LIVE_GATE.md).

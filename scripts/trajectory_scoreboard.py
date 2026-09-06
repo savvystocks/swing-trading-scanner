@@ -102,7 +102,7 @@ def main():
            "Right direction = PRIORITY rising while DISCOVERY stays small and flat.\n"
            "\nNORTH STAR (v1.6): promotion -> proof seat -> 8 rising weeks -> first GBP 1-5k "
            "-> +5% quarters double rungs -> GBP 100k pot.\n"
-           f"Position: strategy promotions to the proof seat: {len([p for p in promoted])} spec upgrades applied to date; "
+           f"Position: proof-seat promotions 0; court upgrades applied to the live spec: {len(promoted)}; "
            f"proof weeks {pw}/8; real capital GBP 0 of 100,000; "
            "lifetime real loss GBP 0 of the 2,500 cap.\n"
            "Nearest commitment: October-gate pre-registration written before 2026-09-18.")

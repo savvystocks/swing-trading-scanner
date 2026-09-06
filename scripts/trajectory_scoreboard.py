@@ -85,13 +85,27 @@ def main():
            "week": week, "open_counts": open_counts, "closed_without_pnl": skipped,
            "note": "realized exits only; entry premiums are decision marks until the fill-honesty fix"}
     json.dump(out, open("reports/research/trajectory_scoreboard.json", "w", encoding="utf-8"), indent=1)
+    spec = {}
+    try:
+        spec = json.load(open("fade_book_spec.json", encoding="utf-8"))
+    except Exception:
+        pass
+    promoted = sorted(k[5:] for k in spec if str(k).startswith("auto_"))
+    proof = spec.get("proof_account") or {}
+    pw = proof.get("rising_weeks", 0)
     msg = ("TRAJECTORY SCOREBOARD (realized, cumulative):\n"
            f"PRIORITY book: ${latest.get('priority', 0):+,} lifetime, ${week.get('priority', 0):+,} this week "
            f"({open_counts['priority']} open)\n"
            f"DISCOVERY tuition: ${latest.get('discovery', 0):+,} lifetime, ${week.get('discovery', 0):+,} this week "
            f"({open_counts['discovery']} open)\n"
            f"V10 legacy (frozen): ${latest.get('legacy', 0):+,}\n"
-           "Right direction = PRIORITY rising while DISCOVERY stays small and flat.")
+           "Right direction = PRIORITY rising while DISCOVERY stays small and flat.\n"
+           "\nNORTH STAR (v1.6): promotion -> proof seat -> 8 rising weeks -> first GBP 1-5k "
+           "-> +5% quarters double rungs -> GBP 100k pot.\n"
+           f"Position: strategy promotions to the proof seat: {len([p for p in promoted])} spec upgrades applied to date; "
+           f"proof weeks {pw}/8; real capital GBP 0 of 100,000; "
+           "lifetime real loss GBP 0 of the 2,500 cap.\n"
+           "Nearest commitment: October-gate pre-registration written before 2026-09-18.")
     print(msg, flush=True)
     tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
     if tok and chat and os.environ.get("SCOREBOARD_DRY") != "1":

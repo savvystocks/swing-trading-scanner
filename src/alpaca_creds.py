@@ -9,6 +9,10 @@ _PROBED = False
 
 
 def _pairs():
+    # ISOLATION (proof contract 2026-09-06): ALPACA_PROOF_* must NEVER be added to this scan.
+    # working_creds() probes an account-agnostic market-data endpoint and caches one winner
+    # process-wide - it is structurally incapable of telling accounts apart. Proof creds are
+    # threaded explicitly through the proof BookContext only, never picked here.
     seen = set()
     out = []
     for kk, sk in (("ALPACA_API_KEY", "ALPACA_SECRET_KEY"),

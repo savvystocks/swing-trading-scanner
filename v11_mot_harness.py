@@ -1027,6 +1027,19 @@ check(6, "occ guard: second entry on a held contract SKIPS (one record per contr
 check(6, "spread cap: skip reason maps to harvest code 'spread_cap'",
       lab._skip_code(_r16a.get("reason", "")) == "spread_cap")
 
+# 6.10b creds isolation (proof-account contract 2026-09-06): no bare _paper_creds() below the
+# routing decision inside enter_proactive_set - creds resolve ONCE at entry and thread through
+# the repricer, spread retry and submit; route_to_alpaca_paper accepts explicit creds.
+import inspect as _insp
+_eps_src = _insp.getsource(lab.enter_proactive_set)
+check(6, "creds isolation: enter_proactive_set resolves _paper_creds exactly once",
+      _eps_src.count("_paper_creds()") == 1, f"count={_eps_src.count('_paper_creds()')}")
+check(6, "creds isolation: route_to_alpaca_paper takes an explicit creds parameter",
+      "creds" in _insp.signature(lab.route_to_alpaca_paper).parameters)
+_pairs_src = _insp.getsource(__import__("src.alpaca_creds", fromlist=["_pairs"])._pairs)
+check(6, "creds isolation: the failover cred-picker never scans PROOF key names",
+      '"ALPACA_PROOF' not in _pairs_src and "'ALPACA_PROOF" not in _pairs_src)
+
 # 6.11 digest renders the scoreboard + alert-reconciliation lines
 _dg6 = lab.daily_digest()
 check(6, "digest: scoreboard + alert reconciliation lines render",

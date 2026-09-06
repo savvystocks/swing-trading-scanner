@@ -532,8 +532,10 @@ def _submit_paper_order(payload, creds):
         return None, "ERROR", str(e)[:120]
 
 
-def route_to_alpaca_paper(ticker, legs, dry_run=True):
-    creds = (os.environ.get("ALPACA_PAPER_API_KEY"), os.environ.get("ALPACA_PAPER_SECRET_KEY"))
+def route_to_alpaca_paper(ticker, legs, dry_run=True, creds=None):
+    # ISOLATION (proof contract 2026-09-06): creds are threaded explicitly - callers on a
+    # non-default book MUST pass theirs; env mutation for account switching is banned.
+    creds = creds or (os.environ.get("ALPACA_PAPER_API_KEY"), os.environ.get("ALPACA_PAPER_SECRET_KEY"))
     out = {}
     for name, leg in legs.items():
         if leg.get("illiquid"):                       # FAIL-OPEN: skip illiquid, keep the rest
@@ -1332,7 +1334,7 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
         # honesty demands the real ask).
         _lb = _la = None
         try:
-            _cr3 = _paper_creds()
+            _cr3 = creds
             _rq3 = urllib.request.Request(
                 "https://data.alpaca.markets/v1beta1/options/quotes/latest?symbols="
                 + _tl["occ_symbol"] + "&feed=indicative",
@@ -1387,7 +1389,7 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
             if isinstance(sp, (int, float)) and sp > cap:
                 try:                                  # SPREAD RETRY (owner 2026-08-17: INTC died on a
                     import time as _t                 # 7.4% flicker quote, then the probe entered at a
-                    _cr = _paper_creds()              # tight one 30s later - one re-quote before
+                    _cr = creds                       # tight one 30s later - one re-quote before
                     global _SR_BUDGET                 # surrendering. BUDGETED: max 2 retries/cycle
                     if all(_cr) and leg.get("occ_symbol") and not probe and _SR_BUDGET > 0:
                         _SR_BUDGET -= 1
@@ -1424,7 +1426,7 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
                                      _lg.get("contracts") or 1, _lg.get("alloc_usd") or LEG_BUDGET)
     except Exception as _ese:
         print(f"  early-strength stash fail-open: {type(_ese).__name__}")
-    orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run)
+    orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run, creds=creds)
     record = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
               "book": "PROBE" if probe else ("FADE" if fade_book.active() else "V10"),
               "router_state": ("MILD" if isinstance((md.get("regime_stack") or {}).get("market_spy_dist_pct"),

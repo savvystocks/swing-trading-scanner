@@ -79,7 +79,7 @@ FROZEN → CANDIDATE → SHADOW_PROVEN → ELIGIBLE_FOR_OWNER → LIVE
 | Council disagreement band | member-prob std ≤ 0.18 | a split house does not trade |
 | Council quorum | 3 of 5 members must score | else component-failure VETO |
 | Treasurer Kelly ceiling | half-Kelly, 25% hard cap | sizing ambition, capped until proven |
-| per-trade budget | $800 | until the EV machinery justifies otherwise in writing |
+| per-trade budget | $1,000 | NORTH_STAR v1.7 (2026-09-06): harmonized from $800 to the audition-evidence sizing basis; until the EV machinery justifies otherwise in writing |
 | liquidity cap | ≤ 10% of resting top-of-book | a recommendation that can actually fill |
 | automatic halt | −30% from high-water | entries stop, human review required |
 | P(halt) review | computed before any live sizing | if uncomfortably high, sizing comes down first |

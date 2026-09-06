@@ -71,6 +71,7 @@ CHECKS = [
     ("uw pull log", "schedule", H + "/uw_pull.log", (22, 30, DAILY), "EVIDENCE"),
     ("uw prints log", "schedule", H + "/prints.log", (0, 15, DAILY), "EVIDENCE"),
     ("friday tuner chain", "schedule", H + "/tuner_apply.log", (21, 45, {4}), "EVIDENCE"),
+    ("trajectory scoreboard", "schedule", H + "/scoreboard.log", (22, 25, {4}), "MONITOR"),
     # -- v1.1 (registry sweep 2026-09-04): failure modes mtime checks cannot see
     ("repo push sync", "push_sync", ".", None, "COURT"),
     ("off-box snapshot repo", "git_commit", H + "/harvest-snapshots", (21, 30, WEEKDAYS), "TRADE"),

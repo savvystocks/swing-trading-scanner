@@ -181,16 +181,15 @@ def main():
                 else:
                     fresh += 1
             elif kind == "jsonl_day":
-                tail = open(target, "rb").readlines()[-80:]
-                days = []
-                for ln in tail:
-                    try:
-                        d = json.loads(ln).get("day")
-                        if d:
-                            days.append(str(d)[:10])
-                    except Exception:
-                        pass
-                behind = trading_days_behind(max(days), today) if days else 999
+                import re as _re
+                mx = ""                 # full-file scan: append order is NOT chronological
+                _dp = _re.compile(r'"day":\s*"(20[0-9]{2}-[0-9]{2}-[0-9]{2})"')
+                for ln in open(target, encoding="utf-8", errors="ignore"):
+                    m = _dp.search(ln)
+                    if m and m.group(1) > mx:
+                        mx = m.group(1)
+                days = [mx] if mx else []
+                behind = trading_days_behind(mx, today) if mx else 999
                 if behind > spec:
                     stale.append(f"[{crit}] {name}: newest content day "
                                  f"{max(days) if days else '?'} - {behind} trading days behind")

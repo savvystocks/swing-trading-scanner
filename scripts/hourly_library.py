@@ -111,8 +111,37 @@ def main():
             if n_done % 1000 < BATCH:
                 print(f"{n_done}/{len(todo)} contracts stored ({month})", flush=True)
             time.sleep(0.35)
+    # TOP-UP PASS (2026-09-07): 'fetched' checkpoints an occ FOREVER, so a contract first
+    # fetched mid-window never receives its later bars - new triggers on known occs could
+    # never replay (September days silently unreplayable; the frozen-window class in
+    # checkpoint clothing). Extend every occ whose stored bars end before its 70d window does.
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    stored_max = dict(con.execute("select occ, max(substr(ts,1,10)) from bars group by occ"))
+    topup = []
+    for occ, d in first.items():
+        wend = min(date.fromisoformat(d) + timedelta(days=70),
+                   date.today() - timedelta(days=1)).isoformat()
+        smax = stored_max.get(occ)
+        if occ in done and smax and smax < wend:
+            topup.append((occ, smax, wend))
+    print(f"top-up: {len(topup)} contracts with incomplete windows", flush=True)
+    n_top = 0
+    for i in range(0, len(topup), BATCH):
+        chunk = topup[i:i + BATCH]
+        start = min(s for _, s, _ in chunk)
+        end = max(w for _, _, w in chunk)
+        got = fetch_batch([occ for occ, _, _ in chunk], start, end)
+        for occ, _, _ in chunk:
+            bars = got.get(occ) or []
+            con.executemany("insert or ignore into bars values (?,?,?,?,?,?)",
+                            [(occ, ts, o, h, l, c) for ts, o, h, l, c in bars])
+        con.commit()
+        n_top += len(chunk)
+        if n_top % 1000 < BATCH:
+            print(f"top-up {n_top}/{len(topup)}", flush=True)
+        time.sleep(0.35)
     tot = con.execute("select count(*) from bars").fetchone()[0]
-    print(f"LIBRARY COMPLETE: {n_done} fetched this run, {tot} hourly bars stored", flush=True)
+    print(f"LIBRARY COMPLETE: {n_done} fetched + {n_top} topped up, {tot} hourly bars stored", flush=True)
 
 
 if __name__ == "__main__":

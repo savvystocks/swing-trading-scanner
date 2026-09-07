@@ -446,3 +446,16 @@ scripts for end-date literal patterns and fails the gate on any unmarked hit, so
 cannot re-enter the codebase through any future edit. LESSON: when the same disease appears
 twice, the third instance is already there - sweep the class the same day, and make the
 gate reject the pattern itself, not just today's instances.
+
+2026-09-07 (third entry) - CHECKPOINT-FROZEN BARS: the frozen-window class in checkpoint
+clothing. hourly_library marked each contract DONE at first fetch, so a contract fetched
+mid-window (e.g. Aug 27 build) never received its later bars - September trigger days were
+silently unreplayable ("0 fetched this run" in a green log) even after every date literal was
+unfrozen, because the staleness lived in a checkpoint table, not a constant. Found chasing
+why the corpus backfill ingested nothing past Aug 31. Fix (same commit): a top-up pass every
+run extends any occ whose stored bars end before its 70-day window does. REGRESSION CHECK:
+the sentinel's "tuner corpus content day" full-file row now trips when ingestion stalls
+(>11 sessions), whatever the mechanism; the library prints its top-up count every run.
+LESSON: a rolling window is not enough - anything CHECKPOINTED against a growing dataset
+needs a completion condition, not a fetched-once flag; and "0 fetched" on a day when data
+grew is itself an anomaly worth a printed count.

@@ -62,7 +62,8 @@ def opt_daily(occs, start="2024-06-01", end="2026-08-16"):
 
 def stock_daily(sym, start="2024-06-01"):
     url = (f"https://data.alpaca.markets/v2/stocks/bars?symbols={sym}&timeframe=1Day&start={start}"
-           "&end=2026-08-16&limit=10000&adjustment=split&feed=iex")
+           "&end=2026-08-16&limit=10000&adjustment=split&feed=iex")  # FROZEN-BY-DESIGN: one-off
+           # 2026-08-18 backtest study; window pinned so the published evidence stays reproducible
     j = get(url)
     return {b["t"][:10]: b["c"] for b in (j.get("bars") or {}).get(sym, [])}
 

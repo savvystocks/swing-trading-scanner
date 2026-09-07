@@ -31,7 +31,10 @@ H = {"APCA-API-KEY-ID": os.environ.get("ALPACA_PAPER_API_KEY", ""),
      "APCA-API-SECRET-KEY": os.environ.get("ALPACA_PAPER_SECRET_KEY", "")}
 TICKERS = ["SPY", "QQQ", "IWM", "NVDA", "TSLA", "AAPL", "MSFT", "AMZN", "META", "GOOGL",
            "AMD", "SLV", "GLD", "TLT", "COIN", "PLTR", "NFLX", "MU", "INTC", "BA"]
-START, END = date(2024, 9, 1), date(2026, 8, 1)
+START = date(2024, 9, 1)
+END = date.today().replace(day=1)   # ROLLING - through the last complete month; a hardcoded
+                                    # END froze every monthly refresh at Aug 1 (third instance
+                                    # of the frozen-window class, swept 2026-09-07)
 
 
 def get(url, tries=4):
@@ -67,7 +70,8 @@ def daily_closes():
     out = {}
     for t in TICKERS:
         url = ("https://data.alpaca.markets/v2/stocks/bars?symbols=" + t +
-               "&timeframe=1Day&start=2024-06-01&end=2026-08-12&limit=10000&adjustment=split&feed=iex")
+               "&timeframe=1Day&start=2024-06-01&end=" + date.today().isoformat() +
+               "&limit=10000&adjustment=split&feed=iex")
         bars = (get(url).get("bars") or {}).get(t) or []
         ser = [(b["t"][:10], b["c"]) for b in bars]
         m = {}

@@ -433,3 +433,16 @@ corpus is >10 trading days stale instead of printing HOLD. REGRESSION CHECKS: se
 LESSON: the lesson of 09-04 was written but not generalized - after any breakdown, grep for
 the CLASS (here: hardcoded date literals in data windows), not just the instance; and a
 verdict that cannot distinguish "no change needed" from "cannot see" must fail loud.
+
+2026-09-07 (second entry) - FROZEN-WINDOW CLASS SWEPT: the owner's challenge ("you've found
+old corpus things twice now") prompted a class-wide sweep of every recurring script for
+hardcoded end-date literals. THIRD live instance found: historical_corpus.py, the monthly
+first-Saturday corpus refresh, had END = 2026-08-01 and a bars URL ending 2026-08-12 - every
+monthly "refresh" since August has added nothing while exiting green. Fixed to rolling
+(through the last complete month). The one legitimate frozen window (fivek_backtests.py, a
+published one-off study whose evidence must stay reproducible) is now explicitly marked
+FROZEN-BY-DESIGN. REGRESSION CHECK: MOT 6.10d frozen-window lint - scans all 22 recurring
+scripts for end-date literal patterns and fails the gate on any unmarked hit, so the class
+cannot re-enter the codebase through any future edit. LESSON: when the same disease appears
+twice, the third instance is already there - sweep the class the same day, and make the
+gate reject the pattern itself, not just today's instances.

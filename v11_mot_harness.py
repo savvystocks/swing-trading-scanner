@@ -1050,6 +1050,27 @@ check(6, "failover coupling: engine commit message matches engine_watch stand-do
       "sandbox lab data [skip ci]" in _msgs and '"sandbox lab data [skip ci]"' in _ew_src,
       str(_msgs)[:80])
 
+# 6.10d FROZEN-WINDOW CLASS LINT (three live instances found 09-04/09-07: uw_history_pull END,
+# probe_tuner closes end, historical_corpus END). No recurring script may bound a data window
+# with a hardcoded end-date literal unless the line is marked FROZEN-BY-DESIGN.
+_RECURRING = ["sandbox_proactive_lab.py", "fade_book.py", "fivek_probes.py", "harvest_logger.py",
+              "scripts/probe_tuner.py", "scripts/glide_sim.py", "scripts/tuner_apply.py",
+              "scripts/fade_meta.py", "scripts/sunday_boundary.py", "scripts/uw_history_pull.py",
+              "scripts/uw_flow_prints.py", "scripts/hourly_library.py", "scripts/historical_corpus.py",
+              "scripts/corpus_study.py", "scripts/shadow_lab.py", "scripts/shadow_breaker.py",
+              "scripts/daily_digest.py", "scripts/integrity_gate.py", "scripts/freshness_sentinel.py",
+              "scripts/trajectory_scoreboard.py", "scripts/engine_failover_exits.py", "scripts/poller.py"]
+_fw_pat = _re2.compile(r'(end=20[2-9][0-9]-|END\s*=\s*date\(20|end_date\s*=\s*["\']20[2-9][0-9]-)')
+_fw_hits = []
+for _rf in _RECURRING:
+    if not os.path.exists(_rf):
+        continue
+    for _ln_no, _ln in enumerate(open(_rf, encoding="utf-8"), 1):
+        if _fw_pat.search(_ln) and "FROZEN-BY-DESIGN" not in _ln:
+            _fw_hits.append(f"{_rf}:{_ln_no}")
+check(6, "frozen-window lint: no hardcoded end-date bounds a data window in recurring code",
+      not _fw_hits, "; ".join(_fw_hits)[:120])
+
 # 6.11 digest renders the scoreboard + alert-reconciliation lines
 _dg6 = lab.daily_digest()
 check(6, "digest: scoreboard + alert reconciliation lines render",

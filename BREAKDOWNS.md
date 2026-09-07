@@ -395,3 +395,17 @@ boundary. Proven same night: the 22:00 boundary ran clean for the first time sin
 the 22:10 student pulled through the dirty court window on autostash. Lesson: on a pull-first
 box one dirty tracked file silently kills EVERY downstream cron; the freshness sentinel's
 schedule checks now catch the symptom class within one night instead of three.
+
+2026-09-07 - THE WATCHDOG'S MESSENGER FAILED SILENTLY: the freshness sentinel ran at 08:00,
+found 2 stale items, and the owner received nothing - the Telegram send was one attempt with
+a bare except that swallowed any failure, and a missing-env path skipped the send with zero
+trace. The owner detected it (again) before the machinery did, on a day when Labor Day
+silence made a missing report invisible. The sentinel existed precisely because processes
+were failing quietly - and its own mouth could fail quietly. Fix (pushed 2026-09-07): three
+send attempts with backoff, every failure path printed loudly to the sentinel log (failed
+attempts, gave-up, missing env), verified by a live delivery. Also fixed: the trajectory
+scoreboard sentinel row false-alarmed because its log file does not exist until the first
+Friday run - touched into existence. Lesson: every alerting path needs retries and a written
+trace of its own failure; a monitor that cannot prove it spoke is presumed silent - and the
+Sunday heartbeat exists for exactly this, so a missing Sunday message must be treated as an
+incident, never as quiet.

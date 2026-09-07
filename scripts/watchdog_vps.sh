@@ -35,5 +35,16 @@ if [ "$MARKET" = "1" ] && [ "$AGE" -gt 30 ]; then
       >/dev/null 2>&1
   fi
 fi
+DISK_PCT=$(df / --output=pcent 2>/dev/null | tail -1 | tr -dc '0-9')
+if [ -n "$DISK_PCT" ] && [ "$DISK_PCT" -gt 85 ]; then
+  # a full disk kills every cron incl. the sentinel itself - this mirror survives that
+  # (coverage audit 2026-09-07; the 2026-07-22 fill was found by luck)
+  if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+    curl -fsS -m 10 "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+      -d chat_id="${TELEGRAM_CHAT_ID}" \
+      -d text="WATCHDOG: VPS disk ${DISK_PCT}% full - above the 85% line; crons start dying at 100%" \
+      >/dev/null 2>&1
+  fi
+fi
 printf '{"ts_utc":"%s","market_open":%s,"last_inbox_commit_age_min":%s,"status":"%s"}\n' \
   "$(date -u +%FT%TZ)" "$MARKET" "$AGE" "$STATUS" > "$SNAP/watchdog_status.json" 2>/dev/null || true

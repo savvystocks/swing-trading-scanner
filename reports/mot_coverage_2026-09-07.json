@@ -1,0 +1,511 @@
+{
+ "generated": "2026-09-07",
+ "method": "4-agent MOT coverage audit (2 matrix mappers, 1 unhappened-class hunter, 1 verifying judge), 162 code reads",
+ "stats": "65 incidents in the matrix: 37 CHECKED, 27 STRUCTURAL, 1 UNCOVERED (the 09-02 red-MOT push, closed by build_today item 2); 10 unhappened classes hunted, all 10 top claims verified true against code (one, the frozen tuner corpus, is actively losing data today); build order lands 9 checks today and 18 consolidated items this week, 6 incidents recorded none-possible, 5 weak proposals killed, 7 duplicate proposals merged.",
+ "matrix": [
+  {
+   "incident": "2026-04-10 SILENT AUTO-PASS GATES",
+   "status": "CHECKED",
+   "check": "v11_mot_harness.py dim 1: 'null core (spot=None) -> SKIPPED, no fabricated trade' and 'zero sentiment (0.0) preserved as a value, not dropped to null' - the current entry gate is asserted fail-closed on null inputs before every push. The V3.1 scan gates themselves are retired.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-04-21 ALPACA-PY BREAKING CHANGE",
+   "status": "CHECKED",
+   "check": "health-check.yml weekly scripts/schema_harness.py (DRIFT pages Telegram + exit 1) for provider payload drift; a crash-form return is also caught live by engine_watch.sh's crash sentinel (fresh heartbeat + data/last_cycle_ok stale >65m -> page at 3 ticks + auto-rollback).",
+   "proposed": "Gap inside the named check: schema_harness probes UW/Yahoo/yfinance and Alpaca STOCK bars only - the surface that actually broke (Alpaca option snapshot/quote fields) is unprobed. Add a check_alpaca_options step asserting bid/ask/IV/open_interest keys on a live option latest-quote/snapshot for SPY."
+  },
+  {
+   "incident": "2026-04-28/30 CRON DRIFT",
+   "status": "CHECKED",
+   "check": "scripts/freshness_sentinel.py schedule-kind rows (each cron's expected fire time computed weekend-aware; file older than expected +2h grace -> 08:00 Telegram) + watchdog_vps.sh (inbox commit >30 min in RTH -> page) + engine_watch.sh heartbeat (>35 min -> page) for engine cadence.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-05-05 SCAN CRASH (datetime import shadow)",
+   "status": "CHECKED",
+   "check": "engine_watch.sh crash-not-dead branch: workflow stamps data/last_cycle_ok only on Execute success; fresh heartbeat + stale stamp pages at 3 ticks and auto-rolls back to the last-good SHA. Pre-push, v11_mot_harness.py imports and exercises the real engine functions, so an exercised-path UnboundLocalError fails the gate.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-05-11/14 IMPORT-TIME CI CRASH (empty secret int())",
+   "status": "CHECKED",
+   "check": "v11_mot_harness.py imports sandbox_proactive_lab/sensors with dummy env vars at the top of the file - an int('') at module import crashes the MOT itself, which must be green before any push; a live recurrence is caught by engine_watch.sh's crash sentinel (last_cycle_ok stale).",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-05-13 WINDOWS UNICODE CRASH (cp1252 print)",
+   "status": "STRUCTURAL",
+   "check": "NONE",
+   "proposed": "NONE-POSSIBLE with reason: every trade-path process now runs on UTF-8 Linux (GHA ubuntu runners + Vultr VPS); the cp1252 console class cannot reach the engine, and remaining Windows-local helper scripts are outside the defended surface."
+  },
+  {
+   "incident": "2026-05-14 GHA QUOTA EMERGENCY",
+   "status": "STRUCTURAL",
+   "check": "NONE that asserts - src/brain/run_weekly.py prints '~N runner-minutes / rough monthly projection ~M of the 3,000 free' in the Sunday report, but it is an informational line, not a failing check; only total exhaustion would page (engine_watch heartbeat, after damage).",
+   "proposed": "In run_weekly.py's ops-telemetry block, page Telegram (and mark the report RED) when the monthly projection exceeds 90% of 3,000 minutes; alternatively a freshness-sentinel-style weekly check hitting the GitHub billing/usage API."
+  },
+  {
+   "incident": "2026-05-22 WRONG FILE DEPLOYED (Streamlit)",
+   "status": "STRUCTURAL",
+   "check": "NONE",
+   "proposed": "NONE-POSSIBLE with reason: Streamlit Cloud deployment no longer exists anywhere in the system; there is no deploy-entry-file surface left to check."
+  },
+  {
+   "incident": "2026-05-29 STUBBED MODULES + BUY-ON-SKIP",
+   "status": "CHECKED",
+   "check": "v11_mot_harness.py dim 1 real-compute battery (e.g. 'macro_technical computes spot/SMA20/ATR/RVOL from bars', 'net_gex finds zero-gamma crossing', 'price_action: rsi_5/rsi_15 match independent reference') - a module reduced to a stub returns wrong exact values and fails; 'null core -> SKIPPED, no fabricated trade' kills the buy-on-degraded-input class. The V3.1 SKIP signal math and Jinja emails are retired.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-06-03 90-MINUTE LIVE OUTAGE (ETF-filter KeyError)",
+   "status": "CHECKED",
+   "check": "engine_watch.sh crash sentinel (heartbeat fresh + last_cycle_ok stale -> page at 3 ticks + auto-rollback, market hours) catches a repeating mid-cycle KeyError; health-check.yml/schema_harness.py watches the root cause class weekly (UW payload key drift on flow_alerts, greek_exposure, darkpool, iv_rank, option_contract_historic 'chains').",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-06-09 STOP BLEW THROUGH (no server-side stops)",
+   "status": "CHECKED",
+   "check": "v11_mot_harness.py dim 6 backstop battery: 'backstop order: type=stop tif=gtc stop=entry x 0.50', 'backstop qty-sync: wrong-qty stop cancelled + resubmitted at held qty', 'backstop fleet mode: non-canary position armed', 'exit pass cancels + CONFIRMS the resting backstop BEFORE closing', 'reconciliation finds a fill on a SUPERSEDED backstop id' - the resting-GTC-stop invariant is asserted end-to-end before every push.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-06-10 VERIFICATION SILENTLY OFF (LLM grader graded 0)",
+   "status": "STRUCTURAL",
+   "check": "NONE on the incident itself - the V9 LLM grader is retired. The class (a checking layer silently dead) is guarded elsewhere: freshness sentinel rows watch the watchdogs' own logs, the sentinel messenger retries + logs its own send failures, and Sunday's all-clear heartbeat makes sentinel death visible.",
+   "proposed": "NONE-POSSIBLE with reason: the graded-0-names subsystem no longer exists; its class-level lesson is already embodied in the absence-alarm/watchdog-of-watchdogs layers named above."
+  },
+  {
+   "incident": "2026-06-10 VPS ROOT PASSWORD EXPOSED",
+   "status": "STRUCTURAL",
+   "check": "NONE",
+   "proposed": "NONE-POSSIBLE with reason: a credential pasted into a chat window is not machine-detectable by any repo/VPS check; the structural fix (key-only, read-only poller account, root login retired) removes the blast radius instead."
+  },
+  {
+   "incident": "2026-06-16 SESSIONS PURGED (30-day transcript cleanup)",
+   "status": "STRUCTURAL",
+   "check": "NONE - SESSION_RECOVERY_HANDOFF.md documents recovery, but nothing watches the transcript store.",
+   "proposed": "A weekly cron rsyncing ~/.claude/projects/<encoded>/ into the private harvest-snapshots repo, plus a freshness_sentinel.py git_commit row for it - turns an unrecoverable purge into a restorable one and alarms if the backup stops."
+  },
+  {
+   "incident": "2026-06-22/23 DEAD KEY + STALE RESOLVER REFERENCE",
+   "status": "CHECKED",
+   "check": "engine_watch.sh crash sentinel catches the crashing-_enrich return live; v11_mot_harness.py dim 6 creds-isolation checks ('enter_proactive_set resolves _paper_creds exactly once', 'route_to_alpaca_paper takes an explicit creds parameter', 'failover cred-picker never scans PROOF key names') lock the resolver call-site sweep before push.",
+   "proposed": "Strengthening: scripts/schema_harness.py marks dead Alpaca creds 'UNREACHABLE', which does NOT page (only DRIFT/ERROR do) - make UNREACHABLE on alpaca/uw also trip the Telegram + exit 1 path so a dead key is caught Sunday, not on Monday's first cycle."
+  },
+  {
+   "incident": "2026-06-22 PERSIST SILENTLY ABORTED (bad pathspec)",
+   "status": "CHECKED",
+   "check": "v10_lab.yml persist step: per-file adds with independent '|| true', JSON validation gate, and a loud failing exit ('PERSIST ABORTED/FAILED - trade records NOT on main', exit 1); a persist that stops landing commits also stales the heartbeat -> engine_watch.sh pages within ~35-50 min, and freshness_sentinel's 'engine records log' row alarms next 08:00.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-07-02 HARVEST AUDIT crit 1 (hardcoded Friday barrier hit the Jul-3 holiday)",
+   "status": "STRUCTURAL",
+   "check": "NONE - harvest_logger.py `_week_last_session`/`_vertical_barrier_ts` now use the XNYS calendar, but no suite asserts holiday behavior (test_harvest_harvester.py only checks 'barrier ts + pcts stamped'), and the code silently falls back to plain Friday if pandas_market_calendars raises.",
+   "proposed": "Add to test_harvest_harvester.py (ship-grid suite): freeze the clock inside a week whose Friday is an XNYS holiday (e.g. 2026-07-03) and assert vertical_barrier_ts lands 16:00 ET on the prior trading day, not the holiday; also assert the mcal-import-failure fallback is exercised and flagged."
+  },
+  {
+   "incident": "2026-07-02 HARVEST AUDIT crits 2+3 (poller never ran, never pulled)",
+   "status": "CHECKED",
+   "check": "healthchecks.io dead-man ping in scripts/run_poller_vps.sh (success pings, crash pings /fail -> email on first failure or silence) + freshness_sentinel.py 'harvest poller log' schedule row and 'harvest candidates day' data_day row (max(signal_ts) > 2 trading days behind -> Telegram) - a poller that stops running or stops ingesting alarms within a day.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-07-02 NAKED 72-POSITION WEEKEND (FLUSHED/orphaned records, no exits)",
+   "status": "CHECKED",
+   "check": "v11_mot_harness.py dim 6: '2b: reconcile_orphans adopts the orphan into an OPEN record', '2b: after adoption the underlying IS blocked', 'flush fix: closed-ok record FLUSHED, failed-close record stays OPEN', plus the backstop battery (every position gets a resting GTC stop); freshness_sentinel.py 'expired legs still open' and 'ghost open records' rows page on any unmanaged residue that survives anyway.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-07-02 MANDATORY RANDOM SAMPLE EMPTY",
+   "status": "CHECKED",
+   "check": "test_harvest_harvester.py: 'B: >= 5 random over the day', 'B: random spread across >= 2 cycles (not morning-concentrated)', 'B: random rows = out-of-band pool, full payload' - the mandatory sampler's emission is asserted in the pre-push suite.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-07-03 CRLF PASS ZEROED run_poller_vps.sh",
+   "status": "CHECKED",
+   "check": "Symptom-level: a zeroed poller script sends no healthchecks.io ping (email on silence) and stops updating data/poller.log, so freshness_sentinel.py's 'harvest poller log' schedule row alarms at the next 08:00; 'harvest candidates day' backs it up at 2 trading days.",
+   "proposed": "NONE (the return is paged twice; if a same-hour catch is wanted, a sentinel json_ok-style 'script non-empty + executable' row over the cron-referenced scripts is cheap to add)."
+  },
+  {
+   "incident": "2026-07-03 DOCS DESCRIBED A DEAD SYSTEM",
+   "status": "STRUCTURAL",
+   "check": "NONE - the present-tense/future-tense doc discipline in CLAUDE.md is a process rule, not an automated assertion.",
+   "proposed": "NONE-POSSIBLE with reason: prose-vs-code drift has no machine-checkable ground truth; the graduation rule (SHIPPED flips docs in the same commit) is the practical control."
+  },
+  {
+   "incident": "2026-07-04 WORKFLOW STARTUP FAILURE (childless with: in v10_lab.yml)",
+   "status": "CHECKED",
+   "check": "engine_watch.sh: a workflow that cannot even start never commits, so the heartbeat exceeds 35 min during market hours -> page + VPS failover; watchdog_vps.sh's 30-min inbox-commit check pages independently.",
+   "proposed": "NONE (optional strengthening: actionlint on .github/workflows in the pre-push suite would catch it before the market does)."
+  },
+  {
+   "incident": "2026-07-04 NO MARKET-OPEN GATE",
+   "status": "CHECKED",
+   "check": "v11_mot_harness.py: 'flush on CLOSED market is a dry no-op (0 orders, 0 closes)' and 'auto-flush sentinel: skip when absent, wait when closed (0 orders), flush+clear when open' assert the _market_is_open gate; scripts/integrity_gate.py 'session discipline' fails RED on any signal timestamped outside the XNYS session (+-10m).",
+   "proposed": "Close the holiday hole: integrity_gate currently SKIPs the session check on holidays ('SKIP (market holiday)') - on a holiday it should instead assert zero candidates were logged that day, so closed-market firing on a holiday also goes RED."
+  },
+  {
+   "incident": "2026-07-06 HARVEST ROW LOST TO A TRIGGER RACE",
+   "status": "STRUCTURAL",
+   "check": "NONE that asserts no loss - .gitattributes 'data/harvest_inbox/*.jsonl merge=union' plus the v10-lab concurrency group are structural prevention; v10_lab.yml itself documents the residual (proactive_sandbox_logs.json is NOT union-merged). Nothing standing would notice a silently dropped executed harvest row today.",
+   "proposed": "Add to scripts/integrity_gate.py: nightly reconcile yesterday's executed legs in proactive_sandbox_logs.json against executed-tier candidate rows in harvest.db (by occ + day); any executed trade with no harvest row (or vice versa) fails RED - the exact WULF-row loss signature."
+  },
+  {
+   "incident": "2026-07-06 FLUSH LIED ABOUT PFE",
+   "status": "CHECKED",
+   "check": "v11_mot_harness.py dim 6: 'flush fix: closed-ok record FLUSHED, failed-close record stays OPEN' plus the PARK-state checks ('park: 5th no-bid failure -> PARKED with ONE alert', 'park: live bid resets the fail counter') - FLUSHED-only-on-confirmed-close is a standing assertion.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-07-08 SILENT-DEATH ALARM OFF (no watchdog/creds/dead-man)",
+   "status": "CHECKED",
+   "check": "watchdog_vps.sh (inbox commit >30 min in RTH -> Telegram) + healthchecks.io reverse watch (VPS watches GitHub, healthchecks watches the VPS); the watchdogs' own death is caught by freshness_sentinel.py rows 'engine watch log', 'landing watch', 'archiver watch' and the Sunday all-clear heartbeat (missing Sunday message = incident, per the 2026-09-07 entry).",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-07-08 SCOREBOARD DRIFT + FAKE SPREADS + params_hash rotation",
+   "status": "CHECKED",
+   "check": "Drift: daily broker-vs-records reconcile marker + v11_mot_harness reconciliation checks + freshness_sentinel 'expired legs still open'/'ghost open records'. Fake spreads: MOT dim 4 'spread STAMPED on directional leg.execution_cost (source == alpaca_quote)' asserts real-quote sourcing. params_hash: test_brain.py::test_foundry_pools_across_params_hash locks that the Foundry pools across hashes, neutralizing rotation.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-07-10 POLLER GIT RACES (cannot fast-forward / cannot lock ref)",
+   "status": "CHECKED",
+   "check": "A poller whose sync fails stops advancing the pile: freshness_sentinel.py 'harvest candidates day' (max 2 trading days behind -> Telegram) and 'bid path day' catch it; a poller that crashes outright pings healthchecks /fail. The fetch+reset mirror sync itself is structural (run_poller_vps.sh).",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-07-16 61% OF TRAINING PILE FEATURELESS",
+   "status": "CHECKED",
+   "check": "scripts/integrity_gate.py null-storm check: >50% empty feature payloads among yesterday's feature-tier rows (topn/executed/random, n>=20) -> RED + Telegram; test_harvest_harvester.py 'A: topn full features, cheap null' asserts the tiering; the Student's 8,000 feature-bearing-row PROVISIONAL floor counts trainable rows before issuing verdicts.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-07-22 VPS DISK FILLED (keep=14 backups)",
+   "status": "STRUCTURAL",
+   "check": "NONE - retention is now 2 (poller.py) but no check anywhere measures disk space (verified: no df/statvfs/disk in scripts/ or watchdogs); a new fill source would only surface indirectly as next-morning sentinel CHECK FAILED/staleness cascades, misdiagnosed.",
+   "proposed": "Add a 'vps disk free' row to freshness_sentinel.py CHECKS: shutil.disk_usage('/') with alarm below 15% free (criticality TRADE) - one line in the existing kind dispatch, alarms before crons start dying."
+  },
+  {
+   "incident": "2026-07-25 THE VALIDATOR WAS BROKEN (PBO not CSCV)",
+   "status": "CHECKED",
+   "check": "test_brain.py::test_pbo_dsr_correctness - explicitly born from this incident: 'pure noise is NOT certified clean (mean PBO in a sane band)', 'noise rarely passes the <=0.20 gate (was 100% when broken)', 'noise scores strictly worse than real edge' - the validator is itself validated in the standing suite.",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-07-26 LOOKAHEAD CONTAMINATION (persistence features leaked the future)",
+   "status": "STRUCTURAL",
+   "check": "NONE for the actual defect - test_brain.py::test_purgedkfold_leakage and test_discovery_walkforward_purge assert SPLIT-level leakage is caught, and feature_ttl asof=signal_ts is structural, but no standing check detects a feature whose construction window extends past signal_ts.",
+   "proposed": "Add a feature-causality check to test_brain.py (or a nightly gate): recompute flow_persistence/persistence features for a sample of stored candidates with the input series hard-truncated at signal_ts and assert equality with the stored values; plus a planted future-return feature canary asserting the harness/Student pipeline flags it instead of scoring it."
+  },
+  {
+   "incident": "2026-07-27/28 55 PHANTOM OPEN RECORDS",
+   "status": "CHECKED",
+   "check": "freshness_sentinel.py 'ghost open records' row (OPEN >10 trading days, no leg occs -> Telegram) and 'expired legs still open' row (expired contracts still OPEN -> Telegram); v11_mot_harness 'backstop fill reconciled: CLOSE_BACKSTOP exit at -50%' asserts the position-gone reconciliation path, and the daily reconcile marker runs live each day.",
+   "proposed": "NONE (residual: a phantom WITH an occ, pre-expiry, is caught only by the exit engine's UNTRACKED path; if wanted, extend ghost_open to also flag OPEN records whose occ has no matching broker position in the daily reconcile marker)."
+  },
+  {
+   "incident": "2026-07-28 ARCHIVER CAPTURED THE WRONG DATA",
+   "status": "STRUCTURAL",
+   "check": "NONE standing on content - the chain-feed archiver's schedule was retired 2026-08-06 (archiver.yml, dispatch-only). Its successor (uw_history.db via uw_history_pull) is freshness-watched by sentinel rows 'uw archive contracts'/'uw archive prints' (max(day) vs trading calendar) and the push-key class by 'push_sync'/'off-box snapshot repo' rows, but nothing asserts field-level correctness of new archive rows - the exact 07-28 defect (bare OCCs, no IV, wrong expiry spread) would pass every freshness check.",
+   "proposed": "Promote scripts/data_integrity_audit.py's checks (cross-source price alignment, OCC round-trip, day-consistency) from a one-off report to a scheduled weekly gate with exit 1 + Telegram, and add a non-null-rate assertion on IV/NBBO columns for each week's new contracts_daily rows."
+  },
+  {
+   "incident": "2026-08-04/05 24-hour silent entry outage",
+   "status": "CHECKED",
+   "check": "ZERO-ENTRY MARKET-DAY ALARM in daily_digest (sandbox_proactive_lab.py:1924-1932): zero entries on a weekday inserts a loud digest line AND fires a separate Telegram _notify; freshness_sentinel row 'daily digest' (digest.log, 22:20 weekdays) guarantees the digest itself runs",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-08-05 watchdog cron silently lost",
+   "status": "CHECKED",
+   "check": "freshness_sentinel.py schedule rows 'engine watch log' (engine_watch.log 19:30 wd), 'landing watch' (landing_watch.log 22:45), 'archiver watch' (archiver_watch.log 22:15) - a watchdog cron that vanishes stops writing its log and alarms at the next 08:00 sweep; archiver_watch.sh itself re-checks the 21:30 snapshot landed",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-08-06 lost trading day (GHA incident)",
+   "status": "CHECKED",
+   "check": "engine_watch.sh heartbeat alarm: origin/main commit age >35 min during market hours -> Telegram page + VPS failover cycle (engine_failover_exits.py); v10_lab.yml full-cadence GH schedule is the redundant dispatcher; freshness_sentinel row 'engine last_cycle_ok' backstops at day granularity",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-08-07 8 false engine-dead pages",
+   "status": "STRUCTURAL",
+   "check": "NONE - the fix is the blind-tick counter + quiet mode inside engine_watch.sh (lines 29-43); no automated test exercises the watchdog's decision logic, so a regression re-introducing blind=dead pages would only surface as live false pages",
+   "proposed": "Watchdog drill in the pre-push suite: run engine_watch.sh against a fixture repo with git fetch stubbed to fail and curl stubbed to a capture file; assert blind ticks 1-3 log 'blind tick N' and the alarm function is never invoked"
+  },
+  {
+   "incident": "2026-08-11 friendly-fire adoption (PUTW short covered)",
+   "status": "STRUCTURAL",
+   "check": "Partial only - MOT dim 6.14 asserts a PARKED straggler is NOT adopted, but no check covers the actual failure shape: a bare-occ legless record (PUTW/VRP/5K) whose occ must land in the reconciler's known set (sandbox_proactive_lab.py:1998-2004)",
+   "proposed": "MOT dim 6 check: call reconcile_orphans with log=[{'occ': X, no legs dict}] and a broker position at X; assert adoptions == [] (bare-occ records are KNOWN, never orphans)"
+  },
+  {
+   "incident": "2026-08-12 record vanished in a push race (NVDA)",
+   "status": "CHECKED",
+   "check": "v10_lab.yml persist gate runs scripts/merge_logs.py (record-level union by trade_set_id) inside every conflicted rebase before push - merge_logs --selftest asserts the exact lost-NVDA union case; and if a record is lost anyway, next-cycle reconcile_orphans adopts the recordless broker position and telegrams it (MOT 6.14 certifies the adoption path)",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-08-14 double-claim disease (duplicate adoptions)",
+   "status": "STRUCTURAL",
+   "check": "NONE - the 45-min adoption grace exists in reconcile_orphans (sandbox_proactive_lab.py:2013-2030) but no MOT/suite/sentinel assertion exercises it; a grace regression would recreate daily duplicates undetected until P&L looks wrong",
+   "proposed": "MOT dim 6 check: reconcile_orphans with a broker fill timestamped 10 min ago must NOT adopt, 50 min ago must adopt; plus a freshness_sentinel row on proactive_sandbox_logs.json alarming when two OPEN records share one occ (duplicate-claim detector)"
+  },
+  {
+   "incident": "2026-08-17 exit engine crashed every cycle (deferred-HOLD KeyError)",
+   "status": "CHECKED",
+   "check": "engine_watch.sh crash-not-dead branch (built from this incident): v10_lab.yml stamps data/last_cycle_ok only on Execute success; fresh heartbeat + stamp older than 65 min for 3 consecutive ticks -> Telegram page + auto-rollback to the stamped last-good SHA",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-08-18 first live auto-rollback with collateral (whole-tree revert)",
+   "status": "STRUCTURAL",
+   "check": "NONE - engine_watch.sh now pins the four data files to origin and checks out only '*.py' and 'scripts/' (lines 106-108), but nothing tests the rollback path; a regression sweeping data files again would only be seen via its downstream damage",
+   "proposed": "Watchdog drill scenario: execute the rollback branch against a fixture repo and assert the rollback commit's diff (git show --name-only) contains only *.py/scripts/ paths and none of proactive_sandbox_logs.json / harvest_state.json / cooloff / watchlist"
+  },
+  {
+   "incident": "2026-08-19 pip queue churn (24 lost runs) + null ledger lines",
+   "status": "CHECKED",
+   "check": "engine_watch.sh pages when cycles stop completing: heartbeat age >35 min -> failover page; fresh-heartbeat + stale last_cycle_ok -> crash-branch page - the churn signature of runs cancelling each other; pip cache in v10_lab.yml is the prevention (the sqlite null-ledger sub-fix in fill_ledger has no dedicated standing check)",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-08-20 false auto-rollback (twin schedulers)",
+   "status": "STRUCTURAL",
+   "check": "NONE - fixes are the 5-min cron offset in v10_lab.yml (line 9 comment), the 'code unchanged since last-good = no rollback' branch and 65m/3-tick thresholds in engine_watch.sh; none is asserted by any harness, and BREAKDOWNS 08-26 states rollback/failover are tested by real incidents only",
+   "proposed": "Watchdog drill scenario: fixture with gappy completions but code identical to the last-good SHA; assert the no-op branch fires ('run-queue churn' alarm) and no revert commit is created; second scenario asserts a real code diff does roll back"
+  },
+  {
+   "incident": "2026-08-24 mass-adoption / corrupt-log (worst data incident)",
+   "status": "CHECKED",
+   "check": "v10_lab.yml JSON VALIDATION GATE (validate_log before EVERY push; rebuild via resolver or 'PERSIST ABORTED' exit 1) + _assert_log_integrity at cycle start (sandbox_proactive_lab.py:2600, unreadable = restore newest parseable or HALT); freshness_sentinel rows 'expired legs still open'/'ghost open records' json.load the log daily and report CHECK FAILED to Telegram if it is unparseable",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-08-25 silent-gap audit fallout (fail-open gaps, unread spec keys, Ford stop-vs-expiry, telegram spam, cron quote mangling)",
+   "status": "STRUCTURAL",
+   "check": "Partial: freshness_sentinel 'spec parses'/'challengers parses' json_ok rows (corrupt-spec class); sunday_boundary.py LIVE_WIRED whitelist refuses promoting any spec key the engine does not read (lines 515-527); sentinel schedule rows catch dead cron emission. NOT covered: the STOP-OUTRANKS-EXPIRY precedence (coded at sandbox_proactive_lab.py:1115-1126) has no regression check - MOT dim 3 only tests CLOSE_EXPIRY at -10%",
+   "proposed": "MOT dim 3 check: manage_exit(ret=-87%, expiry 2 DTE) must return CLOSE_STOP_LOSS not CLOSE_EXPIRY (and the FADE-book variant); optionally a batching check asserting manage_backstops emits at most one _notify per cycle"
+  },
+  {
+   "incident": "2026-08-26 real GHA outage exercised the failover (sentinel stamp + tick coverage gaps)",
+   "status": "STRUCTURAL",
+   "check": "NONE as a test - the fixes live in engine_watch.sh failover-mode (covering cycle every 15-min tick until a real GHA persist lands) and engine_failover_exits.py stamping last_cycle_ok (line 51); the entry itself records that failover is 'tested by real incidents only, 3-0'",
+   "proposed": "Scripted failover drill in the suite: fixture repo with a stale heartbeat; run the engine_watch.sh failover path with the python step stubbed; assert FAILF is created, last_cycle_ok is stamped by the failover, and a covering cycle runs on the following tick"
+  },
+  {
+   "incident": "2026-08-26 (research) precise-replay OOM at 29.4k trades",
+   "status": "STRUCTURAL",
+   "check": "NONE",
+   "proposed": "NONE-POSSIBLE - interactive research tooling; the failure mode (OOM) is loud at run time and the bounded-cache + checkpoint-resume fix is structural; no standing production check is warranted"
+  },
+  {
+   "incident": "2026-08-28 promotion track empty and silent 4 days",
+   "status": "CHECKED",
+   "check": "sunday_boundary.py empty-track announcement (lines 322-327): 'PROMOTION TRACK EMPTY - no probe is being tracked toward auto-promotion' rendered in every nightly boundary court report/Telegram; freshness_sentinel rows 'nightly boundary (SEQ_APPLY)' and 'friday court' guarantee the court itself runs",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-08-31 grand retest scored zero (transient, never reproduced)",
+   "status": "STRUCTURAL",
+   "check": "NONE - grand_retest.py now carries funnel counters (lines 106-154) so a recurrence localizes in one run, but nothing fails automatically on a zero-score run",
+   "proposed": "Script-level guard in grand_retest.py: if universe > 0 and true-trigger trades scored == 0, print the funnel dict and exit 1 so the anomaly can never pass as a completed run"
+  },
+  {
+   "incident": "2026-09-01 venv dependency drift (vaderSentiment missing, MOT 127/128)",
+   "status": "CHECKED",
+   "check": "v11_mot_harness.py dim 1 'news_context VADER score + catalyst-type classify (Earnings)' - imports the vader-backed news sensor and fails red when the package is absent from the venv (exactly the check that fired); the MOT runs before every push per standing rule",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-09-01 stale watchdog expectations (landing_watch false alarms)",
+   "status": "STRUCTURAL",
+   "check": "NONE - fixed by editing landing_watch.sh (retired-manifest check removed, lines 23-25); the failure mode is a loud nightly false alarm so it self-announces, but nothing prevents the next watchdog/artifact drift",
+   "proposed": "Registry cross-check in the suite: assert every artifact path or commit-message pattern a watchdog script (landing_watch.sh, archiver_watch.sh, engine_watch.sh) demands also appears in the freshness_sentinel CHECKS registry, so retiring an artifact without updating its watchers fails the gate"
+  },
+  {
+   "incident": "2026-09-01 rotation sensor-cost blowup (~1.5h no completed cycle)",
+   "status": "STRUCTURAL",
+   "check": "Partial only - engine_watch.sh crash branch (fresh heartbeat + last_cycle_ok >65m for 3 ticks) covers the class but demonstrably did NOT page on the actual 1.5h episode (detection was the owner's end-of-day status pull; the ~110-min page latency sits at the episode's edge, and failover's own last_cycle_ok stamp can mask it); the 6-attempt budget (sandbox_proactive_lab.py:2447-2450) is the structural cost bound with no assertion",
+   "proposed": "MOT/suite check: simulate a cycle whose roster is all never-entering probes and assert enter_proactive_set is invoked at most 6 times (attempt budget holds under rotation); plus tighten the watchdog drill to the cancelled-run signature"
+  },
+  {
+   "incident": "2026-09-01 near-misses caught in adversarial review (rotation reach, EXEC_BASELINE slot, wings-only record, weekly _W floor, DIP_CONF_MILD live-band kill)",
+   "status": "STRUCTURAL",
+   "check": "Partial: regime_drill.py scenario 5 asserts PUT_DEBIT_W buys the LONG wing first and logs a record (happy path only - the short-leg-failure wings-only branch in fivek_probes.py:155-173 is untested); EXEC_BASELINE head slot (lab:2421-2426) and the _W throughput exemption (sunday_boundary.py:157-161) exist in code with no assertions",
+   "proposed": "Suite additions: (a) rotation-reachability check - over a simulated week of (day,hour) seeds every roster index leads at least once and EXEC_BASELINE is always first; (b) court unit check - a _W leg with 1 fill/week never breaches the >=3/week floor; (c) drill scenario where fk._order fails on the short leg - assert the wings-only INCOMPLETE record is logged"
+  },
+  {
+   "incident": "2026-09-01 (evening) instrument-mismatch near-miss (pricey pool evidence corruption)",
+   "status": "CHECKED",
+   "check": "regime_drill.py scenario 2: 'MILD: trigger-contract path buys the verbatim occ (resolution skipped)' asserts occ_symbol == the trigger occ with occ_source uw_trigger_verbatim; scenario 4 asserts the occ-collision guard still refuses a held contract on that path",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-09-02 probe entry drought (attempt budget exhausted by degenerate names)",
+   "status": "STRUCTURAL",
+   "check": "Partial: the mandatory starvation line 'probes: 0 entries this cycle - N of 6 attempts used' (sandbox_proactive_lab.py:2517-2520) prints every starved cycle, and the digest ZERO-ENTRY alarm pages only when the WHOLE day has zero entries - a probe-scope drought with fade entries present still pages nothing",
+   "proposed": "Probe-scope absence alarm: daily_digest counts today's book=PROBE records and _notify-pages when probes logged zero entries on a market day (or a freshness_sentinel row on proactive_sandbox_logs.json doing the same count), mirroring the 08-04 alarm at probe scope"
+  },
+  {
+   "incident": "2026-09-02 (evening) pushed on a red MOT (gate piped through tail)",
+   "status": "UNCOVERED",
+   "check": "NONE for the process hole - the ONE-RECORD-PER-CONTRACT invariant that flagged red is now MOT dim 6 'occ guard: second entry on a held contract SKIPS', but nothing enforces the MOT's exit code at push time: no workflow or hook runs the gate, so shell plumbing can override it again undetected",
+   "proposed": "Repo-committed pre-push git hook (scripts/pre_push_gate.sh wired via core.hooksPath) that runs the four suites + v11_mot_harness.py with set -o pipefail and no pipes, propagating the real exit code so a red gate physically blocks the push"
+  },
+  {
+   "incident": "2026-09-02 (root) the Wednesday blind spot (6-day IV window)",
+   "status": "STRUCTURAL",
+   "check": "NONE - the widen-once 7-18d retry lives in iv_term_structure (sandbox_proactive_lab.py:222-227) but MOT 1.3 stubs _alpaca_atm_iv on the happy path only; a regression deleting the retry (or a new sub-7-day window constant) passes every current check",
+   "proposed": "MOT dim 1 check: stub _alpaca_atm_iv to return None for the CAL_FRONT_DTE window and 55.0 for (7,18); assert iv_front == 55.0 with source alpaca; plus a constant-scan check asserting every DTE window in the sensor file spans >= 7 days"
+  },
+  {
+   "incident": "2026-09-03 bull-day affordability drought (vetted A, traded B)",
+   "status": "CHECKED",
+   "check": "regime_drill.py scenario 1: 'BULL: rich synth -> afford fallback entered the trigger contract' asserts occ_source afford_fallback, contracts == 1, and entry repriced from the LIVE quote (5.40) not the stale alert ask - the exact fallback path this incident shipped",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-09-04 frozen archive window (hardcoded END, budget starvation)",
+   "status": "CHECKED",
+   "check": "freshness_sentinel.py data_day rows 'uw archive contracts' (max(day) from contracts_daily, alarm >3 trading days behind) and 'uw archive prints' (>4 td), plus schedule rows 'uw pull log'/'uw prints log' - watches the DATA not the exit codes, alarming Telegram at 08:00 within days of any re-freeze",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-09-04 (evening) Friday chain tripped on an uncommitted script",
+   "status": "CHECKED",
+   "check": "freshness_sentinel.py row 'friday tuner chain' (tuner_apply.log expected after Friday 21:45 UTC + 2h grace) alarms on the missing-artifact symptom the next morning; 'tuner coarse corpus' and 'glide fine corpus' rows cover the upstream steps; the registry rule pairs every new cron with a sentinel row in the same commit",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-09-04 (late) nightly boundary silent 3 nights (dirty tree killed pull-first crons)",
+   "status": "CHECKED",
+   "check": "freshness_sentinel.py schedule row 'nightly boundary (SEQ_APPLY)' (trajectory_nightly.log, 22:00 weekdays) plus sibling rows (nightly student, shadow breaker, daily digest, evening persist, integrity gate) - the dirty-tree class silences every downstream cron and each dead log alarms at the next 08:00 sweep, catching the class within one night",
+   "proposed": "NONE"
+  },
+  {
+   "incident": "2026-09-07 the watchdog's messenger failed silently (sentinel Telegram swallowed)",
+   "status": "STRUCTURAL",
+   "check": "NONE that can page - the fix (3 retries with backoff, loud 'SEND FAILED / GAVE UP / ENV MISSING' lines in freshness_sentinel.py:246-259, scoreboard.log touched) writes a trace but the trace lives in a log only the broken channel would have announced; detection of a re-failure still rests on the owner noticing a missing Sunday heartbeat",
+   "proposed": "Out-of-band dead-man: after every confirmed Telegram delivery the sentinel pings a healthchecks.io URL (the pattern run_poller_vps.sh already uses); healthchecks emails on silence, so a dead messenger pages through a channel that is not Telegram - \u00a30, existing account"
+  }
+ ],
+ "unhappened_classes": [
+  {
+   "title": "Frozen tuner corpus: probe_tuner's price window is hardcoded to end 2026-08-31",
+   "scenario": "scripts/probe_tuner.py line 38 fetches daily closes with '&start=2024-05-01&end=2026-08-31'. Every SMA/regime feature (smd, reg, sp) comes from that dict, and build_rows() skips any contract-day where they are None - so every archive day AFTER Aug 31 is silently discarded, forever. The Friday chain (probe_tuner -> glide_sim build, which reads probe_tuner_rows.jsonl at scripts/glide_sim.py line 80 -> tuner_apply) will keep 'refreshing' on a corpus whose newest content day can never pass 2026-08-31, while the freshness sentinel's two corpus rows are SCHEDULE (mtime) checks that stay green because the files are rewritten each Friday. tuner_apply then HOLDs or glides live exit knobs in fade_book_spec.json on permanently stale evidence - and HOLD is indistinguishable from the designed 'holding is normal' verdict. This is the exact 2026-09-04 frozen-archive breakdown reproduced one layer downstream, already latent today (Sep 1-5 archive days are being skipped right now).",
+   "precedent": "2026-09-04 FROZEN ARCHIVE WINDOW (hardcoded END=2026-08-21 in the UW puller; 'monitors must alert on DATA FRESHNESS, not process exit codes'); 2026-08-25 silent-gap audit (spy_regime's pinned start would have frozen the regime from ~Sep 21). Same grammar in scripts/fade_meta.py line 59 (end=2026-12-31, freezes the nightly student on New Year's Day).",
+   "check": "Compute end at runtime (yesterday) in probe_tuner.closes_series and fade_meta._vol_ivx_join. Add two jsonl_day CONTENT rows to scripts/freshness_sentinel.py CHECKS (the kind already exists for the shadow ledger) for reports/research/probe_tuner_rows.jsonl and glide_fine_rows.jsonl: newest row 'day' <= 6 trading days behind, else alarm. tuner_apply.main() additionally asserts max(r['day']) is within 10 trading days and pages instead of printing HOLD when it is not.",
+   "effort": "S"
+  },
+  {
+   "title": "/halt and /flatten can confirm to the owner while the flag never reaches origin",
+   "scenario": "scripts/telegram_commands.py _write_flag() writes halt.json FIRST (dirtying the tracked file), then runs 'git pull --rebase' - which refuses a dirty tree (the 2026-09-04 class) - then commits on a stale base and pushes; all four subprocess calls use capture_output=True with return codes ignored. If origin ever moves ahead of the VPS checkout (one dropped push, one snapshot race), the push is rejected non-fast-forward, and every subsequent command fails the same way FOREVER (local stays ahead), while the owner receives 'FLATTEN armed - all paper positions close at the next cycle' each time. The engine, which reads the flag from a fresh clone of origin in v10_lab.yml, keeps trading. The sentinel's 'off-box snapshot repo' row uses git_commit on the LOCAL checkout, so the stuck-unpushed commit reads as fresh - the watcher confirms the lie.",
+   "precedent": "2026-09-04 (late) dirty tracked file silently kills every pull-first cron; 2026-07-06 FLUSH LIED ABOUT PFE (never record an action that didn't confirm); 2026-06-22 persist silently aborted; 2026-09-07 the watchdog's messenger failed silently.",
+   "check": "In _write_flag: pull BEFORE writing the flag, check every returncode, and after push compare 'git rev-parse HEAD' against 'git ls-remote origin main'; the Telegram confirmation is sent ONLY on match, otherwise the reply is 'COMMAND FAILED TO PUBLISH - engine has NOT received it' (fail-loud, one line). Add a push_sync sentinel row (the kind already exists for '.') pointed at /home/poller/harvest-snapshots.",
+   "effort": "S"
+  },
+  {
+   "title": "The engine's halt-flag read fails open on a dead deploy key, and nothing canaries the key",
+   "scenario": "v10_lab.yml's 'Read owner halt flag' step defaults SCHOOL_HALT=0 and on any clone failure prints 'flag fetch failed - fail-open (no halt)' inside a green run. If HARVEST_SNAPSHOTS_DEPLOY_KEY is rotated, revoked, or expires (GitHub is deprecating unrotated keys periodically), the owner's /halt and /flatten become permanent no-ops: the engine enters trades through an emergency the owner believes he stopped. No layer tests this key - health-check.yml's Sunday canary exercises UW/Alpaca/Telegram secrets but not SNAP_KEY, and the fail-open branch never pages.",
+   "precedent": "2026-06-22 dead Alpaca key discovered only when it crashed the path; 2026-07-28 archiver read-only key used for pushes (credential drift found by first-output audit); 2026-08-25 silent-gap audit's fail-open family. The proof contract (reports/proof_account_build_contract_2026-09-06.md, arming section) already mandates secrets in the Sunday canary - the same standard is missing for this older secret.",
+   "check": "Add a step to health-check.yml that clones harvest-snapshots with SNAP_KEY and exits red on failure (schema_harness already telegrams on red). In v10_lab.yml, on flag-fetch failure append a line to a small counter file persisted with the cycle data; a freshness_sentinel row alarms when the counter shows 3+ consecutive cycle failures (transient GitHub blips stay quiet, a dead key pages within an hour).",
+   "effort": "S"
+  },
+  {
+   "title": "The fivek/XSP weekly book is invisible to every defense layer",
+   "scenario": "Four independent gaps compound: (1) sandbox_proactive_lab.py line 2229 wraps fivek_probes.cycle() in a bare fail-open except that prints one line - an ImportError, spec-key rename, or yfinance break stops all entries AND settlements silently in green cycles; (2) fivek records carry no legs dict (occ/occ_more at top level), so the sentinel's expired_open check - which iterates (r.get('legs') or {}).values() - structurally cannot see an expired XSP spread stuck OPEN; (3) settlement prices come from yf.download('^XSP') in _xsp_close_series, a third-party call the weekly schema harness does not test (check_yfinance only tests .calendar; the series shape already needed the s.iloc[:,0] MultiIndex hack once); (4) v11_mot_harness.py contains zero fivek/XSP checks. Blast radius: CREDIT_SPREAD_W is priority #1 and the presumptive first Proof seat - its promotion evidence freezes or mislabels while every dashboard stays green, and the owner discovers it by silence again.",
+   "precedent": "2026-08-04 24h silent entry outage (a _safe wrapper swallowed it); 2026-08-28 promotion track empty and silent; 2026-04-21 provider drift (alpaca-py); 2026-06-10 verification silently off.",
+   "check": "Three small pieces: extend the sentinel's expired_open walker to also scan top-level occ + occ_more; add a fivek absence row to freshness_sentinel CHECKS - alarm on Friday if the ISO week's records contain no CREDIT_SPREAD_W entry while that week's regime was not BEAR (the one legitimate stand-down); add yf.download('^XSP', period='10d') with a non-empty, fresh-last-day assertion to scripts/schema_harness.py.",
+   "effort": "M"
+  },
+  {
+   "title": "The persist fallback 'git pull --rebase -X theirs' can still vanish trade records as valid JSON",
+   "scenario": "v10_lab.yml line 122: when merge_logs.py meets a conflicted file it does not know (its MERGERS covers exactly 4 files), it exits 1 and the workflow falls back to 'git pull --rebase -X theirs --autostash'. That strategy hunk-resolves proactive_sandbox_logs.json too - one side's records lose silently - and validate_log only asserts the result PARSES, not that records survived. The trigger is mundane: any NEW tracked state file that two runs both touch (proof_logs.json in build phase C is the named next candidate, per contract item 4; any future counter or watch-state file qualifies) makes every concurrent-push conflict take the record-shredding path. A closed leg reverting to OPEN also re-arms exits for a double-sell.",
+   "precedent": "2026-08-12 NVDA record vanished in a push race (the resolver was built for exactly this); 2026-08-24 mass-adoption via rebase -X splice (the fix validated JSON syntax, not record survival); 2026-07-06 WULF harvest row lost to a trigger race.",
+   "check": "In the persist step, before the retry loop, snapshot the trade_set_id set of both heads (local file + origin/main's copy); after any conflicted merge resolves, assert the pushed file's id set is a superset of the union and each id's status rank did not regress (merge_logs._rank already encodes this) - on failure, abort persist loudly instead of pushing. Add an MOT fixture that stages a conflict on an unknown file plus the log and asserts no record from either side is lost.",
+   "effort": "M"
+  },
+  {
+   "title": "tuner_apply pushes the live spec through '-X ours' with no post-merge validation and a non-atomic write",
+   "scenario": "scripts/tuner_apply.py line 187: after json.dump-ing fade_book_spec.json IN PLACE (a kill mid-write leaves a truncated spec the engine reads 10 minutes later), it runs 'git pull -q --rebase -X ours && git push'. fade_book_spec.json is the one file that gates every entry, exit, and probe; sunday_boundary.py and the challenger machinery also write it. On any concurrent spec change, -X ours silently resolves hunks - either the tuner's freshly-written probe.tuning block evaporates while its history[] entry claims 'applied' (evidence now lies about which exits produced which fills), or the court's promotion evaporates under the tuner's push. Nothing re-validates after the rebase: the sentinel's 'spec parses' row runs at 08:00 next morning, 10 hours and ~40 engine reads later.",
+   "precedent": "2026-08-24 rebase -X ours splice = worst data incident on record; 2026-08-25 spec trail keys the engine never read (writes that silently do not take effect); 2026-08-20 de-conflict schedulers.",
+   "check": "Write via tmp file + os.replace in both tuner_apply.py and sunday_boundary.py. After the pull-rebase and BEFORE the push, re-open the spec, assert it parses AND still contains the exact tuning/menu block just written (compare the values, not the mtime); on mismatch, page and abort the push. Add one MOT check grepping the two spec writers for '-X ours' without a following revalidation call.",
+   "effort": "S"
+  },
+  {
+   "title": "The freshness sentinel and its date math are holiday-blind, despite claiming otherwise",
+   "scenario": "freshness_sentinel.py's docstring says 'weekend/holiday-aware' but last_expected() knows only day-of-week sets and trading_days_behind() counts every Mon-Fri. On the morning after any market holiday (Thanksgiving, Christmas, New Year, Good Friday, Memorial Day...), every TRADE-critical schedule row (last_cycle_ok, records log, poller log, engine_watch log...) false-alarms in one batched page because the engine legitimately did not run - and data_day rows drift one phantom trading day closer to their limits. A page that cries wolf 9+ mornings a year is a page the owner learns to skim, which is how the next real 08:00 alarm gets missed. The 2026-09-07 entry already shows Labor Day interacting badly with this exact reporting path.",
+   "precedent": "2026-07-02 harvest barriers hardcoded 'Friday 16:00' landed on the Jul-3 holiday ('exchange calendars in all date math'); 2026-08-07 eight false engine-dead pages (false alarms erode the pager); 2026-09-07 Labor Day silence made a missing report invisible.",
+   "check": "Wire the XNYS calendar (already a dependency since fix 62db4895) into freshness_sentinel: last_expected skips non-sessions for market-hours rows and trading_days_behind counts sessions, not weekdays. Add a unit test asserting that a simulated Jul-4 and Labor-Day-Monday produce zero stale rows for the WEEKDAYS-scheduled TRADE checks.",
+   "effort": "S"
+  },
+  {
+   "title": "Failover stand-down is keyed to the literal commit message 'sandbox lab data [skip ci]'",
+   "scenario": "scripts/engine_watch.sh line 69 leaves failover mode only when origin/main's last commit subject exactly equals 'sandbox lab data [skip ci]' - a string hand-written in a different file (v10_lab.yml line 98). The day anyone rewords that commit message (a proof-build rename, a well-meaning cleanup, a message that appends the account name), the next transient staleness episode engages failover mode PERMANENTLY: the VPS runs exit-only covering cycles every 15 minutes forever, concurrently with healthy GHA cycles - two exit engines racing the same trade log and broker book (the double-claim/double-sell grammar), with no page because the 'ok: heartbeat' branch looks healthy.",
+   "precedent": "2026-09-01 stale watchdog expectations (landing_watch grepped for a commit wording that had evolved and alarmed nightly); 2026-08-20 twin schedulers looked like a crash loop; 2026-08-14 double-claim disease from concurrent writers.",
+   "check": "Two lines: an MOT check that extracts the git commit -m string from v10_lab.yml's persist step and asserts it equals the literal in engine_watch.sh (cross-file coupling made un-driftable); a freshness_sentinel mtime row on /home/poller/.engine_watch_failover_mode alarming when the file exists and is older than 2 hours ('failover mode engaged >2h - verify GHA is actually down or the stand-down match is broken').",
+   "effort": "S"
+  },
+  {
+   "title": "Nothing watches VPS disk space, and a full disk kills the sentinel itself",
+   "scenario": "uw_history.db, hourly_paths.db, harvest.db, nightly backups, and ever-growing cron logs all live on the one Vultr box; the archive pullers now legitimately add data every night. At 100% disk, every cron on the box dies at its first write - including freshness_sentinel.py, whose own death is only visible via the WEEKLY Sunday heartbeat, so the failure window is up to 6 days of total silence while sqlite writes fail, the poller drops candidates, and the labeler stalls. The 2026-07-22 fill was found by luck at 14 retained backup copies; the box has since gained three new growing databases and ~10 new nightly log files.",
+   "precedent": "2026-07-22 VPS DISK FILLED (retention 14 -> 2); 2026-05-14 GHA quota emergency (the same 'shared finite resource, no meter' class); 2026-09-07 a monitor that cannot prove it spoke is presumed silent.",
+   "check": "One sentinel row of a new 'disk' kind: os.statvfs('/') alarming at >85% used (TRADE criticality), plus the same check inside watchdog_vps.sh so the alarm survives the sentinel being unable to run (echo + Telegram curl, 3 lines of sh). Both land in the same commit per the registry rule in the sentinel's docstring.",
+   "effort": "S"
+  },
+  {
+   "title": "The student can silently train on a dead feature (NaN-imputed) and keep shipping models",
+   "scenario": "scripts/fade_meta.py builds its matrix from 18 NUMERIC_PATHS metadata fields with explicit fail-open ('any miss -> NaN features, the model imputes'). When one sensor dies fleet-wide - the exact way vaderSentiment vanished from the venv on 2026-09-01, or an alpaca/UW payload rename nulls a path - that column goes 100% NaN, the gradient-boost trains anyway, model_*.json keeps landing daily (so the 'student models' sentinel row stays green), and META_SELECT quietly re-ranks candidates on a degraded brain whose scores feed the shadow-ledger competition. Nobody counts trainable FEATURES, only trainable rows - the 07-16 lesson applied one axis over.",
+   "precedent": "2026-07-16 61% of training pile featureless ('count trainable rows'); 2026-09-01 venv dependency drift (a sensor absent from the environment); 2026-06-10 LLM grader silently graded 0 names.",
+   "check": "In fade_meta after matrix assembly: compute per-feature non-null coverage; write it into model_*.json; page (reuse its tg()) when any feature whose coverage exceeded 50% in the previous model file drops below 25% now - a one-model-lag collapse detector, ~15 lines, no new infrastructure.",
+   "effort": "S"
+  }
+ ],
+ "plan": {
+  "build_today": [
+   "1. Unfreeze the tuner corpus (ACTIVE data loss since Sep 1): compute the bars end-date at runtime in probe_tuner.closes_series (line 38, hardcoded end=2026-08-31) and fade_meta line 59 (end=2026-12-31), add two jsonl_day content rows to freshness_sentinel CHECKS asserting the newest 'day' in probe_tuner_rows.jsonl and glide_fine_rows.jsonl is <=6 trading days behind, and make tuner_apply.main() page-and-abort instead of HOLD when max(row day) exceeds 10 trading days.",
+   "2. Close the only UNCOVERED hole: commit scripts/pre_push_gate.sh wired via core.hooksPath that runs the four suites plus v11_mot_harness.py with set -o pipefail and no pipes, so a red MOT physically blocks the push instead of being laundered through tail (verified: no hook, no hooksPath exists today).",
+   "3. Make /halt and /flatten unable to confirm a lie: in telegram_commands._write_flag pull BEFORE writing halt.json, check every subprocess returncode, and send the owner confirmation only when git rev-parse HEAD matches git ls-remote origin main - otherwise reply 'COMMAND FAILED TO PUBLISH - engine has NOT received it'; add a push_sync sentinel row for /home/poller/harvest-snapshots.",
+   "4. Canary the kill-switch's other end: add a health-check.yml step that clones harvest-snapshots with HARVEST_SNAPSHOTS_DEPLOY_KEY and exits red on failure (verified: the Sunday canary currently never touches SNAP_KEY while v10_lab.yml fail-opens on it), so a dead deploy key pages Sunday instead of making /flatten a permanent no-op.",
+   "5. Make the sentinel holiday-aware: wire the XNYS calendar into freshness_sentinel.last_expected (skip non-sessions for market-hours rows) and trading_days_behind (count sessions, not weekdays), with a unit test asserting simulated Jul-4 and Labor-Day mornings produce zero stale TRADE rows - protects the pager credibility every other 08:00 alarm depends on.",
+   "6. Watch the disk that everything lives on: one new 'disk' kind row in freshness_sentinel (shutil.disk_usage('/'), alarm above 85% used, TRADE criticality) plus a 3-line mirror in watchdog_vps.sh so the alarm survives the sentinel itself dying (verified: zero disk checks exist anywhere today).",
+   "7. Un-drift the failover stand-down coupling: an MOT check extracting the git commit -m string from v10_lab.yml's persist step and asserting it equals the literal 'sandbox lab data [skip ci]' in engine_watch.sh line 69, plus a sentinel mtime row alarming when /home/poller/.engine_watch_failover_mode exists older than 2 hours - prevents permanent twin-exit-engine mode after any commit-message reword.",
+   "8. Assert stop outranks expiry: MOT dim 3 check that manage_exit(ret=-87%, expiry 2 DTE) returns CLOSE_STOP_LOSS not CLOSE_EXPIRY, plus the FADE-book variant (verified: lines 410/411 test each action only in isolation, the precedence path at sandbox_proactive_lab.py:1115-1126 is unguarded).",
+   "9. Let the sentinel see the fivek book's corpses: extend the expired_open walker in freshness_sentinel.py (line 198, currently legs-dict-only) to also scan top-level occ and occ_more, so an expired XSP spread stuck OPEN alarms like any other leg."
+  ],
+  "build_this_week": [
+   "schema_harness hardening in one pass: add a check_alpaca_options step asserting bid/ask/IV/open_interest on a live SPY option latest-quote/snapshot (the exact 04-21 break surface, currently unprobed), a yf.download('^XSP', period='10d') non-empty fresh-last-day probe (fivek settlement source), and make UNREACHABLE on alpaca/uw trip the same Telegram + exit 1 path as DRIFT so a dead key pages Sunday, not Monday's first cycle.",
+   "Atomic spec writes before Friday's tuner window: tmp-file + os.replace in tuner_apply.py and sunday_boundary.py, and after tuner_apply's 'pull --rebase -X ours' re-open fade_book_spec.json and assert the exact tuning block just written survived (compare values) before pushing - page and abort on mismatch.",
+   "reconcile_orphans MOT battery: bare-occ legless record (PUTW/VRP/5K shape) with a matching broker position yields adoptions == [], a fill 10 min old is NOT adopted while 50 min old IS (the 45-min grace at sandbox_proactive_lab.py:2012-2030, currently untested), plus a sentinel row flagging two OPEN records sharing one occ (duplicate-claim detector).",
+   "Persist record-survival guard: in v10_lab.yml snapshot the trade_set_id sets of local and origin/main before the retry loop and after any conflicted merge assert the pushed log's id set is a superset with no status-rank regression (merge_logs._rank), aborting loudly instead of pushing - closes the '-X theirs fallback shreds valid JSON' path at line 122; add an MOT fixture staging a conflict on an unknown file plus the log.",
+   "fivek visibility package: a freshness_sentinel row alarming Friday when the ISO week has no CREDIT_SPREAD_W entry and the week's regime was not BEAR, plus a regime_drill scenario where the short-leg order fails and the wings-only INCOMPLETE record is asserted logged (fivek_probes.py:155-173, happy path only today).",
+   "Watchdog drill suite (one fixture-repo harness, consolidating four proposals): blind ticks 1-3 log without paging, the rollback commit's diff touches only *.py/scripts/ and never the four data files, unchanged-code staleness fires the no-op churn branch with no revert, and the failover path stamps last_cycle_ok and runs a covering cycle on the next tick.",
+   "Out-of-band dead-man for the sentinel's messenger: after every confirmed Telegram delivery freshness_sentinel pings a healthchecks.io URL (the run_poller_vps.sh pattern), so a dead messenger pages through a channel that is not Telegram.",
+   "fade_meta feature-collapse detector: after matrix assembly compute per-feature non-null coverage, write it into model_*.json, and page via its tg() when any feature above 50% coverage in the previous model drops below 25% now.",
+   "Lookahead causality check: recompute persistence features for a sample of stored candidates with inputs hard-truncated at signal_ts and assert equality with stored values, plus a planted future-return canary the Student pipeline must flag rather than score.",
+   "Harvest holiday-barrier test in test_harvest_harvester.py: freeze the clock in a week whose Friday is an XNYS holiday and assert vertical_barrier_ts lands 16:00 ET on the prior trading day, and assert the mcal-import-failure fallback is exercised and flagged.",
+   "integrity_gate additions: on market holidays replace 'SKIP (market holiday)' with an assertion that zero candidates were logged that day, and add a nightly reconcile of yesterday's executed legs in proactive_sandbox_logs.json against executed-tier rows in harvest.db (occ + day) failing RED on any one-sided record - the WULF-loss signature.",
+   "Promote data_integrity_audit.py from one-off report to a scheduled weekly gate with exit 1 + Telegram, adding a non-null-rate assertion on IV/NBBO columns for each week's new contracts_daily rows (the 07-28 defect passes every freshness check today).",
+   "GHA quota meter: in run_weekly.py's ops-telemetry block page Telegram and mark the report RED when the monthly runner-minutes projection exceeds 90% of 3,000.",
+   "grand_retest funnel guard: if universe > 0 and true-trigger trades scored == 0, print the funnel dict and exit 1 so a zero-score run can never pass as complete.",
+   "Probe-scope absence alarm: daily_digest counts today's book=PROBE records and fires _notify when probes logged zero entries on a market day - mirrors the 08-04 zero-entry alarm at probe scope, where a fade-entries-present drought currently pages nothing.",
+   "Rotation and court suite additions (09-01 class, consolidated): MOT check that an all-never-entering roster invokes enter_proactive_set at most 6 times, rotation-reachability over a simulated week of (day,hour) seeds with EXEC_BASELINE always first, and a court unit check that a _W leg with 1 fill/week never breaches the >=3/week floor.",
+   "Wednesday blind-spot MOT check: stub _alpaca_atm_iv to None for the CAL_FRONT_DTE window and 55.0 for (7,18), assert iv_front == 55.0 source alpaca, plus a constant-scan asserting every DTE window in the sensor file spans >= 7 days.",
+   "Transcript-store insurance: weekly cron rsyncing ~/.claude/projects/<encoded>/ into the private harvest-snapshots repo plus a freshness_sentinel git_commit row, turning an unrecoverable purge into a restorable one that alarms when the backup stops."
+  ],
+  "none_possible": [
+   "2026-05-13 Windows Unicode crash - every trade-path process now runs on UTF-8 Linux (GHA ubuntu + Vultr VPS); the cp1252 console class cannot reach the defended surface.",
+   "2026-05-22 wrong file deployed - the Streamlit Cloud deployment no longer exists; there is no deploy-entry-file surface left to check.",
+   "2026-06-10 LLM grader silently graded 0 - the subsystem is retired; the class lesson (a checking layer silently dead) is embodied in the absence-alarm and watchdog-of-watchdogs layers that do exist.",
+   "2026-06-10 VPS root password exposed - a credential pasted into a chat window is not machine-detectable by any repo or VPS check; key-only access with a read-only poller account removed the blast radius instead.",
+   "2026-07-03 docs described a dead system - prose-vs-code drift has no machine-checkable ground truth; the same-commit graduation rule in CLAUDE.md is the practical control.",
+   "2026-08-26 precise-replay OOM - interactive research tooling whose failure is loud at run time; the bounded-cache + checkpoint-resume fix is structural and no standing production check is warranted."
+  ],
+  "stats": "65 incidents in the matrix: 37 CHECKED, 27 STRUCTURAL, 1 UNCOVERED (the 09-02 red-MOT push, closed by build_today item 2); 10 unhappened classes hunted, all 10 top claims verified true against code (one, the frozen tuner corpus, is actively losing data today); build order lands 9 checks today and 18 consolidated items this week, 6 incidents recorded none-possible, 5 weak proposals killed, 7 duplicate proposals merged."
+ }
+}

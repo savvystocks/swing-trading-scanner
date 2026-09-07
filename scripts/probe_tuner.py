@@ -21,7 +21,7 @@ import sqlite3
 import time
 import urllib.request
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(REPO)
@@ -34,8 +34,9 @@ EXITS = [(-50.0, 50.0, 0.20), (-50.0, 80.0, 0.30), (-50.0, 80.0, 0.20), (-50.0, 
 
 
 def closes_series(s):
-    u = (f"https://data.alpaca.markets/v2/stocks/bars?symbols={s}&timeframe=1Day"
-         "&start=2024-05-01&end=2026-08-31&limit=10000&adjustment=split&feed=iex")
+    _end = (date.today() - timedelta(days=1)).isoformat()   # ROLLING - a hardcoded end froze the
+    u = (f"https://data.alpaca.markets/v2/stocks/bars?symbols={s}&timeframe=1Day"    # corpus at
+         f"&start=2024-05-01&end={_end}&limit=10000&adjustment=split&feed=iex")      # 08-31 (09-07)
     for _ in range(3):
         try:
             with urllib.request.urlopen(urllib.request.Request(u, headers=H), timeout=30) as r:

@@ -10,6 +10,12 @@ ever deleted or rewritten.
 
 Format per entry: WHAT BROKE / ROOT CAUSE / FIX / LESSON.
 
+COVERAGE RULE (owner order 2026-09-07, "the MOT must be well taught from all the
+breakdowns"): every new entry also names the REGRESSION CHECK that would catch its
+return (MOT check, suite test, sentinel row, drill scenario, watchdog) - or states
+NONE-POSSIBLE with the reason. The standing coverage matrix lives at
+reports/mot_coverage_2026-09-07.md and is re-audited when it drifts.
+
 ---
 
 ## V3.1/V4 scanner era (Apr-May 2026)
@@ -409,3 +415,21 @@ Friday run - touched into existence. Lesson: every alerting path needs retries a
 trace of its own failure; a monitor that cannot prove it spoke is presumed silent - and the
 Sunday heartbeat exists for exactly this, so a missing Sunday message must be treated as an
 incident, never as quiet.
+
+
+2026-09-07 - FROZEN TUNER CORPUS (active data loss, caught by the coverage audit before any
+symptom): scripts/probe_tuner.py fetched its daily-close window with a HARDCODED end of
+2026-08-31, so every archive day after Aug 31 was silently discarded from the tuning corpus -
+regime features came back None and build_rows skipped the day. The Friday chain would have
+"refreshed" forever on a corpus frozen at Aug 31 while both corpus sentinel rows (mtime-based)
+stayed green, and tuner_apply's HOLD verdicts on frozen evidence are indistinguishable from
+the designed holding-is-normal behavior. The same grammar sat in fade_meta.py (end=2026-12-31,
+a New Year's Day time bomb for the nightly student). This is the 2026-09-04 frozen-archive
+breakdown reproduced one layer downstream, five days later, by the same hand. Fix (same
+commit): both end dates computed at runtime; two CONTENT-day sentinel rows on the corpus files
+(newest row day <= 11 trading days); tuner_apply now REFUSES to judge and pages when the
+corpus is >10 trading days stale instead of printing HOLD. REGRESSION CHECKS: sentinel rows
+"tuner corpus content day" + "glide corpus content day"; tuner_apply's frozen-corpus refusal.
+LESSON: the lesson of 09-04 was written but not generalized - after any breakdown, grep for
+the CLASS (here: hardcoded date literals in data windows), not just the instance; and a
+verdict that cannot distinguish "no change needed" from "cannot see" must fail loud.

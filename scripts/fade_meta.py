@@ -55,8 +55,9 @@ def _vol_ivx_join(rows):
     tks = sorted({r[8] for r in rows if r[8]})
     rv = {}
     for t in tks:
-        u = (f"https://data.alpaca.markets/v2/stocks/bars?symbols={t}&timeframe=1Day"
-             "&start=2024-05-01&end=2026-12-31&limit=10000&adjustment=split&feed=iex")
+        _end = date.today().isoformat()                      # ROLLING - a hardcoded end would
+        u = (f"https://data.alpaca.markets/v2/stocks/bars?symbols={t}&timeframe=1Day"  # freeze the
+             f"&start=2024-05-01&end={_end}&limit=10000&adjustment=split&feed=iex")    # student on 2027-01-01
         c = {}
         for _ in range(2):
             try:

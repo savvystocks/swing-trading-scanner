@@ -1040,6 +1040,16 @@ _pairs_src = _insp.getsource(__import__("src.alpaca_creds", fromlist=["_pairs"])
 check(6, "creds isolation: the failover cred-picker never scans PROOF key names",
       '"ALPACA_PROOF' not in _pairs_src and "'ALPACA_PROOF" not in _pairs_src)
 
+# 6.10c cross-file coupling (coverage audit 2026-09-07): the failover stand-down matches the
+# engine's literal commit message - a reworded message would engage failover PERMANENTLY.
+import re as _re2
+_wf_src = open(".github/workflows/v10_lab.yml", encoding="utf-8").read()
+_ew_src = open("scripts/engine_watch.sh", encoding="utf-8").read()
+_msgs = _re2.findall(r'git commit -m "([^"]+)"', _wf_src)
+check(6, "failover coupling: engine commit message matches engine_watch stand-down literal",
+      "sandbox lab data [skip ci]" in _msgs and '"sandbox lab data [skip ci]"' in _ew_src,
+      str(_msgs)[:80])
+
 # 6.11 digest renders the scoreboard + alert-reconciliation lines
 _dg6 = lab.daily_digest()
 check(6, "digest: scoreboard + alert reconciliation lines render",

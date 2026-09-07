@@ -23,7 +23,7 @@ import sys
 import urllib.parse
 import urllib.request
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(REPO)
@@ -122,6 +122,17 @@ def main():
             rows.append(j)
         except Exception:
             pass
+    _mx = max((r.get("day") or "") for r in rows)
+    _bd, _cur = 0, date.fromisoformat(_mx)
+    while _cur < date.today():
+        _cur += timedelta(days=1)
+        if _cur.weekday() < 5:
+            _bd += 1
+    if _bd > 10:                        # frozen-corpus guard (coverage audit 2026-09-07): HOLD on
+        tg(f"TUNER APPLY REFUSES: corpus newest day {_mx} is {_bd} trading days stale - "
+           "frozen evidence; fix the corpus chain before any verdict.")
+        print(f"CORPUS STALE ({_mx}, {_bd} td) - refusing to judge on frozen evidence", flush=True)
+        return
     spec = json.load(open("fade_book_spec.json"))
     tuning = spec.setdefault("probe", {}).setdefault("tuning", {})
     today = date.today().isoformat()

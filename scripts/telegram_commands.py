@@ -35,13 +35,28 @@ def _flag_state():
 
 
 def _write_flag(state, why):
+    """Returns True ONLY when the flag verifiably reached origin - the engine reads origin,
+    so a confirmation on anything less is a lie (never record an action that didn't confirm,
+    2026-07-06; command-truth hardening 2026-09-07)."""
+    if subprocess.run(["git", "-C", SNAP, "pull", "--rebase", "origin", "main"],
+                      capture_output=True).returncode != 0:
+        return False
     state["updated_utc"] = datetime.now(timezone.utc).isoformat()
     state["why"] = why
     json.dump(state, open(FLAG, "w"), indent=2)
-    subprocess.run(["git", "-C", SNAP, "pull", "--rebase", "origin", "main"], capture_output=True)
     subprocess.run(["git", "-C", SNAP, "add", "halt.json"], capture_output=True)
-    subprocess.run(["git", "-C", SNAP, "commit", "-m", f"owner command: {why} [skip ci]"], capture_output=True)
-    subprocess.run(["git", "-C", SNAP, "push", "origin", "main"], capture_output=True)
+    subprocess.run(["git", "-C", SNAP, "commit", "-m", f"owner command: {why} [skip ci]"],
+                   capture_output=True)          # rc 1 on no-change is benign; push+verify decide
+    if subprocess.run(["git", "-C", SNAP, "push", "origin", "main"], capture_output=True).returncode != 0:
+        return False
+    loc = subprocess.run(["git", "-C", SNAP, "rev-parse", "HEAD"],
+                         capture_output=True, text=True).stdout.strip()
+    rem = subprocess.run(["git", "-C", SNAP, "ls-remote", "origin", "main"],
+                         capture_output=True, text=True).stdout.strip()
+    return bool(loc) and rem.startswith(loc)
+
+
+FAIL_MSG = "COMMAND FAILED TO PUBLISH - the engine has NOT received it. Try again, or check the VPS."
 
 
 def run():
@@ -67,23 +82,23 @@ def run():
         flag = _flag_state()
         if text.startswith("/halt"):
             flag["halt"] = True
-            _write_flag(flag, "HALT by owner")
-            _api("sendMessage", chat_id=allow, text="HALT set - new entries pause from the next cycle. /resume to lift.")
+            _ok = _write_flag(flag, "HALT by owner")
+            _api("sendMessage", chat_id=allow, text="HALT set - new entries pause from the next cycle. /resume to lift." if _ok else FAIL_MSG)
         elif text.startswith("/resume"):
             flag["halt"] = False
             flag["flatten"] = False
-            _write_flag(flag, "RESUME by owner")
-            _api("sendMessage", chat_id=allow, text="RESUMED - entries re-enabled from the next cycle.")
+            _ok = _write_flag(flag, "RESUME by owner")
+            _api("sendMessage", chat_id=allow, text="RESUMED - entries re-enabled from the next cycle." if _ok else FAIL_MSG)
         elif text.startswith("/cancelflatten"):
             flag["flatten"] = False
-            _write_flag(flag, "FLATTEN cancelled by owner")
-            _api("sendMessage", chat_id=allow, text="Flatten cancelled.")
+            _ok = _write_flag(flag, "FLATTEN cancelled by owner")
+            _api("sendMessage", chat_id=allow, text="Flatten cancelled." if _ok else FAIL_MSG)
         elif text.startswith("/flatten"):
             flag["flatten"] = True
             flag["halt"] = True
-            _write_flag(flag, "FLATTEN by owner")
+            _ok = _write_flag(flag, "FLATTEN by owner")
             _api("sendMessage", chat_id=allow,
-                 text="FLATTEN armed (also halts entries) - all paper positions close at the next open-market cycle. /cancelflatten to abort before it fires.")
+                 text=("FLATTEN armed (also halts entries) - all paper positions close at the next open-market cycle. /cancelflatten to abort before it fires." if _ok else FAIL_MSG))
         elif text.startswith("/status"):
             f = _flag_state()
             _api("sendMessage", chat_id=allow,

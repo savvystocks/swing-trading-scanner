@@ -32,6 +32,19 @@ GRACE_H = 2.0
 WEEKDAYS = {0, 1, 2, 3, 4}
 DAILY = {0, 1, 2, 3, 4, 5, 6}
 
+try:                                    # holiday-aware (coverage audit 2026-09-07): the 07-02
+    import pandas_market_calendars as _mcal    # harvest lesson - exchange calendars in ALL date
+    _sch = _mcal.get_calendar("XNYS").schedule(
+        start_date=(date.today() - timedelta(days=45)).isoformat(),
+        end_date=date.today().isoformat())
+    SESSIONS = {d.date() for d in _sch.index}
+except Exception:
+    SESSIONS = None
+
+
+def is_session(d):
+    return (d in SESSIONS) if SESSIONS is not None else (d.weekday() < 5)
+
 # (name, kind, target, spec, criticality)
 # schedule spec: (utc_hour, utc_minute, {dows})   data_day spec: (db, query, max_td)
 # mtime spec: max_hours
@@ -86,14 +99,22 @@ CHECKS = [
     ("governor weekly reports", "mtime", "reports/governor", 240.0, "COURT"),
     ("expired legs still open", "expired_open", "proactive_sandbox_logs.json", 1, "TRADE"),
     ("ghost open records", "ghost_open", "proactive_sandbox_logs.json", 10, "TRADE"),
+    # -- v1.2 (MOT coverage audit 2026-09-07): frozen-window, disk, and failover classes
+    ("tuner corpus content day", "jsonl_day", "reports/research/probe_tuner_rows.jsonl", 11, "EVIDENCE"),
+    ("glide corpus content day", "jsonl_day", "reports/research/glide_fine_rows.jsonl", 11, "EVIDENCE"),
+    ("vps disk headroom", "disk", "/", 85, "TRADE"),
+    ("failover mode stuck", "flag_age", H + "/.engine_watch_failover_mode", 2.0, "TRADE"),
 ]
 
 
 def last_expected(hour, minute, dows, now):
     d = now.date()
     for _ in range(40):
+        dow_ok = d.weekday() in dows
+        if dows == WEEKDAYS and not is_session(d):
+            dow_ok = False              # market-hours artifacts legitimately sleep on holidays
         cand = datetime(d.year, d.month, d.day, hour, minute, tzinfo=timezone.utc)
-        if d.weekday() in dows and cand <= now - timedelta(hours=GRACE_H):
+        if dow_ok and cand <= now - timedelta(hours=GRACE_H):
             return cand
         d -= timedelta(days=1)
     return None
@@ -107,7 +128,7 @@ def trading_days_behind(day_iso, today):
     n, cur = 0, d
     while cur < today:
         cur += timedelta(days=1)
-        if cur.weekday() < 5:
+        if is_session(cur):
             n += 1
     return n
 
@@ -186,6 +207,26 @@ def main():
                                  f"{behind} trading days behind (max {spec})")
                 else:
                     fresh += 1
+            elif kind == "disk":
+                import shutil
+                du = shutil.disk_usage(target)
+                pct = du.used * 100.0 / du.total
+                if pct > spec:
+                    stale.append(f"[{crit}] {name}: {pct:.0f}% used (limit {spec}%) - a full disk "
+                                 "kills every cron on the box including this sentinel")
+                else:
+                    fresh += 1
+            elif kind == "flag_age":
+                if os.path.exists(target):
+                    age_h = (now.timestamp() - os.path.getmtime(target)) / 3600
+                    if age_h > spec:
+                        stale.append(f"[{crit}] {name}: {target} present for {age_h:.1f}h - "
+                                     "failover engaged; verify GHA is really down or the "
+                                     "stand-down match is broken")
+                    else:
+                        fresh += 1
+                else:
+                    fresh += 1
             elif kind == "json_ok":
                 json.load(open(target, encoding="utf-8"))
                 fresh += 1
@@ -195,8 +236,13 @@ def main():
                 for r in json.load(open(target, encoding="utf-8")):
                     if r.get("status") != "OPEN":
                         continue
-                    for lg in (r.get("legs") or {}).values():
-                        for o in (lg.get("occ_symbol"), lg.get("front_occ"), lg.get("back_occ")):
+                    _occs = [lg.get(k) for lg in (r.get("legs") or {}).values() if isinstance(lg, dict)
+                             for k in ("occ_symbol", "front_occ", "back_occ")]
+                    _occs.append(r.get("occ"))
+                    _om = r.get("occ_more")
+                    if isinstance(_om, list):
+                        _occs.extend(_om)
+                    for o in _occs:
                             m = re.search(r"(\d{6})[CP]\d{8}$", o or "")
                             if m:
                                 ed = datetime.strptime(m.group(1), "%y%m%d").date()

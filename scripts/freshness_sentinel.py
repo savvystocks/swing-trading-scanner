@@ -242,11 +242,21 @@ def main():
         tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
         msg = ("ALL FRESH - " + lines[0]) if not stale else "\n".join(lines)
         if tok and chat and os.environ.get("SENTINEL_DRY") != "1":
-            try:
-                urllib.request.urlopen("https://api.telegram.org/bot" + tok + "/sendMessage?" +
-                                       urllib.parse.urlencode({"chat_id": chat, "text": msg}), timeout=15)
-            except Exception:
-                pass
+            sent = False
+            for attempt in range(3):    # the watchdog's messenger gets retries and a loud log -
+                try:                    # a swallowed morning blip silenced the 2026-09-07 report
+                    urllib.request.urlopen("https://api.telegram.org/bot" + tok + "/sendMessage?" +
+                                           urllib.parse.urlencode({"chat_id": chat, "text": msg}), timeout=20)
+                    sent = True
+                    break
+                except Exception as e:
+                    print(f"TELEGRAM SEND ATTEMPT {attempt + 1} FAILED: {repr(e)[:120]}", flush=True)
+                    import time
+                    time.sleep(20 * (attempt + 1))
+            if not sent:
+                print("TELEGRAM SEND GAVE UP - the report above never reached the owner", flush=True)
+        elif not tok or not chat:
+            print("TELEGRAM ENV MISSING - report not sent", flush=True)
     sys.exit(1 if stale else 0)
 
 

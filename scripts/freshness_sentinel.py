@@ -104,6 +104,7 @@ CHECKS = [
     ("glide corpus content day", "jsonl_day", "reports/research/glide_fine_rows.jsonl", 11, "EVIDENCE"),
     ("vps disk headroom", "disk", "/", 85, "TRADE"),
     ("failover mode stuck", "flag_age", H + "/.engine_watch_failover_mode", 2.0, "TRADE"),
+    ("morning analyst", "schedule", H + "/analyst.log", (8, 10, WEEKDAYS), "MONITOR"),
 ]
 
 

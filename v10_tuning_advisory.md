@@ -2986,3 +2986,9 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - IBIT (5d643697f146) - 2026-09-08T14:24:31.119Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

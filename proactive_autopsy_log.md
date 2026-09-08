@@ -4465,3 +4465,30 @@
 
 **Determining factor:** Bearish put FAILED (-100%, move 0.0%): no breakdown materialised; spot held above zero-gamma 480.0.
 
+## Autopsy - MSTR (ee406afed806)
+- entered 2026-09-03T17:45:06.659Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -52.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 130.0 worked against it.
+
+## Autopsy - DPRO (5b84fdc39bc7)
+- entered 2026-09-03T19:26:08.258Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -40.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-40%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 5.0 worked against it.
+
+## Autopsy - NBIS (640f4776c5ad)
+- entered 2026-09-04T18:24:40.098Z | trigger regime_BULLISH_loose | exit CLOSE_EXPIRY | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +242.6% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 230.0 fed the squeeze.
+

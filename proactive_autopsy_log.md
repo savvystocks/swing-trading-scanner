@@ -4501,3 +4501,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 45.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - INTC (4b74f68e54f1)
+- entered 2026-08-17T14:13:11.944Z | trigger regime_BEARISH_loose | exit CLOSE_UNTRACKED | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -48.7% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-49%, move 0.0%): no breakdown materialised; spot held above zero-gamma 110.0.
+

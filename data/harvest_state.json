@@ -1323,7 +1323,41 @@
     "SNDK280121C02000000",
     "HOOD261023P00098000",
     "CRDO270219C00200000",
-    "MU261120C01250000"
+    "MU261120C01250000",
+    "MRVL270115C00230000",
+    "COIN270115P00140000",
+    "AMD270115C00540000",
+    "SOXX260918C00500000",
+    "MDB261120P00300000",
+    "XLE270115C00070000",
+    "BE260911C00280000",
+    "RIOT261120C00024000",
+    "PCG270115C00020000",
+    "BE260918C00280000",
+    "USO281215P00145000",
+    "IBIT260911P00044000",
+    "B260918C00045000",
+    "SPY260925P00759000",
+    "CEG270319C00350000",
+    "AMD270115P00540000",
+    "GLD260918C00400000",
+    "UAL261218P00097500",
+    "AAPL260911P00315000",
+    "PCG261218C00019000",
+    "NEM261002C00130000",
+    "PLTR260911C00170000",
+    "BX261218C00140000",
+    "FN261120C00500000",
+    "PCG280121C00027000",
+    "USO261218C00160000",
+    "IBIT261002C00051500",
+    "QCOM270115C00220000",
+    "NBIS261016P00210000",
+    "GNRC261218C00175000",
+    "ALAB270115C00680000",
+    "CLS260918C00320000",
+    "ASHR261016C00034000",
+    "CROX261016P00115000"
   ],
   "tickers": {
     "GFL": {
@@ -36045,10 +36079,170 @@
       "days_to_earnings": 50,
       "post_earnings_iv_crush_flag": false,
       "flow_persistence_pct": 45.18
+    },
+    "B": {
+      "entry_ts_utc": "2026-09-08T19:35:17.861Z",
+      "macro": {
+        "spot": 44.15,
+        "sma20": 44.57,
+        "distance_to_sma20_pct": -0.939,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 45.8,
+        "iv_back": 47.8,
+        "iv_ratio": 0.958,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 487632.5,
+        "zero_gamma_strike": 46.0,
+        "distance_to_zero_gamma_pct": -4.19,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.68,
+        "atr_pct": 3.8,
+        "rvol_10min": 0.56,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Basic Materials",
+        "industry": "Gold",
+        "market_cap": 72715173888,
+        "short_pct_float": null,
+        "short_ratio": 2.2,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 123.03,
+        "vader_compound": 0.138,
+        "news_type": "Analyst",
+        "top_headline": "Citigroup Reinstates Neutral on Barrick Mining, Announces $45 Price Target",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -0.939,
+        "market_spy_dist_pct": -0.211,
+        "sector_etf": "XLB",
+        "sector_dist_pct": -1.131,
+        "sector_vs_market_spread": -0.92,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 44.2,
+        "call_iv_25d": 46.5,
+        "skew_ratio": 0.951,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 18.1,
+        "ask_sweep_prem": 2049603.0,
+        "total_flow_prem": 11320988.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 44.26,
+        "node_size": 92022.0,
+        "n_prints": 61,
+        "window_start": "2026-09-08T10:00:39Z",
+        "window_end": "2026-09-08T19:34:10Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 29,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 62,
+        "next_earnings_date": "2026-11-09",
+        "iv_rank_1y": 43.12,
+        "last_earnings_date": "2026-08-10",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 45.95,
+        "front_iv": 45.8,
+        "vrp": -0.15,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -550503.0,
+        "flow_persistence_pct": 44.85,
+        "flow_direction": "bearish",
+        "closing_accel": -412318.0,
+        "n_ticks": 334,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1161.1,
+        "vwma_20": 44.59,
+        "rsi_5": 44.31,
+        "rsi_15": 54.43,
+        "gap_pct": -0.391,
+        "day_range": 1.789,
+        "candle_body": 0.532,
+        "dist_sma50": 9.69,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -2.0,
+        "vix_level": 15.61,
+        "execution_hour": 19,
+        "day_of_week": 1,
+        "sector_vs_spy": -1.016,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 21689486.0,
+        "net_vanna": 9804715.0,
+        "net_charm": -3232099.0,
+        "delta_imbalance": 4.535,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.023,
+        "bid": 44.18,
+        "ask": 44.19,
+        "bid_size": 2200.0,
+        "ask_size": 1700.0,
+        "obi": 0.1282,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.52,
+        "gap_pct": -0.391,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": 1640057988,
+        "shares_short": 15475095,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.138,
+      "sweep_aggression_pct": 18.1,
+      "distance_to_zero_gamma_pct": -4.19,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": 29,
+      "days_to_earnings": 62,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 44.85
     }
   },
-  "payload_count": 217,
-  "topn_count": 448,
+  "payload_count": 218,
+  "topn_count": 458,
   "random_count": 11,
   "backoff_429": false,
   "cap_today": 300,

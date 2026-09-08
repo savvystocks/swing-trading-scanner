@@ -130,6 +130,11 @@ def main():
     try:
         data = gather()
         brief = gemini(PROMPT + data)
+        if len(brief) < 400:            # a truncated stub must never pass as a brief (09-08:
+            brief2 = gemini(PROMPT + data)      # 93 chars sent silently) - retry once, then flag
+            brief = brief2 if len(brief2) > len(brief) else brief
+            if len(brief) < 400:
+                brief += "\n\n(short brief - the model degraded this morning; full data is intact)"
         ok = telegram(marker + "MORNING ANALYST\n\n" + brief)
         print(("SENT" if ok else "SEND FAILED") + f" ({len(brief)} chars)", flush=True)
         if not ok:

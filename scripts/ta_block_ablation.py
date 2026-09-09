@@ -21,6 +21,9 @@ sys.path.insert(0, os.path.join(REPO, "scripts"))
 import numpy as np
 import fade_meta as fm
 
+H = {"APCA-API-KEY-ID": os.environ.get("ALPACA_PAPER_API_KEY", ""),
+     "APCA-API-SECRET-KEY": os.environ.get("ALPACA_PAPER_SECRET_KEY", "")}
+
 TA_NAMES = ["rsi5", "rsi14", "macd_hist", "cci20", "willr14", "roc10",
             "bb_pos20", "atr14_ratio", "obv_slope10", "nvi_slope10"]
 
@@ -31,7 +34,7 @@ def bars_for(tkr):
          f"&start=2024-05-01&end={end}&limit=10000&adjustment=split&feed=iex")
     for _ in range(3):
         try:
-            with urllib.request.urlopen(urllib.request.Request(u, headers=fm.H), timeout=30) as r:
+            with urllib.request.urlopen(urllib.request.Request(u, headers=H), timeout=30) as r:
                 bs = (json.loads(r.read()).get("bars") or {}).get(tkr) or []
             return ([b["t"][:10] for b in bs], np.array([b["c"] for b in bs], float),
                     np.array([b["h"] for b in bs], float), np.array([b["l"] for b in bs], float),
@@ -122,12 +125,18 @@ def main():
     tks = sorted({tkr_by_cid.get(c) for c in cids if tkr_by_cid.get(c)})
     print(f"cohort n={len(y)}, tickers={len(tks)}", flush=True)
     lib = {}
+    fails = 0
+    import time
     for i, t in enumerate(tks):
         b = bars_for(t)
         if b:
             lib[t] = (b[0], ta_features(*b))
-        if i % 25 == 0:
-            print(f"bars {i}/{len(tks)}", flush=True)
+        else:
+            fails += 1
+        time.sleep(0.25)
+        if i % 100 == 0:
+            print(f"bars {i}/{len(tks)} (fails {fails})", flush=True)
+    print(f"bars complete: {len(lib)} ok, {fails} failed", flush=True)
     ta = np.full((len(y), len(TA_NAMES)), np.nan)
     epoch = date(1970, 1, 1).toordinal()
     for i, cid in enumerate(cids):
@@ -163,6 +172,8 @@ def main():
                else "NOISE - block stays out of the student")
     if canary < 0.95:
         verdict = "HARNESS BROKEN - canary failed, no verdict valid"
+    if cov < 0.20:                      # a blind study must say it cannot see, never NOISE
+        verdict = f"JOIN FAILED - TA coverage {cov:.1%}, no verdict valid"
     L = [f"# TA BLOCK ABLATION - {date.today().isoformat()}",
          f"cohort n={len(y)}, TA coverage {cov:.1%}, features: {', '.join(TA_NAMES)}",
          f"BASE AUC {base:.4f} | BASE+TA {plus:.4f} (delta {plus - base:+.4f}) | CANARY {canary:.4f}",

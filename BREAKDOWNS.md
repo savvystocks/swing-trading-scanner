@@ -459,3 +459,21 @@ the sentinel's "tuner corpus content day" full-file row now trips when ingestion
 LESSON: a rolling window is not enough - anything CHECKPOINTED against a growing dataset
 needs a completion condition, not a fetched-once flag; and "0 fetched" on a day when data
 grew is itself an anomaly worth a printed count.
+
+2026-09-09 - CONTROL STARVED THE ROSTER: with the attempt budget raised to 10, EXEC_BASELINE
+(which has no candidate filter and always holds the head rotation slot) burned every attempt
+re-testing tickers that were spread-dead or unaffordable, so the rotation never reached the
+tail probes - including the two WINNER_PROFILE controls shipped hours earlier. Root cause: the
+2026-09-02 free-skip fix propagated only the FADE loop's discoveries into engine_skips; a
+probe's OWN quality discovery (spread_cap / metadata_unavailable / premium_too_rich) was
+never recorded, so probe 2..N paid full sensor sweeps to relearn what probe 1 already knew.
+Visible in the 19:07Z cycle: 8 of 10 attempts spent by the control on spread caps, "0 entries
+this cycle". A second defect in the same line: the starved-cycle message still printed "of 6"
+after the budget rose to 10 - a monitoring line that lies about its own limit. Fix (same
+commit): quality skips propagate into engine_skips for the whole cycle (one probe pays, the
+rest skip free); message prints the true cap. REGRESSION CHECK: the starved-cycle line prints
+the attempt count and cap every zero-entry cycle - a control monopolising the budget is now
+legible in one glance; MOT dim-6 probe budget checks cover the loop. LESSON: a fix that
+teaches the system "don't relearn dead facts" must cover EVERY learner, not just the one that
+found the bug - and any monitoring string carrying a constant must read that constant, never
+repeat it.

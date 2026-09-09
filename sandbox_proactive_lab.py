@@ -2521,6 +2521,14 @@ def run_scheduled_cycle(mock=False):
                         if rec and rec.get("skipped") and rec.get("reason") not in (
                                 "probe_filter: candidate does not match this probe slot's hypothesis",):
                             print(f"  probe[{_pname}] skip {t}: {str(rec.get('reason'))[:70]}")
+                            _sc = _skip_code(str(rec.get("reason") or ""))
+                            if _sc in ("spread_cap", "metadata_unavailable", "premium_too_rich"):
+                                engine_skips.setdefault(t, _sc)
+                                # PROPAGATE the discovery (2026-09-09): the 09-02 fix reused the
+                                # FADE loop's dead tickers but not the probes' own - so the control
+                                # burned all 10 attempts re-testing the same spread-dead names and
+                                # the rotation never reached the tail probes. One probe pays; the
+                                # rest skip free. (Quality skips are candidate facts, not hypotheses.)
                         if rec and not rec.get("skipped"):
                             rec["book"] = "PROBE"
                             rec["probe_strategy"] = _pname
@@ -2532,7 +2540,7 @@ def run_scheduled_cycle(mock=False):
                             _cyc += 1
                             break
                 if _cyc == 0:
-                    print(f"  probes: 0 entries this cycle - {_att} of 6 attempts used, "
+                    print(f"  probes: 0 entries this cycle - {_att} of 10 attempts used, "
                           f"{len(candidates)} candidates, regime {fade_book.spy_regime()} "
                           f"(a starved cycle must say so, never sit silent - 2026-09-02)")
             finally:

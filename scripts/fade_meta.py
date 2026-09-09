@@ -165,13 +165,19 @@ def main():
     lines = [f"FADE META-MODEL trained: n={n}, day-grouped OOF AUC {auc:.3f}"]
     os.makedirs("reports/fade_meta", exist_ok=True)
     led = open("reports/shadow_lab/ledger.jsonl", "a", encoding="utf-8")
-    for d, items in sorted(per_day.items()):
-        items.sort(reverse=True)
+    TAU = 0.60                      # confidence floor A/B (2026-09-09): the student may
+    for d, items in sorted(per_day.items()):    # refuse - a second book takes only picks it
+        items.sort(reverse=True)                # is sure about; the courts judge both
+        iso = date.fromordinal(date(1970, 1, 1).toordinal() + d).isoformat()
         top = [r for _, r in items[:3] if r is not None]
         if top:
-            iso = date.fromordinal(date(1970, 1, 1).toordinal() + d).isoformat()
             led.write(json.dumps({"day": iso, "META_SELECT": {"n": len(top),
                       "mean": round(sum(top) / len(top) * 100, 2)},
+                      "computed_at": datetime.now(timezone.utc).isoformat()[:16]}) + "\n")
+        conf = [r for p_, r in items[:3] if r is not None and p_ >= TAU]
+        if conf:
+            led.write(json.dumps({"day": iso, "META_SELECT_60": {"n": len(conf),
+                      "mean": round(sum(conf) / len(conf) * 100, 2)},
                       "computed_at": datetime.now(timezone.utc).isoformat()[:16]}) + "\n")
     led.close()
     Xw, yw, dw, cw = cohort(wide=True)
@@ -191,15 +197,47 @@ def main():
         led = open("reports/shadow_lab/ledger.jsonl", "a", encoding="utf-8")
         for d, items in sorted(per_dw.items()):
             items.sort(reverse=True)
+            iso = date.fromordinal(date(1970, 1, 1).toordinal() + d).isoformat()
             top = [r for _, r in items[:3] if r is not None]
+            confw = [r for p_, r in items[:3] if r is not None and p_ >= TAU]
+            if confw:
+                led.write(json.dumps({"day": iso, "META_WIDE_60": {"n": len(confw),
+                          "mean": round(sum(confw) / len(confw) * 100, 2)},
+                          "computed_at": datetime.now(timezone.utc).isoformat()[:16]}) + '\n')
             if top:
-                iso = date.fromordinal(date(1970, 1, 1).toordinal() + d).isoformat()
                 led.write(json.dumps({"day": iso, "META_WIDE": {"n": len(top),
                           "mean": round(sum(top) / len(top) * 100, 2)},
                           "computed_at": datetime.now(timezone.utc).isoformat()[:16]}) + '\n')
         led.close()
+        from sklearn.inspection import permutation_importance
+        fnames = ([f"{b}.{k}" for b, k in NUMERIC_PATHS] + ["side", "rv20", "prev_oi", "iv_front"])[:Xw.shape[1]]
+        while len(fnames) < Xw.shape[1]:
+            fnames.append(f"f{len(fnames)}")
+        prev_cov = {}
+        try:
+            import glob as _g
+            olds = sorted(_g.glob("reports/fade_meta/wide_*.json"))
+            if olds:
+                prev_cov = (json.load(open(olds[-1])).get("feature_coverage") or {})
+        except Exception:
+            pass
+        tr_i = int(len(yw) * 0.8)
+        mw_full = HistGradientBoostingClassifier(max_depth=3, learning_rate=0.08, random_state=7)
+        mw_full.fit(Xw[:tr_i], yw[:tr_i])
+        pi = permutation_importance(mw_full, Xw[tr_i:], yw[tr_i:], n_repeats=3,
+                                    random_state=7, scoring="roc_auc")
+        ranked = sorted(zip(fnames, pi.importances_mean.round(4)), key=lambda x: -x[1])
+        coverage = {fnames[i]: round(float(np.mean(~np.isnan(Xw[:, i]))), 3)
+                    for i in range(Xw.shape[1])}
+        collapsed = [f for f, c in coverage.items() if prev_cov.get(f, 0) > 0.5 and c < 0.25]
+        if collapsed:                   # 07-16 class: a sensor died upstream, the model
+            tg("STUDENT FEATURE COLLAPSE: " + ", ".join(collapsed) +      # trains blind
+               " fell from >50% to <25% coverage - a sensor died upstream.")
+        lines.append("top features: " + ", ".join(f"{f} {v:+.3f}" for f, v in ranked[:5]))
         json.dump({"n": len(yw), "auc": round(aucw, 4),
-                   "trained": datetime.now(timezone.utc).isoformat()},
+                   "trained": datetime.now(timezone.utc).isoformat(),
+                   "feature_importance": {f: float(v) for f, v in ranked},
+                   "feature_coverage": coverage},
                   open(f"reports/fade_meta/wide_{date.today().isoformat()}.json", "w"), indent=1)
     else:
         lines.append(f"WIDE student: cohort {len(Xw)}/1000 - not yet")

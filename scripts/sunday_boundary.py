@@ -208,8 +208,9 @@ def main():
         chg = False
         for ak in [k for k in spec0 if k.startswith("auto_")]:
             av = spec0[ak]
-            if not isinstance(av, dict) or av.get("demoted"):
-                continue
+            if not isinstance(av, dict) or av.get("demoted") or av.get("tuner"):
+                continue        # tuner glide markers exist for the CLOCK only - the glide rule
+                                # has its own ratchet; they name no ledger book to compare
             pd0 = ak.replace("auto_", "")
             b, vs0 = av.get("book"), av.get("vs", "BASELINE")
             # succession fix (audit finding #8): after promotion the ring respawns and the
@@ -231,18 +232,37 @@ def main():
                     if (d.get(vs0) or {}).get("mean") is not None}
             dif = [x - cmpm[dd] for dd, x in after if dd in cmpm]
             if len(dif) >= 10 and sum(dif) / len(dif) < 0:
-                for path, old in (av.get("prev") or {}).items():
-                    sect, key = path.split(".")
-                    spec0.setdefault(sect, {})[key] = old
-                av["demoted"] = str(datetime.now(timezone.utc).date())
-                chg = True
-                lines.append(f"DEMOTED {b}: post-promotion mean {sum(dif)/len(dif):+.2f} vs {vs0} "
-                             f"over {len(dif)}d - keys reverted (the ratchet turns both ways)")
+                try:                    # PER-RECORD (panel 2026-09-09): one malformed record
+                    for path, old in (av.get("prev") or {}).items():   # used to raise inside the
+                        _seg = path.split(".")                         # blanket except and discard
+                        _node = spec0                                  # EVERY revert in the pass -
+                        for _s in _seg[:-1]:                           # the ratchet silently died
+                            _node = _node.setdefault(_s, {})           # with one log line. Nested
+                        _node[_seg[-1]] = old                          # paths now supported too.
+                    av["demoted"] = str(datetime.now(timezone.utc).date())
+                    chg = True
+                    lines.append(f"DEMOTED {b}: post-promotion mean {sum(dif)/len(dif):+.2f} vs {vs0} "
+                                 f"over {len(dif)}d - keys reverted (the ratchet turns both ways)")
+                except Exception as _re:
+                    lines.append(f"DEMOTION RECORD FAILED for {ak}: {type(_re).__name__} - "
+                                 "this record skipped, the rest of the pass continues (LOUD)")
         if chg:
+            _dm_marks = [k for k, v in spec0.items()
+                         if k.startswith("auto_") and isinstance(v, dict) and v.get("demoted")]
             json.dump(spec0, open("fade_book_spec.json", "w"), indent=1)
             subprocess.run("git add fade_book_spec.json && git commit -qm 'auto-boundary: demotion - "
                            "promoted keys reverted per post-promotion evidence [skip ci]' && "
                            "git pull -q --rebase -X ours && git push -q", shell=True)
+            try:                # verify-after-push (panel 2026-09-09): under rebase -X ours keeps
+                _chk = json.load(open("fade_book_spec.json", encoding="utf-8"))   # the UPSTREAM
+                _still = [k for k in _dm_marks                                    # side, silently
+                          if not (isinstance(_chk.get(k), dict) and _chk[k].get("demoted"))]
+                if _still:
+                    lines.append("DEMOTION WRITE LOST for: " + ", ".join(_still)
+                                 + " - the reverts did NOT reach the spec; the engine still runs "
+                                   "the demoted config (LOUD)")
+            except Exception as _ve2:
+                lines.append(f"demotion write verify failed: {type(_ve2).__name__}")
     except Exception as _de:
         lines.append(f"demotion check skipped: {type(_de).__name__}")
     # ANTI-RUBIKS-CUBE (owner question 2026-08-18 15:38): (a) every spec change RESTARTS all
@@ -332,10 +352,21 @@ def main():
                 w.setdefault(f"{iso[0]}-W{iso[1]:02d}", []).append(v)
             return {k: sum(v) / len(v) for k, v in w.items()}
 
+        _tun = ((spec_p.get("probe") or {}).get("tuning") or {})
         for st_ in prio:
             if st_ in promoted:
                 continue
             dm = daymeans(st_)
+            # PER-STRATEGY TUNING CLOCK (panel 2026-09-09): the Friday glide rewrites this
+            # strategy's exits, so days before it were earned under a config that no longer
+            # exists - the anti-cube law applied to the probe court, which had NO clock at all.
+            _ap = ((_tun.get(st_) or {}).get("applied") or "")
+            if _ap:
+                _before = len(dm)
+                dm = {d: v for d, v in dm.items() if d > _ap}
+                if _before != len(dm):
+                    lines.append(f"  {st_}: tuning clock {_ap} - {_before - len(dm)} pre-change "
+                                 f"day(s) excluded (verdicts are earned against the CURRENT config)")
             # WEEKLY-CADENCE COURT (owner 2026-09-01): _W structures trade once a week by
             # construction, so day-shared accrual starved them (~1 shared day/week = months to
             # the bar). They are judged on shared ISO WEEKS against the control's week-mean -

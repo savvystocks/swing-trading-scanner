@@ -477,3 +477,33 @@ legible in one glance; MOT dim-6 probe budget checks cover the loop. LESSON: a f
 teaches the system "don't relearn dead facts" must cover EVERY learner, not just the one that
 found the bug - and any monitoring string carrying a constant must read that constant, never
 repeat it.
+
+2026-09-09 (second entry) - THREE EVIDENCE-INTEGRITY DEFECTS FOUND BY THE REGIME-MASTERS
+PANEL (none caused by the design under review; all live and costing integrity daily).
+(1) INVISIBLE GLIDES: tuner_apply wrote Friday exit changes into probe.tuning.* but never an
+auto_* marker, and the probe court had NO evidence clock at all - so every strategy kept
+accruing verdicts across a config change that happened under it, the exact laundering the
+anti-cube law was written to stop (it protected only the MENU books). Fix: the tuner writes
+an auto_<date> marker carrying keys+prev, and the probe court excludes days on or before a
+strategy's tuning "applied" date, printing what it excluded. NOTE a near-miss caught during
+the fix: the marker's first draft carried "demoted": "n/a", and the clock does
+max(date, demoted) - any non-date string sorts above every real date and would have silently
+excluded ALL evidence for the touched keys. Markers now carry "tuner": true instead, and the
+demotion loop skips them by that flag.
+(2) THE DEMOTION RATCHET HAD A SINGLE POINT OF FAILURE: the revert did sect, key =
+path.split(".") (a two-level unpack) inside ONE blanket try/except wrapping the entire
+demotion loop AND its commit - so a single malformed or nested path raised, discarded every
+revert computed in that pass, and permanently disabled demotion for every promoted key, with
+the sole symptom one line reading "demotion check skipped: ValueError". Fix: per-record
+try/except with a LOUD skip line, and arbitrary-depth path support.
+(3) SPEC WRITES COULD VANISH AND STILL REPORT SUCCESS: every spec writer pushes with
+git pull --rebase -X ours, where under rebase "ours" is the UPSTREAM side - a conflicting
+hunk silently discards the local edit, -q hides it, and the script then telegrams that the
+glide/demotion was applied. Fix: verify-after-push in both writers - re-read the spec from
+disk and assert the exact values survived BEFORE claiming success; on loss the telegram says
+WRITE LOST and names the keys. REGRESSION CHECKS: the tuning-clock exclusion line prints on
+every affected court run; the demotion skip line names the failing record instead of the
+pass; the WRITE LOST telegram replaces a false success. LESSON: a law is only as wide as the
+paths it is wired into - the anti-cube clock existed for a year and never covered the court
+that judges promotions; and any "success" message not derived from re-reading the artifact is
+a guess wearing a fact's clothes.

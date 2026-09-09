@@ -190,14 +190,44 @@ def main():
                          "paired_t": round(pr["t"], 2)})
             tuning[sname] = {"exits": {"stop": abs(new[0]), "trig": new[1], "give": new[2]},
                              "applied": today, "history": hist[-12:]}
+            # ANTI-CUBE MARKER (panel 2026-09-09): without this the Friday glide is invisible
+            # to the boundary's clock and 14-day freeze - every other hypothesis kept accruing
+            # evidence against a config that had just changed under it.
+            spec.setdefault(f"auto_{today}", {"book": "TUNER_GLIDE", "vs": "n/a",
+                                              "keys": {}, "prev": {}, "tuner": True})
+            # NOTE: no "demoted" field - the clock does max(date, demoted) and any non-date
+            # string there sorts above every real date, silently excluding all evidence.
+            # The demotion loop skips tuner markers by book instead (glide has its own ratchet).
+            _mk = spec[f"auto_{today}"]
+            _mk["keys"][f"probe.tuning.{sname}.exits"] = list(new)
+            _mk["prev"][f"probe.tuning.{sname}.exits"] = {"stop": abs(inc[0]), "trig": inc[1],
+                                                          "give": inc[2]}
             changed = True
     print("\n".join(lines), flush=True)
     if changed and not DRY:
+        _want = {k: v.get("exits") for k, v in tuning.items() if v.get("applied") == today}
         json.dump(spec, open("fade_book_spec.json", "w"), indent=1)
         subprocess.run("git add fade_book_spec.json && git commit -qm "
                        "'tuner apply v2: damped glide [skip ci]' && "
                        "git pull -q --rebase -X ours && git push -q", shell=True)
-        tg("TUNER APPLY (glide rule):\n" + "\n".join(lines))
+        # VERIFY AFTER PUSH (panel 2026-09-09): under rebase, -X ours keeps the UPSTREAM side,
+        # so a conflicting hunk silently discards this write - and the telegram then reports a
+        # glide that never landed. Never claim success without re-reading what survived.
+        _lost = []
+        try:
+            _after = ((json.load(open("fade_book_spec.json", encoding="utf-8")).get("probe")
+                       or {}).get("tuning") or {})
+            for _k, _v in _want.items():
+                if (_after.get(_k) or {}).get("exits") != _v:
+                    _lost.append(_k)
+        except Exception as _ve:
+            _lost = [f"verify failed: {type(_ve).__name__}"]
+        if _lost:
+            lines.append("SPEC WRITE LOST for: " + ", ".join(map(str, _lost))
+                         + " - the push did not carry these; the engine still runs the OLD exits")
+            tg("TUNER APPLY - WRITE LOST (do not trust the glide above):\n" + "\n".join(lines))
+        else:
+            tg("TUNER APPLY (glide rule, verified on disk):\n" + "\n".join(lines))
     elif not DRY:
         tg("TUNER APPLY: all strategies HOLDING at their measured sweet spots.\n" +
            "\n".join(lines[1:]))

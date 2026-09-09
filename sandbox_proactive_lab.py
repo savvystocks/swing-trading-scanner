@@ -2353,18 +2353,22 @@ def run_scheduled_cycle(mock=False):
                 return isinstance(sma, (int, float)) and abs(sma) < cap_
             _ROSTER = [
                 ("EXEC_BASELINE", None),                                    # pure execution data
-                ("FADE_UNROUTED", lambda md, c: _shape(md, c)),             # fade shape, router ignored
+                # FADE_UNROUTED culled 2026-09-09 (owner, roster-oxygen cull): 4 fills / 3
+                # closed / -$1,289 - the unrouted fade shape is what the 2-year archive already
+                # killed on real triggers (-14%/day t-4.33). Records and evidence stay; slot freed.
                 # CONSENSUS culled 2026-09-01 (owner): 8/8-day case closed at the boundary -
                 # own-mean -20.4%/day vs +3 floor, trimmed t vs control +0.13 (zero edge).
                 # Superseded by CONSENSUS_CALLS (the calls-only refinement, tracked).
-                ("DP_HEAVY", lambda md, c: ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
+                # DP_HEAVY culled 2026-09-09 (owner): 5 fills, 5 closed, FIVE losses, -$1,426,
+                # dormant 12 days - a completed and negative case. Slot freed.
                 # QUIET_TAPE culled 2026-09-01 (owner Friday-queue pulled forward): -$1,005 over its
                 # era, no positive stretch - roster slot freed for the grid probes.
                 ("FADE_DP", lambda md, c: _shape(md, c)
                                           and ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
-                ("OPT_WINNER", lambda md, c: _shape(md, c) and _depth_lt(md, 3.0)
-                                             and ((c or {}).get("total_premium") or 0) <= 250000),
-                ("FADE_WHALE", lambda md, c: _shape(md, c)),
+                # OPT_WINNER culled 2026-09-09 (owner): ZERO fills in five weeks - its triple
+                # filter (fade shape + depth<3% + premium<=250k) is structurally starved; no path
+                # to the 8-day bar. FADE_WHALE culled the same night: 1 fill in 28 days, -$173.
+                # Both slots freed so the strategies with live cases rotate more often.
                 ("GEX_PIN", lambda md, c: abs((md.get("gex") or {}).get("distance_to_zero_gamma_pct")
                                               or 9) < 0.3),   # owner 2026-08-18: untapped UW trigger
                 ("IV_EXTREME", lambda md, c: ((md.get("pemd") or {}).get("iv_rank_1y") or 50) >= 85

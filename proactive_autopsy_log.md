@@ -4519,3 +4519,12 @@
 
 **Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 230.0 worked against it.
 
+## Autopsy - SOXL (04c3fb4b388d)
+- entered 2026-09-04T16:44:28.366Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.2% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 114.0.
+

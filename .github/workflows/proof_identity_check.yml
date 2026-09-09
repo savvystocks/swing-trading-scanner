@@ -1,0 +1,29 @@
+name: proof-identity-check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify proof credentials resolve to the pinned account
+        env:
+          PK: ${{ secrets.ALPACA_PROOF_API_KEY }}
+          PS: ${{ secrets.ALPACA_PROOF_SECRET_KEY }}
+          DK: ${{ secrets.ALPACA_PAPER_API_KEY }}
+        run: |
+          # Build-contract identity assertion (2026-09-06): proof creds must open EXACTLY the
+          # pinned Proof account and must differ from discovery creds. Output is boolean-only -
+          # this repo is public and logs must leak nothing.
+          PINNED="PA3QMQJYAP59"
+          ACCT=$(curl -fsS -m 20 https://paper-api.alpaca.markets/v2/account \
+                 -H "APCA-API-KEY-ID: $PK" -H "APCA-API-SECRET-KEY: $PS") || { echo "AUTH: FAIL (keys rejected)"; exit 1; }
+          AID=$(echo "$ACCT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('account_number',''))")
+          EQ=$(echo "$ACCT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('equity','0'))")
+          echo "AUTH: OK"
+          if [ "$AID" = "$PINNED" ]; then echo "PINNED IDENTITY MATCH: YES"; else echo "PINNED IDENTITY MATCH: NO"; fi
+          if [ "$PK" != "$DK" ]; then echo "DISTINCT FROM DISCOVERY KEYS: YES"; else echo "DISTINCT FROM DISCOVERY KEYS: NO"; fi
+          python3 -c "import sys; eq=float('$EQ'); print('BALANCE AT PROOF SCALE (=5000): ' + ('YES' if abs(eq-5000)<1 else 'NO'))"
+          [ "$AID" = "$PINNED" ] || exit 1

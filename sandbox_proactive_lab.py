@@ -1850,8 +1850,20 @@ def scan_candidates(params, limit=None):
                                    "alert_ask": _qa}
             continue
         a = agg.setdefault(t, {"ticker": t, "call_prem": 0.0, "put_prem": 0.0,
-                               "underlying_price": _num(r.get("underlying_price")), "min_contract_premium": pc})
+                               "underlying_price": _num(r.get("underlying_price")),
+                               "min_contract_premium": pc, "tight_spread_pct": 999.0})
         a["min_contract_premium"] = min(a["min_contract_premium"], pc)
+        # LIQUIDITY HINT (throughput diagnosis 2026-09-09): 31 of ~90 recent probe skips were
+        # spread_cap, EACH discovered only after paying a full sensor sweep. The alert rows
+        # already carry NBBO, so record the tightest spread this ticker showed today; the probe
+        # loop uses it as a FREE hopeless-check. This does NOT loosen the 2% execution cap - it
+        # stops spending the attempt budget on names whose own alerts are nowhere near it.
+        try:
+            _sb, _sa = _num(r.get("bid")), _num(r.get("ask"))
+            if _sb and _sa and _sa > 0:
+                a["tight_spread_pct"] = min(a["tight_spread_pct"], (_sa - _sb) / _sa * 100.0)
+        except Exception:
+            pass
         # AFFORDABILITY IDENTITY (2026-09-03 fix): keep the cheapest in-band contract PER SIDE so
         # a probe whose synthesized contract prices over the $1k budget (mega-cap bull days) can
         # buy THE trigger contract instead of nothing - it passed this very price filter.
@@ -2500,6 +2512,13 @@ def run_scheduled_cycle(mock=False):
                             continue            # candidate-level hypothesis check is FREE - never pay
                                                 # a sensor sweep to learn a put isn't a call (panel
                                                 # 2026-09-02: put-flow names were burning the budget)
+                        if (c or {}).get("tight_spread_pct", 0) > 10.0:
+                            continue            # FREE hopeless-check: even this ticker's TIGHTEST
+                                                # alert spread today is >10% - it cannot pass the
+                                                # 2% execution cap, so never pay a sweep to learn
+                                                # it (throughput diagnosis 2026-09-09). Generous
+                                                # threshold on purpose: a liquidity proxy, not a
+                                                # second execution standard.
                         if engine_skips.get(t) in ("metadata_unavailable", "spread_cap"):
                             continue            # the fade loop already paid the sensor sweep and found
                                                 # this ticker dead THIS cycle - re-attempting it burned

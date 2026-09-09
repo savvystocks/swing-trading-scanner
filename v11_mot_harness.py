@@ -1071,6 +1071,17 @@ for _rf in _RECURRING:
 check(6, "frozen-window lint: no hardcoded end-date bounds a data window in recurring code",
       not _fw_hits, "; ".join(_fw_hits)[:120])
 
+# 6.10e WINNER_PROFILE secondary control (owner 2026-09-09): roster carries the frozen
+# universal-winner shape with the exact committed profile values.
+_lab_src = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+import json as _json2
+_wp = _json2.load(open("reports/research/winner_profile.json", encoding="utf-8"))
+_wp_prem = _wp["features"]["rule_score"]["pooled_median"]
+_wp_iv = _wp["features"]["iv_term.iv_front"]["pooled_median"]
+check(6, "winner profile: roster entry present with frozen profile values",
+      '"WINNER_PROFILE"' in _lab_src and str(int(_wp_prem)) in _lab_src
+      and str(_wp_iv) in _lab_src, f"prem {_wp_prem} iv {_wp_iv}")
+
 # 6.11 digest renders the scoreboard + alert-reconciliation lines
 _dg6 = lab.daily_digest()
 check(6, "digest: scoreboard + alert reconciliation lines render",

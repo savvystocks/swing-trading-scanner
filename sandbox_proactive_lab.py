@@ -2394,6 +2394,17 @@ def run_scheduled_cycle(mock=False):
                                              # + SPY<20d confirmation in MILD = +11.3%/day t2.43;
                                              # WITHOUT the SPY gate the same trade is -5.4/day -
                                              # the confirmation IS the strategy (3x3 middle cell)
+                ("WINNER_PROFILE", lambda md, c: ((c or {}).get("total_premium") or 0) > 73200
+                                                 and isinstance((md.get("iv_term") or {}).get("iv_front"), (int, float))
+                                                 and (md.get("iv_term") or {}).get("iv_front") < 47.7),
+                                             # SECONDARY CONTROL (owner 2026-09-09): the frozen
+                                             # universal-winner shape from ALL 25,597 labeled
+                                             # trades - big flow (>73.2k pooled median) + cheap
+                                             # vol (iv_front<47.7); the third profile leg (tight
+                                             # spread, winners<5.6%) is enforced by the standard
+                                             # 2% cap. Regime-agnostic, both sides. Values frozen
+                                             # from reports/research/winner_profile.json - teacher
+                                             # freeze; rebuild only by owner order.
                 ("FOLLOW_CALLS", lambda md, c: (c or {}).get("flow_type") == "call"),   # archive winner
                                              # 2026-08-23: buy aggressively-bought calls, all regimes -
                                              # +32/+12/+14 bear/mild/bull, t>3 each (thin bear). The one
@@ -2464,7 +2475,7 @@ def run_scheduled_cycle(mock=False):
                                             # here so 50d/20d divergence days can't burn the budget
                     _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
                              else _PRICEY_CANDS[:14] if _pname in ("DIP_CONF_MILD", "BULL_DIP_X")
-                             else _FULL_CANDS[:16] if _pname in ("FOLLOW_CALLS", "CONSENSUS_CALLS")
+                             else _FULL_CANDS[:16] if _pname in ("FOLLOW_CALLS", "CONSENSUS_CALLS", "WINNER_PROFILE")
                              else candidates[2:12])   # skim BELOW the fade book's 2-per-cycle picks
                              # DIP_CONF_MILD buys THE TRIGGER CONTRACT via _PROBE_CONTRACT (panel-
                              # corrected 2026-09-01): the +21.2/day t4.31 cell was measured on the

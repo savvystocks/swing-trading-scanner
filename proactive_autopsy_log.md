@@ -4510,3 +4510,12 @@
 
 **Determining factor:** Bearish put FAILED (-49%, move 0.0%): no breakdown materialised; spot held above zero-gamma 110.0.
 
+## Autopsy - NVDA (48dc9f946d7a)
+- entered 2026-09-04T15:15:53.340Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -52.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 230.0 worked against it.
+

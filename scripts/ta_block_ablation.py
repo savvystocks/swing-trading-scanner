@@ -145,6 +145,9 @@ def main():
     from sklearn.metrics import roc_auc_score
 
     def run(M):
+        keep = [j for j in range(M.shape[1])
+                if len(np.unique(M[:, j][~np.isnan(M[:, j])])) >= 2]
+        M = M[:, keep]                  # a fold-empty/constant column crashes sklearn binning
         oof = np.full(len(y), np.nan)
         for tr, te in GroupKFold(n_splits=5).split(M, y, g):
             m = HistGradientBoostingClassifier(max_depth=3, learning_rate=0.08, random_state=7)

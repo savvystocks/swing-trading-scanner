@@ -27,7 +27,11 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(REPO)
 H = {"APCA-API-KEY-ID": os.environ.get("ALPACA_PAPER_API_KEY", ""),
      "APCA-API-SECRET-KEY": os.environ.get("ALPACA_PAPER_SECRET_KEY", "")}
-CKPT = "reports/research/probe_tuner_rows.jsonl"
+CKPT = "reports/research/probe_tuner_rows_v2.jsonl"   # v2 = EXECUTABLE basis
+# v1 (probe_tuner_rows.jsonl) entered at the close of the first hourly bar AFTER the
+# print (~90 min late, a TRADE price, not an ask) and fed that same bar to the peak
+# loop (look-ahead). Panel 2026-09-09 ruled every v1 cell optimistic and superseded.
+CKPT_V1 = "reports/research/probe_tuner_rows.jsonl"
 
 EXITS = [(-50.0, 50.0, 0.20), (-50.0, 80.0, 0.30), (-50.0, 80.0, 0.20), (-50.0, 50.0, 0.30),
          (-70.0, 50.0, 0.20), (-70.0, 80.0, 0.30), (-70.0, 80.0, 0.20), (-70.0, 50.0, 0.30)]
@@ -53,7 +57,14 @@ def smad(c, n=20):
     return o
 
 
-def replay_true(bars_today_after, bars_next, e, stop, trig, give):
+def replay_true(bars_today_after, bars_next, e, stop, trig, give, sf=0.0):
+    """sf = fractional spread at the print. Every EXIT is a sale, so it fills on the bid
+    side: the realized price is haircut by sf before the return is taken (panel 2026-09-09 -
+    v1 filled at the exact theoretical level, which no seller ever gets). bars_today_after
+    MUST already exclude the entry bar; feeding it in let the trail arm on a high that
+    happened before entry."""
+    def _sell(rp):                      # rp = return% at the theoretical level
+        return ((1 + rp / 100.0) * (1 - sf) - 1) * 100.0
     peak = -999.0
     on = False
     for (h, l, c) in bars_today_after:
@@ -69,10 +80,10 @@ def replay_true(bars_today_after, bars_next, e, stop, trig, give):
             peak = max(peak, rh)
             fl = peak * (1 - give)
             if rl <= fl:
-                return fl
+                return _sell(fl)
         if rl <= stop:
-            return stop
-    return (bars_next[-1][2] / e - 1) * 100 if bars_next else None
+            return _sell(min(stop, rl) if rl < stop else stop)   # gap-through fills lower
+    return _sell((bars_next[-1][2] / e - 1) * 100) if bars_next else None
 
 
 def build_rows():
@@ -87,8 +98,16 @@ def build_rows():
     for x in sd_:
         buf.append(spyc[x]); s50[x] = (spyc[x] / (sum(buf[-50:]) / min(len(buf), 50)) - 1) * 100
     prints = {}
-    for occ, day, ts in src.execute("select occ, day, min(executed_at) from flow_prints group by occ, day"):
-        prints[(occ, day)] = ts
+    # EXECUTABLE ENTRY BASIS (panel 2026-09-09): take the NBBO AT the first print, which
+    # uw_flow_prints has banked all along and every consumer threw away. Entry = that ask;
+    # the exit haircut uses that spread. No ask -> the contract is DROPPED, never faked from
+    # the daily quote (house rule: entry_ref = ask at signal, never a later trade price).
+    for occ, day, ts, bid, ask_ in src.execute(
+            "select occ, day, executed_at, nbbo_bid, nbbo_ask from flow_prints "
+            "where executed_at = (select min(executed_at) from flow_prints f2 "
+            "where f2.occ = flow_prints.occ and f2.day = flow_prints.day)"):
+        if (occ, day) not in prints:
+            prints[(occ, day)] = (ts, bid, ask_)
 
     done = set()
     if os.path.exists(CKPT):
@@ -116,24 +135,30 @@ def build_rows():
         mid = (bid + ask) / 2.0
         if mid <= 0 or (ask - bid) / mid * 100 > 2.0:
             continue
-        pts = prints.get((occ, day))
-        if not pts:
+        _pr = prints.get((occ, day))
+        if not _pr:
             continue
+        pts, _pbid, _pask = _pr
+        if not _pask or _pask <= 0:
+            continue                    # no executable ask at the print -> not tradeable, DROP
         rows_ = cur.execute("select ts, h, l, c from bars where occ=? order by ts", (occ,)).fetchall()
         today_after = [(h, l, c) for ts_, h, l, c in rows_
                        if ts_[:10] == day and ts_[11:19] > pts[11:19]]
         nxt = [(h, l, c) for ts_, h, l, c in rows_ if ts_[:10] > day]
         if len(nxt) < 3:
             continue
-        e = today_after[0][2] if today_after else ask
-        if e <= 0:
-            continue
+        e = float(_pask)                # THE ask we would have paid, at the trigger moment
+        _sf = 0.0                       # bid-side haircut: an exit is a SALE, never at the level
+        if _pbid and _pask and _pask > 0 and _pbid > 0:
+            _sf = max(0.0, min(0.05, (_pask - _pbid) / _pask))
         done.add(occ)
         rets = []
         for (st, tg, gv) in EXITS:
-            r = replay_true(today_after, nxt, e, st, tg, gv)
+            r = replay_true(today_after[1:], nxt, e, st, tg, gv, _sf)
             rets.append(round(r, 2) if r is not None else None)
         out.write(json.dumps({"occ": occ, "t": t, "day": day, "prem": prem, "ask": ask,
+                              "basis": "ask_at_print", "entry": round(e, 2),
+                              "spread_frac": round(_sf, 4),
                               "side": "C" if occ[-9] == "C" else "P", "smd": round(smd, 2),
                               "reg": round(reg, 2), "sp": round(sp, 2), "rets": rets}) + "\n")
         n += 1

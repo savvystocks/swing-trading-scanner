@@ -507,3 +507,34 @@ pass; the WRITE LOST telegram replaces a false success. LESSON: a law is only as
 paths it is wired into - the anti-cube clock existed for a year and never covered the court
 that judges promotions; and any "success" message not derived from re-reading the artifact is
 a guess wearing a fact's clothes.
+
+2026-09-09 (third entry) - EVERY BACKTEST NUMBER WAS OPTIMISTIC BY ~4-5 POINTS/DAY: the
+corpus entry basis was not executable. probe_tuner (and glide_sim, grand_retest, the mild_conf
+studies) entered each replayed trade at the CLOSE OF THE FIRST HOURLY BAR AFTER the print -
+an Alpaca OPRA TRADE aggregate roughly 60-120 minutes after the signal, i.e. a last-sale
+price, not an ask. Three compounding faults: (1) that price violates the house rule that
+entry_ref is the ASK at signal - we were buying at a number no buyer could transact; (2) the
+SAME entry bar was fed to the peak/trail loop, so the trail could arm and the peak could be
+set on a high that occurred BEFORE entry - one-directional look-ahead; (3) exits returned the
+exact theoretical level (`return fl`, `return stop`), never a bid, never gapping through.
+Found by the instrument-mismatch panel (2026-09-09), which was convened for a different and
+lesser defect. The correct input had been banked all along and thrown away: uw_flow_prints
+stores nbbo_bid/nbbo_ask AT each print - its own docstring says the point was "entry at the
+TRUE trigger time and TRUE ask" - and every consumer took only min(executed_at) and discarded
+the quote. MEASURED COST (reports/research/basis_diff_2026-09-09.md): POOL +6.03 -> +1.67,
+FOLLOW_CALLS +9.06 -> +4.49, BULL_DIP +9.36 -> +4.70, DIP_CONF_MILD +11.06 -> +5.59,
+DIP_CONVEXITY +18.44 -> +14.49, WINNER_PROFILE_X +6.33 -> +1.95. Every cell degraded by more
+than the +3/day promotion floor, so under the panel's pre-registered rule EVERY v1-derived
+figure is SUPERSEDED. The edges survive relative to the pool (excess over pool is largely
+unchanged, ~+2.8 to +12.8) - the bias was systematic, not strategy-specific - but the
+ABSOLUTE numbers that promotion floors are denominated in were inflated roughly two-fold.
+Fix (same commit): entry = the banked ask at the print, contracts with no print ask DROPPED
+rather than faked from the daily quote, the entry bar excluded from the peak loop, and every
+exit haircut to the bid side with gap-through filling at the bar low. Corpus rebuilt to a
+VERSIONED file (probe_tuner_rows_v2.jsonl, 79,045 rows) so the two bases can never be silently
+mixed, and every row now stamps basis/entry/spread_frac. REGRESSION CHECK: rows carry a
+"basis" field, the sentinel watches the v2 file, and the basis-diff report is committed so
+any future reader sees what the correction cost. LESSON: a backtest is a claim about a price
+you could have paid - if the entry is not a quote you could have lifted at the moment you
+decided, the whole edge is a measurement artifact; and when the honest input is already in
+the database, the defect is not missing data but a consumer that never asked for it.

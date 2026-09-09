@@ -68,7 +68,7 @@ CHECKS = [
      ("select max(day) from flow_prints", 4), "EVIDENCE"),
     ("hourly bar library", "data_day", "data/hourly_paths.db",
      ("select max(substr(ts,1,10)) from bars", 8), "EVIDENCE"),
-    ("tuner coarse corpus", "schedule", "reports/research/probe_tuner_rows.jsonl", (20, 15, {4}), "EVIDENCE"),
+    ("tuner coarse corpus", "schedule", "reports/research/probe_tuner_rows_v2.jsonl", (20, 15, {4}), "EVIDENCE"),
     ("glide fine corpus", "schedule", "reports/research/glide_fine_rows.jsonl", (21, 45, {4}), "EVIDENCE"),
     # -- nightly rhythm: courts, student, digests, integrity
     ("nightly boundary (SEQ_APPLY)", "schedule", H + "/trajectory_nightly.log", (22, 0, WEEKDAYS), "COURT"),
@@ -100,7 +100,7 @@ CHECKS = [
     ("expired legs still open", "expired_open", "proactive_sandbox_logs.json", 1, "TRADE"),
     ("ghost open records", "ghost_open", "proactive_sandbox_logs.json", 10, "TRADE"),
     # -- v1.2 (MOT coverage audit 2026-09-07): frozen-window, disk, and failover classes
-    ("tuner corpus content day", "jsonl_day", "reports/research/probe_tuner_rows.jsonl", 11, "EVIDENCE"),
+    ("tuner corpus content day", "jsonl_day", "reports/research/probe_tuner_rows_v2.jsonl", 11, "EVIDENCE"),
     ("glide corpus content day", "jsonl_day", "reports/research/glide_fine_rows.jsonl", 11, "EVIDENCE"),
     ("vps disk headroom", "disk", "/", 85, "TRADE"),
     ("failover mode stuck", "flag_age", H + "/.engine_watch_failover_mode", 2.0, "TRADE"),

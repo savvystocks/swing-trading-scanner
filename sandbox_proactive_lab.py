@@ -2405,6 +2405,12 @@ def run_scheduled_cycle(mock=False):
                                              # 2% cap. Regime-agnostic, both sides. Values frozen
                                              # from reports/research/winner_profile.json - teacher
                                              # freeze; rebuild only by owner order.
+                ("WINNER_PROFILE_X", lambda md, c: ((c or {}).get("total_premium") or 0) > 100000),
+                                             # the sim's most CONSISTENT cell (2026-09-09 grid,
+                                             # 73k archive trades): flow>100k, no IV cap ->
+                                             # +6.33%/day, t+3.37 vs pool, halves +7.3/+5.3.
+                                             # Runs beside the frozen control so the courts
+                                             # judge live whether best-variables beats original.
                 ("FOLLOW_CALLS", lambda md, c: (c or {}).get("flow_type") == "call"),   # archive winner
                                              # 2026-08-23: buy aggressively-bought calls, all regimes -
                                              # +32/+12/+14 bear/mild/bull, t>3 each (thin bear). The one
@@ -2475,7 +2481,7 @@ def run_scheduled_cycle(mock=False):
                                             # here so 50d/20d divergence days can't burn the budget
                     _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
                              else _PRICEY_CANDS[:14] if _pname in ("DIP_CONF_MILD", "BULL_DIP_X")
-                             else _FULL_CANDS[:16] if _pname in ("FOLLOW_CALLS", "CONSENSUS_CALLS", "WINNER_PROFILE")
+                             else _FULL_CANDS[:16] if _pname in ("FOLLOW_CALLS", "CONSENSUS_CALLS", "WINNER_PROFILE", "WINNER_PROFILE_X")
                              else candidates[2:12])   # skim BELOW the fade book's 2-per-cycle picks
                              # DIP_CONF_MILD buys THE TRIGGER CONTRACT via _PROBE_CONTRACT (panel-
                              # corrected 2026-09-01): the +21.2/day t4.31 cell was measured on the

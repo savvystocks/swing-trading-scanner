@@ -1081,6 +1081,8 @@ _wp_iv = _wp["features"]["iv_term.iv_front"]["pooled_median"]
 check(6, "winner profile: roster entry present with frozen profile values",
       '"WINNER_PROFILE"' in _lab_src and str(int(_wp_prem)) in _lab_src
       and str(_wp_iv) in _lab_src, f"prem {_wp_prem} iv {_wp_iv}")
+check(6, "winner profile X: sim-best sibling present (flow>100k, no IV cap)",
+      '"WINNER_PROFILE_X"' in _lab_src and "> 100000" in _lab_src)
 
 # 6.11 digest renders the scoreboard + alert-reconciliation lines
 _dg6 = lab.daily_digest()

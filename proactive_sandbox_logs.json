@@ -172856,8 +172856,8 @@
         "mfe_pct": 86.8,
         "mae_pct": -28.8,
         "stage": "initial",
-        "close_fails": 0,
-        "last_ret": 60.3
+        "close_fails": 1,
+        "last_ret": 69.1
       }
     },
     "backstop": {
@@ -177192,8 +177192,8 @@
         "mfe_pct": 369.5,
         "mae_pct": -21.9,
         "stage": "initial",
-        "close_fails": 3,
-        "last_ret": 178.1
+        "close_fails": 4,
+        "last_ret": 179.0
       }
     },
     "leg_exits": {},
@@ -180862,8 +180862,8 @@
         "mfe_pct": 76.2,
         "mae_pct": -32.5,
         "stage": "initial",
-        "last_ret": 67.9,
-        "close_fails": 4
+        "last_ret": 67.5,
+        "close_fails": 0
       }
     },
     "backstop": {
@@ -186903,8 +186903,8 @@
         "mfe_pct": 94.2,
         "mae_pct": -31.7,
         "stage": "initial",
-        "last_ret": 43.9,
-        "close_fails": 2
+        "last_ret": 48.9,
+        "close_fails": 3
       }
     },
     "backstop": {
@@ -187916,7 +187916,7 @@
         "mfe_pct": 61.9,
         "mae_pct": -46.0,
         "stage": "initial",
-        "last_ret": 20.9,
+        "last_ret": 20.2,
         "close_fails": 4
       }
     },
@@ -191638,8 +191638,8 @@
         "mfe_pct": 56.2,
         "mae_pct": -13.5,
         "stage": "initial",
-        "last_ret": 31.5,
-        "close_fails": 4
+        "last_ret": 30.3,
+        "close_fails": 0
       }
     },
     "backstop": {
@@ -193049,7 +193049,7 @@
         "mfe_pct": 54.3,
         "mae_pct": -4.0,
         "stage": "initial",
-        "last_ret": 5.7,
+        "last_ret": 5.6,
         "close_fails": 4
       }
     },
@@ -194984,7 +194984,7 @@
         "mfe_pct": -14.7,
         "mae_pct": -49.5,
         "stage": "initial",
-        "last_ret": -43.2
+        "last_ret": -42.1
       }
     },
     "backstop": {
@@ -198181,7 +198181,7 @@
         "mfe_pct": 21.1,
         "mae_pct": -5.3,
         "stage": "initial",
-        "last_ret": 13.2
+        "last_ret": 11.8
       }
     },
     "backstop": {
@@ -198780,7 +198780,7 @@
         "mfe_pct": 155.0,
         "mae_pct": -23.0,
         "stage": "initial",
-        "last_ret": 122.5,
+        "last_ret": 132.5,
         "close_fails": 1
       }
     },
@@ -198798,7 +198798,8 @@
         "stage": "initial",
         "at": "2026-09-10T17:08:49.649Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "retired": true
       }
     }
   },
@@ -199939,5 +199940,268 @@
         "last_ret": -0.9
       }
     }
+  },
+  {
+    "trade_set_id": "6190e57c8ef6",
+    "ticker": "SOFI",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "book": "PROBE",
+    "router_state": "MILD",
+    "entry_ts_utc": "2026-09-10T17:18:58.835Z",
+    "leg_budget_usd": 1000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 19,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5,
+      "backstop_note": "2026-08-25: canary GRADUATED (was pinned to FCEL260821C00022000, which expired 2026-08-21 - backstops were armed on ZERO positions since). Ford -87% autopsy: no broker stop + unquotable option = unmanaged decay to expiry. Backstops now arm on ALL eligible open legs from day 2 (same ratchet/fill-capture machinery the canary proved). Broker-side stops protect precisely the positions the engine cannot price."
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-09-10T17:18:58.835Z",
+      "macro": {
+        "spot": 17.34,
+        "sma20": 18.17,
+        "distance_to_sma20_pct": -4.597,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 48.7,
+        "iv_back": 48.9,
+        "iv_ratio": 0.996,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 2169211.2,
+        "zero_gamma_strike": 25.0,
+        "distance_to_zero_gamma_pct": -44.175,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -33.3,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.8,
+        "atr_pct": 4.61,
+        "rvol_10min": 0.4,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Financial Services",
+        "industry": "Credit Services",
+        "market_cap": 22408744960,
+        "short_pct_float": 13.54,
+        "short_ratio": 2.38,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 147.66,
+        "vader_compound": 0.326,
+        "news_type": "Analyst",
+        "top_headline": "SoFi, Payward Team up to Connect Banking and Crypto Markets — Stock Trending",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -4.597,
+        "market_spy_dist_pct": -1.124,
+        "sector_etf": "XLF",
+        "sector_dist_pct": -1.591,
+        "sector_vs_market_spread": -0.467,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 47.8,
+        "call_iv_25d": 51.8,
+        "skew_ratio": 0.922,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 6.9,
+        "ask_sweep_prem": 261834.0,
+        "total_flow_prem": 3796894.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.25,
+        "heaviest_node_price": 17.3,
+        "node_size": 718501.0,
+        "n_prints": 200,
+        "window_start": "2026-09-10T14:31:52Z",
+        "window_end": "2026-09-10T17:15:06Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 43,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 47,
+        "next_earnings_date": "2026-10-27",
+        "iv_rank_1y": 9.41,
+        "last_earnings_date": "2026-07-29",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 54.32,
+        "front_iv": 48.7,
+        "vrp": -5.62,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 1920719.0,
+        "flow_persistence_pct": 41.09,
+        "flow_direction": "bullish",
+        "closing_accel": -1653573.0,
+        "n_ticks": 227,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1046.5,
+        "vwma_20": 18.21,
+        "rsi_5": 36.34,
+        "rsi_15": 43.29,
+        "gap_pct": -1.816,
+        "day_range": 2.597,
+        "candle_body": 0.667,
+        "dist_sma50": -2.938,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -0.2,
+        "vix_level": 17.3,
+        "execution_hour": 17,
+        "day_of_week": 3,
+        "sector_vs_spy": -0.623,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 22730551.0,
+        "net_vanna": 103664021.0,
+        "net_charm": -102639936.0,
+        "delta_imbalance": 1.442,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.058,
+        "bid": 17.32,
+        "ask": 17.33,
+        "bid_size": 4600.0,
+        "ask_size": 5800.0,
+        "obi": -0.1154,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.4,
+        "gap_pct": -1.816,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 13.54,
+        "float_shares": 1271809298,
+        "shares_short": 172515246,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.326,
+      "sweep_aggression_pct": 6.9,
+      "distance_to_zero_gamma_pct": -44.175,
+      "distance_to_heaviest_dp_node_pct": 0.25,
+      "days_since_earnings": 43,
+      "days_to_earnings": 47,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 41.09
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "SOFI261009P00016500",
+        "expiry": "2026-10-09",
+        "strike": 16.5,
+        "dte": 35,
+        "entry_premium": 1.05,
+        "limit_price": 1.06,
+        "contracts": 9,
+        "alloc_usd": 1000.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "1251",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.55,
+          "ask": 0.56,
+          "mid": 0.555,
+          "bid_ask_spread_pct": 1.802,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 1677.0,
+          "oi_prev": 1251.0,
+          "oi_change": 426.0,
+          "source": "uw_historic"
+        }
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "bfd4a67c-2ed8-4f90-bf94-a7c9d45f3673",
+        "error": null,
+        "submitted": true,
+        "limit_price": 1.06,
+        "contracts": 9
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "buy_alert_delivered": true,
+    "probe_strategy": "EXEC_BASELINE"
   }
 ]

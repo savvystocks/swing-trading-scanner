@@ -550,3 +550,20 @@ a band entirely below the live floor); every research consumer and the sentinel 
 REGRESSION CHECK: MOT 6.10f corpus-basis lint fails if any script names a v1 corpus file.
 LESSON: a data-basis fix is not done at the writer - sweep every reader in the same session,
 and lint the old name so it cannot creep back.
+
+2026-09-10 - EXIT ENGINE DOWN 30 MINUTES (KeyError mfe_pct, three consecutive cycles 18:50-19:10
+UTC, owner paged by GHA + Telegram). WHAT BROKE: manage_open_positions crashed before managing
+any position; the run's data persist and cycle-complete marker were skipped. Broker-side GTC
+backstops were the only protection during the gap. ROOT CAUSE: two writers create leg_path
+entries of different shapes. NKE's limit order (18:17) sat unfilled 32 minutes; for three
+cycles the record was OPEN with no broker position, so the untracked-leg counter did
+setdefault(leg, {}) and stored only missing_cycles. When the fill landed at 18:49, the
+excursion update's setdefault found that bare dict and indexed path["mfe_pct"] directly.
+FIX: excursion keys read with .get(key, ret_pct) (a missing excursion means "start tracking
+now"), and missing_cycles is cleared when the position is tracked again (a stale count from a
+slow fill could otherwise add to a later transient gap and book a false CLOSE_UNTRACKED). The
+crash fix shipped alone first (live outage, market open); this entry and the counter reset
+followed in the next commit. REGRESSION CHECK: MOT 6.10g lints the update line for direct
+indexing and requires the counter reset. LESSON: when two code paths write the same record
+slot, one bare setdefault is a time bomb - and any exception inside position management must
+skip the record, not the cycle (the loop still lacks a per-record guard; queued).

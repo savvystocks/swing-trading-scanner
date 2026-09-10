@@ -1093,6 +1093,13 @@ for _f in _glob.glob("scripts/*.py"):
         if ("probe_tuner_rows.jsonl" in _ln or "glide_fine_rows.jsonl" in _ln) and "CKPT_V1" not in _ln and not _ln.strip().startswith("#"):
             _v1_hits.append(f"{_f}:{_i}")
 check(6, "corpus basis lint: no consumer reads the superseded v1 corpus", not _v1_hits, "; ".join(_v1_hits)[:120])
+# 6.10g EXCURSION READ LINT (BREAKDOWNS 2026-09-10): the exit engine must never index leg_path
+# excursion keys directly - two writers create entries of different shapes (the untracked-leg
+# counter seeds a bare dict). Direct indexing crashed every cycle for 30 minutes.
+_lab_txt = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+check(6, "exit engine reads leg_path excursions defensively (no path[\"mfe_pct\"] on the update line)",
+      'max(path["mfe_pct"]' not in _lab_txt and 'min(path["mae_pct"]' not in _lab_txt
+      and 'path.pop("missing_cycles"' in _lab_txt)
 check(6, "winner profile X: sim-best sibling present (flow>100k, no IV cap)",
       '"WINNER_PROFILE_X"' in _lab_src and "> 100000" in _lab_src)
 

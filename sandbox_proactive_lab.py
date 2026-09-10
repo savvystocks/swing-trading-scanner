@@ -1599,6 +1599,9 @@ def manage_open_positions(creds, params, positions=None):
             # from here" - never a reason to leave every position unmanaged.
             path["mfe_pct"] = round(max(path.get("mfe_pct", ret_pct), ret_pct), 1)   # Max Favorable Excursion
             path["mae_pct"] = round(min(path.get("mae_pct", ret_pct), ret_pct), 1)   # Max Adverse Excursion
+            path.pop("missing_cycles", None)    # the position is back: a stale count from a slow
+                                                # fill must not add to a later transient gap and
+                                                # book a false CLOSE_UNTRACKED at 5
             path["last_ret"] = round(ret_pct, 1)
             path.pop("missing_cycles", None)                             # position visible again
             dirty = True                                                 # persist the running path every cycle

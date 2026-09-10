@@ -1111,6 +1111,11 @@ check(6, "pullers defer recent zero-results instead of marking them done",
 check(6, "sentinel carries session-hole and day-density rows for every evidence store",
       _sn.count('"day_density"') >= 3 and '"session_holes"' in _sn and _sn.count('"jsonl_density"') >= 2)
 check(6, "tuner_apply refuses to judge on a thin corpus", "DENSITY GUARD" in _ta)
+# 6.10j GROWING CORPORA STAY UNTRACKED (BREAKDOWNS 2026-09-11): a 131 MB corpus was swept into
+# the nightly commit because only the OLD filename was gitignored; every push was blocked.
+_gi = open(".gitignore", encoding="utf-8").read()
+check(6, "growing corpora are gitignored (v2 tuner rows, v2 fine grid, cohort cache)",
+      all(x in _gi for x in ("probe_tuner_rows_v2.jsonl", "glide_fine_rows_v2.jsonl", "student_cohort_cache.npz")))
 # 6.10i THROUGHPUT (BREAKDOWNS 2026-09-10 third entry): the probe loop must pre-quote before the
 # sweep and cap attempts per probe, or the control starves the roster again.
 _lab_t = open("sandbox_proactive_lab.py", encoding="utf-8").read()

@@ -605,3 +605,15 @@ so at least three probes are reached every cycle. REGRESSION CHECK: MOT 6.10i as
 starved-cycle line now prints pre-skips beside attempts so the split is legible daily. LESSON:
 a budget that protects cycle time must be spent on the expensive step only - every cheap
 rejection moved in front of the expensive step is a free attempt returned to the roster.
+
+2026-09-11 - PUSHES BLOCKED BY A 131 MB CORPUS IN A NIGHTLY COMMIT. WHAT BROKE: the 22:10 UTC
+student job's commit ("fade meta weekly") swept reports/research/glide_fine_rows_v2.jsonl
+(131 MB) into its commit; GitHub refuses files over 100 MB, so that commit and everything on
+top of it could not be pushed - the first symptom was a research commit failing to land at
+23:16 UTC. ROOT CAUSE: the 2026-09-09 corpus rebuild introduced NEW filenames (v2) and only the
+old v1 names were in .gitignore; a broad "git add" in a nightly job did the rest. FIX: local
+unpushed history rewritten with a soft reset to origin (no force push, origin untouched), the
+file unstaged, both v2 corpora and the cohort cache gitignored, one clean commit pushed.
+REGRESSION CHECK: MOT 6.10j asserts the growing corpora are gitignored. LESSON: renaming a
+growing artifact is a change to .gitignore first - and a nightly job that adds a whole
+directory will find every file you forgot.

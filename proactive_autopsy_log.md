@@ -4537,3 +4537,39 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 315.0 worked against it.
 
+## Autopsy - SLV (6b5b4ce97158)
+- entered 2026-09-04T13:55:28.167Z | trigger regime_BULLISH_loose | exit CLOSE_BREAKEVEN | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -33.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-34%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 63.0 worked against it.
+
+## Autopsy - PLTR (c27c4aed1cd2)
+- entered 2026-09-04T19:05:11.787Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -49.6% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 190.0 worked against it.
+
+## Autopsy - TSLA (63921919b51b)
+- entered 2026-09-08T17:16:27.936Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -66.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-67%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 420.0 worked against it.
+
+## Autopsy - NOK (0afd6e940bce)
+- entered 2026-09-09T14:17:27.939Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -64.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-65%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 10.0 worked against it.
+

@@ -1594,8 +1594,11 @@ def manage_open_positions(creds, params, positions=None):
                 cur_px = float(p.get("current_price") or 0)
                 ret_pct = (cur_px / entry_px - 1) * 100.0 if entry_px else 0.0
             path = rec.setdefault("leg_path", {}).setdefault(leg_name, {"mfe_pct": ret_pct, "mae_pct": ret_pct, "stage": "initial"})
-            path["mfe_pct"] = round(max(path["mfe_pct"], ret_pct), 1)   # Max Favorable Excursion (trade path)
-            path["mae_pct"] = round(min(path["mae_pct"], ret_pct), 1)   # Max Adverse Excursion
+            # 2026-09-10: a leg_path entry existed WITHOUT these keys and the exit engine crashed
+            # on every cycle for 30 minutes (KeyError). A missing excursion means "start tracking
+            # from here" - never a reason to leave every position unmanaged.
+            path["mfe_pct"] = round(max(path.get("mfe_pct", ret_pct), ret_pct), 1)   # Max Favorable Excursion
+            path["mae_pct"] = round(min(path.get("mae_pct", ret_pct), ret_pct), 1)   # Max Adverse Excursion
             path["last_ret"] = round(ret_pct, 1)
             path.pop("missing_cycles", None)                             # position visible again
             dirty = True                                                 # persist the running path every cycle

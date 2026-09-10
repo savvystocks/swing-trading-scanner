@@ -1111,6 +1111,13 @@ check(6, "pullers defer recent zero-results instead of marking them done",
 check(6, "sentinel carries session-hole and day-density rows for every evidence store",
       _sn.count('"day_density"') >= 3 and '"session_holes"' in _sn and _sn.count('"jsonl_density"') >= 2)
 check(6, "tuner_apply refuses to judge on a thin corpus", "DENSITY GUARD" in _ta)
+# 6.10i THROUGHPUT (BREAKDOWNS 2026-09-10 third entry): the probe loop must pre-quote before the
+# sweep and cap attempts per probe, or the control starves the roster again.
+_lab_t = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+check(6, "probe loop pre-quotes the alert contract before the sensor sweep",
+      "_live_spread_pct(_pq_occ, creds)" in _lab_t and "_pre += 1" in _lab_t)
+check(6, "per-probe attempt ceiling caps the control at _PROBE_MAX_ATT",
+      "_patt >= _PROBE_MAX_ATT" in _lab_t and "_PROBE_MAX_ATT = 4" in _lab_t)
 check(6, "winner profile X: sim-best sibling present (flow>100k, no IV cap)",
       '"WINNER_PROFILE_X"' in _lab_src and "> 100000" in _lab_src)
 

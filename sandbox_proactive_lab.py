@@ -430,6 +430,31 @@ def _tuned(name, kind):
         pass
     return (PROBE_STRUCT if kind == "struct" else PROBE_EXITS).get(name or "")
 _ACTIVE_PROBE = {"name": None}
+_PROBE_MAX_ATT = 4              # per-probe attempt ceiling per cycle (throughput fix 2026-09-10):
+                                # the control sat first in rotation and burned all 10 attempts on
+                                # spread-dead names - 23 of 36 cycles starved, tail probes got 1-4
+                                # attempts ALL DAY. With 10 total and 4 per probe, at least three
+                                # probes are reached every cycle.
+
+
+def _live_spread_pct(occ, creds):
+    """Cheap pre-sweep liquidity read: the live indicative NBBO of ONE contract (~100 ms) vs a
+    full sensor sweep (seconds, and one of the 10 attempts). Returns spread% of the ask, or
+    None when there is no usable quote (fail-closed, same convention as the repricing gate)."""
+    try:
+        _rq = urllib.request.Request(
+            "https://data.alpaca.markets/v1beta1/options/quotes/latest?symbols=" + occ + "&feed=indicative",
+            headers={"APCA-API-KEY-ID": creds[0], "APCA-API-SECRET-KEY": creds[1]})
+        with urllib.request.urlopen(_rq, timeout=8) as _r:
+            _q = (json.loads(_r.read()).get("quotes") or {}).get(occ) or {}
+        _b, _a = float(_q.get("bp") or 0), float(_q.get("ap") or 0)
+        if _a <= 0 or _b <= 0 or _b > _a:
+            return None
+        return (_a - _b) / _a * 100.0
+    except Exception:
+        return None
+
+
 _PROBE_CONTRACT = {"c": None}   # trigger-contract override (DIP_CONF_MILD): when set, build_legs
                                 # returns THE contract the expensive-flow trigger printed on
                                 # instead of synthesizing one - the panel catch of 2026-09-01:
@@ -2465,6 +2490,8 @@ def run_scheduled_cycle(mock=False):
                 _rest = [x for x in _ROSTER if x[0] != "EXEC_BASELINE"]
                 _rot = (int(_today[8:10]) + int(_now_iso_ms()[11:13])) % len(_rest)
                 _order = [_ROSTER[0]] + _rest[_rot:] + _rest[:_rot]
+                _pq_cache = {}                  # ticker -> live spread% of its alert contract, this cycle
+                _pre = 0                        # names skipped on the live pre-quote (no attempt spent)
             except Exception:
                 _order = list(_ROSTER)
             _mkt20 = None
@@ -2508,8 +2535,9 @@ def run_scheduled_cycle(mock=False):
                              # DIP_CONF_MILD buys THE TRIGGER CONTRACT via _PROBE_CONTRACT (panel-
                              # corrected 2026-09-01): the +21.2/day t4.31 cell was measured on the
                              # expensive contract itself, so the live evidence is earned on it too
+                    _patt = 0                   # attempts spent by THIS probe this cycle
                     for c in _pool:
-                        if _att >= 10:
+                        if _att >= 10 or _patt >= _PROBE_MAX_ATT:
                             break
                         t = c["ticker"]
                         if t.upper() in _open_tk:
@@ -2531,6 +2559,24 @@ def run_scheduled_cycle(mock=False):
                                                 # the whole 6-attempt budget on degenerate names and
                                                 # starved every probe (found 2026-09-02: 5 of the top
                                                 # 10 were metadata-dead; zero probe entries all day)
+                        # LIVE PRE-QUOTE (throughput fix 2026-09-10): ~80% of attempted names die at
+                        # the 2% spread cap, discovered only AFTER a full sensor sweep. Quote the
+                        # whale's own contract first (one cheap call, cached per ticker per cycle):
+                        # if even that contract has no usable quote or a spread over 4%, the name's
+                        # chain is not tradeable now - skip WITHOUT spending an attempt and tell the
+                        # rest of the roster. 4% is a liquidity proxy, not a second standard: the
+                        # 2% gate still decides on the actual contract.
+                        _pq_occ = ((c or {}).get("occ")
+                                   or (((c or {}).get("afford_call") if (c or {}).get("flow_type") == "call"
+                                        else (c or {}).get("afford_put")) or {}).get("occ"))
+                        if live and _pq_occ:
+                            if t not in _pq_cache:
+                                _pq_cache[t] = _live_spread_pct(_pq_occ, creds)
+                            _sp_ = _pq_cache[t]
+                            if _sp_ is None or _sp_ > 4.0:
+                                engine_skips.setdefault(t, "spread_cap")
+                                _pre += 1
+                                continue
                         try:
                             _ACTIVE_PROBE["name"] = _pname
                             if _pname in ("DIP_CONF_MILD", "BULL_DIP_X"):
@@ -2538,6 +2584,7 @@ def run_scheduled_cycle(mock=False):
                                     continue
                                 _PROBE_CONTRACT["c"] = c
                             _att += 1
+                            _patt += 1
                             rec = enter_proactive_set(t, None, mock=mock, candidate=c,
                                                       dry_run=not live, positions=positions,
                                                       open_orders=open_orders, probe=True,
@@ -2570,6 +2617,7 @@ def run_scheduled_cycle(mock=False):
                             break
                 if _cyc == 0:
                     print(f"  probes: 0 entries this cycle - {_att} of 10 attempts used, "
+                          f"{_pre} name(s) pre-skipped on live spread, "
                           f"{len(candidates)} candidates, regime {fade_book.spy_regime()} "
                           f"(a starved cycle must say so, never sit silent - 2026-09-02)")
             finally:

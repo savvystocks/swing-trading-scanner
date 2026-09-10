@@ -590,3 +590,18 @@ the defer guard in both pullers, the density rows in the sentinel, and the densi
 the tuner; the density rows themselves page the next morning if the class returns. LESSON:
 "fresh" must mean complete AND dense, not merely recent - a freshness registry that only asks
 "what is the newest day" is a registry of last-seen dates, not of data health.
+
+2026-09-10 (third entry) - ROSTER STARVATION, STRUCTURAL FIX. WHAT BROKE: 23 of 36 cycles spent
+all 10 attempts with zero entries; the control (first in rotation, no filter) burned 108 attempts
+in a day - 78 on spread-cap rejections each discovered only AFTER a full sensor sweep - and the
+tail strategies received 1-4 attempts all day. Half of all orders the engine did place never
+filled. ROOT CAUSE: the attempt budget bounds SWEEPS (cycle time), but a rejection at the 2%
+live spread cap was only learnable after the sweep, and nothing stopped one probe from consuming
+the whole budget. FIX: (1) LIVE PRE-QUOTE - before any sweep, one cheap indicative quote of the
+whale's own alert contract (cached per ticker per cycle); no usable quote or spread over 4% ->
+skip without spending an attempt, and mark the ticker dead for the rest of the roster this cycle
+(the 2% gate on the actual contract is unchanged); (2) PER-PROBE CEILING of 4 attempts per cycle
+so at least three probes are reached every cycle. REGRESSION CHECK: MOT 6.10i asserts both; the
+starved-cycle line now prints pre-skips beside attempts so the split is legible daily. LESSON:
+a budget that protects cycle time must be spent on the expensive step only - every cheap
+rejection moved in front of the expensive step is a free attempt returned to the roster.

@@ -276,6 +276,7 @@ and SPRT clock are decisions 14/27.)
 | 33 | Strategy | 2026-09-10: roster focused to SEVEN (control, FOLLOW_CALLS, BULL_DIP, DIP_CONF_MILD, DIP_CONVEXITY, CREDIT_SPREAD_W, WINNER_PROFILE); per-strategy daily fill cap 8; verdicts in weeks, not months | fade_book_spec probe.priority + sandbox roster |
 | 34 | Money | 2026-09-10: a defined-risk spread may take a proof seat at the largest width whose worst case fits the $1,000 cap (NORTH_STAR v1.8); discovery keeps its 2% width and its accrued weeks | NORTH_STAR v1.8 + proof_account.sizing |
 | 35 | Ops | 2026-09-10: NO deadline on the discovery experiment or the data subscription; the owner decides on evidence, not on a date | NORTH_STAR operating principles |
+| 36 | Strategy | 2026-09-10: the STUDENT goes live - META_SELECT (0.673 OOF AUC) beat the shadow control on 24 unseen days (+10.2/day, t 1.79) and its wiring gate had gone unpaged; STUDENT_SELECT joins the roster (picks scored 0.60+, both sides, all regimes, $1,000 auditions, same court), panel first, live by Mon 15 Sep | item 8 + sandbox roster |
 | 10 | Money | 3-month best-case calendar; gates decide the real dates | item 14 |
 | 11 | Owner | Judge the four numbers against expected bands, never feel | NORTH_STAR owner's part + item 6 |
 | 12 | Brain | Deep teaching - one concept per weekly report | item 16 |

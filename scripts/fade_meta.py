@@ -180,6 +180,33 @@ def main():
                       "mean": round(sum(conf) / len(conf) * 100, 2)},
                       "computed_at": datetime.now(timezone.utc).isoformat()[:16]}) + "\n")
     led.close()
+    # STUDENT GATE PAGE (2026-09-10): the wiring gate ("beats BASELINE on >= 10 virgin days")
+    # had been met for 24 days and nobody was paged. Compute the standing from the ledger and
+    # page ONCE per week while the gate is met and the student is not yet on the live roster.
+    try:
+        _rows = [json.loads(l) for l in open("reports/shadow_lab/ledger.jsonl", encoding="utf-8") if l.strip()]
+        _by = {}
+        for _r in _rows:
+            for _b in ("META_SELECT", "BASELINE"):
+                _v = _r.get(_b)
+                if isinstance(_v, dict) and _v.get("mean") is not None and _v.get("n", 0) > 0:
+                    _by.setdefault(_b, {})[_r["day"]] = _v["mean"]
+        _sh = sorted(set(_by.get("META_SELECT", {})) & set(_by.get("BASELINE", {})))
+        if len(_sh) >= 10:
+            _d = [_by["META_SELECT"][x] - _by["BASELINE"][x] for x in _sh]
+            _mu = sum(_d) / len(_d)
+            _sd = (sum((x - _mu) ** 2 for x in _d) / (len(_d) - 1)) ** 0.5
+            _t = _mu / (_sd / len(_d) ** 0.5) if _sd > 0 else 0.0
+            _wired = '"STUDENT_SELECT"' in open("sandbox_proactive_lab.py", encoding="utf-8").read()
+            _flag = "/home/poller/.student_gate_paged"
+            _stale = (not os.path.exists(_flag)) or (time.time() - os.path.getmtime(_flag) > 7 * 86400)
+            if _mu > 0 and not _wired and _stale:
+                tg(f"STUDENT GATE MET: META_SELECT beats the shadow control on {len(_sh)} unseen days "
+                   f"(edge {_mu:+.1f}%/day, t{_t:+.2f}, ahead {sum(1 for x in _d if x > 0)}/{len(_sh)}). "
+                   "The student is NOT on the live roster yet - the wiring session is owed.")
+                open(_flag, "w").write(datetime.now(timezone.utc).isoformat())
+    except Exception as _ge:
+        print(f"student gate page skipped: {type(_ge).__name__}", flush=True)
     Xw, yw, dw, cw = cohort(wide=True)
     if len(Xw) >= 1000:
         Xw = np.array(Xw); yw = np.array(yw); gw = np.array(dw)

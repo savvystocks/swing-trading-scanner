@@ -123,9 +123,11 @@ CHECKS = [
     #    session_holes: (query of days, lookback sessions, lag)   day_density / jsonl_density:
     #    (query of day,count | -, lookback, ref sessions, min ratio vs ref median, lag)
     ("uw archive session holes", "session_holes", "data/uw_history.db",
-     ("select distinct day from contracts_daily where day >= date('now','-45 day')", 12, 1), "EVIDENCE"),
+     ("select distinct day from contracts_daily where day >= date('now','-45 day')", 12, 2), "EVIDENCE"),
     ("uw archive day density", "day_density", "data/uw_history.db",
-     ("select day, count(*) from contracts_daily where day >= date('now','-75 day') group by day", 5, 25, 0.4, 1), "EVIDENCE"),
+     ("select day, count(*) from contracts_daily where day >= date('now','-75 day') group by day", 5, 25, 0.4, 2), "EVIDENCE"),
+    # ^ lag 2: day D lands at 22:30 UTC on D+1 (END = today-1), so at the 08:00 run on D+1 the
+    #   newest complete session is D-1 - lag 1 would page every single morning
     ("uw prints cohort density", "day_density", "data/uw_history.db",
      ("select day, count(distinct occ) from flow_prints where day >= date('now','-75 day') group by day", 5, 25, 0.4, 2), "EVIDENCE"),
     ("hourly bars day density", "day_density", "data/hourly_paths.db",

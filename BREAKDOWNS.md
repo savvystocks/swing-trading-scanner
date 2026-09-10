@@ -538,3 +538,15 @@ any future reader sees what the correction cost. LESSON: a backtest is a claim a
 you could have paid - if the entry is not a quote you could have lifted at the moment you
 decided, the whole edge is a measurement artifact; and when the honest input is already in
 the database, the defect is not missing data but a consumer that never asked for it.
+
+2026-09-10 - FOLLOW-UP to the 2026-09-09 corpus-basis entry: the fix had covered the GENERATOR
+only. Nine consumers still read the superseded v1 files - including the whole Friday chain
+(glide_sim build at 21:45 UTC and tuner_apply behind it), which would have applied exit glides
+on the optimistic basis the very next day. glide_sim ported to the executable basis (reads v2
+rows' banked ask + spread, entry bar out of the peak loop, bid-side fills, versioned output
+glide_fine_rows_v2.jsonl, single-writer lock); tuner_apply repointed and its INCUMBENT_POOL
+moved to the $4-9.90 band the live gate actually buys (BULL_DIP/DIP_CONVEXITY had been tuning on
+a band entirely below the live floor); every research consumer and the sentinel repointed.
+REGRESSION CHECK: MOT 6.10f corpus-basis lint fails if any script names a v1 corpus file.
+LESSON: a data-basis fix is not done at the writer - sweep every reader in the same session,
+and lint the old name so it cannot creep back.

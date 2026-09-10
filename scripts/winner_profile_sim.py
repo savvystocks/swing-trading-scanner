@@ -50,13 +50,13 @@ def paired_t(a, b):
 
 def main():
     rows = []
-    for ln in open("reports/research/glide_fine_rows.jsonl", encoding="utf-8"):
+    for ln in open("reports/research/glide_fine_rows_v2.jsonl", encoding="utf-8"):
         try:
             rows.append(json.loads(ln))
         except Exception:
             pass
     pa = {}
-    for ln in open("reports/research/probe_tuner_rows.jsonl", encoding="utf-8"):
+    for ln in open("reports/research/probe_tuner_rows_v2.jsonl", encoding="utf-8"):
         try:
             j = json.loads(ln)
             pa[j["occ"]] = j.get("prem")

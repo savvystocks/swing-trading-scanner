@@ -48,7 +48,7 @@ def q(d):
 
 def main():
     rows = []
-    for ln in open("reports/research/glide_fine_rows.jsonl", encoding="utf-8"):
+    for ln in open("reports/research/glide_fine_rows_v2.jsonl", encoding="utf-8"):
         try:
             rows.append(json.loads(ln))
         except Exception:

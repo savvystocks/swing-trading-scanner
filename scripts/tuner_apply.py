@@ -33,9 +33,12 @@ from probe_tuner import BUY_VARIANTS
 
 DRY = os.environ.get("TUNER_APPLY_DRY") == "1"
 GLIDE = 0.15
-INCUMBENT_POOL = {"FOLLOW_CALLS": "fullband", "CONSENSUS_CALLS": "fullband",
-                  "BULL_DIP": "base_cheap", "DIP_CONF_MILD": "pricey_4_9",
-                  "DIP_CONVEXITY": "base_cheap", "FADE_BEAR": "base_cheap"}
+INCUMBENT_POOL = {"FOLLOW_CALLS": "pricey_4_9", "CONSENSUS_CALLS": "pricey_4_9",
+                  "BULL_DIP": "pricey_4_9", "DIP_CONVEXITY": "pricey_4_9",
+                  "DIP_CONF_MILD": "pricey_4_9"}
+# ALL strategies tune on the band the live gate actually buys ($4.00-$9.90 repricing floor and
+# ceiling). Panel 2026-09-09: BULL_DIP/DIP_CONVEXITY were tuning exits on base_cheap, a $0.30-4
+# band that sits ENTIRELY below the live floor - a cohort the book structurally cannot buy.
 DEFAULT_EXITS = {"DIP_CONVEXITY": (-70.0, 80.0, 0.30), "BULL_DIP_X": (-70.0, 80.0, 0.30)}
 ANCHORS = [(-50.0, 50.0, 0.20), (-50.0, 80.0, 0.30), (-50.0, 80.0, 0.20), (-50.0, 50.0, 0.30),
            (-70.0, 50.0, 0.20), (-70.0, 80.0, 0.30), (-70.0, 80.0, 0.20), (-70.0, 50.0, 0.30)]
@@ -106,7 +109,7 @@ def main():
         print("no fine-grid rows - run glide_sim.py build first")
         return
     pa = {}
-    for line in open("reports/research/probe_tuner_rows.jsonl", encoding="utf-8"):
+    for line in open("reports/research/probe_tuner_rows_v2.jsonl", encoding="utf-8"):
         try:
             j = json.loads(line)
             pa[j["occ"]] = (j["prem"], j["ask"], j["t"])

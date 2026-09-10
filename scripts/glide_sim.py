@@ -32,7 +32,9 @@ GRID = [(s, t, g) for s in STOPS for t in TRIGS for g in GIVES]
 GIX = {c: i for i, c in enumerate(GRID)}
 ANCHORS = [(-50.0, 50.0, 0.20), (-50.0, 80.0, 0.30), (-50.0, 80.0, 0.20), (-50.0, 50.0, 0.30),
            (-70.0, 50.0, 0.20), (-70.0, 80.0, 0.30), (-70.0, 80.0, 0.20), (-70.0, 50.0, 0.30)]
-FINE = "reports/research/glide_fine_rows.jsonl"
+FINE = "reports/research/glide_fine_rows_v2.jsonl"   # v2 = EXECUTABLE basis (2026-09-10)
+COARSE = "reports/research/probe_tuner_rows_v2.jsonl"
+LOCK = "/tmp/glide_build.lock"
 
 STRATS = {
     "FOLLOW_CALLS": lambda r: r["side"] == "C",
@@ -46,7 +48,11 @@ STRATS = {
 START = {"DIP_CONVEXITY": (-70.0, 80.0, 0.30), "FADE_BEAR": (-50.0, 50.0, 0.20)}
 
 
-def replay(bars_today_after, bars_next, e, stop, trig, give):
+def replay(bars_today_after, bars_next, e, stop, trig, give, sf=0.0):
+    # sf = fractional spread at the print; every exit is a SALE and fills bid-side (panel
+    # 2026-09-09). bars_today_after must exclude the entry bar (look-ahead otherwise).
+    def _sell(rp):
+        return ((1 + rp / 100.0) * (1 - sf) - 1) * 100.0
     peak = -999.0
     on = False
     for (h, l, c) in bars_today_after:
@@ -62,10 +68,10 @@ def replay(bars_today_after, bars_next, e, stop, trig, give):
             peak = max(peak, rh)
             fl = peak * (1 - give)
             if rl <= fl:
-                return fl
+                return _sell(fl)
         if rl <= stop:
-            return stop
-    return (bars_next[-1][2] / e - 1) * 100 if bars_next else None
+            return _sell(min(stop, rl))          # gap-through fills at the bar low
+    return _sell((bars_next[-1][2] / e - 1) * 100) if bars_next else None
 
 
 def build_fine():
@@ -76,8 +82,17 @@ def build_fine():
     prints = {}
     for occ, day, ts in src.execute("select occ, day, min(executed_at) from flow_prints group by occ, day"):
         prints[(occ, day)] = ts
+    if os.path.exists(LOCK):                # one writer only - a cron build racing a manual
+        try:                                # rebuild would interleave rows in one file
+            _pid = int(open(LOCK).read().strip() or 0)
+            os.kill(_pid, 0)
+            print(f"fine grid build already running (pid {_pid}) - skipping", flush=True)
+            return
+        except Exception:
+            pass
+    open(LOCK, "w").write(str(os.getpid()))
     rows = []
-    for line in open("reports/research/probe_tuner_rows.jsonl", encoding="utf-8"):
+    for line in open(COARSE, encoding="utf-8"):
         try:
             rows.append(json.loads(line))
         except Exception:
@@ -104,12 +119,13 @@ def build_fine():
         nx = [(h, l, c) for ts_, h, l, c in bars_ if ts_[:10] > r["day"]]
         if len(nx) < 3:
             continue
-        e = ta[0][2] if ta else r["ask"]
-        if e <= 0:
-            continue
+        e = float(r.get("entry") or 0)      # v2 row: the ASK banked at the print
+        if e <= 0 or r.get("basis") != "ask_at_print":
+            continue                        # never score a row on the superseded basis
+        _sf = float(r.get("spread_frac") or 0.0)
         rets = []
         for (s, t, g) in GRID:
-            v = replay(ta, nx, e, s, t, g)
+            v = replay(ta[1:], nx, e, s, t, g, _sf)
             rets.append(round(v, 2) if v is not None else None)
         out.write(json.dumps({"occ": r["occ"], "day": r["day"], "side": r["side"],
                               "smd": r["smd"], "reg": r["reg"], "sp": r["sp"], "rets": rets}) + "\n")
@@ -117,6 +133,11 @@ def build_fine():
         if n % 2000 == 0:
             out.flush(); print(f"fine {n}", flush=True)
     out.close()
+    os.utime(FINE, None)                    # the sentinel's schedule row sees every run
+    try:
+        os.remove(LOCK)
+    except Exception:
+        pass
     print(f"FINE GRID COMPLETE (+{n})", flush=True)
 
 

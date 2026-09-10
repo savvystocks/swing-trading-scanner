@@ -45,7 +45,7 @@ def dte_of(occ, t, day):
 
 def main():
     rows = []
-    for line in open("reports/research/probe_tuner_rows.jsonl", encoding="utf-8"):
+    for line in open("reports/research/probe_tuner_rows_v2.jsonl", encoding="utf-8"):
         try:
             rows.append(json.loads(line))
         except Exception:

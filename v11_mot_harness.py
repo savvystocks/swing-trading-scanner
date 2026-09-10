@@ -1081,6 +1081,18 @@ _wp_iv = _wp["features"]["iv_term.iv_front"]["pooled_median"]
 check(6, "winner profile: roster entry present with frozen profile values",
       '"WINNER_PROFILE"' in _lab_src and str(int(_wp_prem)) in _lab_src
       and str(_wp_iv) in _lab_src, f"prem {_wp_prem} iv {_wp_iv}")
+# 6.10f CORPUS BASIS LINT (panel 2026-09-09 / BREAKDOWNS 2026-09-09 third entry): no script
+# may read the superseded v1 corpus files. Only basis_diff.py (the comparison itself) and the
+# CKPT_V1 constant in probe_tuner.py may name them.
+import glob as _glob
+_v1_hits = []
+for _f in _glob.glob("scripts/*.py"):
+    if _f.replace("\\", "/").endswith("basis_diff.py"):
+        continue
+    for _i, _ln in enumerate(open(_f, encoding="utf-8"), 1):
+        if ("probe_tuner_rows.jsonl" in _ln or "glide_fine_rows.jsonl" in _ln) and "CKPT_V1" not in _ln and not _ln.strip().startswith("#"):
+            _v1_hits.append(f"{_f}:{_i}")
+check(6, "corpus basis lint: no consumer reads the superseded v1 corpus", not _v1_hits, "; ".join(_v1_hits)[:120])
 check(6, "winner profile X: sim-best sibling present (flow>100k, no IV cap)",
       '"WINNER_PROFILE_X"' in _lab_src and "> 100000" in _lab_src)
 

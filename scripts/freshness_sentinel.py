@@ -129,7 +129,9 @@ CHECKS = [
     # ^ lag 2: day D lands at 22:30 UTC on D+1 (END = today-1), so at the 08:00 run on D+1 the
     #   newest complete session is D-1 - lag 1 would page every single morning
     ("uw prints cohort density", "day_density", "data/uw_history.db",
-     ("select day, count(distinct occ) from flow_prints where day >= date('now','-75 day') group by day", 5, 25, 0.4, 2), "EVIDENCE"),
+     ("select day, count(distinct occ) from flow_prints where day >= date('now','-75 day') group by day", 5, 25, 0.4, 3), "EVIDENCE"),
+    # ^ lag 3: day D's contracts land 22:30 on D+1, the first prints attempt at 00:15 on D+2
+    #   usually returns empty (vendor lag) and is deferred, the second at 00:15 on D+3 lands
     ("hourly bars day density", "day_density", "data/hourly_paths.db",
      ("select substr(ts,1,10), count(distinct occ) from bars where ts >= date('now','-75 day') group by 1", 5, 25, 0.4, 2), "EVIDENCE"),
     ("tuner corpus v2 density", "jsonl_density", "reports/research/probe_tuner_rows_v2.jsonl", (5, 25, 0.4, 6), "EVIDENCE"),

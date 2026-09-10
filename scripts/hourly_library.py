@@ -119,7 +119,11 @@ def main():
     stored_max = dict(con.execute("select occ, max(substr(ts,1,10)) from bars group by occ"))
     topup = []
     for occ, d in first.items():
-        wend = min(date.fromisoformat(d) + timedelta(days=70),
+        try:                                # a contract's bars END AT EXPIRY - without this
+            _exp = date(2000 + int(occ[-15:-13]), int(occ[-13:-11]), int(occ[-11:-9]))   # cap,
+        except Exception:                   # every expired contract looked "incomplete" and
+            _exp = date.today()             # the top-up re-fetched 177k of them per run (2h)
+        wend = min(date.fromisoformat(d) + timedelta(days=70), _exp,
                    date.today() - timedelta(days=1)).isoformat()
         smax = stored_max.get(occ)
         if occ in done and smax and smax < wend:

@@ -2406,16 +2406,16 @@ def run_scheduled_cycle(mock=False):
                 # dormant 12 days - a completed and negative case. Slot freed.
                 # QUIET_TAPE culled 2026-09-01 (owner Friday-queue pulled forward): -$1,005 over its
                 # era, no positive stretch - roster slot freed for the grid probes.
-                ("FADE_DP", lambda md, c: _shape(md, c)
-                                          and ((md.get("dark_pool") or {}).get("n_prints") or 0) >= 150),
+                # FADE_DP retired 2026-09-10 (owner: focus the roster to seven so each survivor
+                # fills 2-3x faster): 1 fill, open; dark-pool fade shape - no path to a verdict. Records and evidence stay.
                 # OPT_WINNER culled 2026-09-09 (owner): ZERO fills in five weeks - its triple
                 # filter (fade shape + depth<3% + premium<=250k) is structurally starved; no path
                 # to the 8-day bar. FADE_WHALE culled the same night: 1 fill in 28 days, -$173.
                 # Both slots freed so the strategies with live cases rotate more often.
-                ("GEX_PIN", lambda md, c: abs((md.get("gex") or {}).get("distance_to_zero_gamma_pct")
-                                              or 9) < 0.3),   # owner 2026-08-18: untapped UW trigger
-                ("IV_EXTREME", lambda md, c: ((md.get("pemd") or {}).get("iv_rank_1y") or 50) >= 85
-                                             or ((md.get("pemd") or {}).get("iv_rank_1y") or 50) <= 10),
+                # GEX_PIN retired 2026-09-10 (owner: focus the roster to seven so each survivor
+                # fills 2-3x faster): no fills in the audition era. Records and evidence stay.
+                # IV_EXTREME retired 2026-09-10 (owner: focus the roster to seven so each survivor
+                # fills 2-3x faster): no fills in the audition era. Records and evidence stay.
                 ("BULL_DIP", lambda md, c: fade_book.spy_regime() == "BULL"
                                            and isinstance((md.get("macro") or {}).get("distance_to_sma20_pct"), (int, float))
                                            and (md.get("macro") or {}).get("distance_to_sma20_pct") < 0
@@ -2452,7 +2452,8 @@ def run_scheduled_cycle(mock=False):
                                              # 2% cap. Regime-agnostic, both sides. Values frozen
                                              # from reports/research/winner_profile.json - teacher
                                              # freeze; rebuild only by owner order.
-                ("WINNER_PROFILE_X", lambda md, c: ((c or {}).get("total_premium") or 0) > 100000),
+                # WINNER_PROFILE_X retired 2026-09-10 (owner: focus the roster to seven so each survivor
+                # fills 2-3x faster): 0 fills; on the honest corpus basis its own cell (+1.95/day) no longer clears the floor. Records and evidence stay.
                                              # the sim's most CONSISTENT cell (2026-09-09 grid,
                                              # 73k archive trades): flow>100k, no IV cap ->
                                              # +6.33%/day, t+3.37 vs pool, halves +7.3/+5.3.
@@ -2462,14 +2463,14 @@ def run_scheduled_cycle(mock=False):
                                              # 2026-08-23: buy aggressively-bought calls, all regimes -
                                              # +32/+12/+14 bear/mild/bull, t>3 each (thin bear). The one
                                              # candidate positive & significant in every regime. PRIORITY.
-                ("BULL_DIP_X", lambda md, c: isinstance((md.get("macro") or {}).get("distance_to_sma20_pct"), (int, float))
-                                             and (md.get("macro") or {}).get("distance_to_sma20_pct") < 0
-                                             and (c or {}).get("flow_type") == "call"),
+                # BULL_DIP_X retired 2026-09-10 (owner: focus the roster to seven so each survivor
+                # fills 2-3x faster): 0 fills; the dip filter tested indistinguishable from none, BULL_DIP keeps the seat. Records and evidence stay.
                                              # CONSENSUS's replacement (owner cull+replace order
                                              # 2026-09-01): BULL regime (pre-checked below) + ticker
                                              # dip + THE expensive trigger contract, wide exits.
                                              # bull_expensive test: +40.8%/day t+5.17, 86d, n=366
-                ("CONSENSUS_CALLS", lambda md, c: (not _shape(md, c)) and (c or {}).get("flow_type") == "call"),  # 400k-1M side-pool (owner ask
+                # CONSENSUS_CALLS retired 2026-09-10 (owner: focus the roster to seven so each survivor
+                # fills 2-3x faster): 0 fills as the calls-only refinement; parent CONSENSUS culled 09-01 at -$3,424. Records and evidence stay.
                                                                     # 2026-08-12: sim +3.37 vs -0.47
                                                                     # day-mean, halves flipped - live
                                                                     # fills settle it)
@@ -2500,7 +2501,7 @@ def run_scheduled_cycle(mock=False):
                 _mkt20 = _sv._sma_distance("SPY")
             except Exception:
                 pass
-            _CALLS_ONLY = {"FOLLOW_CALLS", "CONSENSUS_CALLS", "BULL_DIP", "BULL_DIP_X",
+            _CALLS_ONLY = {"FOLLOW_CALLS", "BULL_DIP",
                            "DIP_CONF_MILD", "DIP_CONVEXITY"}
             # ATTEMPT BUDGET (hotfix 2026-09-01 19:0x UTC): every enter_proactive_set attempt costs
             # a full sensor sweep whether or not the filter passes. Head-first ordering hid that -
@@ -2530,7 +2531,7 @@ def run_scheduled_cycle(mock=False):
                                             # here so 50d/20d divergence days can't burn the budget
                     _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
                              else _PRICEY_CANDS[:14] if _pname in ("DIP_CONF_MILD", "BULL_DIP_X")
-                             else _FULL_CANDS[:16] if _pname in ("FOLLOW_CALLS", "CONSENSUS_CALLS", "WINNER_PROFILE", "WINNER_PROFILE_X")
+                             else _FULL_CANDS[:16] if _pname in ("FOLLOW_CALLS", "WINNER_PROFILE")
                              else candidates[2:12])   # skim BELOW the fade book's 2-per-cycle picks
                              # DIP_CONF_MILD buys THE TRIGGER CONTRACT via _PROBE_CONTRACT (panel-
                              # corrected 2026-09-01): the +21.2/day t4.31 cell was measured on the

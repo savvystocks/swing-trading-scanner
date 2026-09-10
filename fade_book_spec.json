@@ -46,7 +46,7 @@
  "probe": {
   "enabled": true,
   "size_usd": 1000,
-  "per_strategy_max_per_day": 5,
+  "per_strategy_max_per_day": 8,
   "max_per_day": 25,
   "roster": [
    "EXEC_BASELINE",
@@ -129,11 +129,8 @@
    "CREDIT_SPREAD_W",
    "DIP_CONVEXITY",
    "BULL_DIP",
-   "CONSENSUS_CALLS",
    "FOLLOW_CALLS",
-   "DIP_CONF_MILD",
-   "PUT_DEBIT_W",
-   "BULL_DIP_X"
+   "DIP_CONF_MILD"
   ],
   "priority_note": "owner order 2026-09-01 (ship the grid): the full 3x3 grid is tracked - one strategy per regime cell plus structure. Bear cell 2 is the FADE book itself (above this track). More candidates = more luck-chances vs one control; the placebo army + sentinels measure exactly that, bar v2 (symmetric trim + floor) unchanged.",
   "dip_convexity": {
@@ -160,7 +157,8 @@
   "bull_dip_x": {
    "evidence": "bull_expensive test 2026-09-01 (CONSENSUS replacement, owner cull+replace): BULL regime + ticker<20d + calls, EXPENSIVE trigger contracts (ask 4-9, prem 50-400k, aggressor, spr<=2), true-trigger entries ON the contract: wide exits +40.8%/day t+5.17 (86d, n=366, halves +74/+8); live exits +18.8 t+3.06; cheap band only +7.0 t+1.5. No SPY-conf gate (thin in bull). Trades the trigger contract verbatim via _PROBE_CONTRACT, wide exits via PROBE_EXITS. CAVEAT: front-loaded halves (+74/+8) - bull-era decay risk is real; the +8 second half still clears the floor. CONTRADICTION FLAG (tuner full grid, same night): differently-sampled grid (per-occ first-qualifying-day by symbol order, n=186) shows pricey bull-dip halves +44/-4 and NO PASS - the +40.8 halves +74/+8 (by-day sampling, n=366) may be sampling-sensitive. Probe stays (paper; live virgin days arbitrate) but promotion bar must see this note.",
    "added": "2026-09-01"
-  }
+  },
+  "v2.5_note": "2026-09-10 owner: roster focused to seven (control, FOLLOW_CALLS, the three regime seats, CREDIT_SPREAD_W, WINNER_PROFILE); per-strategy daily fill cap 5 -> 8 so each survivor fills 2-3x faster. Retired: CONSENSUS_CALLS, BULL_DIP_X, PUT_DEBIT_W (never enabled), FADE_DP, GEX_PIN, IV_EXTREME, WINNER_PROFILE_X. Priority edits carry no auto_ marker: no evidence clock restarts."
  },
  "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal.",
  "v1.7.1_note": "owner order 2026-08-12 00:36 (sim-first then probe): FADE_WHALE probe slot - fade-shaped 400k-1M prints from a side-pool the live book never sees (its candidate list is byte-identical). Sim promising but half-flipped; live fills decide. 1M+ excluded (negative, n=8).",
@@ -209,7 +207,9 @@
   "reserve_nickname": "promotion 2",
   "seats": [],
   "sizing": {
-   "per_trade_cap_usd": 1000
+   "per_trade_cap_usd": 1000,
+   "defined_risk_max_loss_usd": 1000,
+   "spread_width_rule": "NORTH_STAR v1.8 (2026-09-10): a defined-risk spread may take a proof seat at the LARGEST width whose worst case (width - credit, per contract) fits defined_risk_max_loss_usd; on XSP near 757 that is roughly a 1.3% width (long leg ~3.3% OTM against the 2% short) instead of the discovery book 2%. Phase C computes the width from the cap at seating; discovery keeps trading 2%."
   },
   "rising_weeks": 0,
   "week_history": [],

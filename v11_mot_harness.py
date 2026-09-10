@@ -1118,8 +1118,10 @@ check(6, "probe loop pre-quotes the alert contract before the sensor sweep",
       "_live_spread_pct(_pq_occ, creds)" in _lab_t and "_pre += 1" in _lab_t)
 check(6, "per-probe attempt ceiling caps the control at _PROBE_MAX_ATT",
       "_patt >= _PROBE_MAX_ATT" in _lab_t and "_PROBE_MAX_ATT = 4" in _lab_t)
-check(6, "winner profile X: sim-best sibling present (flow>100k, no IV cap)",
-      '"WINNER_PROFILE_X"' in _lab_src and "> 100000" in _lab_src)
+check(6, "roster focused to seven (owner 2026-09-10): retired names absent from the live roster",
+      all(('("%s", lambda' % n) not in _lab_src for n in
+          ("WINNER_PROFILE_X", "CONSENSUS_CALLS", "BULL_DIP_X", "FADE_DP", "GEX_PIN", "IV_EXTREME"))
+      and '"WINNER_PROFILE"' in _lab_src and '"FOLLOW_CALLS"' in _lab_src)
 
 # 6.11 digest renders the scoreboard + alert-reconciliation lines
 _dg6 = lab.daily_digest()

@@ -112,6 +112,8 @@ def main():
     print(f"todo {len(todo)} ticker-days; budget used today {used_today(con)}/{DAILY_BUDGET}", flush=True)
     n_calls = 0
     d0 = date.today()
+    n_def = 0
+    _floor = (date.today() - timedelta(days=7)).isoformat()   # ZERO-RESULT-DEFER window
     for dd, t in todo:
         if date.today() != d0:
             print("UTC day rolled - stop; the new budget belongs to the new day's crons", flush=True)
@@ -134,14 +136,18 @@ def main():
                          f(r.get("avg_price")), f(r.get("last_price")), f(r.get("implied_volatility")),
                          f(r.get("delta")), f(r.get("gamma")), f(r.get("theta")), f(r.get("vega")),
                          r.get("last_tape_time")))
-        con.execute("insert or replace into pulled values (?,?,?)", (dd, t, len(rows)))
+        if len(rows) == 0 and dd >= _floor:
+            n_def += 1      # ZERO-RESULT-DEFER (2026-09-10): an empty day inside the recent
+                            # window is "not published yet", never "done" - retried next session
+        else:
+            con.execute("insert or replace into pulled values (?,?,?)", (dd, t, len(rows)))
         if n_calls % 50 == 0:
             con.commit()
             print(f"{n_calls} calls, latest {dd} {t} ({len(rows)} contracts)", flush=True)
         time.sleep(0.25)
     con.commit()
     tot = con.execute("select count(*) from contracts_daily").fetchone()[0]
-    print(f"session done: {n_calls} calls, {tot} contract-days stored", flush=True)
+    print(f"session done: {n_calls} calls, {tot} contract-days stored, {n_def} recent zero-results deferred", flush=True)
 
 
 if __name__ == "__main__":

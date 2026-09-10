@@ -76,7 +76,9 @@ def main():
     print(f"cohort contract-days to pull: {len(todo)}; budget used today "
           f"{used_today(con)}/{DAILY_BUDGET}", flush=True)
     n = 0
+    n_def = 0
     d0 = date.today()
+    _floor = date.fromordinal(d0.toordinal() - 7).isoformat()   # ZERO-RESULT-DEFER window
     for d, occ in todo:
         if date.today() != d0:
             print("UTC day rolled - stop; the new budget belongs to the new day's crons", flush=True)
@@ -101,14 +103,21 @@ def main():
                              "ask" if (pr.get("ask_vol") or 0) >= (pr.get("bid_vol") or 0) else "bid"))
             except Exception:
                 continue
-        con.execute("insert or replace into prints_pulled values (?,?,?)", (d, occ, len(prints)))
+        if len(prints) == 0 and d >= _floor:
+            n_def += 1      # ZERO-RESULT-DEFER (2026-09-10): UW publishes a day's prints with a
+                            # lag; pulling at 00:15 the next morning returned EMPTY for Sep 1/2/3/8
+                            # and the mark made them "done" forever - September held 14 corpus rows
+                            # while every newest-day check passed. Inside the recent window an
+                            # empty result is "not yet", never "none": retried next session.
+        else:
+            con.execute("insert or replace into prints_pulled values (?,?,?)", (d, occ, len(prints)))
         if n % 100 == 0:
             con.commit()
             print(f"{n} contract-days pulled ({d} {occ}: {len(prints)} prints)", flush=True)
         time.sleep(0.2)
     con.commit()
     tot = con.execute("select count(*) from flow_prints").fetchone()[0]
-    print(f"session done: {n} requests, {tot} prints stored total", flush=True)
+    print(f"session done: {n} requests, {tot} prints stored total, {n_def} recent zero-results deferred", flush=True)
 
 
 if __name__ == "__main__":

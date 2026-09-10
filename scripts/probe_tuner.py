@@ -261,4 +261,5 @@ def report():
 
 if __name__ == "__main__":
     build_rows()
-    report()
+    if os.environ.get("TUNER_BUILD_ONLY") != "1":   # nightly chain builds rows; Friday reports
+        report()

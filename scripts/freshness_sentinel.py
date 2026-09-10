@@ -35,7 +35,7 @@ DAILY = {0, 1, 2, 3, 4, 5, 6}
 try:                                    # holiday-aware (coverage audit 2026-09-07): the 07-02
     import pandas_market_calendars as _mcal    # harvest lesson - exchange calendars in ALL date
     _sch = _mcal.get_calendar("XNYS").schedule(
-        start_date=(date.today() - timedelta(days=45)).isoformat(),
+        start_date=(date.today() - timedelta(days=75)).isoformat(),
         end_date=date.today().isoformat())
     SESSIONS = {d.date() for d in _sch.index}
 except Exception:
@@ -44,6 +44,17 @@ except Exception:
 
 def is_session(d):
     return (d in SESSIONS) if SESSIONS is not None else (d.weekday() < 5)
+
+
+def session_windows(today, lag, lookback, ref):
+    """Sessions <= today, newest first, split into: `lag` ignored (pipeline latency), then
+    `lookback` recent sessions to judge, then `ref` older sessions as the reference."""
+    seq, d = [], today
+    while len(seq) < lag + lookback + ref and d > today - timedelta(days=150):
+        if is_session(d):
+            seq.append(d)
+        d -= timedelta(days=1)
+    return seq[lag:lag + lookback], seq[lag + lookback:lag + lookback + ref]
 
 # (name, kind, target, spec, criticality)
 # schedule spec: (utc_hour, utc_minute, {dows})   data_day spec: (db, query, max_td)
@@ -105,6 +116,23 @@ CHECKS = [
     ("vps disk headroom", "disk", "/", 85, "TRADE"),
     ("failover mode stuck", "flag_age", H + "/.engine_watch_failover_mode", 2.0, "TRADE"),
     ("morning analyst", "schedule", H + "/analyst.log", (8, 10, WEEKDAYS), "MONITOR"),
+    # -- v1.3 (owner 2026-09-10, "why can't the system stay updated"): HOLES and THINNESS.
+    #    Every newest-day check passed for a week while September held 14 corpus rows
+    #    (prints marked done with zero rows, bars topped up Fridays only). A newest-day check
+    #    cannot see a hole behind the newest day or a day that is 1% of normal.
+    #    session_holes: (query of days, lookback sessions, lag)   day_density / jsonl_density:
+    #    (query of day,count | -, lookback, ref sessions, min ratio vs ref median, lag)
+    ("uw archive session holes", "session_holes", "data/uw_history.db",
+     ("select distinct day from contracts_daily where day >= date('now','-45 day')", 12, 1), "EVIDENCE"),
+    ("uw archive day density", "day_density", "data/uw_history.db",
+     ("select day, count(*) from contracts_daily where day >= date('now','-75 day') group by day", 5, 25, 0.4, 1), "EVIDENCE"),
+    ("uw prints cohort density", "day_density", "data/uw_history.db",
+     ("select day, count(distinct occ) from flow_prints where day >= date('now','-75 day') group by day", 5, 25, 0.4, 2), "EVIDENCE"),
+    ("hourly bars day density", "day_density", "data/hourly_paths.db",
+     ("select substr(ts,1,10), count(distinct occ) from bars where ts >= date('now','-75 day') group by 1", 5, 25, 0.4, 2), "EVIDENCE"),
+    ("tuner corpus v2 density", "jsonl_density", "reports/research/probe_tuner_rows_v2.jsonl", (5, 25, 0.4, 6), "EVIDENCE"),
+    ("glide corpus v2 density", "jsonl_density", "reports/research/glide_fine_rows_v2.jsonl", (5, 25, 0.4, 6), "EVIDENCE"),
+    ("nightly corpus chain", "schedule", H + "/corpus_nightly.log", (1, 45, {1, 2, 3, 4, 5}), "EVIDENCE"),
 ]
 
 
@@ -159,6 +187,42 @@ def main():
                 if behind > max_td:
                     stale.append(f"[{crit}] {name}: newest data {str(v)[:10]} - "
                                  f"{behind} trading days behind (max {max_td})")
+                else:
+                    fresh += 1
+            elif kind == "session_holes":
+                q, lookback, lag = spec
+                con = sqlite3.connect(f"file:{target}?mode=ro", uri=True, timeout=30)
+                have = {str(r[0])[:10] for r in con.execute(q)}
+                con.close()
+                recent, _ = session_windows(today, lag, lookback, 0)
+                missing = [d.isoformat() for d in recent if d.isoformat() not in have]
+                if missing:
+                    stale.append(f"[{crit}] {name}: {len(missing)} session(s) with NO rows in the "
+                                 f"last {lookback} ({', '.join(missing[:4])}) - a hole behind the newest day")
+                else:
+                    fresh += 1
+            elif kind in ("day_density", "jsonl_density"):
+                if kind == "day_density":
+                    q, lookback, ref, min_ratio, lag = spec
+                    con = sqlite3.connect(f"file:{target}?mode=ro", uri=True, timeout=30)
+                    counts = {str(r[0])[:10]: int(r[1] or 0) for r in con.execute(q)}
+                    con.close()
+                else:
+                    lookback, ref, min_ratio, lag = spec
+                    import re as _re
+                    counts = {}
+                    for _d in _re.findall(r'"day":\s*"(20[0-9]{2}-[0-9]{2}-[0-9]{2})"',
+                                          open(target, encoding="utf-8").read()):
+                        counts[_d] = counts.get(_d, 0) + 1
+                recent, reference = session_windows(today, lag, lookback, ref)
+                refv = sorted(counts.get(d.isoformat(), 0) for d in reference)
+                med = refv[len(refv) // 2] if refv else 0
+                thin = [(d.isoformat(), counts.get(d.isoformat(), 0)) for d in recent
+                        if counts.get(d.isoformat(), 0) < min_ratio * med]
+                if med > 0 and thin:
+                    stale.append(f"[{crit}] {name}: {len(thin)} thin session(s) vs trailing median "
+                                 f"{med} ({', '.join(f'{d}={c}' for d, c in thin[:4])}) - a newest-day "
+                                 "check cannot see this")
                 else:
                     fresh += 1
             elif kind == "push_sync":

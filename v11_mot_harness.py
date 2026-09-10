@@ -1100,6 +1100,17 @@ _lab_txt = open("sandbox_proactive_lab.py", encoding="utf-8").read()
 check(6, "exit engine reads leg_path excursions defensively (no path[\"mfe_pct\"] on the update line)",
       'max(path["mfe_pct"]' not in _lab_txt and 'min(path["mae_pct"]' not in _lab_txt
       and 'path.pop("missing_cycles"' in _lab_txt)
+# 6.10h EVIDENCE-CHAIN CURRENCY (BREAKDOWNS 2026-09-10): both UW pullers defer zero results
+# inside the recent window, the sentinel carries hole + density rows, the tuner refuses thin.
+_pp = open("scripts/uw_flow_prints.py", encoding="utf-8").read()
+_hp = open("scripts/uw_history_pull.py", encoding="utf-8").read()
+_sn = open("scripts/freshness_sentinel.py", encoding="utf-8").read()
+_ta = open("scripts/tuner_apply.py", encoding="utf-8").read()
+check(6, "pullers defer recent zero-results instead of marking them done",
+      "ZERO-RESULT-DEFER" in _pp and "ZERO-RESULT-DEFER" in _hp)
+check(6, "sentinel carries session-hole and day-density rows for every evidence store",
+      _sn.count('"day_density"') >= 3 and '"session_holes"' in _sn and _sn.count('"jsonl_density"') >= 2)
+check(6, "tuner_apply refuses to judge on a thin corpus", "DENSITY GUARD" in _ta)
 check(6, "winner profile X: sim-best sibling present (flow>100k, no IV cap)",
       '"WINNER_PROFILE_X"' in _lab_src and "> 100000" in _lab_src)
 

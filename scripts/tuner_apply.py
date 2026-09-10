@@ -136,6 +136,21 @@ def main():
            "frozen evidence; fix the corpus chain before any verdict.")
         print(f"CORPUS STALE ({_mx}, {_bd} td) - refusing to judge on frozen evidence", flush=True)
         return
+    # DENSITY GUARD (2026-09-10): the newest-day guard passed while September held 14 rows.
+    # The last five populated days inside two weeks must each carry >= 40% of the trailing
+    # 25-day median row count, and at least three of them must exist - else refuse to judge.
+    from collections import Counter as _Ctr
+    _cnt = _Ctr(r.get("day") for r in rows if r.get("day"))
+    _cut = (date.today() - timedelta(days=14)).isoformat()
+    _recent = sorted(d for d in _cnt if d > _cut)[-5:]
+    _refv = sorted(_cnt[d] for d in sorted(d for d in _cnt if d <= _cut)[-25:])
+    _med = _refv[len(_refv) // 2] if _refv else 0
+    _thin = [f"{d}={_cnt[d]}" for d in _recent if _cnt[d] < 0.4 * _med]
+    if _med and (_thin or len(_recent) < 3):
+        tg(f"TUNER APPLY REFUSES: corpus is THIN - recent days {_recent} vs trailing median "
+           f"{_med} rows/day (thin: {_thin or 'too few days'}); fix the evidence chain first.")
+        print(f"CORPUS THIN ({_thin or 'too few recent days'}) - refusing to judge", flush=True)
+        return
     spec = json.load(open("fade_book_spec.json"))
     tuning = spec.setdefault("probe", {}).setdefault("tuning", {})
     today = date.today().isoformat()

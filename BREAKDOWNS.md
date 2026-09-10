@@ -567,3 +567,26 @@ followed in the next commit. REGRESSION CHECK: MOT 6.10g lints the update line f
 indexing and requires the counter reset. LESSON: when two code paths write the same record
 slot, one bare setdefault is a time bomb - and any exception inside position management must
 skip the record, not the cycle (the loop still lacks a per-record guard; queued).
+
+2026-09-10 (second entry) - EVIDENCE CHAIN EFFECTIVELY FROZEN AT AUG 31 WHILE EVERY CHECK
+PASSED (owner: "why can't the system stay updated with the newest and right data"). WHAT BROKE:
+the tuner corpus held 14 September rows against ~1,650 in a normal month; tomorrow's Friday
+tuning pass would have judged on an August corpus. ROOT CAUSES (two): (1) the prints puller
+runs at 00:15 UTC and Unusual Whales publishes a day's prints with a lag - it received EMPTY
+lists for Sep 1 (219 of 253 contract-days), Sep 2 (all 201), Sep 3 (all 352) and Sep 8 (all
+390), and "insert or replace into prints_pulled ... 0" marked every one of them done forever;
+(2) the hourly bar library topped up only in the Friday chain, so the corpus could never be
+fresher than a week. WHY NO ALARM: every freshness check on these stores tested the NEWEST DAY
+(max(day), newest content day, newest file) - and the newest day was fine. A hole behind the
+newest day, or a day at 1% of normal volume, is invisible to a newest-day check; the 43-row
+sentinel was green all week. FIX: both pullers defer an empty result inside the last 7 days
+(retried next session, never marked); a nightly corpus chain (01:45 UTC Tue-Sat: bar top-up,
+tuner rows build-only, fine-grid build) replaces Friday-only; the sentinel gains session-hole
+and day-density rows for the archive, prints, bars and both corpora (v1.3), and tuner_apply
+refuses to judge when recent days are thin or missing. One-off repair: recent zero marks
+deleted and re-pulled. Also corrected in the same session: an initial misread claimed Sep 5
+was a missing day - it was a Saturday (date discipline). REGRESSION CHECK: MOT 6.10h asserts
+the defer guard in both pullers, the density rows in the sentinel, and the density refusal in
+the tuner; the density rows themselves page the next morning if the class returns. LESSON:
+"fresh" must mean complete AND dense, not merely recent - a freshness registry that only asks
+"what is the newest day" is a registry of last-seen dates, not of data health.

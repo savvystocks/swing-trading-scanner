@@ -74,11 +74,12 @@ def main():
     ok = ~np.isnan(rets_base)
     y_cls = (rets_base > 0).astype(int); y_big = (rets_base >= 30).astype(int)
     y_reg = np.clip(np.nan_to_num(rets_base, nan=0.0), -100, 300)
-    cm = sf.cohort_mask(meta, "AFFORD") & ok
-    scores = sf.fit_stream(X, y_cls, y_big, y_reg, days, "PWIN", cm)
+    _co = os.environ.get("EXIT_COHORT", "AFFORD"); _tg = os.environ.get("EXIT_TARGET", "PWIN")
+    cm = sf.cohort_mask(meta, _co) & ok
+    scores = sf.fit_stream(X, y_cls, y_big, y_reg, days, _tg, cm)
     HDR = ("| exit | trades | weeks | %/trade | win | $/week | weekly t | +weeks | halves | maxDD $ | total $ | regimes n/mean |\n"
            "|---|---|---|---|---|---|---|---|---|---|---|---|")
-    L = [f"# STUDENT EXIT SEARCH - {date.today().isoformat()} (full two years, no holdout)",
+    L = [f"# STUDENT EXIT SEARCH - {date.today().isoformat()} (full two years, no holdout) - {_tg}/{_co} on {os.environ.get('FEATURE_SET', 'archive')} features",
          "entry = P(win) student on the AFFORD band, quarterly walk-forward, k picks/week by threshold; "
          "exits = 210 fine-grid configs on the v3 basis (close-confirmed trail fills).", ""]
     for k in (3, 2):
@@ -124,7 +125,7 @@ def main():
               "from the past only. The gap between them is the optimism a no-holdout number carries.",
           "CAVEATS: label returns on the v3 basis; two years dominated by bull and mild tape; picks are ~3 a week so "
               "single trades move the weekly numbers."]
-    fn = f"reports/research/student_exit_{date.today().isoformat()}.md"
+    fn = f"reports/research/student_exit_{_tg}_{_co}_{date.today().isoformat()}.md"
     open(fn, "w", encoding="utf-8").write("\n".join(L) + "\n")
     print("\n".join(L), flush=True)
     print("EXIT SEARCH COMPLETE", flush=True)

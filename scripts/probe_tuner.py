@@ -61,9 +61,16 @@ def closes_series(s):
 
 
 def smad(c, n=20):
+    """Distance to the n-day SMA, keyed by day x but computed from closes ENDING THE PRIOR
+    DAY (panel 2026-09-11: the entry-day close is post-entry information - it sat inside the
+    three most-split student features and inside every regime cell). Value on day x = the
+    prior day's reading; the first day has none."""
     d = sorted(c); o = {}; buf = []
+    prev = None
     for x in d:
-        buf.append(c[x]); o[x] = (c[x] / (sum(buf[-n:]) / min(len(buf), n)) - 1) * 100
+        if prev is not None:
+            o[x] = prev
+        buf.append(c[x]); prev = (c[x] / (sum(buf[-n:]) / min(len(buf), n)) - 1) * 100
     return o
 
 
@@ -105,9 +112,7 @@ def build_rows():
                                      "having count(distinct day) >= 400")}
     sm = {t: smad(closes_series(t)) for t in tks}
     spyc = closes_series("SPY"); spy20 = smad(spyc)
-    sd_ = sorted(spyc); s50 = {}; buf = []
-    for x in sd_:
-        buf.append(spyc[x]); s50[x] = (spyc[x] / (sum(buf[-50:]) / min(len(buf), 50)) - 1) * 100
+    s50 = smad(spyc, 50)                      # same D-1 convention as the 20d readings
     prints = {}
     # EXECUTABLE ENTRY BASIS (panel 2026-09-09): take the NBBO AT the first print, which
     # uw_flow_prints has banked all along and every consumer threw away. Entry = that ask;
@@ -187,7 +192,7 @@ def build_rows():
             r = replay_true(today_after[1:], nxt, e, st, tg, gv, _sf)
             rets.append(round(r, 2) if r is not None else None)
         out.write(json.dumps({"occ": occ, "t": t, "day": day, "prem": prem, "ask": ask,
-                              "basis": ("ask_at_qualifying_print" if BASIS == "v3" else "ask_at_print"), "entry": round(e, 2),
+                              "basis": ("ask_at_qualifying_print" if BASIS == "v3" else "ask_at_print"), "regime_basis": "d1_close", "entry": round(e, 2),
                               "spread_frac": round(_sf, 4),
                               "side": "C" if occ[-9] == "C" else "P", "smd": round(smd, 2),
                               "reg": round(reg, 2), "sp": round(sp, 2), "rets": rets}) + "\n")

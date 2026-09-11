@@ -120,7 +120,7 @@ def build_fine():
         if len(nx) < 3:
             continue
         e = float(r.get("entry") or 0)      # v2 row: the ASK banked at the print
-        if e <= 0 or r.get("basis") != "ask_at_qualifying_print":
+        if e <= 0 or r.get("basis") != "ask_at_qualifying_print" or r.get("regime_basis") != "d1_close":
             continue                        # never score a row on the superseded basis
         _sf = float(r.get("spread_frac") or 0.0)
         rets = []

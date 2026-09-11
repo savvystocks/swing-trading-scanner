@@ -1113,6 +1113,69 @@ check(6, "pullers defer recent zero-results instead of marking them done",
 check(6, "sentinel carries session-hole and day-density rows for every evidence store",
       _sn.count('"day_density"') >= 3 and '"session_holes"' in _sn and _sn.count('"jsonl_density"') >= 2)
 check(6, "tuner_apply refuses to judge on a thin corpus", "DENSITY GUARD" in _ta)
+# 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
+# vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
+# ranks best-first, fail-closed model loading, passive score log, court membership.
+import sys as _sys2
+_sys2.path.insert(0, ".")
+from src import student_features as _sfx
+import fade_book as _fb
+_lab_s = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+check(6, "student: shared feature vector has 15 named features, none unbuildable live",
+      len(_sfx.FEATS) == 15 and not ({"price_drift", "delta_prev", "gamma_prev", "n_prints", "cum_size"} & set(_sfx.FEATS)))
+_asof = _sfx.asof_from_prints([("2026-09-10T14:31:00.000", 5.0, 10, 5000.0, 4.9, 5.1, "ask"),
+                               ("2026-09-10T14:40:00.000", 5.2, 100, 52000.0, 5.0, 5.3, "ask")])
+check(6, "student: as-of block qualifies at the print where cumulative premium crosses 50k",
+      _asof is not None and abs(_asof["cum_prem"] - 57000.0) < 1e-6 and abs(_asof["mins_since_first"] - 9.0) < 1e-6
+      and abs(_asof["entry_ask"] - 5.3) < 1e-9)
+_alert = {"created_at": "2026-09-10T14:40:00Z", "total_premium": 57000, "total_size": 110, "trade_count": 2,
+          "total_ask_side_prem": 57000, "total_bid_side_prem": 0, "open_interest": 1200, "iv_start": 0.4}
+_live = _sfx.asof_from_alert(_alert, 5.0, 5.3, "2026-09-10T14:31:00Z")
+_va = _sfx.vector("C", "XYZ261009C00050000", "2026-09-10", 2.5, 1.0, 0.5, _asof, 1200, 0.4)
+_vl = _sfx.vector("C", "XYZ261009C00050000", "2026-09-10", 2.5, 1.0, 0.5, _live, 1200, 0.4)
+check(6, "student: archive and live builders produce the same 15-float vector for the same alert",
+      len(_va) == 15 and len(_vl) == 15 and all(abs(a - b) < 1e-9 for a, b in zip(_va, _vl)))
+_fake = {"kind": "classifier", "baseline": 0.0, "n_features": 15,
+         "trees": [[{"v": 0.0, "f": 1, "t": 10.0, "ml": True, "l": 1, "r": 2, "leaf": False},
+                    {"v": -1.0, "f": 0, "t": 0.0, "ml": True, "l": 0, "r": 0, "leaf": True},
+                    {"v": 1.0, "f": 0, "t": 0.0, "ml": True, "l": 0, "r": 0, "leaf": True}]]}
+_x1 = [0.0] * 15; _x1[1] = 5.0
+_x2 = [0.0] * 15; _x2[1] = 30.0
+_x3 = [0.0] * 15; _x3[1] = float("nan")
+check(6, "student: dependency-free evaluator routes thresholds and missing values",
+      abs(_sfx.predict(_fake, _x1) - 1 / (1 + 2.718281828459045)) < 1e-6
+      and abs(_sfx.predict(_fake, _x2) - 1 / (1 + 2.718281828459045 ** -1)) < 1e-6
+      and abs(_sfx.predict(_fake, _x3) - _sfx.predict(_fake, _x1)) < 1e-9)
+check(6, "student: prior-close helper drops a today-dated bar (no regime input carries today's close)",
+      _fb.prev_close_series([1.0, 2.0, 3.0], ["2026-09-08", "2026-09-09", "2026-09-10"], "2026-09-10") == [1.0, 2.0]
+      and _fb.prev_close_series([1.0, 2.0, 3.0], ["2026-09-08", "2026-09-09", "2026-09-10"], "2026-09-11") == [1.0, 2.0, 3.0])
+check(6, "student: engine wiring is the one-seat ranked design (rank, seat, weekly budget, stamp, passive log)",
+      all(x in _lab_s for x in ("def _student_rank", '("STUDENT", None)', "_student_week_used(name, log)",
+                                 'rec["student_p"]', "STUDENT_SCORES_LOG", "spy_prev_readings()",
+                                 'fade_book.spy_regime() in (None, "BEAR")')))
+check(6, "student: no stale per-name STUDENT_ hooks remain in the roster loop",
+      '_pname.startswith("STUDENT_")' not in _lab_s)
+check(6, "student: the corpus regime columns are prior-close on the archive side",
+      '"regime_basis": "d1_close"' in open("scripts/probe_tuner.py", encoding="utf-8").read())
+_spec_s = __import__("json").load(open("fade_book_spec.json", encoding="utf-8"))
+_stu = ((_spec_s.get("probe") or {}).get("student") or {})
+check(6, "student: the spec carries the probe.student block when the engine carries the wiring",
+      bool(_stu.get("probes")) or "def _student_rank" not in _lab_s)
+if _stu.get("probes"):
+    _missing = [n for n, c in _stu["probes"].items() if not os.path.exists(c.get("model", ""))]
+    check(6, "student: every configured picker has its exported model file", not _missing, ", ".join(_missing))
+    _bad = []
+    for n, c in _stu["probes"].items():
+        try:
+            jj = __import__("json").load(open(c["model"], encoding="utf-8"))
+            if (jj.get("n_features") != 15 or float(jj.get("parity_max_err", 1)) > 1e-4 or not jj.get("thresholds")
+                    or jj.get("kind") not in ("classifier", "regressor") or "walk_forward_auc" not in jj):
+                _bad.append(n)
+        except Exception:
+            _bad.append(n)
+    check(6, "student: every model is a 15-feature classifier or regressor with thresholds, walk-forward AUC and evaluator parity", not _bad, ", ".join(_bad))
+    _pri = (_spec_s.get("probe") or {}).get("priority") or []
+    check(6, "student: every picker is on the court's priority track", all(n in _pri for n in _stu["probes"]))
 # 6.10j GROWING CORPORA STAY UNTRACKED (BREAKDOWNS 2026-09-11): a 131 MB corpus was swept into
 # the nightly commit because only the OLD filename was gitignored; every push was blocked.
 _gi = open(".gitignore", encoding="utf-8").read()

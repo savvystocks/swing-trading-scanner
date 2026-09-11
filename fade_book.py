@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta, timezone
 
 _SPEC_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fade_book_spec.json")
 _SPEC = None
-_REGIME = {"date": None, "val": None}     # daily cache: SPY regime by 50d SMA (fail-open)
+_REGIME = {"date": None, "val": None, "dist": None, "dist50_prev": None, "dist20_prev": None}   # daily cache (fail-open)
 
 
 def spy_regime():
@@ -42,11 +42,37 @@ def spy_regime():
             if len(cl) >= 50:
                 sma50 = sum(cl[-50:]) / 50
                 dist = (cl[-1] / sma50 - 1) * 100
+                _REGIME["dist"] = dist
+                # PRIOR-CLOSE readings for the student (panel 2026-09-11): the corpus defines
+                # reg/sp at the D-1 close; a today-dated bar is dropped so both sides agree.
+                _cp = prev_close_series(cl, [b["t"][:10] for b in bars], today)
+                if len(_cp) >= 50:
+                    _REGIME["dist50_prev"] = (_cp[-1] / (sum(_cp[-50:]) / 50) - 1) * 100
+                    _REGIME["dist20_prev"] = (_cp[-1] / (sum(_cp[-20:]) / 20) - 1) * 100
                 val = "BEAR" if dist < -2 else ("BULL" if dist > 2 else "MILD")
     except Exception:
         val = None
     _REGIME["date"], _REGIME["val"] = today, val
     return val
+
+
+def prev_close_series(closes, dates, today_iso):
+    """Closes ending at the PRIOR session: drops the last element when it carries today's date."""
+    if closes and dates and dates[-1] == today_iso:
+        return closes[:-1]
+    return closes
+
+
+def spy_prev_readings():
+    """(SPY dist to 50d, SPY dist to 20d) at the prior close - the student's reg/sp; (None, None) if unknown."""
+    spy_regime()
+    return _REGIME.get("dist50_prev"), _REGIME.get("dist20_prev")
+
+
+def spy_dist50():
+    """Numeric SPY distance to its 50d SMA (%), the student's `reg` feature; None if unknown."""
+    spy_regime()
+    return _REGIME.get("dist")
 
 
 def spec():

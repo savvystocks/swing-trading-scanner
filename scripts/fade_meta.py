@@ -197,7 +197,8 @@ def main():
             _mu = sum(_d) / len(_d)
             _sd = (sum((x - _mu) ** 2 for x in _d) / (len(_d) - 1)) ** 0.5
             _t = _mu / (_sd / len(_d) ** 0.5) if _sd > 0 else 0.0
-            _wired = '"STUDENT_SELECT"' in open("sandbox_proactive_lab.py", encoding="utf-8").read()
+            _spec_w = json.load(open("fade_book_spec.json", encoding="utf-8"))
+            _wired = bool((((_spec_w.get("probe") or {}).get("student") or {}).get("probes")))
             _flag = "/home/poller/.student_gate_paged"
             _stale = (not os.path.exists(_flag)) or (time.time() - os.path.getmtime(_flag) > 7 * 86400)
             if _mu > 0 and not _wired and _stale:

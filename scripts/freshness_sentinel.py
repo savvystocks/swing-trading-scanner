@@ -137,6 +137,7 @@ CHECKS = [
     ("tuner corpus v2 density", "jsonl_density", "reports/research/probe_tuner_rows_v3.jsonl", (5, 25, 0.4, 6), "EVIDENCE"),
     ("glide corpus v2 density", "jsonl_density", "reports/research/glide_fine_rows_v3.jsonl", (5, 25, 0.4, 6), "EVIDENCE"),
     ("nightly corpus chain", "schedule", H + "/corpus_nightly.log", (1, 45, {1, 2, 3, 4, 5}), "EVIDENCE"),
+    ("student models (exported)", "newest_file_day", "reports/fade_meta/student_*.json", 100, "COURT"),
 ]
 
 

@@ -134,7 +134,8 @@ def _alpaca_daily(ticker, days=60):
         start = datetime.utcnow() - timedelta(days=days + 20)
         bars = cli.get_stock_bars(StockBarsRequest(symbol_or_symbols=ticker, timeframe=TimeFrame.Day,
                                                    start=start, feed=DataFeed.IEX)).data.get(ticker, [])
-        return [{"h": float(b.high), "l": float(b.low), "c": float(b.close), "v": float(b.volume)} for b in bars]
+        return [{"h": float(b.high), "l": float(b.low), "c": float(b.close), "v": float(b.volume),
+                 "t": (b.timestamp.date().isoformat() if getattr(b, "timestamp", None) else "")} for b in bars]
     except Exception:
         return []
 
@@ -150,8 +151,11 @@ def macro_technical(ticker, mock):
         atr = sum(trs[-14:]) / 14.0
         vols = [b["v"] for b in bars]
         rvol = round(vols[-1] / (sum(vols[-20:]) / 20.0), 2) if sum(vols[-20:]) else None
+        _cp = closes[:-1] if (bars[-1].get("t") == date.today().isoformat() and len(closes) >= 22) else closes
+        _sma_prev = sum(_cp[-20:]) / 20.0
         return {"spot": round(spot, 2), "sma20": round(sma20, 2),
                 "distance_to_sma20_pct": round((spot - sma20) / sma20 * 100, 3) if sma20 else 0.0,
+                "distance_to_sma20_prev_pct": round((_cp[-1] - _sma_prev) / _sma_prev * 100, 3) if _sma_prev else None,
                 "atr": round(atr, 2), "atr_pct": round(atr / spot * 100, 2) if spot else 0.0,
                 "rvol_10min": rvol if rvol is not None else 1.0, "source": "alpaca"}
     if mock:                                                  # local demo only - synthetic sample (cheap name, $800-affordable)
@@ -430,6 +434,186 @@ def _tuned(name, kind):
         pass
     return (PROBE_STRUCT if kind == "struct" else PROBE_EXITS).get(name or "")
 _ACTIVE_PROBE = {"name": None}
+# ---------------------------------------------------------------------------------------------
+# STUDENT PICKERS (owner order 2026-09-11 02:04: "build it and get it live ... more student
+# oriented picks, not strategies"; panel 2026-09-11 required changes applied). ONE roster seat,
+# "STUDENT", scores every affordable trigger candidate with every configured picker BEFORE any
+# sensor sweep (cheap inputs only: the alert row, the live quote, daily bars, the prior-close
+# regime readings), ranks the picks best-first, and enters the top pick that clears its model's
+# threshold and still has weekly budget - exactly the simulated rule. Each pick is recorded
+# under its MODEL's name (probe_strategy = STUDENT_x) so the court sees one book per picker
+# while the roster spends one seat's attempts. Every scored candidate is logged passively
+# (reports/shadow_lab/student_scores.jsonl) for the calibration audit. mode "shadow" = score
+# and log, never enter. Fail-CLOSED everywhere: a broken model, quote or vector means no
+# trade and a loud line; the cycle never dies.
+# ---------------------------------------------------------------------------------------------
+_STUDENT_MODELS = {}
+_STUDENT_LAST = {"p": None, "model": None}
+STUDENT_SCORES_LOG = "reports/shadow_lab/student_scores.jsonl"
+
+
+def _student_cfg():
+    try:
+        return (fade_book.spec().get("probe") or {}).get("student") or {}
+    except Exception:
+        return {}
+
+
+def _student_model(name):
+    if name in _STUDENT_MODELS:
+        return _STUDENT_MODELS[name]
+    m = None
+    try:
+        from src import student_features as _sfx
+        import hashlib as _hl
+        cfg = (_student_cfg().get("probes") or {}).get(name) or {}
+        path = cfg.get("model")
+        if path and os.path.exists(path):
+            raw = open(path, "rb").read()
+            j = json.loads(raw.decode("utf-8"))
+            _age = (date.today() - date.fromisoformat(str(j.get("trained", "1970-01-01"))[:10])).days
+            if _age > int(_student_cfg().get("max_model_age_days", 200)):
+                print(f"  student[{name}]: model {_age}d old - STALE, picker stands down", flush=True)
+            elif j.get("kind") not in ("classifier", "regressor"):
+                print(f"  student[{name}]: unknown model kind {j.get('kind')} - stands down", flush=True)
+            elif int(j.get("n_features", 0)) != len(_sfx.FEATS):
+                print(f"  student[{name}]: model has {j.get('n_features')} features, engine builds {len(_sfx.FEATS)} - stands down", flush=True)
+            else:
+                j["_stamp"] = os.path.basename(path) + "@" + _hl.sha256(raw).hexdigest()[:8]
+                m = j
+        else:
+            print(f"  student[{name}]: no model file at {path} - picker stands down", flush=True)
+    except Exception as _se:
+        print(f"  student[{name}]: model load failed ({type(_se).__name__}) - picker stands down", flush=True)
+    _STUDENT_MODELS[name] = m
+    return m
+
+
+def _student_threshold(name):
+    cfg = (_student_cfg().get("probes") or {}).get(name) or {}
+    m = _student_model(name) or {}
+    thr = cfg.get("threshold")
+    if thr is not None:
+        try:
+            thr = float(thr)
+            if m.get("kind") == "classifier" and not (0.0 < thr < 1.0):
+                print(f"  student[{name}]: spec threshold {thr} outside (0,1) for a classifier - ignored", flush=True)
+                thr = None
+        except Exception:
+            thr = None
+    if thr is None:
+        thr = (m.get("thresholds") or {}).get(f"k{int(cfg.get('k_per_week', 3))}")
+    return float(thr) if thr is not None else None
+
+
+def _student_week_used(name, log):
+    """Fills this picker already has in the current ISO week (from the record book)."""
+    try:
+        iso = date.today().isocalendar()
+        n = 0
+        for r in log:
+            if r.get("probe_strategy") != name:
+                continue
+            d = (r.get("entry_ts_utc") or "")[:10]
+            if d and date.fromisoformat(d).isocalendar()[:2] == iso[:2]:
+                n += 1
+        return n
+    except Exception:
+        return 999
+
+
+def _live_quote(occ, creds):
+    """(bid, ask) from the indicative feed, or None. Shares the repricing gate's source."""
+    try:
+        _rq = urllib.request.Request(
+            "https://data.alpaca.markets/v1beta1/options/quotes/latest?symbols=" + occ + "&feed=indicative",
+            headers={"APCA-API-KEY-ID": creds[0], "APCA-API-SECRET-KEY": creds[1]})
+        with urllib.request.urlopen(_rq, timeout=8) as _r:
+            _q = (json.loads(_r.read()).get("quotes") or {}).get(occ) or {}
+        _b, _a = float(_q.get("bp") or 0), float(_q.get("ap") or 0)
+        if _a <= 0 or _b <= 0 or _b > _a:
+            return None
+        return (_b, _a)
+    except Exception:
+        return None
+
+
+def _student_log(rows):
+    """Passive: append scored candidates for the calibration audit. Never raises."""
+    try:
+        os.makedirs(os.path.dirname(STUDENT_SCORES_LOG), exist_ok=True)
+        with open(STUDENT_SCORES_LOG, "a", encoding="utf-8") as f:
+            for r in rows:
+                f.write(json.dumps(r) + "\n")
+    except Exception:
+        pass
+
+
+def _student_rank(pool, creds, log):
+    """Score every pool candidate with every enabled picker; return [(score, model_name, cand,
+    vec)] best-first for picks that clear their model's threshold and have weekly budget.
+    Logs every scored (candidate, model) pair passively. Fail-closed: [] on any structural fault."""
+    out, logrows = [], []
+    try:
+        from src import student_features as _sfx
+        cfg = _student_cfg()
+        probes = cfg.get("probes") or {}
+        if not probes:
+            return []
+        reg_prev, sp_prev = fade_book.spy_prev_readings()
+        if reg_prev is None or sp_prev is None:
+            print("  student: prior-close SPY readings unavailable - pickers stand down", flush=True)
+            return []
+        today = date.today().isoformat()
+        bars_cache, quote_cache = {}, {}
+        for c in pool:
+            occ = (c or {}).get("occ"); a = (c or {}).get("alert")
+            if not occ or not a:
+                continue
+            t = c.get("ticker")
+            if t not in bars_cache:
+                _b = _alpaca_daily(t)
+                _cl = [x["c"] for x in _b]
+                _cp = _cl[:-1] if (_b and _b[-1].get("t") == today) else _cl
+                bars_cache[t] = ((_cp[-1] - sum(_cp[-20:]) / 20.0) / (sum(_cp[-20:]) / 20.0) * 100.0) if len(_cp) >= 20 else None
+            smd_prev = bars_cache[t]
+            if occ not in quote_cache:
+                quote_cache[occ] = _live_quote(occ, creds)
+            q = quote_cache[occ]
+            if q is None or smd_prev is None:
+                continue
+            asof = _sfx.asof_from_alert(a, q[0], q[1], a.get("first_seen"))
+            vec = _sfx.vector(c.get("flow_type") or "call", occ, today, reg_prev, sp_prev, smd_prev,
+                              asof, a.get("open_interest"), a.get("iv_start"))
+            _miss = [n for n, v in zip(_sfx.FEATS, vec) if v != v and n not in ("iv_prev", "oi_prev")]
+            for name, pc in probes.items():
+                if pc.get("pulled"):
+                    continue
+                m = _student_model(name)
+                if not m:
+                    continue
+                if _miss:                       # training NaN-rate for these is ~0 - out of support
+                    print(f"  student[{name}]: {t} missing {_miss} live - not scored (fail-closed)", flush=True)
+                    continue
+                sc = float(_sfx.predict(m, vec))
+                thr = _student_threshold(name)
+                used = _student_week_used(name, log)
+                k = int(pc.get("k_per_week", 3))
+                ok = thr is not None and sc >= thr and used < k
+                logrows.append({"ts": _now_iso_ms(), "model": name, "stamp": m.get("_stamp"), "ticker": t,
+                                "occ": occ, "score": round(sc, 4), "thr": thr, "week_used": used, "k": k,
+                                "eligible": bool(ok), "mode": cfg.get("mode", "shadow"),
+                                "vec": [None if v != v else round(v, 5) for v in vec]})
+                if ok:
+                    out.append((sc, name, c, vec))
+        out.sort(key=lambda x: -x[0])
+    except Exception as _se:
+        print(f"  student: ranking failed ({type(_se).__name__}) - pickers stand down this cycle", flush=True)
+        out = []
+    _student_log(logrows)
+    return out
+
+
 _PROBE_MAX_ATT = 4              # per-probe attempt ceiling per cycle (throughput fix 2026-09-10):
                                 # the control sat first in rotation and burned all 10 attempts on
                                 # spread-dead names - 23 of 36 cycles starved, tail probes got 1-4
@@ -1878,7 +2062,17 @@ def scan_candidates(params, limit=None):
                                    "underlying_price": _num(r.get("underlying_price")),
                                    "min_contract_premium": pc, "occ": r.get("option_chain"),
                                    "expiry": r.get("expiry"), "strike": _num(r.get("strike")),
-                                   "alert_ask": _qa}
+                                   "alert_ask": _qa, "alert_bid": _qb,
+                                   # STUDENT (2026-09-11): the as-of fields the picker scores on
+                                   "alert": {"created_at": r.get("created_at"), "total_premium": _tp,
+                                             "total_size": _num(r.get("total_size")),
+                                             "trade_count": _num(r.get("trade_count")),
+                                             "total_ask_side_prem": _asp, "total_bid_side_prem": _bsp,
+                                             "open_interest": _num(r.get("open_interest")),
+                                             "iv_start": _num(r.get("iv_start")),
+                                             "first_seen": min([x.get("created_at") or "" for x in rows
+                                                                if x.get("option_chain") == r.get("option_chain")
+                                                                and x.get("created_at")] or [r.get("created_at") or ""])}}
             continue
         a = agg.setdefault(t, {"ticker": t, "call_prem": 0.0, "put_prem": 0.0,
                                "underlying_price": _num(r.get("underlying_price")),
@@ -2396,6 +2590,10 @@ def run_scheduled_cycle(mock=False):
                 return isinstance(sma, (int, float)) and abs(sma) < cap_
             _ROSTER = [
                 ("EXEC_BASELINE", None),                                    # pure execution data
+            ] + ([("STUDENT", None)] if _student_cfg().get("enabled") else []) + [
+                                             # STUDENT (2026-09-11): one seat, several pickers -
+                                             # see _student_rank. "More student-oriented picks,
+                                             # not strategies" (owner). Same court as everyone.
                 # FADE_UNROUTED culled 2026-09-09 (owner, roster-oxygen cull): 4 fills / 3
                 # closed / -$1,289 - the unrouted fade shape is what the 2-year archive already
                 # killed on real triggers (-14%/day t-4.33). Records and evidence stay; slot freed.
@@ -2516,6 +2714,51 @@ def run_scheduled_cycle(mock=False):
                 for _pname, _pf in _order:
                     if _cyc >= 2 or _tot >= _tot_cap or _att >= 10:
                         break                       # 2 probes per cycle max - spread across the day
+                    if _pname == "STUDENT":
+                        try:
+                            _scfg_all = _student_cfg()
+                            if _scfg_all.get("bear_standdown", True) and fade_book.spy_regime() in (None, "BEAR"):
+                                continue    # no bear evidence yet, and an unknown regime is not a regime
+                            _ranked = _student_rank(_PRICEY_CANDS[:14], creds, _plog)
+                            print(f"  student: {len(_ranked)} eligible pick(s) across pickers ({_scfg_all.get('mode', 'shadow')})", flush=True)
+                            if _scfg_all.get("mode", "shadow") != "live":
+                                continue    # shadow: scored and logged, never entered
+                            _sent = 0
+                            for _sc, _mname, _c, _vec in _ranked:
+                                if _att >= 10 or _sent >= 1 or _cyc >= 2:
+                                    break
+                                if (_c.get("ticker") or "").upper() in _open_tk:
+                                    continue
+                                _STUDENT_LAST["p"], _STUDENT_LAST["model"] = _sc, _mname
+                                try:
+                                    _ACTIVE_PROBE["name"] = _mname
+                                    _PROBE_CONTRACT["c"] = _c
+                                    _att += 1
+                                    rec = enter_proactive_set(_c["ticker"], None, mock=mock, candidate=_c,
+                                                              dry_run=not live, positions=positions,
+                                                              open_orders=open_orders, probe=True,
+                                                              probe_filter=None)
+                                except Exception as _ee:
+                                    print(f"  student[{_mname}]: entry raised {type(_ee).__name__} - skipped", flush=True)
+                                    continue
+                                finally:
+                                    _ACTIVE_PROBE["name"] = None
+                                    _PROBE_CONTRACT["c"] = None
+                                if rec and rec.get("skipped"):
+                                    print(f"  student[{_mname}] skip {_c['ticker']}: {str(rec.get('reason'))[:70]}", flush=True)
+                                    continue
+                                if rec:
+                                    rec["book"] = "PROBE"; rec["probe_strategy"] = _mname
+                                    rec["student_p"] = round(float(_sc), 4)
+                                    rec["student_model"] = (_student_model(_mname) or {}).get("_stamp", "")
+                                    _rewrite_last(rec)
+                                    print(f"  PROBE[{_mname}] entered {_c['ticker']} (student pick p={_sc:.3f})", flush=True)
+                                    _open_tk.add((_c["ticker"] or "").upper())
+                                    _pcount[_mname] = _pcount.get(_mname, 0) + 1
+                                    _tot += 1; _cyc += 1; _sent += 1
+                        except Exception as _se2:
+                            print(f"  student seat failed ({type(_se2).__name__}) - no student entries this cycle", flush=True)
+                        continue
                     if _pcount.get(_pname, 0) >= _per:
                         continue
                     _rg_need = {"BULL_DIP": "BULL", "BULL_DIP_X": "BULL", "DIP_CONVEXITY": "BEAR",

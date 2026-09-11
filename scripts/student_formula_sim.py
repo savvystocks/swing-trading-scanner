@@ -38,6 +38,7 @@ from datetime import date, datetime
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(REPO)
+sys.path.insert(0, REPO)
 import numpy as np
 
 SEARCH_END = "2026-03-01"
@@ -50,7 +51,23 @@ FEATS = ["side", "smd", "reg", "sp", "prem", "entry", "spread_frac", "dte", "hou
          "vol_oi", "prem_oi", "iv", "delta", "gamma", "theta", "vega", "moneyness_proxy"]
 
 
+def load_asof():
+    """As-of feature set (2026-09-11): only what existed at the qualifying print."""
+    global FEATS
+    from src import student_features as sfx
+    FEATS = list(sfx.FEATS)
+    X, meta = [], []
+    for l in open("reports/research/student_asof_v3.jsonl", encoding="utf-8"):
+        r = json.loads(l)
+        X.append(r["vec"])
+        meta.append((r["day"], r["side"], r["reg"], r["smd"], r["sp"], r["entry"], r["rets"], r["occ"]))
+    print(f"as-of corpus: {len(meta)} rows, {len(FEATS)} features", flush=True)
+    return np.array(X, float), meta
+
+
 def load():
+    if os.environ.get("FEATURE_SET") == "ASOF":
+        return load_asof()
     src_file = os.environ.get("CORPUS_FILE", "reports/research/probe_tuner_rows_v3.jsonl")
     rows = [json.loads(l) for l in open(src_file, encoding="utf-8") if l.strip()]
     rows = [r for r in rows if r.get("basis") in ("ask_at_print", "ask_at_qualifying_print")]
@@ -278,7 +295,7 @@ def main():
         picks, wc = [], defaultdict(int)
         for d in sorted(by_day):
             wk = week_key(d)
-            for i in sorted(by_day[d], key=lambda i: -X[i][4]):
+            for i in sorted(by_day[d], key=lambda i: -X[i][FEATS.index('cum_prem') if 'cum_prem' in FEATS else 4]):
                 if wc[wk] >= k:
                     break
                 picks.append(i); wc[wk] += 1
@@ -352,7 +369,8 @@ def main():
               "72 configurations searched - the search-window numbers are selection-biased by construction, "
               "which is why only the holdout row is evidence. A weekly-budget picker is implementable live as "
               "written (threshold on prior scores, cap per ISO week)."]
-    _tag = "_v3" if "v3" in os.environ.get("CORPUS_FILE", "") else ""
+    _tag = ("_asof" if os.environ.get("FEATURE_SET") == "ASOF" else
+            ("_v3" if "v3" in os.environ.get("CORPUS_FILE", "") else ""))
     fn = f"reports/research/student_formula{_tag}_{date.today().isoformat()}.md"
     open(fn, "w", encoding="utf-8").write("\n".join(L) + "\n")
     print("\n".join(L), flush=True)

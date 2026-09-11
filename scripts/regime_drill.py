@@ -159,6 +159,49 @@ check("BEAR: PUT_DEBIT_W enters, LONG wing bought FIRST (never naked)",
       bool(ok5) and buys_first and any(r.get("probe_strategy") == "PUT_DEBIT_W" for r in saved),
       str(orders_placed[:2]))
 
+# --- scenario 6: STUDENT seat (2026-09-11): no model -> stands down; unknown/BEAR regime -> no
+#     scoring; MILD with a model -> ranked pick; shadow mode never enters ---
+try:
+    import json as _j6, os as _o6
+    lab._STUDENT_MODELS.clear()
+    _pool6 = [{"ticker": "XYZ", "flow_type": "call", "occ": "XYZ261009C00050000", "alert_ask": 5.4, "alert_bid": 5.3,
+               "total_premium": 57000, "expiry": EXP_ISO, "strike": 50.0,
+               "alert": {"created_at": "2026-09-10T14:40:00Z", "total_premium": 57000, "total_size": 110,
+                         "trade_count": 2, "total_ask_side_prem": 57000, "total_bid_side_prem": 0,
+                         "open_interest": 1200, "iv_start": 0.4, "first_seen": "2026-09-10T14:31:00Z"}}]
+    _bars_bak = lab._alpaca_daily
+    lab._alpaca_daily = lambda t, days=60: [{"h": 10, "l": 9, "c": 10.0 + (i % 3) * 0.1, "v": 1000, "t": f"2026-08-{(i % 28) + 1:02d}"} for i in range(30)]
+    _reg_bak = fade_book.spy_regime
+    fade_book._REGIME.update({"date": date.today().isoformat(), "val": "MILD", "dist50_prev": 1.5, "dist20_prev": 0.8})
+    fade_book.spy_regime = lambda: "MILD"
+    _r6a = lab._student_rank(_pool6, ("k", "s"), [])
+    check("STUDENT: no spec block -> rank returns nothing, no exception", _r6a == [])
+    _fake = {"kind": "classifier", "baseline": 3.0, "n_features": 15, "trained": date.today().isoformat(),
+             "thresholds": {"k3": 0.5}, "trees": []}
+    _o6.makedirs("reports/fade_meta", exist_ok=True)
+    _j6.dump(_fake, open("reports/fade_meta/student_STUDENT_DRILL.json", "w"))
+    _spec_bak = fade_book._SPEC
+    _sp6 = _j6.loads(_j6.dumps(fade_book.spec()))
+    _sp6.setdefault("probe", {})["student"] = {"enabled": True, "mode": "shadow", "bear_standdown": True,
+        "probes": {"STUDENT_DRILL": {"model": "reports/fade_meta/student_STUDENT_DRILL.json", "k_per_week": 3}}}
+    fade_book._SPEC = _sp6
+    lab._STUDENT_MODELS.clear()
+    _r6b = lab._student_rank(_pool6, ("k", "s"), [])
+    check("STUDENT: MILD with a model -> one ranked eligible pick with p > 0.9",
+          len(_r6b) == 1 and _r6b[0][1] == "STUDENT_DRILL" and _r6b[0][0] > 0.9, str([(round(x[0], 3), x[1]) for x in _r6b]))
+    _r6c = lab._student_rank(_pool6, ("k", "s"), [{"probe_strategy": "STUDENT_DRILL", "entry_ts_utc": date.today().isoformat() + "T14:00:00Z"}] * 3)
+    check("STUDENT: weekly budget spent -> the pick is logged but not eligible", _r6c == [])
+    fade_book._REGIME.update({"dist50_prev": None, "dist20_prev": None})
+    _r6d = lab._student_rank(_pool6, ("k", "s"), [])
+    check("STUDENT: prior-close SPY readings unknown -> stands down (fail-closed)", _r6d == [])
+    fade_book._SPEC = _spec_bak
+    fade_book.spy_regime = _reg_bak
+    lab._alpaca_daily = _bars_bak
+    lab._STUDENT_MODELS.clear()
+    _o6.remove("reports/fade_meta/student_STUDENT_DRILL.json")
+except Exception as _e6:
+    check("STUDENT: drill scenario ran", False, f"{type(_e6).__name__}: {_e6}")
+
 print(f"\nDRILL: {len(PASS)} pass / {len(FAIL)} fail", flush=True)
 if FAIL:
     print("FAILED: " + ", ".join(FAIL), flush=True)

@@ -638,3 +638,31 @@ standing check on any future "too good" number. LESSON: a picker is the sharpest
 there is - when a model's best trades share a profile no trader would recognise, the profile is
 the bug; and a row that qualifies on a whole day's total must not be entered before that total
 existed.
+
+2026-09-11 (second entry) - CORPUS LEAK #3: REGIME COLUMNS FROM THE ENTRY-DAY CLOSE (found by the
+student-wiring panel, 02:30). WHAT BROKE: the corpus's three regime readings - SPY vs its 50d
+(reg), SPY vs its 20d (sp), ticker vs its 20d (smd) - were computed from a window that INCLUDED
+the entry day's close, i.e. post-entry information, and keyed on the entry day. Entry is the
+ask at the qualifying print; the same-day close move sits inside every label the model was
+trained against and inside every regime cell any strategy was measured on. In the student's
+first models these were the #1, #2 and #5 most-split features (27% of splits); the archive
+showed the tell-tale sign of a leak, a side-flipping correlation (calls positive, puts negative
+in the same tercile). Live, the engine fed intraday running values instead - a different
+quantity, so the leaked part could never transfer. FIX: the corpus computes all three at the
+PRIOR close (smad shifted by one day; rows stamp regime_basis "d1_close"; glide_sim refuses rows
+without it); the live side computes the same prior-close readings (fade_book.spy_prev_readings,
+macro distance_to_sma20_prev_pct) and the student uses ONLY those; corpora v3 rebuilt
+(70,976 rows), fine grid, as-of features and the formula search re-run on the honest columns.
+Also fixed in the same session from the same panel: five student features that could not
+exist live (dropped; 15 remain), thresholds now calibrated on the walk-forward stream never
+in-sample, the export refuses while a case is open and asserts evaluator parity, the roster
+runs ONE student seat ranking best-first (six seats would have reversed the 2026-09-10
+throughput fix), a NameError on the trade path (an unbound record-book name) caught before it
+ran, and the regime stand-down now treats an UNKNOWN regime as a stand-down. REGRESSION
+CHECK: MOT 6.11 (15 features, live/archive vector parity, prior-close helper, one-seat wiring,
+no stale hooks, corpus regime_basis, model files with walk-forward AUC and parity); regime
+drill scenario 6 (no model, budget spent, unknown readings). LESSON: every fixed-strategy
+archive number before 2026-09-11 also carried this leak; the corpus is now on its fourth
+honest correction in three days, each found by a harder question than the last - the panels
+are the machinery that finds them, and the leak that matters most is always the one hiding
+inside the "obvious" columns.

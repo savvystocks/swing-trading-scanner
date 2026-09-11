@@ -130,7 +130,13 @@
    "DIP_CONVEXITY",
    "BULL_DIP",
    "FOLLOW_CALLS",
-   "DIP_CONF_MILD"
+   "DIP_CONF_MILD",
+   "STUDENT_A",
+   "STUDENT_B",
+   "STUDENT_C",
+   "STUDENT_D",
+   "STUDENT_E",
+   "STUDENT_F"
   ],
   "priority_note": "owner order 2026-09-01 (ship the grid): the full 3x3 grid is tracked - one strategy per regime cell plus structure. Bear cell 2 is the FADE book itself (above this track). More candidates = more luck-chances vs one control; the placebo army + sentinels measure exactly that, bar v2 (symmetric trim + floor) unchanged.",
   "dip_convexity": {
@@ -158,7 +164,144 @@
    "evidence": "bull_expensive test 2026-09-01 (CONSENSUS replacement, owner cull+replace): BULL regime + ticker<20d + calls, EXPENSIVE trigger contracts (ask 4-9, prem 50-400k, aggressor, spr<=2), true-trigger entries ON the contract: wide exits +40.8%/day t+5.17 (86d, n=366, halves +74/+8); live exits +18.8 t+3.06; cheap band only +7.0 t+1.5. No SPY-conf gate (thin in bull). Trades the trigger contract verbatim via _PROBE_CONTRACT, wide exits via PROBE_EXITS. CAVEAT: front-loaded halves (+74/+8) - bull-era decay risk is real; the +8 second half still clears the floor. CONTRADICTION FLAG (tuner full grid, same night): differently-sampled grid (per-occ first-qualifying-day by symbol order, n=186) shows pricey bull-dip halves +44/-4 and NO PASS - the +40.8 halves +74/+8 (by-day sampling, n=366) may be sampling-sensitive. Probe stays (paper; live virgin days arbitrate) but promotion bar must see this note.",
    "added": "2026-09-01"
   },
-  "v2.5_note": "2026-09-10 owner: roster focused to seven (control, FOLLOW_CALLS, the three regime seats, CREDIT_SPREAD_W, WINNER_PROFILE); per-strategy daily fill cap 5 -> 8 so each survivor fills 2-3x faster. Retired: CONSENSUS_CALLS, BULL_DIP_X, PUT_DEBIT_W (never enabled), FADE_DP, GEX_PIN, IV_EXTREME, WINNER_PROFILE_X. Priority edits carry no auto_ marker: no evidence clock restarts."
+  "v2.5_note": "2026-09-10 owner: roster focused to seven (control, FOLLOW_CALLS, the three regime seats, CREDIT_SPREAD_W, WINNER_PROFILE); per-strategy daily fill cap 5 -> 8 so each survivor fills 2-3x faster. Retired: CONSENSUS_CALLS, BULL_DIP_X, PUT_DEBIT_W (never enabled), FADE_DP, GEX_PIN, IV_EXTREME, WINNER_PROFILE_X. Priority edits carry no auto_ marker: no evidence clock restarts.",
+  "tuning": {
+   "STUDENT_A": {
+    "exits": {
+     "stop": 50.0,
+     "trig": 50.0,
+     "give": 0.2
+    },
+    "applied": "2026-09-11",
+    "history": []
+   },
+   "STUDENT_B": {
+    "exits": {
+     "stop": 70.0,
+     "trig": 80.0,
+     "give": 0.3
+    },
+    "applied": "2026-09-11",
+    "history": []
+   },
+   "STUDENT_C": {
+    "exits": {
+     "stop": 70.0,
+     "trig": 80.0,
+     "give": 0.3
+    },
+    "applied": "2026-09-11",
+    "history": []
+   },
+   "STUDENT_D": {
+    "exits": {
+     "stop": 50.0,
+     "trig": 50.0,
+     "give": 0.2
+    },
+    "applied": "2026-09-11",
+    "history": []
+   },
+   "STUDENT_E": {
+    "exits": {
+     "stop": 50.0,
+     "trig": 50.0,
+     "give": 0.2
+    },
+    "applied": "2026-09-11",
+    "history": []
+   },
+   "STUDENT_F": {
+    "exits": {
+     "stop": 50.0,
+     "trig": 50.0,
+     "give": 0.2
+    },
+    "applied": "2026-09-11",
+    "history": []
+   }
+  },
+  "student": {
+   "enabled": true,
+   "mode": "shadow",
+   "bear_standdown": true,
+   "max_model_age_days": 200,
+   "probes": {
+    "STUDENT_A": {
+     "target": "EXPRET",
+     "cohort": "ALL",
+     "exit_label": "BASE",
+     "k_per_week": 3,
+     "search_rank": 1,
+     "search_wk_t": 1.97,
+     "search_per_trade": 19.9,
+     "holdout_touched": true,
+     "model": "reports/fade_meta/student_STUDENT_A_2026-09-11.json",
+     "pulled": false
+    },
+    "STUDENT_B": {
+     "target": "EXPRET",
+     "cohort": "CALLS",
+     "exit_label": "WIDE",
+     "k_per_week": 3,
+     "search_rank": 2,
+     "search_wk_t": 1.37,
+     "search_per_trade": 31.9,
+     "holdout_touched": false,
+     "model": "reports/fade_meta/student_STUDENT_B_2026-09-11.json",
+     "pulled": false
+    },
+    "STUDENT_C": {
+     "target": "PBIG",
+     "cohort": "CALLS",
+     "exit_label": "WIDE",
+     "k_per_week": 3,
+     "search_rank": 3,
+     "search_wk_t": 1.3,
+     "search_per_trade": 14.1,
+     "holdout_touched": false,
+     "model": "reports/fade_meta/student_STUDENT_C_2026-09-11.json",
+     "pulled": true
+    },
+    "STUDENT_D": {
+     "target": "PWIN",
+     "cohort": "AFFORD",
+     "exit_label": "BASE",
+     "k_per_week": 3,
+     "search_rank": 4,
+     "search_wk_t": 0.89,
+     "search_per_trade": 7.1,
+     "holdout_touched": false,
+     "model": "reports/fade_meta/student_STUDENT_D_2026-09-11.json",
+     "pulled": false
+    },
+    "STUDENT_E": {
+     "target": "EXPRET",
+     "cohort": "CALLS",
+     "exit_label": "BASE",
+     "k_per_week": 3,
+     "search_rank": 5,
+     "search_wk_t": 0.63,
+     "search_per_trade": 8.2,
+     "holdout_touched": false,
+     "model": "reports/fade_meta/student_STUDENT_E_2026-09-11.json",
+     "pulled": false
+    },
+    "STUDENT_F": {
+     "target": "EXPRET",
+     "cohort": "FADE",
+     "exit_label": "BASE",
+     "k_per_week": 3,
+     "search_rank": 6,
+     "search_wk_t": 0.6,
+     "search_per_trade": 13.3,
+     "holdout_touched": false,
+     "model": "reports/fade_meta/student_STUDENT_F_2026-09-11.json",
+     "pulled": false
+    }
+   },
+   "note": "2026-09-11 owner order: student pickers on the roster at audition level. ONE seat (STUDENT) scores every picker pre-sweep and enters best-first under the model's name. mode shadow = score + log only; flip to live on the owner's word after the panel's owner decisions. Only search_rank 1 touched the holdout; the others carry search-window numbers only (selection-biased by construction)."
+  }
  },
  "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal.",
  "v1.7.1_note": "owner order 2026-08-12 00:36 (sim-first then probe): FADE_WHALE probe slot - fade-shaped 400k-1M prints from a side-pool the live book never sees (its candidate list is byte-identical). Sim promising but half-flipped; live fills decide. 1M+ excluded (negative, n=8).",

@@ -50,8 +50,12 @@ def cohort_mask(rows, name):
             out.append(r["side"] == "C")
         elif name == "CALLS_AFFORD":
             out.append(r["side"] == "C" and 4.0 <= r["entry"] <= 9.9)
-        else:
+        elif name == "FADE":
+            out.append((r["smd"] < 0 and r["sp"] < 0) if r["side"] == "C" else (r["smd"] > 0 and r["sp"] > 0))
+        elif name == "ALL":
             out.append(True)
+        else:
+            raise ValueError(f"unknown cohort {name}")   # never silently 'everything' (2026-09-11: F duplicated A)
     return np.array(out)
 
 

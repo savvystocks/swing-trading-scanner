@@ -1113,6 +1113,25 @@ check(6, "pullers defer recent zero-results instead of marking them done",
 check(6, "sentinel carries session-hole and day-density rows for every evidence store",
       _sn.count('"day_density"') >= 3 and '"session_holes"' in _sn and _sn.count('"jsonl_density"') >= 2)
 check(6, "tuner_apply refuses to judge on a thin corpus", "DENSITY GUARD" in _ta)
+# 6.12 MARKET GATE SECOND OPINION (BREAKDOWNS 2026-09-11 third entry): when the Alpaca clock
+# call raises, the gate must answer from the exchange calendar, never a blanket False.
+_pg_bak = lab._paper_get
+def _raise(*a, **k):
+    raise RuntimeError("clock down")
+lab._paper_get = _raise
+try:
+    import pandas_market_calendars as _mcx
+    from datetime import datetime as _dtx, timezone as _tzx
+    _nowx = _dtx.now(_tzx.utc)
+    _schx = _mcx.get_calendar("XNYS").schedule(start_date=_nowx.date().isoformat(), end_date=_nowx.date().isoformat())
+    _cal_open = (not _schx.empty) and (_schx.iloc[0]["market_open"].to_pydatetime() <= _nowx <= _schx.iloc[0]["market_close"].to_pydatetime())
+    _gate = lab._market_is_open(("k", "s"))
+    check(6, "market gate: clock API failure -> exchange-calendar answer, not a blanket closed",
+          _gate == _cal_open, f"gate {_gate} calendar {_cal_open}")
+except Exception as _gx:
+    check(6, "market gate: clock API failure -> exchange-calendar answer, not a blanket closed", False, type(_gx).__name__)
+finally:
+    lab._paper_get = _pg_bak
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.

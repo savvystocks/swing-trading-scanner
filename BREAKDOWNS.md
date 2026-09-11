@@ -666,3 +666,23 @@ archive number before 2026-09-11 also carried this leak; the corpus is now on it
 honest correction in three days, each found by a harder question than the last - the panels
 are the machinery that finds them, and the leak that matters most is always the one hiding
 inside the "obvious" columns.
+
+2026-09-11 (third entry) - ENGINE BLIND FOR ~55 MINUTES MID-SESSION: ALPACA CLOCK 500 + FAIL-CLOSED
+GATE (16:10-17:04 UTC; owner paged by the VPS watchdog "no inbox commit for 50m during market
+hours"). WHAT BROKE: every cycle printed "market closed - no cycle: 0 orders, 0 exits, 0 harvest"
+while the market was open; no position was managed, no candidate was scored, no inbox row was
+committed. The runs reported SUCCESS, so the workflow's failure alarm and the crash detector
+stayed quiet; only the inbox-staleness watchdog saw it (it did, correctly, every 15 minutes).
+ROOT CAUSE: Alpaca's paper /v2/clock endpoint returned "Internal Server Error" intermittently
+(the data quote endpoint 504'd in the same window); _market_is_open() made ONE call and treated
+any exception as "closed" - a deliberate fail-closed rule written so a clock blip could never fire
+an order into a closed market, which in this failure mode disabled the exit engine instead.
+Broker-side GTC backstops were the only protection. FIX: the gate retries the clock three times
+with backoff, then decides from the XNYS exchange calendar (holiday and early-close aware) with
+a loud line; no credentials still means closed; calendar unavailable still means closed. Shipped
+alone first (live outage); this entry and the regression check followed. REGRESSION CHECK: MOT
+6.12 forces the clock call to raise and asserts the gate returns the calendar's answer instead of
+False. LESSON: "fail closed" must be read per consequence - closed-for-ENTRIES is safety,
+closed-for-EXITS is exposure; a gate that guards both with one bit needs a second opinion the
+moment its only source fails. And the watchdog that paged is the one that watches the DATA, not
+the exit codes: the 2026-09-04 lesson, vindicated.

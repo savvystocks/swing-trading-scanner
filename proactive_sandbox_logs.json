@@ -172857,7 +172857,7 @@
         "mae_pct": -28.8,
         "stage": "initial",
         "close_fails": 0,
-        "last_ret": 30.9
+        "last_ret": 25.0
       }
     },
     "backstop": {
@@ -177192,8 +177192,8 @@
         "mfe_pct": 369.5,
         "mae_pct": -21.9,
         "stage": "initial",
-        "close_fails": 3,
-        "last_ret": 196.2
+        "close_fails": 4,
+        "last_ret": 195.2
       }
     },
     "leg_exits": {},
@@ -180862,7 +180862,7 @@
         "mfe_pct": 88.3,
         "mae_pct": -32.5,
         "stage": "initial",
-        "last_ret": 29.8,
+        "last_ret": 28.3,
         "close_fails": 1
       }
     },
@@ -186903,7 +186903,7 @@
         "mfe_pct": 94.2,
         "mae_pct": -31.7,
         "stage": "initial",
-        "last_ret": 23.0,
+        "last_ret": 20.9,
         "close_fails": 4
       }
     },
@@ -187916,7 +187916,7 @@
         "mfe_pct": 61.9,
         "mae_pct": -46.0,
         "stage": "initial",
-        "last_ret": -33.4,
+        "last_ret": -33.8,
         "close_fails": 1
       }
     },
@@ -191638,7 +191638,7 @@
         "mfe_pct": 56.2,
         "mae_pct": -13.5,
         "stage": "initial",
-        "last_ret": -5.6,
+        "last_ret": -6.7,
         "close_fails": 0
       }
     },
@@ -193049,7 +193049,7 @@
         "mfe_pct": 54.3,
         "mae_pct": -4.0,
         "stage": "initial",
-        "last_ret": 11.3,
+        "last_ret": 11.1,
         "close_fails": 4
       }
     },
@@ -194984,7 +194984,7 @@
         "mfe_pct": 29.5,
         "mae_pct": -49.5,
         "stage": "initial",
-        "last_ret": 29.5
+        "last_ret": 16.8
       }
     },
     "backstop": {
@@ -197232,7 +197232,7 @@
         "mfe_pct": 17.2,
         "mae_pct": -35.9,
         "stage": "initial",
-        "last_ret": 12.4
+        "last_ret": 3.4
       }
     },
     "backstop": {
@@ -197554,7 +197554,7 @@
         "mfe_pct": 6.5,
         "mae_pct": -42.7,
         "stage": "initial",
-        "last_ret": -24.2
+        "last_ret": -29.8
       }
     },
     "backstop": {
@@ -198181,7 +198181,7 @@
         "mfe_pct": 21.1,
         "mae_pct": -5.3,
         "stage": "initial",
-        "last_ret": 10.5
+        "last_ret": 1.3
       }
     },
     "backstop": {
@@ -198780,8 +198780,8 @@
         "mfe_pct": 432.5,
         "mae_pct": -23.0,
         "stage": "initial",
-        "last_ret": 397.5,
-        "close_fails": 1
+        "last_ret": 370.0,
+        "close_fails": 2
       }
     },
     "backstop": {
@@ -199999,7 +199999,7 @@
         "mfe_pct": 4.5,
         "mae_pct": -15.2,
         "stage": "initial",
-        "last_ret": -15.2
+        "last_ret": -14.3
       }
     },
     "backstop": {
@@ -200287,7 +200287,7 @@
         "mfe_pct": 3.7,
         "mae_pct": -18.5,
         "stage": "initial",
-        "last_ret": -18.5
+        "last_ret": -14.8
       }
     },
     "backstop": {
@@ -200863,7 +200863,7 @@
         "mfe_pct": 5.8,
         "mae_pct": -7.0,
         "stage": "initial",
-        "last_ret": -2.9
+        "last_ret": 2.3
       }
     },
     "backstop": {
@@ -201140,14 +201140,43 @@
         "ledger_terminal": "expired"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_UNTRACKED",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -100.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "missing_cycles": 5
+        }
+      },
+      "mfe_pct": 0,
+      "mae_pct": 0,
+      "determining_factor": "Bullish call FAILED (-100%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 200.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "probe_strategy": "WINNER_PROFILE_X",
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "ORCL260918C00200000",
+        "closed_at": "2026-09-11T14:14:33.621Z",
+        "return_pct": -100.0,
+        "reason": "UNTRACKED: no broker position for 5 cycles and no backstop fill - booked at last seen -100.0%",
+        "action": "CLOSE_UNTRACKED",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
-        "missing_cycles": 4
+        "missing_cycles": 5
       }
     }
   },

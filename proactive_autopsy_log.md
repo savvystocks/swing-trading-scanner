@@ -4591,3 +4591,12 @@
 
 **Determining factor:** Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 7.0 worked against it.
 
+## Autopsy - ORCL (1809ed39464c)
+- entered 2026-09-10T19:59:50.136Z | trigger regime_BULLISH_loose | exit CLOSE_UNTRACKED | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -100.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-100%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 200.0 worked against it.
+

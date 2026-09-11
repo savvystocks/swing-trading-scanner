@@ -3052,3 +3052,9 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - ORCL (1809ed39464c) - 2026-09-11T14:14:34.338Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
+---

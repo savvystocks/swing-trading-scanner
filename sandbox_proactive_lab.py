@@ -599,10 +599,10 @@ def _student_rank(pool, creds, log):
                 thr = _student_threshold(name)
                 used = _student_week_used(name, log)
                 k = int(pc.get("k_per_week", 3))
-                ok = thr is not None and sc >= thr and used < k
+                ok = thr is not None and sc >= thr and used < k and bool(pc.get("live"))
                 logrows.append({"ts": _now_iso_ms(), "model": name, "stamp": m.get("_stamp"), "ticker": t,
                                 "occ": occ, "score": round(sc, 4), "thr": thr, "week_used": used, "k": k,
-                                "eligible": bool(ok), "mode": cfg.get("mode", "shadow"),
+                                "eligible": bool(ok), "live": bool(pc.get("live")), "mode": cfg.get("mode", "shadow"),
                                 "vec": [None if v != v else round(v, 5) for v in vec]})
                 if ok:
                     out.append((sc, name, c, vec))

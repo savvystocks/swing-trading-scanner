@@ -335,6 +335,13 @@ def main():
             if day and ret is not None:
                 by_strat.setdefault(st_, {}).setdefault(day, []).append(ret)
 
+        # STUDENT FAMILY (owner 2026-09-11): the student pickers are judged as ONE book on the
+        # weekly unit; each picker's own numbers are printed as diagnostics, never as verdicts.
+        for _sn, _dm in list(by_strat.items()):
+            if _sn.startswith("STUDENT_") and _sn != "STUDENT_FAMILY":
+                for _d, _v in _dm.items():
+                    by_strat.setdefault("STUDENT_FAMILY", {}).setdefault(_d, []).extend(_v)
+
         def daymeans(strat):
             return {d: sum(v) / len(v) for d, v in (by_strat.get(strat) or {}).items()}
 
@@ -372,7 +379,13 @@ def main():
             # the bar). They are judged on shared ISO WEEKS against the control's week-mean -
             # same n>=8, same trim, same t>=1.8, same both-halves; only the unit and the floor
             # (weekly key, default 5.0) change. Cadence-matched, not bar-lowered.
-            wk = st_.endswith("_W")
+            wk = st_.endswith("_W") or st_ == "STUDENT_FAMILY"
+            if st_ == "STUDENT_FAMILY":
+                for _sn in sorted(k for k in by_strat if k.startswith("STUDENT_") and k != "STUDENT_FAMILY"):
+                    _dd = daymeans(_sn)
+                    if _dd:
+                        lines.append(f"  {_sn}: {sum(len(v) for v in by_strat[_sn].values())} fills / {len(_dd)} days, "
+                                     f"own mean {sum(_dd.values()) / len(_dd):+.1f}%/day (diagnostic only)")
             if wk:
                 dm = weekmeans(dm)
                 ctrl_u = weekmeans(ctrl)

@@ -110,14 +110,26 @@ def main():
         have = cm & ~np.isnan(oos)
         _ywin = (rets > 0).astype(int)              # AUC always vs "did it win", whatever the target
         auc = float(roc_auc_score(_ywin[have], oos[have])) if have.sum() > 50 and len(set(_ywin[have])) > 1 else float("nan")
-        sub_days = sorted(set(np.array(days)[have]))[-60:]
-        tail = have & np.isin(np.array(days), sub_days)
+        thr_co = cfg.get("threshold_cohort") or cohort        # A: trained on ALL, calibrated on AFFORD
+        have_t = have & cohort_mask(rows, thr_co)
+        sub_days = sorted(set(np.array(days)[have_t]))[-60:]
+        tail = have_t & np.isin(np.array(days), sub_days)
         weeks = max(1, len({date.fromisoformat(d).isocalendar()[:2] for d in np.array(days)[tail]}))
         per_week = tail.sum() / weeks
         thr = {}
         for k in (1, 2, 3):
             q = 1.0 - min(0.5, (k * 1.5) / per_week)
             thr[f"k{k}"] = float(np.quantile(oos[tail], q))
+        # walk-forward result on the THRESHOLD cohort (what this picker will actually see live)
+        try:
+            _sc = oos.copy(); _sc[~have_t] = np.nan
+            _pk = sf.pick_weekly(_sc, days, have_t, int(cfg.get("k_per_week", 3)))
+            _ev = sf.evaluate(_pk, meta, ei, name + " on " + thr_co)
+            live_slice = ({"trades": _ev["trades"], "weeks": _ev["weeks"], "per_trade": round(_ev["per_trade"], 1),
+                           "win": round(_ev["win"], 3), "wk_t": round(_ev["wk_t"], 2), "pos_weeks": round(_ev["pos_weeks"], 2),
+                           "total": round(_ev["total"])} if _ev else None)
+        except Exception as _le:
+            live_slice = {"error": type(_le).__name__}
         # final model on all rows of the cohort
         if target == "EXPRET":
             m = HistGradientBoostingRegressor(max_depth=3, learning_rate=0.06, max_iter=150, random_state=7)
@@ -134,17 +146,18 @@ def main():
         nan_rate = {f: float(np.mean(np.isnan(X[cm][:, j]))) for j, f in enumerate(sfx.FEATS)}
         out = dict(exported, name=name, target=target, cohort=cohort, exit_label=ex, trained=today,
                    n_train=int(cm.sum()), feats=sfx.FEATS, thresholds=thr, parity_max_err=err,
-                   walk_forward_auc=auc, training_nan_rate=nan_rate,
+                   walk_forward_auc=auc, training_nan_rate=nan_rate, threshold_cohort=thr_co,
+                   walk_forward_on_threshold_cohort=live_slice,
                    corpus_sha256=hashlib.sha256(open(ASOF, "rb").read()).hexdigest()[:16])
         fname = f"reports/fade_meta/student_{name}_{today}.json"
         json.dump(out, open(fname, "w", encoding="utf-8"))
         cfg["model"] = fname
         cfg["pulled"] = bool(auc == auc and auc <= 0.50)
         spec["probe"].setdefault("tuning", {}).setdefault(name, {})["applied"] = today   # court clock restarts
-        if name not in (spec["probe"].get("priority") or []):
-            spec["probe"].setdefault("priority", []).append(name)                         # the court judges it
+        if "STUDENT_FAMILY" not in (spec["probe"].get("priority") or []):
+            spec["probe"].setdefault("priority", []).append("STUDENT_FAMILY")             # the court judges the FAMILY
         changed = True
-        lines.append(f"{name}: {target}/{cohort}/{ex} n={int(cm.sum())} walk-forward AUC {auc:.3f}"
+        lines.append(f"{name}: {target}/{cohort}/{ex} n={int(cm.sum())} walk-forward AUC {auc:.3f} | on {thr_co}: {live_slice}"
                      f"{' -> PULLED (<= 0.50)' if cfg['pulled'] else ''} thresholds "
                      f"{ {k: round(v, 4) for k, v in thr.items()} } parity {err:.1e} -> {fname}")
     print("\n".join(lines), flush=True)

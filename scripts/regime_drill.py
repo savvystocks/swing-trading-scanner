@@ -183,7 +183,7 @@ try:
     _spec_bak = fade_book._SPEC
     _sp6 = _j6.loads(_j6.dumps(fade_book.spec()))
     _sp6.setdefault("probe", {})["student"] = {"enabled": True, "mode": "shadow", "bear_standdown": True,
-        "probes": {"STUDENT_DRILL": {"model": "reports/fade_meta/student_STUDENT_DRILL.json", "k_per_week": 3}}}
+        "probes": {"STUDENT_DRILL": {"model": "reports/fade_meta/student_STUDENT_DRILL.json", "k_per_week": 3, "live": True}}}
     fade_book._SPEC = _sp6
     lab._STUDENT_MODELS.clear()
     _r6b = lab._student_rank(_pool6, ("k", "s"), [])
@@ -191,6 +191,11 @@ try:
           len(_r6b) == 1 and _r6b[0][1] == "STUDENT_DRILL" and _r6b[0][0] > 0.9, str([(round(x[0], 3), x[1]) for x in _r6b]))
     _r6c = lab._student_rank(_pool6, ("k", "s"), [{"probe_strategy": "STUDENT_DRILL", "entry_ts_utc": date.today().isoformat() + "T14:00:00Z"}] * 3)
     check("STUDENT: weekly budget spent -> the pick is logged but not eligible", _r6c == [])
+    _sp6["probe"]["student"]["probes"]["STUDENT_DRILL"]["live"] = False
+    lab._STUDENT_MODELS.clear()
+    _r6e = lab._student_rank(_pool6, ("k", "s"), [])
+    check("STUDENT: a picker not flagged live is scored and logged but never eligible", _r6e == [])
+    _sp6["probe"]["student"]["probes"]["STUDENT_DRILL"]["live"] = True
     fade_book._REGIME.update({"dist50_prev": None, "dist20_prev": None})
     _r6d = lab._student_rank(_pool6, ("k", "s"), [])
     check("STUDENT: prior-close SPY readings unknown -> stands down (fail-closed)", _r6d == [])

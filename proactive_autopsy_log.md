@@ -4582,3 +4582,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 87.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - POET (29b62229296b)
+- entered 2026-09-09T17:38:13.344Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -53.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-54%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 7.0 worked against it.
+

@@ -784,9 +784,32 @@ def _market_is_open(creds=None):
     creds = creds or _paper_creds()
     if not all(creds):
         return False
+    # 2026-09-11: Alpaca's clock endpoint returned "Internal Server Error" for an hour mid-session;
+    # fail-closed on a single call blinded the WHOLE engine - no exits, no harvest - while the
+    # market was open (watchdog paged "stalled"). Retry, then decide from the exchange calendar
+    # (holiday and early-close aware) with a loud line. No creds still means closed.
+    import time as _t
+    for _i in range(3):
+        try:
+            return bool(_paper_get("/v2/clock", creds).get("is_open"))
+        except Exception as _ce:
+            _err = type(_ce).__name__
+            _t.sleep(2 * (_i + 1))
     try:
-        return bool(_paper_get("/v2/clock", creds).get("is_open"))
-    except Exception:
+        import pandas_market_calendars as _mc
+        import pandas as _pd
+        _now = datetime.now(timezone.utc)
+        _sch = _mc.get_calendar("XNYS").schedule(start_date=_now.date().isoformat(), end_date=_now.date().isoformat())
+        if _sch.empty:
+            print(f"  market gate: clock API failing ({_err}); calendar says NO session today -> closed", flush=True)
+            return False
+        _o, _c = _sch.iloc[0]["market_open"].to_pydatetime(), _sch.iloc[0]["market_close"].to_pydatetime()
+        _open = _o <= _now <= _c
+        print(f"  market gate: clock API failing ({_err}); calendar says {'OPEN' if _open else 'closed'} "
+              f"({_o.strftime('%H:%M')}-{_c.strftime('%H:%M')}Z) - proceeding on the calendar", flush=True)
+        return _open
+    except Exception as _fe:
+        print(f"  market gate: clock API failing and calendar unavailable ({type(_fe).__name__}) -> closed", flush=True)
         return False
 
 

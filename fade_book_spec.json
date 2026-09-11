@@ -131,12 +131,7 @@
    "BULL_DIP",
    "FOLLOW_CALLS",
    "DIP_CONF_MILD",
-   "STUDENT_A",
-   "STUDENT_B",
-   "STUDENT_C",
-   "STUDENT_D",
-   "STUDENT_E",
-   "STUDENT_F"
+   "STUDENT_FAMILY"
   ],
   "priority_note": "owner order 2026-09-01 (ship the grid): the full 3x3 grid is tracked - one strategy per regime cell plus structure. Bear cell 2 is the FADE book itself (above this track). More candidates = more luck-chances vs one control; the placebo army + sentinels measure exactly that, bar v2 (symmetric trim + floor) unchanged.",
   "dip_convexity": {
@@ -223,7 +218,7 @@
   },
   "student": {
    "enabled": true,
-   "mode": "shadow",
+   "mode": "live",
    "bear_standdown": true,
    "max_model_age_days": 200,
    "probes": {
@@ -237,7 +232,9 @@
      "search_per_trade": 19.9,
      "holdout_touched": true,
      "model": "reports/fade_meta/student_STUDENT_A_2026-09-11.json",
-     "pulled": false
+     "pulled": false,
+     "live": true,
+     "threshold_cohort": "AFFORD"
     },
     "STUDENT_B": {
      "target": "EXPRET",
@@ -249,7 +246,8 @@
      "search_per_trade": 31.9,
      "holdout_touched": false,
      "model": "reports/fade_meta/student_STUDENT_B_2026-09-11.json",
-     "pulled": false
+     "pulled": false,
+     "live": false
     },
     "STUDENT_C": {
      "target": "PBIG",
@@ -261,7 +259,8 @@
      "search_per_trade": 14.1,
      "holdout_touched": false,
      "model": "reports/fade_meta/student_STUDENT_C_2026-09-11.json",
-     "pulled": true
+     "pulled": true,
+     "live": false
     },
     "STUDENT_D": {
      "target": "PWIN",
@@ -273,7 +272,8 @@
      "search_per_trade": 7.1,
      "holdout_touched": false,
      "model": "reports/fade_meta/student_STUDENT_D_2026-09-11.json",
-     "pulled": false
+     "pulled": false,
+     "live": false
     },
     "STUDENT_E": {
      "target": "EXPRET",
@@ -285,7 +285,8 @@
      "search_per_trade": 8.2,
      "holdout_touched": false,
      "model": "reports/fade_meta/student_STUDENT_E_2026-09-11.json",
-     "pulled": false
+     "pulled": false,
+     "live": false
     },
     "STUDENT_F": {
      "target": "EXPRET",
@@ -297,10 +298,11 @@
      "search_per_trade": 13.3,
      "holdout_touched": false,
      "model": "reports/fade_meta/student_STUDENT_F_2026-09-11.json",
-     "pulled": false
+     "pulled": false,
+     "live": false
     }
    },
-   "note": "2026-09-11 owner order: student pickers on the roster at audition level. ONE seat (STUDENT) scores every picker pre-sweep and enters best-first under the model's name. mode shadow = score + log only; flip to live on the owner's word after the panel's owner decisions. Only search_rank 1 touched the holdout; the others carry search-window numbers only (selection-biased by construction)."
+   "note": "2026-09-11 03:20 owner rulings: A LIVE on its affordable subset (trained on ALL, thresholds calibrated on the -9.90 slice it can buy; cap stays ,000); B/D/E/F shadow (scored + logged, never enter); C pulled. Court judges STUDENT_FAMILY on the weekly unit; per-picker numbers are diagnostics. One seat, best-first."
   }
  },
  "v1.6_note": "owner order 2026-08-11: confirmed-entry mode - sim +7.0 day-mean, halves +22.9/+21.8 (most stable config measured). Entries now require the option to prove +5-15% strength within ~2h of signal.",

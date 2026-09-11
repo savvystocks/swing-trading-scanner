@@ -152,13 +152,17 @@ def main():
         fname = f"reports/fade_meta/student_{name}_{today}.json"
         json.dump(out, open(fname, "w", encoding="utf-8"))
         cfg["model"] = fname
-        cfg["pulled"] = bool(auc == auc and auc <= 0.50)
+        _neg = bool(isinstance(live_slice, dict) and live_slice.get("wk_t") is not None
+                    and live_slice.get("trades", 0) >= 40 and live_slice["wk_t"] <= -1.5)
+        cfg["pulled"] = bool(auc == auc and auc <= 0.50) or _neg   # owner decision 4, extended 2026-09-11: a
+        if cfg["pulled"]:                                          # picker that LOSES on the slice it would
+            cfg["live"] = False                                    # trade (t <= -1.5, n >= 40) never goes live
         spec["probe"].setdefault("tuning", {}).setdefault(name, {})["applied"] = today   # court clock restarts
         if "STUDENT_FAMILY" not in (spec["probe"].get("priority") or []):
             spec["probe"].setdefault("priority", []).append("STUDENT_FAMILY")             # the court judges the FAMILY
         changed = True
         lines.append(f"{name}: {target}/{cohort}/{ex} n={int(cm.sum())} walk-forward AUC {auc:.3f} | on {thr_co}: {live_slice}"
-                     f"{' -> PULLED (<= 0.50)' if cfg['pulled'] else ''} thresholds "
+                     f"{' -> PULLED' if cfg['pulled'] else ''} thresholds "
                      f"{ {k: round(v, 4) for k, v in thr.items()} } parity {err:.1e} -> {fname}")
     print("\n".join(lines), flush=True)
     if changed:

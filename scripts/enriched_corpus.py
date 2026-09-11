@@ -51,7 +51,7 @@ def main():
     lib = sqlite3.connect("file:data/hourly_paths.db?mode=ro", uri=True, timeout=60)
     cur = lib.cursor()
     rows = []
-    for line in open("reports/research/probe_tuner_rows_v2.jsonl", encoding="utf-8"):
+    for line in open("reports/research/probe_tuner_rows_v3.jsonl", encoding="utf-8"):
         try:
             rows.append(json.loads(line))
         except Exception:

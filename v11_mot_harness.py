@@ -1090,9 +1090,11 @@ for _f in _glob.glob("scripts/*.py"):
     if _f.replace("\\", "/").endswith("basis_diff.py"):
         continue
     for _i, _ln in enumerate(open(_f, encoding="utf-8"), 1):
-        if ("probe_tuner_rows.jsonl" in _ln or "glide_fine_rows.jsonl" in _ln) and "CKPT_V1" not in _ln and not _ln.strip().startswith("#"):
+        if (("probe_tuner_rows.jsonl" in _ln or "glide_fine_rows.jsonl" in _ln or "probe_tuner_rows_v2.jsonl" in _ln
+             or "glide_fine_rows_v2.jsonl" in _ln) and "CKPT_V1" not in _ln and "BASIS_OLD" not in _ln
+                and 'else "reports/research/probe_tuner_rows_v2.jsonl"' not in _ln and not _ln.strip().startswith("#")):
             _v1_hits.append(f"{_f}:{_i}")
-check(6, "corpus basis lint: no consumer reads the superseded v1 corpus", not _v1_hits, "; ".join(_v1_hits)[:120])
+check(6, "corpus basis lint: no consumer reads a superseded corpus (v1 or v2)", not _v1_hits, "; ".join(_v1_hits)[:120])
 # 6.10g EXCURSION READ LINT (BREAKDOWNS 2026-09-10): the exit engine must never index leg_path
 # excursion keys directly - two writers create entries of different shapes (the untracked-leg
 # counter seeds a bare dict). Direct indexing crashed every cycle for 30 minutes.
@@ -1115,7 +1117,8 @@ check(6, "tuner_apply refuses to judge on a thin corpus", "DENSITY GUARD" in _ta
 # the nightly commit because only the OLD filename was gitignored; every push was blocked.
 _gi = open(".gitignore", encoding="utf-8").read()
 check(6, "growing corpora are gitignored (v2 tuner rows, v2 fine grid, cohort cache)",
-      all(x in _gi for x in ("probe_tuner_rows_v2.jsonl", "glide_fine_rows_v2.jsonl", "student_cohort_cache.npz")))
+      all(x in _gi for x in ("probe_tuner_rows_v2.jsonl", "glide_fine_rows_v2.jsonl", "probe_tuner_rows_v3.jsonl",
+                                     "glide_fine_rows_v3.jsonl", "student_cohort_cache.npz")))
 # 6.10i THROUGHPUT (BREAKDOWNS 2026-09-10 third entry): the probe loop must pre-quote before the
 # sweep and cap attempts per probe, or the control starves the roster again.
 _lab_t = open("sandbox_proactive_lab.py", encoding="utf-8").read()

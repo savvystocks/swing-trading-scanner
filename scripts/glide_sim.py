@@ -32,8 +32,8 @@ GRID = [(s, t, g) for s in STOPS for t in TRIGS for g in GIVES]
 GIX = {c: i for i, c in enumerate(GRID)}
 ANCHORS = [(-50.0, 50.0, 0.20), (-50.0, 80.0, 0.30), (-50.0, 80.0, 0.20), (-50.0, 50.0, 0.30),
            (-70.0, 50.0, 0.20), (-70.0, 80.0, 0.30), (-70.0, 80.0, 0.20), (-70.0, 50.0, 0.30)]
-FINE = "reports/research/glide_fine_rows_v2.jsonl"   # v2 = EXECUTABLE basis (2026-09-10)
-COARSE = "reports/research/probe_tuner_rows_v2.jsonl"
+FINE = "reports/research/glide_fine_rows_v3.jsonl"   # v3 = qualifying-print basis (2026-09-11)
+COARSE = "reports/research/probe_tuner_rows_v3.jsonl"
 LOCK = "/tmp/glide_build.lock"
 
 STRATS = {
@@ -68,7 +68,7 @@ def replay(bars_today_after, bars_next, e, stop, trig, give, sf=0.0):
             peak = max(peak, rh)
             fl = peak * (1 - give)
             if rl <= fl:
-                return _sell(fl)
+                return _sell(min(fl, (c / e - 1) * 100))   # v3: close-confirmed fill
         if rl <= stop:
             return _sell(min(stop, rl))          # gap-through fills at the bar low
     return _sell((bars_next[-1][2] / e - 1) * 100) if bars_next else None
@@ -120,7 +120,7 @@ def build_fine():
         if len(nx) < 3:
             continue
         e = float(r.get("entry") or 0)      # v2 row: the ASK banked at the print
-        if e <= 0 or r.get("basis") != "ask_at_print":
+        if e <= 0 or r.get("basis") != "ask_at_qualifying_print":
             continue                        # never score a row on the superseded basis
         _sf = float(r.get("spread_frac") or 0.0)
         rets = []

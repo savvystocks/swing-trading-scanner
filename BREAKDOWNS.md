@@ -617,3 +617,24 @@ file unstaged, both v2 corpora and the cohort cache gitignored, one clean commit
 REGRESSION CHECK: MOT 6.10j asserts the growing corpora are gitignored. LESSON: renaming a
 growing artifact is a change to .gitignore first - and a nightly job that adds a whole
 directory will find every file you forgot.
+
+2026-09-11 - CORPUS ENTRY LEAK #2: FIRST-PRINT ENTRY ON A DAY-QUALIFIED ROW (found by the
+student formula search). WHAT BROKE: the v2 corpus entered every contract-day at the ask of
+the day's FIRST print, but a row qualifies on the day's TOTAL premium (>= 50k) - an alert would
+only exist once cumulative premium crossed that floor. For cheap short-dated calls the crossing
+came a median 86 minutes after the first print at an ask 24% higher on average (29% of cases
+>25% higher); for the engine's $4+ band the ratio was exactly 1.0 with zero lag. A picker
+trained on v2 found and harvested exactly that: +131%/trade, 94% wins, "+276%/trade on the
+holdout" - and its picked-trade profile ($0.37 entry, 4 DTE, day volume 25x the cohort) was
+the tell. FIX: corpus v3 - entry at the QUALIFYING print (cumulative premium first >= 50k) plus
+a 10-minute cycle delay before any bar counts; trail exits fill at the bar CLOSE once the floor
+is crossed (an intrabar spike on a cheap contract is not a fill); rows without a qualifying
+print are excluded (69,666 rows vs 79,045). Every consumer repointed; MOT 6.10f now forbids v1
+AND v2 names; v3 corpora gitignored. Same search on v3: the pre-registered winner is
++33%/trade on the search window and +12%/trade, 62% wins, weekly t +1.45 on the untouched
+holdout (random 95th pct +0.55). REGRESSION CHECK: MOT 6.10f (basis lint) + the rows' basis
+tag "ask_at_qualifying_print" required by glide_sim; the holdout discipline itself is the
+standing check on any future "too good" number. LESSON: a picker is the sharpest leak detector
+there is - when a model's best trades share a profile no trader would recognise, the profile is
+the bug; and a row that qualifies on a whole day's total must not be entered before that total
+existed.

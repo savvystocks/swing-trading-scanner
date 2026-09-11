@@ -109,7 +109,7 @@ def main():
         print("no fine-grid rows - run glide_sim.py build first")
         return
     pa = {}
-    for line in open("reports/research/probe_tuner_rows_v2.jsonl", encoding="utf-8"):
+    for line in open("reports/research/probe_tuner_rows_v3.jsonl", encoding="utf-8"):
         try:
             j = json.loads(line)
             pa[j["occ"]] = (j["prem"], j["ask"], j["t"])

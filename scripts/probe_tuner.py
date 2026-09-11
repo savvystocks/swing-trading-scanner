@@ -27,7 +27,17 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(REPO)
 H = {"APCA-API-KEY-ID": os.environ.get("ALPACA_PAPER_API_KEY", ""),
      "APCA-API-SECRET-KEY": os.environ.get("ALPACA_PAPER_SECRET_KEY", "")}
-CKPT = "reports/research/probe_tuner_rows_v2.jsonl"   # v2 = EXECUTABLE basis
+BASIS = os.environ.get("CORPUS_BASIS", "v3")   # v3 standard since 2026-09-11
+CKPT = ("reports/research/probe_tuner_rows_v3.jsonl" if BASIS == "v3"
+        else "reports/research/probe_tuner_rows_v2.jsonl")   # v2 = EXECUTABLE basis
+# v3 (2026-09-11): entry at the QUALIFYING print - the print at which the day's cumulative
+# premium first reaches the 50k band floor (when an alert would exist) - plus a 10-minute
+# cycle delay before any bar counts; trail exits fill at the bar CLOSE once the floor is
+# crossed (an intrabar spike on a cheap contract is not a fill). Found by the formula search:
+# the v2 first-print entry let a picker "buy" cheap contracts a median 86 minutes before the
+# alert, at an ask 24% lower on average.
+QUAL_PREM = 50000.0
+CYCLE_DELAY_MIN = 10
 # v1 (probe_tuner_rows.jsonl) entered at the close of the first hourly bar AFTER the
 # print (~90 min late, a TRADE price, not an ask) and fed that same bar to the peak
 # loop (look-ahead). Panel 2026-09-09 ruled every v1 cell optimistic and superseded.
@@ -80,7 +90,8 @@ def replay_true(bars_today_after, bars_next, e, stop, trig, give, sf=0.0):
             peak = max(peak, rh)
             fl = peak * (1 - give)
             if rl <= fl:
-                return _sell(fl)
+                rc = (c / e - 1) * 100
+                return _sell(min(fl, rc) if BASIS == "v3" else fl)   # v3: close-confirmed fill
         if rl <= stop:
             return _sell(min(stop, rl) if rl < stop else stop)   # gap-through fills lower
     return _sell((bars_next[-1][2] / e - 1) * 100) if bars_next else None
@@ -102,12 +113,31 @@ def build_rows():
     # uw_flow_prints has banked all along and every consumer threw away. Entry = that ask;
     # the exit haircut uses that spread. No ask -> the contract is DROPPED, never faked from
     # the daily quote (house rule: entry_ref = ask at signal, never a later trade price).
-    for occ, day, ts, bid, ask_ in src.execute(
-            "select occ, day, executed_at, nbbo_bid, nbbo_ask from flow_prints "
-            "where executed_at = (select min(executed_at) from flow_prints f2 "
-            "where f2.occ = flow_prints.occ and f2.day = flow_prints.day)"):
-        if (occ, day) not in prints:
-            prints[(occ, day)] = (ts, bid, ask_)
+    if BASIS == "v3":
+        cum = {}
+        for occ, day, ts, prem_, bid, ask_ in src.execute(
+                "select occ, day, executed_at, premium, nbbo_bid, nbbo_ask from flow_prints "
+                "order by occ, day, executed_at"):
+            k = (occ, day)
+            if k in prints:
+                continue
+            c = cum.get(k, 0.0) + float(prem_ or 0.0)
+            cum[k] = c
+            if c >= QUAL_PREM:
+                try:                                    # + cycle delay on the clock string
+                    hh, mm = int(ts[11:13]), int(ts[14:16]) + CYCLE_DELAY_MIN
+                    hh += mm // 60; mm %= 60
+                    ts = ts[:11] + f"{hh:02d}:{mm:02d}" + ts[16:]
+                except Exception:
+                    pass
+                prints[k] = (ts, bid, ask_)
+    else:
+        for occ, day, ts, bid, ask_ in src.execute(
+                "select occ, day, executed_at, nbbo_bid, nbbo_ask from flow_prints "
+                "where executed_at = (select min(executed_at) from flow_prints f2 "
+                "where f2.occ = flow_prints.occ and f2.day = flow_prints.day)"):
+            if (occ, day) not in prints:
+                prints[(occ, day)] = (ts, bid, ask_)
 
     done = set()
     if os.path.exists(CKPT):
@@ -157,7 +187,7 @@ def build_rows():
             r = replay_true(today_after[1:], nxt, e, st, tg, gv, _sf)
             rets.append(round(r, 2) if r is not None else None)
         out.write(json.dumps({"occ": occ, "t": t, "day": day, "prem": prem, "ask": ask,
-                              "basis": "ask_at_print", "entry": round(e, 2),
+                              "basis": ("ask_at_qualifying_print" if BASIS == "v3" else "ask_at_print"), "entry": round(e, 2),
                               "spread_frac": round(_sf, 4),
                               "side": "C" if occ[-9] == "C" else "P", "smd": round(smd, 2),
                               "reg": round(reg, 2), "sp": round(sp, 2), "rets": rets}) + "\n")

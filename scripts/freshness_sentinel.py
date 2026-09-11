@@ -79,8 +79,8 @@ CHECKS = [
      ("select max(day) from flow_prints", 4), "EVIDENCE"),
     ("hourly bar library", "data_day", "data/hourly_paths.db",
      ("select max(substr(ts,1,10)) from bars", 8), "EVIDENCE"),
-    ("tuner coarse corpus", "schedule", "reports/research/probe_tuner_rows_v2.jsonl", (20, 15, {4}), "EVIDENCE"),
-    ("glide fine corpus", "schedule", "reports/research/glide_fine_rows_v2.jsonl", (21, 45, {4}), "EVIDENCE"),
+    ("tuner coarse corpus", "schedule", "reports/research/probe_tuner_rows_v3.jsonl", (20, 15, {4}), "EVIDENCE"),
+    ("glide fine corpus", "schedule", "reports/research/glide_fine_rows_v3.jsonl", (21, 45, {4}), "EVIDENCE"),
     # -- nightly rhythm: courts, student, digests, integrity
     ("nightly boundary (SEQ_APPLY)", "schedule", H + "/trajectory_nightly.log", (22, 0, WEEKDAYS), "COURT"),
     ("friday court", "schedule", H + "/sunday_boundary.log", (22, 35, {4}), "COURT"),
@@ -111,8 +111,8 @@ CHECKS = [
     ("expired legs still open", "expired_open", "proactive_sandbox_logs.json", 1, "TRADE"),
     ("ghost open records", "ghost_open", "proactive_sandbox_logs.json", 10, "TRADE"),
     # -- v1.2 (MOT coverage audit 2026-09-07): frozen-window, disk, and failover classes
-    ("tuner corpus content day", "jsonl_day", "reports/research/probe_tuner_rows_v2.jsonl", 11, "EVIDENCE"),
-    ("glide corpus content day", "jsonl_day", "reports/research/glide_fine_rows_v2.jsonl", 11, "EVIDENCE"),
+    ("tuner corpus content day", "jsonl_day", "reports/research/probe_tuner_rows_v3.jsonl", 11, "EVIDENCE"),
+    ("glide corpus content day", "jsonl_day", "reports/research/glide_fine_rows_v3.jsonl", 11, "EVIDENCE"),
     ("vps disk headroom", "disk", "/", 85, "TRADE"),
     ("failover mode stuck", "flag_age", H + "/.engine_watch_failover_mode", 2.0, "TRADE"),
     ("morning analyst", "schedule", H + "/analyst.log", (8, 10, WEEKDAYS), "MONITOR"),
@@ -134,8 +134,8 @@ CHECKS = [
     #   usually returns empty (vendor lag) and is deferred, the second at 00:15 on D+3 lands
     ("hourly bars day density", "day_density", "data/hourly_paths.db",
      ("select substr(ts,1,10), count(distinct occ) from bars where ts >= date('now','-75 day') group by 1", 5, 25, 0.4, 2), "EVIDENCE"),
-    ("tuner corpus v2 density", "jsonl_density", "reports/research/probe_tuner_rows_v2.jsonl", (5, 25, 0.4, 6), "EVIDENCE"),
-    ("glide corpus v2 density", "jsonl_density", "reports/research/glide_fine_rows_v2.jsonl", (5, 25, 0.4, 6), "EVIDENCE"),
+    ("tuner corpus v2 density", "jsonl_density", "reports/research/probe_tuner_rows_v3.jsonl", (5, 25, 0.4, 6), "EVIDENCE"),
+    ("glide corpus v2 density", "jsonl_density", "reports/research/glide_fine_rows_v3.jsonl", (5, 25, 0.4, 6), "EVIDENCE"),
     ("nightly corpus chain", "schedule", H + "/corpus_nightly.log", (1, 45, {1, 2, 3, 4, 5}), "EVIDENCE"),
 ]
 

@@ -63,8 +63,8 @@ def daymean(rows, pred, gi):
 
 
 def main():
-    v1 = load("reports/research/probe_tuner_rows.jsonl")
-    v2 = load("reports/research/probe_tuner_rows_v2.jsonl")
+    v1 = load(os.environ.get("BASIS_OLD", "reports/research/probe_tuner_rows_v2.jsonl"))
+    v2 = load(os.environ.get("BASIS_NEW", "reports/research/probe_tuner_rows_v3.jsonl"))
     L = [f"# CORPUS BASIS DIFF v1 -> v2 - {date.today().isoformat()}",
          "",
          f"v1 rows {len(v1)} (entry = trade-bar close ~90min post-print, look-ahead in the entry "
@@ -92,7 +92,7 @@ def main():
           "Note the two bases also differ in population: v2 drops any contract with no executable "
           "ask banked at its print (never faked from the daily quote), and v2 was built after the "
           "bar-library top-up, so row counts are not directly comparable - the day-means are."]
-    fn = f"reports/research/basis_diff_{date.today().isoformat()}.md"
+    fn = f"reports/research/basis_diff_{os.environ.get('BASIS_TAG', 'v2_v3')}_{date.today().isoformat()}.md"
     open(fn, "w", encoding="utf-8").write("\n".join(L) + "\n")
     print("\n".join(L), flush=True)
     print("BASIS DIFF COMPLETE", flush=True)

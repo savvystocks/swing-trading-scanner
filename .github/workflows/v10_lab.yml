@@ -128,7 +128,7 @@ jobs:
             # origin/main may be missing from what we push; the resolver restores any and stages.
             git fetch -q origin main || true
             python scripts/merge_logs.py --guard origin/main || echo "union guard: could not run"
-            if ! git diff --cached --quiet; then git commit -q --amend --no-edit; fi
+            if ! git diff --cached --quiet; then git commit -q --amend --no-edit || true; fi
             sleep 2
           done
           validate_log || { echo "PERSIST ABORTED - final state invalid, NOT pushing"; exit 1; }

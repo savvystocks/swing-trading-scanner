@@ -1277,8 +1277,10 @@ if _stu.get("probes"):
           "STUDENT_FAMILY" in _pri and not any(n in _pri for n in _stu["probes"]))
     check(6, "student: a pulled picker is never live",
           not any(c.get("pulled") and c.get("live") for c in _stu["probes"].values()))
-    check(6, "student: the court aggregates STUDENT_ fills into STUDENT_FAMILY on the weekly unit",
-          'st_ == "STUDENT_FAMILY"' in open("scripts/sunday_boundary.py", encoding="utf-8").read())
+    _sb_s = open("scripts/sunday_boundary.py", encoding="utf-8").read()
+    check(6, "student: the court aggregates STUDENT_ fills into STUDENT_FAMILY and judges it on trading DAYS (owner 2026-09-12)",
+          'setdefault("STUDENT_FAMILY", {})' in _sb_s and 'wk = st_.endswith("_W")' in _sb_s
+          and 'or st_ == "STUDENT_FAMILY"' not in _sb_s)
 # 6.10j GROWING CORPORA STAY UNTRACKED (BREAKDOWNS 2026-09-11): a 131 MB corpus was swept into
 # the nightly commit because only the OLD filename was gitignored; every push was blocked.
 _gi = open(".gitignore", encoding="utf-8").read()

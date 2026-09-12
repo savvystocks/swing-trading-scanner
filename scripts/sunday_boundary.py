@@ -379,8 +379,9 @@ def main():
             # the bar). They are judged on shared ISO WEEKS against the control's week-mean -
             # same n>=8, same trim, same t>=1.8, same both-halves; only the unit and the floor
             # (weekly key, default 5.0) change. Cadence-matched, not bar-lowered.
-            wk = st_.endswith("_W") or st_ == "STUDENT_FAMILY"
-            if st_ == "STUDENT_FAMILY":
+            wk = st_.endswith("_W")            # STUDENT_FAMILY is judged on trading DAYS (owner ruling
+            if st_ == "STUDENT_FAMILY":        # 2026-09-12, decision 37): the same 8-shared-day bar the
+                                               # daily probes face; weeks were my cadence call, retired
                 for _sn in sorted(k for k in by_strat if k.startswith("STUDENT_") and k != "STUDENT_FAMILY"):
                     _dd = daymeans(_sn)
                     if _dd:

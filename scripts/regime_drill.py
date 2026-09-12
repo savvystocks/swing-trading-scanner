@@ -9,6 +9,7 @@ live day on current code."""
 import json
 import os
 import sys
+import tempfile
 import urllib.request
 from datetime import date, timedelta
 
@@ -37,6 +38,10 @@ lab._notify = lambda text: True
 lab.get_open_positions = lambda creds: []
 lab.route_to_alpaca_paper = lambda *a, **k: {"orders": [{"status": "accepted", "id": "drill"}]}
 lab._paper_creds = lambda: ("drill", "drill")
+lab._rewrite_last = lambda rec: None                 # 2026-09-12: the entry path now rewrites the
+lab.STUDENT_SCORES_LOG = os.path.join(              # book after routing - never the real one here;
+    tempfile.gettempdir(), "regime_drill_student_scores.jsonl")   # and the passive score log is
+                                                     # a committed audit - fixture rows stay out of it
 
 EXP_NEAR = (date.today() + timedelta(days=30)).strftime("%y%m%d")
 EXP_ISO = (date.today() + timedelta(days=30)).isoformat()

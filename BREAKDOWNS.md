@@ -738,3 +738,19 @@ orphan roll-call; the guards see PENDING; a functional roll-call (broker has the
 LESSON: a record store merged by git needs a merge that understands records on EVERY path,
 including the fallback - a fallback allowed to lose data will eventually lose the one record
 that mattered. And the intent belongs on disk before the order is on the wire.
+
+2026-09-12 (third entry) - A DRILL WROTE FIXTURE ROWS INTO THE LIVE SCORE LOG. WHAT BROKE: the
+regime drill's student scenario (scripts/regime_drill.py, scenario 6) scores a fixture
+candidate "XYZ" through the real _student_rank, whose passive logger appends to
+reports/shadow_lab/student_scores.jsonl - the calibration audit the engine commits every
+cycle. Seven XYZ rows landed in the VPS working copy at 06:53 UTC; the fade-meta cron's
+`git add reports` would have pushed them into the committed audit on Monday. ROOT CAUSE: the
+drill fakes the book (append/save/load), the broker and the router, but not the score-log
+path, and the engine's logger is deliberately silent (never raises) - so nothing said a word.
+FIX: the drill points STUDENT_SCORES_LOG at a temp file and neutralises _rewrite_last before
+any scenario runs (the entry path now rewrites the book after routing); the MOT does the same
+for itself; the seven rows were discarded from the VPS copy (never committed). REGRESSION
+CHECK: MOT 6.15 - source order in the drill, and the MOT asserts the real score log is
+byte-for-byte unchanged across its own run. LESSON: a passive logger that never raises is
+exactly the writer a harness forgets to fake - every fail-open sink needs a redirect in every
+harness that exercises the code around it.

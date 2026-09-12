@@ -31,6 +31,17 @@ lab.LOG_PATH = os.path.join(_tmp, "mot_log.json")
 lab.AUTOPSY_MD = os.path.join(_tmp, "mot_autopsy.md")
 lab.ADVISORY_MD = os.path.join(_tmp, "mot_advisory.md")
 lab.COOLOFF_PATH = os.path.join(_tmp, "mot_cooloff.json")
+lab.STUDENT_SCORES_LOG = os.path.join(_tmp, "mot_student_scores.jsonl")   # 2026-09-12: committed audit, never touched by a harness
+
+
+def _ssl_size15():
+    try:
+        return os.path.getsize("reports/shadow_lab/student_scores.jsonl")
+    except OSError:
+        return -1
+
+
+_SSL_SIZE0 = _ssl_size15()
 
 
 def _wipe():
@@ -1323,6 +1334,14 @@ fb._SPEC = None
 os.environ["FADE_BOOK_FORCE_OFF"] = _env
 
 print("\n" + "=" * 70)
+# 6.15 DRILLS AND THE MOT LEAVE THE PASSIVE SCORE LOG ALONE (BREAKDOWNS 2026-09-12 third entry)
+_dr15 = open("scripts/regime_drill.py", encoding="utf-8").read()
+check(6, "regime drill redirects the student score log and neutralises the record rewrite before any entry or rank call",
+      "lab.STUDENT_SCORES_LOG" in _dr15 and "lab._rewrite_last" in _dr15
+      and _dr15.index("lab.STUDENT_SCORES_LOG") < _dr15.index("enter_proactive_set(")
+      and _dr15.index("lab.STUDENT_SCORES_LOG") < _dr15.index("_student_rank("))
+check(6, "the MOT leaves reports/shadow_lab/student_scores.jsonl byte-for-byte unchanged",
+      _ssl_size15() == _SSL_SIZE0, f"{_SSL_SIZE0} -> {_ssl_size15()}")
 total = len(RESULTS)
 passed = sum(1 for r in RESULTS if r[2])
 by_dim = {}

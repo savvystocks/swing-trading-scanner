@@ -704,3 +704,37 @@ orphan reconcile adopts it on Monday's first cycle with a backstop; the PENDING-
 before routing is promoted to the next build. REGRESSION CHECK: MOT 6.13 asserts the VOID branch
 and its never-tracked condition. LESSON: "conservative default" is only conservative in one
 direction - a fake loss corrupts the evidence exactly as a fake win would.
+
+2026-09-12 (second entry) - A FILLED TRADE'S RECORD WAS LOST TO A PUSH RACE. WHAT BROKE: the
+19:40 UTC cycle of 2026-09-11 entered NBIS260918C00240000 for FOLLOW_CALLS at 19:51:13, wrote
+the record and pushed it (commit f654da2e carries it). The next cycle checked out main 34
+seconds after that push landed and still received the previous commit (982fa024): it ran its
+whole cycle on a book without NBIS (its orphan roll-call saw the fill and held it in the
+45-minute grace window), then its own push was rejected, the rebase conflicted on the log, and
+the record-level resolver ABORTED because data/last_cycle_ok - a two-line heartbeat committed by
+every run since 2026-08-17 - was not in its table. The workflow's fallback is a FILE-LEVEL
+`git pull --rebase -X theirs`, which resolved the conflicted hunk with the stale run's copy:
+commit 526f5182 removed the NBIS record. A filled paper position sat at the broker with no
+record, no backstop and no strategy attribution. ROOT CAUSE: three links, each survivable on
+its own - (1) a stale checkout (GitHub-side propagation, not controllable); (2) a resolver that
+treated one unknown conflicted file as a reason to give up on ALL of them (latent since
+2026-08-17, fired on every push race since); (3) a fallback that resolves at file level and so
+drops records. The panel's "submitted-but-unlogged" window (instrument-mismatch panel item 9,
+2026-09-09) is a fourth, separate route to the same orphan and was still open. FIX (one commit):
+PENDING-INTENT RECORD - enter_proactive_set writes the record as PENDING with a client_order_id
+per leg BEFORE routing, flips it to OPEN after the fill response, and reconcile_pending() at
+cycle start settles any PENDING left behind against the broker by order name (exists -> OPEN
+with the order attached; ended unfilled or absent after 15 minutes -> VOID, return None); every
+exposure guard (one-per-underlying, one-record-per-contract, roster, fade concurrency) counts
+PENDING as open. RESOLVER - merge_logs merges data/last_cycle_ok (later heartbeat wins) and, for
+any other unknown conflicted file, takes the run's own version and continues; the record-level
+merge never aborts. UNION GUARD - inside the push-retry loop the workflow runs
+merge_logs --guard origin/main after every rebase path: any trade record present on origin and
+missing locally is restored before the push. The NBIS record itself is restored from f654da2e
+in the data commit that follows this one. REGRESSION CHECK: MOT 6.14 - the entry path writes
+PENDING before routing; the payload carries client_order_id; the pending roll-call precedes the
+orphan roll-call; the guards see PENDING; a functional roll-call (broker has the order -> OPEN;
+404 after grace -> VOID with return None); resolver and guard wiring; the merge_logs selftest.
+LESSON: a record store merged by git needs a merge that understands records on EVERY path,
+including the fallback - a fallback allowed to lose data will eventually lose the one record
+that mattered. And the intent belongs on disk before the order is on the wire.

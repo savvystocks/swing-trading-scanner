@@ -719,12 +719,16 @@ def build_legs(ticker, md, regime="NEUTRAL", leg_budget=None, illiquid=None):
 
 def _order_payload(name, leg):
     if name == "flat_calendar":
-        return {"order_class": "mleg", "qty": str(leg["contracts"]), "type": "limit",
-                "limit_price": str(leg["limit_price"]), "time_in_force": "day", "legs": [
-                    {"symbol": leg["front_occ"], "ratio_qty": "1", "side": "sell", "position_intent": "sell_to_open"},
-                    {"symbol": leg["back_occ"], "ratio_qty": "1", "side": "buy", "position_intent": "buy_to_open"}]}
-    return {"symbol": leg["occ_symbol"], "qty": str(leg["contracts"]), "side": "buy", "type": "limit",
-            "limit_price": str(leg["limit_price"]), "time_in_force": "day"}
+        p = {"order_class": "mleg", "qty": str(leg["contracts"]), "type": "limit",
+             "limit_price": str(leg["limit_price"]), "time_in_force": "day", "legs": [
+                 {"symbol": leg["front_occ"], "ratio_qty": "1", "side": "sell", "position_intent": "sell_to_open"},
+                 {"symbol": leg["back_occ"], "ratio_qty": "1", "side": "buy", "position_intent": "buy_to_open"}]}
+    else:
+        p = {"symbol": leg["occ_symbol"], "qty": str(leg["contracts"]), "side": "buy", "type": "limit",
+             "limit_price": str(leg["limit_price"]), "time_in_force": "day"}
+    if leg.get("client_order_id"):          # PENDING-INTENT (2026-09-12): the record's own id rides on
+        p["client_order_id"] = leg["client_order_id"]   # the order, so a lost OPEN write can be
+    return p                                 # reconciled against the broker by name, never by guess
 
 
 def _submit_paper_order(payload, creds):
@@ -934,7 +938,7 @@ def ticker_blocked(ticker, positions, params, open_orders=None, now=None, log=No
         log = log if log is not None else _load_log_list()
         tracked = set()
         for rec in log:
-            if rec.get("status") == "OPEN":                    # PARKED / FLUSHED / CLOSED never block
+            if rec.get("status") in ("OPEN", "PENDING"):       # PARKED / FLUSHED / CLOSED never block
                 if probe and rec.get("book") != "PROBE":
                     # CROSS-BOOK SOFTENING (owner 2026-09-02): a $1k probe is no longer blocked by a
                     # DIFFERENT book's old position on the same name - July/August legacies were
@@ -1595,7 +1599,7 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
     _occ_taken = set()
     try:
         for _r0 in _load_log_list():
-            if _r0.get("status") == "OPEN":
+            if _r0.get("status") in ("OPEN", "PENDING"):
                 for _o0 in _record_leg_occs(_r0).values():
                     if _o0:
                         _occ_taken.add(_o0.upper())
@@ -1658,8 +1662,15 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
                                      _lg.get("contracts") or 1, _lg.get("alloc_usd") or LEG_BUDGET)
     except Exception as _ese:
         print(f"  early-strength stash fail-open: {type(_ese).__name__}")
-    orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run, creds=creds)
-    record = {"trade_set_id": uuid.uuid4().hex[:12], "ticker": ticker, "regime": regime, "trigger": trigger,
+    # PENDING INTENT (BREAKDOWNS 2026-09-12, second entry - the NBIS loss; instrument-mismatch
+    # panel item 9): the record reaches the book BEFORE the order reaches the broker, carrying a
+    # client_order_id per leg. If the OPEN write after routing never lands (job timeout, an
+    # exception in the notify/log path, a push that loses the run's commit), the next cycle's
+    # reconcile_pending() asks the broker for that id and settles the record as OPEN or VOID -
+    # a filled position can no longer exist without a record that names its strategy. Dry runs
+    # write nothing here (nothing reaches the broker).
+    _tsid = uuid.uuid4().hex[:12]
+    record = {"trade_set_id": _tsid, "ticker": ticker, "regime": regime, "trigger": trigger,
               "book": "PROBE" if probe else ("FADE" if fade_book.active() else "V10"),
               "router_state": ("MILD" if isinstance((md.get("regime_stack") or {}).get("market_spy_dist_pct"),
                                                     (int, float))
@@ -1668,11 +1679,24 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
               "execution_mode": "DRY_RUN" if dry_run else "LIVE_PAPER",
               "occ_resolution": "alpaca_real" if resolve_real else "synthesized",
               "ticker_guard": why, "open_positions_checked": len(positions),
-              "params_snapshot": params, "metadata": md, "legs": legs, "orders": orders,
-              "exit": None, "status": "OPEN"}
+              "params_snapshot": params, "metadata": md, "legs": legs, "orders": {},
+              "exit": None, "status": "PENDING", "intent_ts_utc": _now_iso_ms()}
+    if probe and _ACTIVE_PROBE.get("name"):
+        record["probe_strategy"] = _ACTIVE_PROBE["name"]   # attribution travels WITH the intent
     if not dry_run:
+        for _ln, _lg in legs.items():
+            if not _lg.get("illiquid"):
+                _lg["client_order_id"] = f"{_tsid}-{_ln}"[:48]
+        _append_log(record)                          # raises on a corrupt book -> NO order is sent
+    orders = route_to_alpaca_paper(ticker, legs, dry_run=dry_run, creds=creds)
+    record["orders"] = orders
+    record["status"] = "OPEN"
+    if not dry_run:
+        _rewrite_last(record)                        # OPEN lands first; the alert cannot delay it
         record["buy_alert_delivered"] = _notify(_buy_msg(record))   # honesty flag - reconciled in the digest
-    _append_log(record)
+        _rewrite_last(record)
+    else:
+        _append_log(record)
     return record
 
 
@@ -1712,7 +1736,7 @@ def _append_log(record):
 def _rewrite_last(record):
     data = json.load(open(LOG_PATH, encoding="utf-8"))
     for i in range(len(data) - 1, -1, -1):
-        if data[i]["trade_set_id"] == record["trade_set_id"]:
+        if data[i].get("trade_set_id") == record["trade_set_id"]:
             data[i] = record
             break
     json.dump(data, open(LOG_PATH, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
@@ -2254,6 +2278,104 @@ def _maybe_send_digest():
     _append_log({"type": "daily_digest", "ts_utc": _now_iso_ms(), "status": "SENT"})
 
 
+def reconcile_pending(creds, log=None, positions=None, grace_min=15):
+    """PENDING-INTENT ROLL-CALL (BREAKDOWNS 2026-09-12, second entry). enter_proactive_set writes
+    the record as PENDING before it routes; a run that dies, times out or loses its push between
+    the submit and the OPEN write leaves that PENDING record behind. Cycle-start, BEFORE the exit
+    pass and BEFORE the orphan roll-call, each such record is settled against the broker BY NAME
+    (the leg's client_order_id): an order that exists in any state that can hold or fill a
+    position makes the record OPEN with the order attached (the 6.13 never-filled rule then
+    applies as usual); an order that ended unfilled, or no order at all once the grace window has
+    passed, VOIDs the record - return None, never a fake loss. A broker error leaves the record
+    PENDING for the next cycle (fail-open per record). Returns (opened, voided) trade_set_ids."""
+    import urllib.error as _ue
+    import urllib.parse as _up
+    if not all(creds):
+        return [], []
+    log_list = log if log is not None else _load_log_list()
+    pend = [r for r in log_list if r.get("status") == "PENDING" and isinstance(r.get("legs"), dict)]
+    if not pend:
+        return [], []
+    held = set()
+    try:
+        for _p in (positions if positions is not None else get_open_positions(creds)):
+            held.add((_p.get("symbol") or "").upper())
+    except Exception:
+        pass
+    _ALIVE = {"new", "accepted", "pending_new", "accepted_for_bidding", "held", "calculated",
+              "partially_filled", "filled", "pending_replace", "replaced"}
+    opened, voided, now = [], [], datetime.now(timezone.utc)
+    for rec in pend:
+        try:
+            _ts = (rec.get("intent_ts_utc") or rec.get("entry_ts_utc") or "").replace("Z", "+00:00")
+            age_min = (now - datetime.fromisoformat(_ts)).total_seconds() / 60.0
+        except Exception:
+            age_min = grace_min + 1.0
+        orders = dict(rec.get("orders") or {})
+        alive, settled = False, True
+        for ln, leg in rec["legs"].items():
+            occ = (leg.get("occ_symbol") or leg.get("front_occ") or "").upper()
+            if occ and occ in held:
+                alive = True
+                orders.setdefault(ln, {"status": "position_held", "order_id": None, "error": None,
+                                       "submitted": True, "reconciled": "pending_intent"})
+                continue
+            cid = leg.get("client_order_id")
+            o = None
+            if cid:
+                try:
+                    o = _paper_get("/v2/orders:by_client_order_id?client_order_id=" + _up.quote(cid), creds)
+                except _ue.HTTPError as _he:
+                    o = None if _he.code == 404 else "ERR"
+                except Exception:
+                    o = "ERR"
+            if o == "ERR":
+                settled = False
+                continue
+            if o:
+                st = (o.get("status") or "").lower()
+                orders[ln] = {"status": st, "order_id": o.get("id"), "error": None, "submitted": True,
+                              "limit_price": leg.get("limit_price"), "contracts": leg.get("contracts"),
+                              "filled_qty": o.get("filled_qty"), "filled_avg_price": o.get("filled_avg_price"),
+                              "reconciled": "pending_intent"}
+                if st in _ALIVE or float(o.get("filled_qty") or 0) > 0:
+                    alive = True
+                else:
+                    orders[ln]["void"] = True
+            elif age_min < grace_min:
+                settled = False                          # too young to call: still in flight
+            else:
+                orders[ln] = {"status": "NEVER_SUBMITTED", "order_id": None, "error": None,
+                              "submitted": False, "reconciled": "pending_intent", "void": True}
+        if not settled:
+            print(f"  pending reconcile: {rec.get('ticker')} {rec.get('trade_set_id')} unsettled "
+                  f"({age_min:.0f} min) - retry next cycle")
+            continue
+        rec["orders"] = orders
+        rec["pending_reconciled_at"] = _now_iso_ms()
+        if alive:
+            rec["status"] = "OPEN"
+            opened.append(rec.get("trade_set_id"))
+        else:
+            rec.setdefault("leg_exits", {})
+            for ln, leg in rec["legs"].items():
+                rec["leg_exits"][ln] = {"occ": leg.get("occ_symbol") or leg.get("front_occ"),
+                                        "closed_at": _now_iso_ms(), "return_pct": None,
+                                        "reason": "VOID: intent never became a position (no order at the "
+                                                  "broker after the grace window, or it ended unfilled)",
+                                        "action": "VOID_NEVER_SUBMITTED", "closed_ok": True}
+            rec["status"] = "VOID"
+            voided.append(rec.get("trade_set_id"))
+    if opened or voided:
+        _save_log_list(log_list)
+        _notify(f"<b>PENDING INTENTS SETTLED: {len(opened)} opened, {len(voided)} voided</b>\n"
+                f"Plain English: a previous cycle wrote its intention to buy but never confirmed the "
+                f"result. I asked the broker by order name: {len(opened)} became real positions (now "
+                f"managed under their own strategy), {len(voided)} never happened (voided, no P&L). "
+                f"Nothing needed from you.")
+    return opened, voided
+
+
 def reconcile_orphans(creds, params, positions=None, log=None):
     """ROADMAP item 2b: cycle-start broker-vs-record ROLL-CALL. A dropped trade record (rare
     double-push collision on the non-union-merged log) leaves a live broker position with NO tracking
@@ -2353,6 +2475,15 @@ def run_scheduled_cycle(mock=False):
 
     # 0. orphan roll-call (item 2b): adopt any live position with no tracking record BEFORE the exit
     #    pass, so a trade record dropped by a push collision can't leave a position unmanaged.
+    # 0a. pending-intent roll-call (2026-09-12): settle any record written before routing whose
+    #     OPEN write never landed - BEFORE the orphan roll-call, so a filled intent is OPEN under
+    #     its own strategy rather than ADOPTED with its attribution lost.
+    try:
+        _po, _pv = reconcile_pending(creds)
+        if _po or _pv:
+            print(f"pending reconcile: {len(_po)} opened {_po}, {len(_pv)} voided {_pv}")
+    except Exception as _pe:
+        print(f"pending reconcile skipped (fail-open): {type(_pe).__name__}: {str(_pe)[:80]}")
     adopted = reconcile_orphans(creds, params)
     if adopted:
         print(f"orphan reconcile: adopted {len(adopted)} unmanaged position(s) -> {adopted}")
@@ -2511,7 +2642,7 @@ def run_scheduled_cycle(mock=False):
     except Exception as e:
         print(f"  momentum probe skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")
     entered_list = []                                        # FADE v1.2: up to 2 clusters per cycle
-    _open_fade = (sum(1 for r in _load_log_list() if r.get("book") == "FADE" and r.get("status") == "OPEN")
+    _open_fade = (sum(1 for r in _load_log_list() if r.get("book") == "FADE" and r.get("status") in ("OPEN", "PENDING"))
                   if fade_book.active() else 0)
     for c in ([] if (brake_active or halt_active) else candidates):   # ONLY 'active'/HALT suppress; shadow lets entries fire
         t = c["ticker"]
@@ -2603,7 +2734,7 @@ def run_scheduled_cycle(mock=False):
             _today = _now_iso_ms()[:10]
             _plog = _load_log_list()
             _recent_cut = (datetime.now(timezone.utc) - timedelta(days=5)).date().isoformat()
-            _open_tk = {(r.get("ticker") or "").upper() for r in _plog if r.get("status") == "OPEN"
+            _open_tk = {(r.get("ticker") or "").upper() for r in _plog if r.get("status") in ("OPEN", "PENDING")
                         and (r.get("book") == "PROBE"
                              or (r.get("entry_ts_utc") or "")[:10] >= _recent_cut)}
             # cross-book softening (owner 2026-09-02): probes block on other PROBES and on any

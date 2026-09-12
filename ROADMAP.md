@@ -254,6 +254,7 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
 | 14 | Live-capital gate | D | QUEUED | £1–5k initial staged; criteria pass before real money; best-case live review ~early Oct (gates decide); NORTH_STAR "item 14" |
 | 15 | Barrier-configuration optimization | D | QUEUED | Barrier changes justified under item-7 PBO discipline |
 | 16 | Teaching block (Stage 1) | C | QUEUED | Every weekly report explains one concept via that week's rows |
+| 17 | Pending-intent record + record-level push guard (panel item 9, 2026-09-09) | A | SHIPPED 2026-09-12 | No filled position without a record naming its strategy: PENDING before routing, broker roll-call by order name, resolver never aborts, union guard before every push; MOT 6.14 |
 
 
 ## Standing owner decisions (2026-07-05)

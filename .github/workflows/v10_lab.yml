@@ -123,6 +123,12 @@ jobs:
                 git pull --rebase -X theirs --autostash origin main || true
               fi
             fi
+            # UNION GUARD (2026-09-12: a stale checkout + the file-level fallback above dropped a
+            # filled NBIS record). Whatever path the rebase took, no trade record that is on
+            # origin/main may be missing from what we push; the resolver restores any and stages.
+            git fetch -q origin main || true
+            python scripts/merge_logs.py --guard origin/main || echo "union guard: could not run"
+            if ! git diff --cached --quiet; then git commit -q --amend --no-edit; fi
             sleep 2
           done
           validate_log || { echo "PERSIST ABORTED - final state invalid, NOT pushing"; exit 1; }

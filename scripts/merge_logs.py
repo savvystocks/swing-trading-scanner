@@ -77,19 +77,31 @@ def merge_flat_dict(a, b):
     return m
 
 
+def merge_sentinel(a, b):
+    """data/last_cycle_ok - two text lines (UTC stamp, last-good sha): the later stamp wins."""
+    la, lb = (a or "").strip().splitlines(), (b or "").strip().splitlines()
+    return (a or "") if (la[0] if la else "") >= (lb[0] if lb else "") else (b or "")
+
+
 MERGERS = {
     "proactive_sandbox_logs.json": merge_log,
     "data/harvest_state.json": merge_state,
     "sandbox_ticker_cooloff.json": merge_flat_dict,
     "sandbox_watchlist.json": merge_flat_dict,
 }
+TEXT_MERGERS = {
+    "data/last_cycle_ok": merge_sentinel,   # 2026-09-12: committed by every run since 2026-08-17,
+}                                            # its absence here aborted the resolver on every race
+
+
+def _stage_text(path, n):
+    r = subprocess.run(["git", "show", f":{n}:{path}"], capture_output=True, text=True)
+    return None if r.returncode != 0 else r.stdout
 
 
 def _stage(path, n):
-    r = subprocess.run(["git", "show", f":{n}:{path}"], capture_output=True, text=True)
-    if r.returncode != 0:
-        return None
-    return json.loads(r.stdout)
+    s = _stage_text(path, n)
+    return None if s is None else json.loads(s)
 
 
 def resolve():
@@ -100,10 +112,30 @@ def resolve():
         print("merge_logs: no conflicted files")
         return 0
     for f in files:
+        if f in TEXT_MERGERS:
+            ta, tb = _stage_text(f, 2), _stage_text(f, 3)
+            merged = TEXT_MERGERS[f](ta, tb)
+            with open(f, "w", encoding="utf-8") as fh:
+                fh.write(merged if merged.endswith("\n") else merged + "\n")
+            subprocess.run(["git", "add", f], check=True)
+            print(f"merge_logs: resolved {f} (later heartbeat wins)")
+            continue
         fn = MERGERS.get(f)
         if fn is None:
-            print(f"merge_logs: UNKNOWN conflicted file {f} - cannot resolve")
-            return 1
+            # UNKNOWN FILE (2026-09-12, the NBIS loss): never abort the whole resolver - the
+            # workflow's fallback is a FILE-LEVEL -X theirs that drops trade records. Take
+            # this run's own version (stage 3 = the commit being replayed) and carry on.
+            t = _stage_text(f, 3)
+            if t is None:
+                t = _stage_text(f, 2)
+            if t is None:
+                print(f"merge_logs: UNKNOWN conflicted file {f} with no readable stage - cannot resolve")
+                return 1
+            with open(f, "w", encoding="utf-8") as fh:
+                fh.write(t)
+            subprocess.run(["git", "add", f], check=True)
+            print(f"merge_logs: UNKNOWN conflicted file {f} - took this run's version (stage 3), continuing")
+            continue
         ours, theirs = _stage(f, 2), _stage(f, 3)
         if ours is None or theirs is None:
             print(f"merge_logs: missing stage for {f} - cannot resolve")
@@ -137,9 +169,47 @@ def selftest():
     assert set(ms["contracts"]) == {"A", "B", "C"} and set(ms["tickers"]) == {"T1", "T2"}
     assert ms["payload_count"] == 5 and ms["topn_count"] == 4
     assert merge_state({"date": "2026-08-13"}, sb)["date"] == "2026-08-13", "later-date rule failed"
+    assert merge_sentinel("2026-09-11T19:51:00Z\naaa\n", "2026-09-11T19:56:00Z\nbbb\n").startswith("2026-09-11T19:56"), "sentinel rule failed"
+    assert merge_sentinel("", "2026-09-11T19:56:00Z\nbbb\n").startswith("2026-09-11T19:56"), "sentinel empty-side failed"
     print("merge_logs selftest: ALL PASS")
     return 0
 
 
+def guard(ref):
+    """UNION GUARD (2026-09-12, the NBIS loss): whatever path the rebase took - record-level
+    resolution, an aborted rebase, the file-level -X theirs fallback - no trade record that
+    exists on <ref> may be missing from the working copy about to be pushed. Any such record is
+    restored (union by trade_set_id; a shared id keeps its most advanced version) and the file
+    is staged for the caller's --amend. Never blocks the push: an unreadable ref is a skip."""
+    r = subprocess.run(["git", "show", f"{ref}:proactive_sandbox_logs.json"], capture_output=True, text=True)
+    if r.returncode != 0 or not r.stdout.strip():
+        print(f"merge_logs guard: {ref} log unreadable - guard skipped")
+        return 0
+    try:
+        remote = json.loads(r.stdout)
+        local = json.load(open("proactive_sandbox_logs.json", encoding="utf-8"))
+    except Exception as e:
+        print(f"merge_logs guard: parse failure ({type(e).__name__}) - guard skipped")
+        return 0
+    if not isinstance(remote, list) or not isinstance(local, list):
+        print("merge_logs guard: unexpected shape - guard skipped")
+        return 0
+    have = {_key(x, i) for i, x in enumerate(local) if _key(x, i)[0] != "pos"}
+    missing = [x for i, x in enumerate(remote) if _key(x, i)[0] != "pos" and _key(x, i) not in have]
+    if not missing:
+        print(f"merge_logs guard: every record on {ref} is present locally ({len(local)} records)")
+        return 0
+    merged = merge_log(local, remote)
+    with open("proactive_sandbox_logs.json", "w", encoding="utf-8") as fh:
+        json.dump(merged, fh, indent=2, ensure_ascii=False)
+    subprocess.run(["git", "add", "-f", "proactive_sandbox_logs.json"], check=True)
+    ids = [x.get("trade_set_id") or x.get("type") for x in missing]
+    print(f"merge_logs guard: RESTORED {len(missing)} record(s) present on {ref} but missing locally: "
+          f"{ids[:8]}{'...' if len(ids) > 8 else ''} -> {len(merged)} records")
+    return 0
+
+
 if __name__ == "__main__":
+    if "--guard" in sys.argv:
+        sys.exit(guard(sys.argv[sys.argv.index("--guard") + 1]))
     sys.exit(selftest() if "--selftest" in sys.argv else resolve())

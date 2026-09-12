@@ -1136,6 +1136,70 @@ except Exception as _gx:
     check(6, "market gate: clock API failure -> exchange-calendar answer, not a blanket closed", False, type(_gx).__name__)
 finally:
     lab._paper_get = _pg_bak
+# 6.14 PENDING INTENT + UNION GUARD (BREAKDOWNS 2026-09-12 second entry: NBIS filled 19:51Z with
+# no record - stale checkout, resolver abort on data/last_cycle_ok, file-level -X theirs).
+import json as _json14
+import subprocess as _sp14
+_lab14 = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+_ep14 = _lab14[_lab14.index("def enter_proactive_set("):_lab14.index("def _skip_code(")]
+check(6, "entry path writes the PENDING record (with client_order_id) BEFORE routing the order",
+      '"status": "PENDING"' in _ep14
+      and _ep14.index('"status": "PENDING"') < _ep14.index("orders = route_to_alpaca_paper(")
+      and _ep14.index("_append_log(record)") < _ep14.index("orders = route_to_alpaca_paper(")
+      and "client_order_id" in _ep14)
+check(6, "order payload carries the record's client_order_id",
+      '"client_order_id"' in _lab14[_lab14.index("def _order_payload("):_lab14.index("def _submit_paper_order(")])
+_cy14 = _lab14[_lab14.index("def run_scheduled_cycle("):]
+check(6, "pending roll-call runs at cycle start BEFORE the orphan roll-call",
+      "reconcile_pending(creds)" in _cy14
+      and _cy14.index("reconcile_pending(creds)") < _cy14.index("reconcile_orphans(creds, params)"))
+check(6, "one-per-underlying, one-record-per-contract, roster and fade guards all see PENDING records",
+      _lab14.count('in ("OPEN", "PENDING")') >= 4)
+_wipe()
+_json14.dump([{"trade_set_id": "pend1", "ticker": "AAA", "status": "PENDING", "book": "PROBE",
+               "intent_ts_utc": "2026-09-11T19:51:13.956Z", "orders": {},
+               "legs": {"bullish_call": {"occ_symbol": "AAA260918C00100000", "client_order_id": "pend1-bullish_call",
+                                         "limit_price": 1.0, "contracts": 1}}},
+              {"trade_set_id": "pend2", "ticker": "BBB", "status": "PENDING", "book": "PROBE",
+               "intent_ts_utc": "2026-09-11T19:51:13.956Z", "orders": {},
+               "legs": {"bullish_call": {"occ_symbol": "BBB260918C00100000", "client_order_id": "pend2-bullish_call",
+                                         "limit_price": 1.0, "contracts": 1}}}],
+             open(lab.LOG_PATH, "w", encoding="utf-8"))
+_pg14, _gp14, _nt14 = lab._paper_get, lab.get_open_positions, lab._notify
+def _fake_get14(path, creds):
+    if "pend1-bullish_call" in path:
+        return {"id": "o-pend1", "status": "filled", "filled_qty": "1", "filled_avg_price": "1.0"}
+    import urllib.error as _ue14
+    raise _ue14.HTTPError(path, 404, "not found", None, None)
+lab._paper_get = _fake_get14
+lab.get_open_positions = lambda creds=None: []
+lab._notify = lambda *a, **k: False
+_lbl14 = "pending roll-call: order at the broker -> OPEN with the order attached; none after grace -> VOID, return None"
+try:
+    _po14, _pv14 = lab.reconcile_pending(("k", "s"))
+    _lg14 = {r["trade_set_id"]: r for r in _json14.load(open(lab.LOG_PATH, encoding="utf-8"))}
+    check(6, _lbl14,
+          _po14 == ["pend1"] and _pv14 == ["pend2"]
+          and _lg14["pend1"]["status"] == "OPEN" and _lg14["pend1"]["orders"]["bullish_call"]["order_id"] == "o-pend1"
+          and _lg14["pend2"]["status"] == "VOID"
+          and _lg14["pend2"]["leg_exits"]["bullish_call"]["return_pct"] is None
+          and _lg14["pend2"]["leg_exits"]["bullish_call"]["action"] == "VOID_NEVER_SUBMITTED",
+          f"opened {_po14} voided {_pv14}")
+except Exception as _x14:
+    check(6, _lbl14, False, type(_x14).__name__ + ": " + str(_x14)[:80])
+finally:
+    lab._paper_get, lab.get_open_positions, lab._notify = _pg14, _gp14, _nt14
+_wipe()
+_ml14 = open("scripts/merge_logs.py", encoding="utf-8").read()
+_yml14 = open(".github/workflows/v10_lab.yml", encoding="utf-8").read()
+check(6, "merge_logs resolves the heartbeat file and takes this run's version of any other unknown file instead of aborting",
+      '"data/last_cycle_ok"' in _ml14 and "took this run's version" in _ml14 and "def guard(" in _ml14)
+check(6, "workflow runs the union guard against origin/main inside the push-retry loop, before the final push",
+      "merge_logs.py --guard origin/main" in _yml14
+      and _yml14.index("merge_logs.py --guard origin/main") < _yml14.rindex("git push origin HEAD:main"))
+_r14 = _sp14.run([sys.executable, "scripts/merge_logs.py", "--selftest"], capture_output=True, text=True)
+check(6, "merge_logs selftest: union keeps a record present on one side only; later heartbeat wins",
+      _r14.returncode == 0 and "ALL PASS" in _r14.stdout, (_r14.stdout + _r14.stderr)[-120:].strip())
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.

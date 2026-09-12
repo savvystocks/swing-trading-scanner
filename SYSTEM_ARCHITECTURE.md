@@ -92,6 +92,8 @@ Vultr VPS: poller.py --once  (crontab; git pull --ff-only origin main first)
 
 The inbox JSONL is committed (it is the transport); the SQLite DB is gitignored. Ingest is idempotent on the `candidate_id` primary key, so re-ingesting a committed file is a no-op.
 
+**The trade book rides the same push (`proactive_sandbox_logs.json`).** The lab's trade records travel in the same "Persist forensic logs" commit. The file is whole-file JSON, so a rejected push is rebased and any conflict is resolved at RECORD level by `scripts/merge_logs.py`: union by `trade_set_id` (a shared id keeps its most advanced version), `data/harvest_state.json` by date, `data/last_cycle_ok` by later heartbeat, and any other unknown conflicted file takes the run's own version - the resolver never aborts. After every rebase path the workflow runs `merge_logs.py --guard origin/main`, which restores any record present on origin and missing locally before the push. On the engine side every entry is written as a PENDING record (one `client_order_id` per leg) BEFORE the order is routed and flipped to OPEN after the fill response; `reconcile_pending()` at cycle start settles a PENDING record left by a dead run against the broker by order name (OPEN with the order attached, or VOID with `return_pct` null) and runs before the orphan roll-call so a filled intent keeps its strategy attribution. Every guard that counts open exposure counts PENDING as open.
+
 ### Deduplication & sampling rules (`harvest_scan`, verified)
 
 - **Tracking unit = per-contract-per-day.** State in `data/harvest_state.json` holds `contracts` (occ symbols already logged today) and `tickers` (ticker→payload already computed today). The full feature payload is computed **once upon first qualification** of a ticker that day and reused; a contract already logged today is skipped as `skipped_dup` (executions always log regardless).
@@ -183,7 +185,7 @@ Proves the logger cannot alter or crash live execution: `run_scheduled_cycle` is
 ### Supporting suites
 - `test_harvest_harvester.py` — tiering, per-contract-per-day dedup, band filter, barrier-ts stamping, schema.
 - `test_harvest_poller.py` — ingest, path accumulation, label resolution (up/down/stale), re-run idempotency.
-- `v11_mot_harness.py` — full offline "MOT", **119/119** checks green (routing, exit/autopsy state machine, sizing floor, observability, sourcing filter + flush, edge sensors, spread cap).
+- `v11_mot_harness.py` — full offline "MOT", **168/168** checks green (routing, exit/autopsy state machine, sizing floor, observability, sourcing filter + flush, edge sensors, spread cap).
 - `v12_school_mot.py` — the school MOT, **30/30** green: the load-bearing off-state byte-identity proof (`school_mode=off` produces byte-identical orders and never calls the scorer) plus the fail-closed gate-mode chain, feature-TTL enforcement, Governor-never-grants-LIVE, Treasurer-shadow, and the spread cap.
 - `test_harvest_poller.py` — **15/15** (barrier/label chain + the API-failure classifier: a rate-limit/error writes a MISSING bid_path row excluded from grading, counted in `labels.n_missing`).
 - `test_brain.py` — **15 groups** green (isolation, leakage, weights, EV, calibration, discovery, Student, Council, Governor, Treasurer, convergence).

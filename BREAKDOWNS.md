@@ -686,3 +686,21 @@ False. LESSON: "fail closed" must be read per consequence - closed-for-ENTRIES i
 closed-for-EXITS is exposure; a gate that guards both with one bit needs a second opinion the
 moment its only source fails. And the watchdog that paged is the one that watches the DATA, not
 the exit codes: the 2026-09-04 lesson, vindicated.
+
+2026-09-12 - A NEVER-FILLED ORDER WAS BOOKED AS A -100% LOSS. WHAT BROKE: ORCL (WINNER_PROFILE_X,
+entered 2026-09-10 19:59 UTC) never filled - the limit was cancelled unfilled and the broker
+never held the position - yet after five position-less cycles the untracked-leg counter booked
+CLOSE_UNTRACKED at "worst-known" = -100%, inventing a $111 loss on a trade that never existed
+and a losing day for a strategy's record. ROOT CAUSE: the counter (audit finding #10) was
+written for positions that VANISHED (expired worthless, manually closed) and used -100% as the
+conservative default; it could not tell "vanished" from "never arrived". The tell was in the
+record all along: a leg that never had an excursion tracked (no mfe_pct) was never a position.
+FIX: a leg with no tracked excursion after five position-less cycles is VOIDED - return None,
+status VOID, action VOID_NEVER_FILLED, excluded from every court and ledger - and the ORCL record
+corrected the same way. A vanished position (excursion once tracked) still books worst-known.
+ALSO FOUND the same morning: NBIS260918C00240000 bought 2026-09-11 19:51 UTC exists at the
+broker with NO record in the book (the panel's item 8 window, submitted-but-unlogged); the
+orphan reconcile adopts it on Monday's first cycle with a backstop; the PENDING-intent record
+before routing is promoted to the next build. REGRESSION CHECK: MOT 6.13 asserts the VOID branch
+and its never-tracked condition. LESSON: "conservative default" is only conservative in one
+direction - a fake loss corrupts the evidence exactly as a fake win would.

@@ -1113,6 +1113,10 @@ check(6, "pullers defer recent zero-results instead of marking them done",
 check(6, "sentinel carries session-hole and day-density rows for every evidence store",
       _sn.count('"day_density"') >= 3 and '"session_holes"' in _sn and _sn.count('"jsonl_density"') >= 2)
 check(6, "tuner_apply refuses to judge on a thin corpus", "DENSITY GUARD" in _ta)
+# 6.13 NEVER-FILLED RECORDS ARE VOID, NOT -100% (BREAKDOWNS 2026-09-12)
+check(6, "exit engine voids a never-filled record instead of booking a fake -100%",
+      '"action": "VOID_NEVER_FILLED"' in open("sandbox_proactive_lab.py", encoding="utf-8").read()
+      and 'if _mc >= 5 and "mfe_pct" not in _pth:' in open("sandbox_proactive_lab.py", encoding="utf-8").read())
 # 6.12 MARKET GATE SECOND OPINION (BREAKDOWNS 2026-09-11 third entry): when the Alpaca clock
 # call raises, the gate must answer from the exchange calendar, never a blanket False.
 _pg_bak = lab._paper_get

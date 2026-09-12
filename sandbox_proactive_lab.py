@@ -1802,6 +1802,19 @@ def manage_open_positions(creds, params, positions=None):
                 # (worst-known if none) so the record leaves the open set.
                 _pth = rec.setdefault("leg_path", {}).setdefault(leg_name, {})
                 _mc = _pth["missing_cycles"] = _pth.get("missing_cycles", 0) + 1
+                if _mc >= 5 and "mfe_pct" not in _pth:
+                    # NEVER FILLED (2026-09-12): the broker never showed this position at all -
+                    # the limit was cancelled unfilled. Booking -100% here invented a loss on a
+                    # trade that never existed (ORCL, WINNER_PROFILE_X, 2026-09-11). VOID it:
+                    # no return, excluded from every court and ledger, and say so.
+                    rec["leg_exits"][leg_name] = {
+                        "occ": occ, "closed_at": _now_iso_ms(), "return_pct": None,
+                        "reason": "VOID: never filled - no broker position in " + str(_mc)
+                                  + " cycles since entry and no excursion ever tracked",
+                        "action": "VOID_NEVER_FILLED", "closed_ok": True}
+                    rec["status"] = "VOID"
+                    print(f"  VOID {rec.get('ticker')} {occ}: never filled - record retired without a return", flush=True)
+                    continue
                 if _mc >= 5:
                     _lr = _pth.get("last_ret", _pth.get("mae_pct", -100.0))
                     rec["leg_exits"][leg_name] = {

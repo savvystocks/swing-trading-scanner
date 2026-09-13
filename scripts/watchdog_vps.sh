@@ -34,6 +34,8 @@ if [ "$MARKET" = "1" ] && [ "$AGE" -gt 30 ]; then
       -d text="WATCHDOG: no inbox commit for ${AGE}m during market hours - the engine may be stalled (check cron-job.org + GHA v10-lab runs)" \
       >/dev/null 2>&1
   fi
+  # evidence bundle for the page (2026-09-13): never blocks or fails the alarm
+  bash "$REPO/scripts/page_bundle.sh" "watchdog: no inbox commit for ${AGE}m" >/dev/null 2>&1 || true
 fi
 DISK_PCT=$(df / --output=pcent 2>/dev/null | tail -1 | tr -dc '0-9')
 if [ -n "$DISK_PCT" ] && [ "$DISK_PCT" -gt 85 ]; then

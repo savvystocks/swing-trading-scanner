@@ -19,6 +19,10 @@ when the engine, the snapshot landing, or the data freshness goes quiet.
 - Freshness: `scripts/freshness_sentinel.py` (08:00 UTC): one row per evidence store and job with
   lag limits (session holes, day density, jsonl density, schedule rows, student model age).
 - Failover exits: `scripts/engine_failover_exits.py` (the VPS can run exits if GHA is down).
+- Page bundle: `scripts/page_bundle.sh` runs from both watchdogs' page paths and writes
+  `reports/shadow_lab/page_bundles/<utc>_<reason>.md` (last-good stamp, last commits, last engine
+  runs from the public Actions API, watchdog log tails, sentinel rows, book counts, which map files
+  to read), pushed to main with `[skip ci]`. Start every page investigation from the bundle.
 
 ## Exercise
 - `tail -20 /home/poller/engine_watch.log`; `./.venv/bin/python scripts/freshness_sentinel.py`.

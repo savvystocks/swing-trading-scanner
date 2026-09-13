@@ -35,6 +35,7 @@ from the code. This map is the maintained verification source for the engine; `s
 | candidate-scan.md | UW flow rows -> ticker candidates, pricey pool, student pool | MOT 6.17 pool checks |
 | probe-roster.md | the seven-strategy probe loop, rotation, attempt budget | a cycle log's `probes:` line |
 | student-seat.md | the pickers: pool, rank, select, budget, export | drill scenarios 6-7, MOT 6.11/6.17 |
+| credit-spread.md | the weekly XSP credit spread and the $5k defined-risk probes | drill scenario 5, Monday settle line |
 | entry-path.md | enter_proactive_set: guards, legs, repricing, PENDING, routing | drill scenarios 1-4, MOT 6.14 |
 | exit-engine.md | exits, backstops, VOID, autopsy | MOT dimension 3, 6.13 |
 | reconcile.md | pending-intent and orphan roll-calls, stale orders, log integrity | MOT 6.14 (both) |

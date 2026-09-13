@@ -12,6 +12,7 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MAP = os.path.join(REPO, "docs", "feature_map")
+MAP_BORN = "2026-09-13"          # incidents dated from here on must appear in a Traps section
 SECTIONS = ["## What", "## Where", "## Exercise", "## Healthy", "## Evidence", "## Checks", "## Traps"]
 NO_SECTIONS = {"README.md", "vps-crons.md", "gate-and-ship.md"}
 ALLOW_MISSING = {"data/harvest.db", "data/uw_history.db", "data/hourly_paths.db", "data/harvest_inbox",
@@ -59,12 +60,24 @@ def main():
                 continue
             if sym and not defines(full, sym):
                 misses.append(f"{name}: `{path}:{sym}` not defined")
+    # EVERY NEW INCIDENT MUST BE MAPPED (the video's rule: a review comment becomes a hard check):
+    # each BREAKDOWNS.md entry dated on or after the map's birth must be cited by date in some
+    # subsystem file's Traps. Same-day entries are matched by date, so one date covers its entries.
+    try:
+        bd = open(os.path.join(REPO, "BREAKDOWNS.md"), encoding="utf-8").read()
+        dates = sorted({m.group(1) for m in re.finditer(r"^(20\d\d-\d\d-\d\d)", bd, re.M) if m.group(1) >= MAP_BORN})
+        alltxt = " ".join(open(os.path.join(MAP, n), encoding="utf-8").read() for n in os.listdir(MAP) if n.endswith(".md"))
+        for d in dates:
+            if d not in alltxt:
+                misses.append(f"BREAKDOWNS entry dated {d} is not mapped - add it to the Traps of the subsystem it hit")
+    except Exception as e:
+        misses.append(f"BREAKDOWNS cross-check failed: {type(e).__name__}")
     if misses:
         print("feature map lint: FAIL")
         for m in misses:
             print("  " + m)
         return 1
-    print(f"feature map lint: OK ({n_cites} citations resolved)")
+    print(f"feature map lint: OK ({n_cites} citations resolved, incidents since {MAP_BORN} mapped)")
     return 0
 
 

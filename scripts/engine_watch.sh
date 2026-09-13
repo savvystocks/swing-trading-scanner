@@ -17,6 +17,8 @@ alarm() {
     curl -fsS -m 15 "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
       -d chat_id="${TELEGRAM_CHAT_ID}" -d text="ENGINE WATCH: ${MSG}" >/dev/null || true
   fi
+  # evidence bundle for the page (2026-09-13): never blocks or fails the alarm
+  bash "$REPO/scripts/page_bundle.sh" "engine_watch: ${MSG}" >/dev/null 2>&1 || true
 }
 
 # market-hours guard (UTC): 13:40-20:05 Mon-Fri, skip outside

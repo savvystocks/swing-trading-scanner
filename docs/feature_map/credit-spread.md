@@ -1,0 +1,50 @@
+# Credit spread (CREDIT_SPREAD_W) and the $5k defined-risk probes
+
+## What
+The income seat's candidate: once a week, sell the 2%-OTM XSP put and buy the 4%-OTM put
+(max loss = width minus credit, about $1,200 on XSP), European and cash-settled so no
+sell-to-close order ever exists and it can never day-trade. Judged by the court on ISO weeks
+(3 of 8 as of 2026-09-11; week four expired Friday 2026-09-11 and settles on Monday's first
+cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) was retired in the
+2026-09-10 cull. Unseatable on the proof account while its max loss exceeds the $1,000 cap
+(NORTH_STAR v1.7); the v1.8 income-seat amendment lets a narrower width seat at the cap.
+
+## Where
+- `fivek_probes.py:cycle` - called every engine cycle from `sandbox_proactive_lab.py:run_scheduled_cycle`
+  (`fivek_probes.cycle(creds, allow_entries=not (brake_active or halt_active))`), fail-open.
+- `fivek_probes.py:_enter` - one entry per structure per ISO week, first cycle at or after 15:00
+  UTC; the LONG wing is bought FIRST so a partial fill can never leave a naked short; broker
+  idempotency check (`fivek_probes.py:_held`) before entering; limits from `fivek_probes.py:_quote`;
+  orders via `fivek_probes.py:_order`; OCCs from `fivek_probes.py:_occ`.
+- `fivek_probes.py:_settle_one` - after Friday expiry, settles each open record against the ^XSP
+  close (`fivek_probes.py:_xsp_close_series`, yfinance) and books `settle.pnl_usd`.
+- Config: `fivek_probes.py:_cfg` reads `probe.fivek` from `fade_book_spec.json`.
+- Records: `book: PROBE`, `probe_strategy: CREDIT_SPREAD_W`, NO legs dict (the options exit engine
+  ignores them), `occ` + `occ_more` so the orphan reconciler knows every leg.
+
+## Exercise
+- `./.venv/bin/python scripts/regime_drill.py | grep -n "PUT_DEBIT_W\|fivek"` (scenario 5: wings first).
+- Live: `gh run view <id> --log | grep -in "fivek\|CREDIT_SPREAD\|settle"` on Monday's first cycle.
+- Standing: `grep "CREDIT_SPREAD_W" /home/poller/sunday_boundary.log | tail -3`.
+
+## Healthy
+- `PROBE CREDIT_SPREAD_W: 3/8 live virgin weeks vs control - HOLD` in the Friday court.
+- A settle line on the first cycle after expiry with a `pnl_usd`; `fivek probes skipped (fail-open): ...`
+  means the module raised and did nothing - read the reason.
+
+## Evidence
+- Records with `settle`; the court's weekly unit (`scripts/sunday_boundary.py` `weekmeans`);
+  the 2.5-year backtest in `scripts/fivek_backtests.py` (+$2.3k over 114 weeks, superseded-basis caveats apply).
+
+## Checks
+- Drill scenario 5 (bear-only PUT_DEBIT_W, wings first); the court's weekly cadence branch.
+
+## Traps
+- Regime gate: `probe.fivek.credit_spread.regime_gate` (default true) stands the spread down in a
+  BEAR week (the playbook on real SPY quotes: +$64/week in mild tape, bleeds in bear); an unknown
+  regime allows the entry (fail-open, a missed income week beats a blocked settle path).
+- 2026-08-11 FRIENDLY-FIRE ADOPTION class: bare-occ records must stay known to
+  `sandbox_proactive_lab.py:reconcile_orphans` (they are: occ + occ_more).
+- Settlement depends on yfinance returning ^XSP; a missing close leaves the record open until the
+  next cycle that can fetch it. Check the Monday log if a week's settle line is missing.
+- Never propose a sell-to-close for these; they are cash-settled by design.

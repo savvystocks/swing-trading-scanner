@@ -1275,6 +1275,26 @@ check(6, "feature map: every cited file and function resolves and every subsyste
 _pm = _sp18.run([sys.executable, "scripts/performance_map_lint.py"], capture_output=True, text=True)
 check(6, "performance map: every quoted number agrees with a fresh returns ledger and every active strategy is mapped",
       _pm.returncode == 0, ((_pm.stdout or "") + (_pm.stderr or "")).strip()[-240:])
+# 6.20 GATE FRESHNESS (BREAKDOWNS 2026-09-13: pushed on a stale green sentinel): the verification
+# stamps a sentinel that names the tree, and the freshness check reports STALE once the tree moves.
+_ve = open("scripts/verify_engine.sh", encoding="utf-8").read()
+_gf = open("scripts/gate_fresh.sh", encoding="utf-8").read()
+check(6, "verify_engine.sh stamps the green sentinel through gate_fresh.sh only on ALL GREEN",
+      "gate_fresh.sh --stamp" in _ve and 'rm -f /tmp/gate_green /tmp/verify_green' in _ve
+      and "git rev-parse HEAD" in _gf and "STALE" in _gf and "md5sum" in _gf)
+try:                                                   # with the sentinel set aside, the check must refuse
+    _sent = "/tmp/verify_green"; _aside = None
+    if os.path.exists(_sent):
+        _aside = _sent + ".mot"; os.replace(_sent, _aside)
+    try:
+        _gfr = _sp18.run(["bash", "scripts/gate_fresh.sh"], capture_output=True, text=True)
+    finally:
+        if _aside:
+            os.replace(_aside, _sent)
+    check(6, "gate freshness: with no green sentinel for this tree the check refuses (exit 1, names the fix)",
+          _gfr.returncode != 0 and "no green sentinel" in (_gfr.stdout or ""), (_gfr.stdout or "").strip()[-100:])
+except Exception as _gfe:
+    check(6, "gate freshness: with no green sentinel for this tree the check refuses", False, type(_gfe).__name__)
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.

@@ -5,7 +5,8 @@ rule is, which exact evidence cell it stands on (basis, window, exit, sizing, re
 numbers WITH their sample sizes, how to recompute them, what healthy looks like, where live results
 land, the checks that guard the claim, and the traps that have already produced a wrong number.
 
-Every number in these files is a token of the form `[[strategies.NAME.side.key = value]]` that
+Every number in these files is a token of the form `[[ strategies.NAME.side.key = value ]]`
+(written without the inner spaces in the files) that
 `scripts/returns_ledger.py --update-map` rewrites from `reports/performance/ledger.json`.
 `scripts/performance_map_lint.py` (MOT 6.19) fails the gate when a token disagrees with the ledger,
 when a token names a key the ledger does not hold, when an active strategy has no file, or when

@@ -12,7 +12,7 @@ if $PY scripts/feature_map_lint.py > /tmp/verify_lint.log 2>&1; then tail -1 /tm
 echo "=== 2/3 regime drill ==="
 if $PY scripts/regime_drill.py > /tmp/verify_drill.log 2>&1; then tail -2 /tmp/verify_drill.log; else grep -n "FAIL" /tmp/verify_drill.log | head -8; tail -2 /tmp/verify_drill.log; rc=1; fi
 echo "=== 3/3 ship gate (compile + suites + MOT) ==="
-rm -f /tmp/gate_green
+rm -f /tmp/gate_green /tmp/verify_green
 if [ -f "$HOME/vps_ship_grid.sh" ]; then
   bash "$HOME/vps_ship_grid.sh" > /tmp/verify_gate.log 2>&1
   if [ -f /tmp/gate_green ]; then tail -3 /tmp/verify_gate.log; else grep -n "FAIL\|MISSING" /tmp/verify_gate.log | head -8; tail -3 /tmp/verify_gate.log; rc=1; fi
@@ -20,5 +20,11 @@ else
   echo "gate script $HOME/vps_ship_grid.sh not found"; rc=1
 fi
 echo "=== verdict ==="
-[ $rc -eq 0 ] && echo "VERIFY: ALL GREEN" || echo "VERIFY: RED (see /tmp/verify_*.log)"
+rm -f /tmp/verify_green
+if [ $rc -eq 0 ]; then
+  echo "VERIFY: ALL GREEN"
+  bash scripts/gate_fresh.sh --stamp        # the sentinel names THIS tree; any edit makes it stale
+else
+  echo "VERIFY: RED (see /tmp/verify_*.log)"
+fi
 exit $rc

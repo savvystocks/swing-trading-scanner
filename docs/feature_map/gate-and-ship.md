@@ -20,8 +20,11 @@ verified there, then committed and pushed from there.
 1. Copy the current VPS files to the scratchpad (`scp poller@...:~/swing-trading-scanner/<f> ...`)
    and confirm `md5sum` matches HEAD before editing.
 2. Edit the scratch copies; `python -m py_compile` each.
-3. `scp` them back; `bash ~/vps_ship_grid.sh 2>&1 | tail -4; [ -f /tmp/gate_green ]`.
-4. On green: `git add <files> && git commit -F <msg> && git push origin main`; commit messages end
+3. `scp` them back; `bash scripts/verify_engine.sh` (lint, drill, gate; on ALL GREEN it stamps
+   `/tmp/verify_green` with the HEAD sha and a hash of the working tree).
+4. Gate the commit on `bash scripts/gate_fresh.sh` (exit 0 only when the sentinel describes the
+   tree as it is now), never on the existence of a file: `bash scripts/gate_fresh.sh && git add
+   <files> && git commit -F <msg> && git push origin main`; commit messages end
    with `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`; data and docs commits carry `[skip ci]`.
 5. Every fix adds its BREAKDOWNS.md entry in the same commit and names its regression check;
    `SYSTEM_ARCHITECTURE.md` gets the present-tense reality; `ROADMAP.md` the decision.
@@ -37,6 +40,9 @@ verified there, then committed and pushed from there.
 
 ## Traps
 - 2026-09-02 (evening) PUSHED ON A RED MOT (process breakdown).
+- 2026-09-13 PUSHED WITHOUT THE GATE ON A STALE GREEN SENTINEL: a lint failed, the chain stopped
+  before the gate, and `[ -f /tmp/gate_green ]` found the previous run's file. The sentinel now
+  names the tree it certified (`scripts/gate_fresh.sh`); a chain that tests a bare file is wrong.
 - 2026-09-11 PUSHES BLOCKED BY A 131 MB CORPUS (never `git add -A`; corpora are gitignored).
 - 2026-07-03 CRLF PASS ZEROED A SCRIPT; heredoc quoting through ssh mangles Python - write scratch
   files and `scp` them.

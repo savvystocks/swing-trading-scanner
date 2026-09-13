@@ -777,3 +777,21 @@ unchanged, export executed slice, spec keys) and regime drill scenario 7 (pricey
 cheap put enters as a 25-lot LONG_PUT through the dry-run entry path). LESSON: before a picker is
 wired to a pool, write down the universe its evidence was measured on and diff it against the pool's
 filters - a seat cannot find an edge in a band the evidence never contained.
+
+2026-09-13 - PUSHED WITHOUT THE GATE ON A STALE GREEN SENTINEL (process breakdown, self-inflicted,
+the 2026-09-02 class). WHAT BROKE: the returns-map ship chain ran the new performance-map lint,
+which FAILED on an illustrative token in docs/performance_map/README.md; the `&&` chain stopped
+before scripts/verify_engine.sh, so the drill and the MOT never ran - and the commit step then
+tested `[ -f /tmp/gate_green ]`, found the sentinel left by the PREVIOUS green run, and pushed
+ce90f120 to main. The MOT's new 6.19 check would have failed on that tree. ROOT CAUSE: a
+green-sentinel that only asserts "a gate passed once" instead of "the gate passed on THIS tree";
+every chain since 2026-09-01 has carried the same flaw and the 2026-09-02 entry fixed the habit,
+not the mechanism. FIX (same night): scripts/gate_fresh.sh - verify_engine.sh stamps
+/tmp/verify_green with the HEAD sha plus a hash of the working tree's status and diff, only on ALL
+GREEN, and ship chains gate the commit on `bash scripts/gate_fresh.sh` (exit 0 only when the
+sentinel describes the tree as it is now; any edit, new file or commit makes it stale). The README
+example token was rewritten so the lint cannot match it, and the offending tree was re-verified
+in full before the corrective commit. REGRESSION CHECK: MOT 6.20 asserts verify_engine.sh stamps
+through gate_fresh.sh and that gate_fresh.sh reports STALE after a change to the tree; the map's
+gate-and-ship.md carries the trap. LESSON: "the gate is green" must be a statement about a tree,
+not about a file; a sentinel without an identity is a lie waiting for the next `&&` to break.

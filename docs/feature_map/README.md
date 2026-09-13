@@ -46,6 +46,12 @@ from the code. This map is the maintained verification source for the engine; `s
 | telegram-and-watchdogs.md | notifications, owner commands, dead-man watchdogs, auto-rollback | watchdog logs |
 | gate-and-ship.md | how a change is verified and shipped | `bash ~/vps_ship_grid.sh` |
 
+## The returns counterpart
+`docs/performance_map/` maps performance the same way: one file per active strategy whose numbers
+are tokens rewritten from `reports/performance/ledger.json` by `scripts/returns_ledger.py`
+(`--update-map`), linted by `scripts/performance_map_lint.py` (MOT 6.19), with nightly divergence
+alarms from `scripts/returns_alarms.py`. "How are the strategies doing" is one command there.
+
 ## Conventions for the files
 Every subsystem file has the same seven sections so an agent can find the same thing in the same
 place: What, Where, Exercise, Healthy, Evidence, Checks, Traps. Citations are backticked

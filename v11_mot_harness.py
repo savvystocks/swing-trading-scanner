@@ -1269,6 +1269,12 @@ import subprocess as _sp18
 _fm = _sp18.run([sys.executable, "scripts/feature_map_lint.py"], capture_output=True, text=True)
 check(6, "feature map: every cited file and function resolves and every subsystem file has its seven sections",
       _fm.returncode == 0, ((_fm.stdout or "") + (_fm.stderr or "")).strip()[-240:])
+# 6.19 PERFORMANCE MAP LINT (owner order 2026-09-13 "do this but for returns"): every number the
+# returns map quotes must equal the ledger's, every active strategy must have a file, and the
+# ledger may not be older than ten days - a stale performance claim fails the gate.
+_pm = _sp18.run([sys.executable, "scripts/performance_map_lint.py"], capture_output=True, text=True)
+check(6, "performance map: every quoted number agrees with a fresh returns ledger and every active strategy is mapped",
+      _pm.returncode == 0, ((_pm.stdout or "") + (_pm.stderr or "")).strip()[-240:])
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.

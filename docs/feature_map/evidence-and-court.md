@@ -28,6 +28,9 @@ and the scoreboard that reports where the system stands against the North Star.
   searches); superseded corpora in `reports/research/superseded/`.
 
 ## Exercise
+- `./.venv/bin/python scripts/returns_ledger.py` - the one-command performance table (live as the
+  court reads it, archive on the executable basis, court standing), written to
+  `reports/performance/ledger.md`; `--update-map` refreshes `docs/performance_map/`.
 - `tail -40 /home/poller/sunday_boundary.log`, `/home/poller/tuner.log`, `/home/poller/corpus_nightly.log`.
 - Density: `wc -l reports/research/probe_tuner_rows_v3.jsonl` and the sentinel's `jsonl_density` rows.
 - A strategy's honest cell: `grep <NAME> reports/research/basis_diff_v2_v3_2026-09-11.md`.

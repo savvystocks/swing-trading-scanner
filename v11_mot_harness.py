@@ -1211,6 +1211,57 @@ check(6, "workflow runs the union guard against origin/main inside the push-retr
 _r14 = _sp14.run([sys.executable, "scripts/merge_logs.py", "--selftest"], capture_output=True, text=True)
 check(6, "merge_logs selftest: union keeps a record present on one side only; later heartbeat wins",
       _r14.returncode == 0 and "ALL PASS" in _r14.stdout, (_r14.stdout + _r14.stderr)[-120:].strip())
+# 6.17 STUDENT CHEAP-PICK PATH (owner order 2026-09-12; BREAKDOWNS 2026-09-12 fourth entry): the seat
+# scores the ARCHIVE universe (both sides, ask >= 0.30 with no ceiling, DTE >= 1) and executes only
+# picks under the cap at engine sizing; an unaffordable pick spends a budget unit once per contract-day.
+import fade_book as _fbcp
+_lab_cp = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+check(6, "student seat ranks the student pool, not the dip strategies' $4-9 call pool",
+      "_student_rank(_STUDENT_CANDS, creds, _plog)" in _lab_cp and "_student_rank(_PRICEY_CANDS" not in _lab_cp)
+check(6, "student pool: both sides, archive premium band, ask floor with no ceiling, DTE floor 1, keyed by contract",
+      '"sides": ["call", "put"]' in _lab_cp and '"prem_min": 50000, "prem_max": 1000000' in _lab_cp
+      and '"dte_min": 1' in _lab_cp and "sagg[_occ_s]" in _lab_cp and '_dte_s >= int(_spool["dte_min"])' in _lab_cp)
+_rk = [(0.9, "STUDENT_X", {"ticker": "PRC", "occ": "PRC261016C00100000"}, [0.0] * 15, 25.0),
+       (0.8, "STUDENT_X", {"ticker": "CHP", "occ": "CHP261016P00010000"}, [0.0] * 15, 0.40),
+       (0.7, "STUDENT_X", {"ticker": "OPN", "occ": "OPN261016C00010000"}, [0.0] * 15, 0.50)]
+_sel = lab._student_select(_rk, 10.0, {"OPN"})
+check(6, "student select: over-cap pick is unaffordable, cheap pick enters, open underlying is skipped",
+      [a for _, a in _sel] == ["unaffordable", "enter", "open_ticker"])
+check(6, "student select: no live ask or no cap -> nothing enters (fail-closed)",
+      all(a != "enter" for _, a in lab._student_select([(0.9, "S", {"ticker": "A"}, [], None)], 10.0, set()))
+      and all(a != "enter" for _, a in lab._student_select(_rk, None, set())))
+check(6, "student weekly budget counts deduplicated unaffordable picks from the score log",
+      lab._student_week_used("STUDENT_X", [], {"STUDENT_X": {("A", "2026-09-12"), ("B", "2026-09-12")}}) == 2
+      and lab._student_week_used("STUDENT_X", [], {}) == 0)
+_pcb = lab._PROBE_CONTRACT.get("c")
+try:
+    _expcp = (date.today() + timedelta(days=5)).isoformat()
+    lab._PROBE_CONTRACT["c"] = {"ticker": "CHP", "occ": "CHP261016P00010000", "expiry": _expcp, "strike": 10.0,
+                                "flow_type": "put", "alert_ask": 0.45, "live_ask": 0.40, "student": True}
+    _lg = lab.build_legs("CHP", {"macro": {"spot": 10.5}, "iv_term": {"iv_front": 40.0, "iv_back": 38.0}})
+    _lp = _lg.get("bearish_put") or {}
+    check(6, "student trigger leg: a put pick builds a LONG_PUT on the picker's contract, sized to the budget off the live ask",
+          list(_lg) == ["bearish_put"] and _lp.get("structure") == "LONG_PUT" and _lp.get("occ_symbol") == "CHP261016P00010000"
+          and _lp.get("contracts") == int(lab.LEG_BUDGET // 40) and abs(_lp.get("entry_premium", 0) - 0.40) < 1e-9
+          and _lp.get("occ_source") == "student_pick" and abs(_lp.get("band_lo", 0) - 0.30) < 1e-9,
+          str({k: _lp.get(k) for k in ("structure", "contracts", "entry_premium", "occ_source")}))
+    lab._PROBE_CONTRACT["c"] = {"ticker": "DIP", "occ": "DIP261016C00050000", "expiry": _expcp, "strike": 50.0,
+                                "flow_type": "call", "alert_ask": 6.0}
+    _lg2 = lab.build_legs("DIP", {"macro": {"spot": 50.0}, "iv_term": {"iv_front": 40.0, "iv_back": 38.0}})
+    _lc = _lg2.get("bullish_call") or {}
+    check(6, "dip strategies' trigger leg unchanged: one call contract at the alert ask, no student label",
+          list(_lg2) == ["bullish_call"] and _lc.get("contracts") == 1 and abs(_lc.get("entry_premium", 0) - 6.0) < 1e-9
+          and "occ_source" not in _lc)
+finally:
+    lab._PROBE_CONTRACT["c"] = _pcb
+_ex_txt = open("scripts/student_export.py", encoding="utf-8").read()
+check(6, "student export judges the pull rule on the EXECUTED slice under the cap",
+      "def executed_slice(" in _ex_txt and "walk_forward_executed_slice=exec_slice" in _ex_txt and "_judge = exec_slice" in _ex_txt)
+_spc = ((_fbcp.spec().get("probe") or {}).get("student") or {})
+check(6, "spec: student pool block, exec cap and A's ALL threshold cohort are present",
+      isinstance(_spc.get("pool"), dict) and _spc.get("exec_max_ask") is not None
+      and ((_spc.get("probes") or {}).get("STUDENT_A") or {}).get("threshold_cohort") == "ALL",
+      str({"pool": bool(_spc.get("pool")), "exec_max_ask": _spc.get("exec_max_ask")}))
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.
@@ -1248,7 +1299,7 @@ check(6, "student: prior-close helper drops a today-dated bar (no regime input c
       _fb.prev_close_series([1.0, 2.0, 3.0], ["2026-09-08", "2026-09-09", "2026-09-10"], "2026-09-10") == [1.0, 2.0]
       and _fb.prev_close_series([1.0, 2.0, 3.0], ["2026-09-08", "2026-09-09", "2026-09-10"], "2026-09-11") == [1.0, 2.0, 3.0])
 check(6, "student: engine wiring is the one-seat ranked design (rank, seat, weekly budget, stamp, passive log)",
-      all(x in _lab_s for x in ("def _student_rank", '("STUDENT", None)', "_student_week_used(name, log)",
+      all(x in _lab_s for x in ("def _student_rank", '("STUDENT", None)', "_student_week_used(name, log, _STUDENT_CONSUMED)",
                                  'rec["student_p"]', "STUDENT_SCORES_LOG", "spy_prev_readings()",
                                  'fade_book.spy_regime() in (None, "BEAR")')))
 check(6, "student: no stale per-name STUDENT_ hooks remain in the roster loop",

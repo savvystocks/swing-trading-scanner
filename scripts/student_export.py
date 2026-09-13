@@ -52,11 +52,39 @@ def cohort_mask(rows, name):
             out.append(r["side"] == "C" and 4.0 <= r["entry"] <= 9.9)
         elif name == "FADE":
             out.append((r["smd"] < 0 and r["sp"] < 0) if r["side"] == "C" else (r["smd"] > 0 and r["sp"] > 0))
+        elif name == "CAP1000":
+            out.append(0.30 <= r["entry"] <= 9.90)
         elif name == "ALL":
             out.append(True)
         else:
             raise ValueError(f"unknown cohort {name}")   # never silently 'everything' (2026-09-11: F duplicated A)
     return np.array(out)
+
+
+def executed_slice(picks, rows, ei, cap):
+    """The walk-forward picks the seat would actually TRADE under the cap (entry <= cap), in
+    real dollars at engine sizing (lots = floor($1,000 / cost)) - the study's rows
+    (reports/research/student_spread_2026-09-12.md). The auto-pull rule reads this."""
+    idx = [i for i in picks if rows[i]["entry"] <= cap]
+    if not idx:
+        return {"trades": 0, "picks": len(picks), "share_executed": 0.0}
+    wk = {}
+    pct = []
+    for i in idx:
+        r = rows[i]; p = r["rets"][ei] if r["rets"][ei] is not None else 0.0
+        lots = max(1, int(10.0 // r["entry"]))
+        usd = lots * p / 100.0 * r["entry"] * 100.0
+        pct.append(p)
+        k = date.fromisoformat(r["day"]).isocalendar()[:2]
+        wk[k] = wk.get(k, 0.0) + usd
+    w = np.array([wk[x] for x in sorted(wk)])
+    t = float(w.mean() / (w.std(ddof=1) / len(w) ** 0.5)) if len(w) > 2 and w.std(ddof=1) > 0 else 0.0
+    h = len(w) // 2
+    return {"trades": len(idx), "picks": len(picks), "share_executed": round(len(idx) / len(picks), 3),
+            "weeks": len(w), "per_trade": round(float(np.mean(pct)), 1), "win": round(float(np.mean(np.array(pct) > 0)), 3),
+            "wk_t": round(t, 2), "pos_weeks": round(float(np.mean(w > 0)), 2),
+            "h1": round(float(w[:h].mean()), 0) if h else 0.0, "h2": round(float(w[h:].mean()), 0) if len(w) - h else 0.0,
+            "total": round(float(w.sum())), "cap": cap}
 
 
 def open_case(name, days=14):
@@ -121,6 +149,7 @@ def main():
             q = 1.0 - min(0.5, (k * 1.5) / per_week)
             thr[f"k{k}"] = float(np.quantile(oos[tail], q))
         # walk-forward result on the THRESHOLD cohort (what this picker will actually see live)
+        exec_slice = None
         try:
             _sc = oos.copy(); _sc[~have_t] = np.nan
             _pk = sf.pick_weekly(_sc, days, have_t, int(cfg.get("k_per_week", 3)))
@@ -128,6 +157,12 @@ def main():
             live_slice = ({"trades": _ev["trades"], "weeks": _ev["weeks"], "per_trade": round(_ev["per_trade"], 1),
                            "win": round(_ev["win"], 3), "wk_t": round(_ev["wk_t"], 2), "pos_weeks": round(_ev["pos_weeks"], 2),
                            "total": round(_ev["total"])} if _ev else None)
+            # EXECUTED SLICE (owner order 2026-09-12): what the seat TRADES under the cap - the
+            # picks whose entry ask fits exec_max_ask, at engine sizing. Both the pull rule and
+            # the court's expectation live here, not on the threshold cohort as a whole.
+            _cap = cfg.get("exec_max_ask", stu.get("exec_max_ask"))
+            if _cap is not None:
+                exec_slice = executed_slice(_pk, rows, ei, float(_cap))
         except Exception as _le:
             live_slice = {"error": type(_le).__name__}
         # final model on all rows of the cohort
@@ -148,15 +183,19 @@ def main():
                    n_train=int(cm.sum()), feats=sfx.FEATS, thresholds=thr, parity_max_err=err,
                    walk_forward_auc=auc, training_nan_rate=nan_rate, threshold_cohort=thr_co,
                    walk_forward_on_threshold_cohort=live_slice,
+                   walk_forward_executed_slice=exec_slice,
                    corpus_sha256=hashlib.sha256(open(ASOF, "rb").read()).hexdigest()[:16])
         fname = f"reports/fade_meta/student_{name}_{today}.json"
         json.dump(out, open(fname, "w", encoding="utf-8"))
         cfg["model"] = fname
-        _neg = bool(isinstance(live_slice, dict) and live_slice.get("wk_t") is not None
-                    and live_slice.get("trades", 0) >= 40 and live_slice["wk_t"] <= -1.5)
+        _judge = exec_slice if isinstance(exec_slice, dict) and exec_slice.get("wk_t") is not None else live_slice
+        _neg = bool(isinstance(_judge, dict) and _judge.get("wk_t") is not None
+                    and _judge.get("trades", 0) >= 40 and _judge["wk_t"] <= -1.5)
         cfg["pulled"] = bool(auc == auc and auc <= 0.50) or _neg   # owner decision 4, extended 2026-09-11: a
         if cfg["pulled"]:                                          # picker that LOSES on the slice it would
             cfg["live"] = False                                    # trade (t <= -1.5, n >= 40) never goes live
+        if exec_slice is not None:                                 # 2026-09-12: judged on the EXECUTED slice
+            lines.append(f"{name}: executed slice (ask <= {exec_slice.get('cap')}): {exec_slice}")
         spec["probe"].setdefault("tuning", {}).setdefault(name, {})["applied"] = today   # court clock restarts
         if "STUDENT_FAMILY" not in (spec["probe"].get("priority") or []):
             spec["probe"].setdefault("priority", []).append("STUDENT_FAMILY")             # the court judges the FAMILY

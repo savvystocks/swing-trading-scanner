@@ -459,6 +459,71 @@ def _student_cfg():
         return {}
 
 
+def _student_pool_cfg():
+    """The student pool's universe (spec probe.student.pool): the ARCHIVE universe the pickers
+    were trained on. None when the seat is disabled; a missing block falls back to the archive
+    values, loudly, rather than silently emptying the seat."""
+    cfg = _student_cfg()
+    if not cfg or not cfg.get("enabled"):
+        return None
+    d = {"sides": ["call", "put"], "ask_min": 0.30, "prem_min": 50000, "prem_max": 1000000,
+         "spread_max_pct": 2.0, "dte_min": 1, "max_pool": 30}
+    p = cfg.get("pool")
+    if not isinstance(p, dict):
+        print("  student pool: spec probe.student.pool missing - archive-universe defaults in force", flush=True)
+        return d
+    d.update({k: p[k] for k in d if k in p})
+    return d
+
+
+_STUDENT_CONSUMED = {}          # this cycle's {picker: {(occ, day)}} of budget units spent on
+                                # picks the seat could not afford (read once per cycle)
+
+
+def _student_consumed_this_week():
+    """Budget units spent on picks the seat could not afford this ISO week, from the passive
+    score log: {picker: {(occ, day), ...}}, deduplicated - a contract that re-alerts every
+    cycle costs its picker ONE unit, never the week."""
+    out = {}
+    try:
+        iso = date.today().isocalendar()[:2]
+        if os.path.exists(STUDENT_SCORES_LOG):
+            with open(STUDENT_SCORES_LOG, encoding="utf-8") as f:
+                for line in f:
+                    if '"budget_consumed": true' not in line:
+                        continue
+                    r = json.loads(line)
+                    d = (r.get("ts") or "")[:10]
+                    if d and date.fromisoformat(d).isocalendar()[:2] == iso:
+                        out.setdefault(r.get("model"), set()).add((r.get("occ"), d))
+    except Exception:
+        pass
+    return out
+
+
+def _student_select(ranked, exec_max_ask, open_tk):
+    """Pure: the seat's decision per ranked pick -> [(pick, action)], action in enter /
+    unaffordable / open_ticker. The study spent one of the three weekly picks on EVERY pick it
+    made and traded only the cheap ones; the seat does the same: a pick whose live ask is over
+    the cap is logged, consumes a budget unit and is not traded. An open underlying costs
+    nothing (it was never a pick the study could have made twice)."""
+    out = []
+    try:
+        cap = float(exec_max_ask) if exec_max_ask is not None else None
+    except Exception:
+        cap = None
+    for pk in ranked:
+        c = pk[2]
+        ask = pk[4] if len(pk) > 4 else None
+        if (c.get("ticker") or "").upper() in open_tk:
+            out.append((pk, "open_ticker"))
+        elif cap is None or ask is None or float(ask) > cap:
+            out.append((pk, "unaffordable"))
+        else:
+            out.append((pk, "enter"))
+    return out
+
+
 def _student_model(name):
     if name in _STUDENT_MODELS:
         return _STUDENT_MODELS[name]
@@ -506,8 +571,9 @@ def _student_threshold(name):
     return float(thr) if thr is not None else None
 
 
-def _student_week_used(name, log):
-    """Fills this picker already has in the current ISO week (from the record book)."""
+def _student_week_used(name, log, consumed=None):
+    """Weekly budget units this picker has spent: fills in the current ISO week (from the record
+    book) plus, when given, the deduplicated unaffordable picks from the passive score log."""
     try:
         iso = date.today().isocalendar()
         n = 0
@@ -517,6 +583,8 @@ def _student_week_used(name, log):
             d = (r.get("entry_ts_utc") or "")[:10]
             if d and date.fromisoformat(d).isocalendar()[:2] == iso[:2]:
                 n += 1
+        if consumed:
+            n += len(consumed.get(name) or ())
         return n
     except Exception:
         return 999
@@ -566,6 +634,8 @@ def _student_rank(pool, creds, log):
             return []
         today = date.today().isoformat()
         bars_cache, quote_cache = {}, {}
+        global _STUDENT_CONSUMED
+        _STUDENT_CONSUMED = _student_consumed_this_week()      # once per cycle, not per candidate
         for c in pool:
             occ = (c or {}).get("occ"); a = (c or {}).get("alert")
             if not occ or not a:
@@ -597,15 +667,16 @@ def _student_rank(pool, creds, log):
                     continue
                 sc = float(_sfx.predict(m, vec))
                 thr = _student_threshold(name)
-                used = _student_week_used(name, log)
+                used = _student_week_used(name, log, _STUDENT_CONSUMED)
                 k = int(pc.get("k_per_week", 3))
                 ok = thr is not None and sc >= thr and used < k and bool(pc.get("live"))
                 logrows.append({"ts": _now_iso_ms(), "model": name, "stamp": m.get("_stamp"), "ticker": t,
                                 "occ": occ, "score": round(sc, 4), "thr": thr, "week_used": used, "k": k,
                                 "eligible": bool(ok), "live": bool(pc.get("live")), "mode": cfg.get("mode", "shadow"),
+                                "ask_live": q[1], "side": c.get("flow_type"),
                                 "vec": [None if v != v else round(v, 5) for v in vec]})
                 if ok:
-                    out.append((sc, name, c, vec))
+                    out.append((sc, name, c, vec, q[1]))
         out.sort(key=lambda x: -x[0])
     except Exception as _se:
         print(f"  student: ranking failed ({type(_se).__name__}) - pickers stand down this cycle", flush=True)
@@ -651,17 +722,29 @@ def build_legs(ticker, md, regime="NEUTRAL", leg_budget=None, illiquid=None):
     per_leg = LEG_BUDGET if leg_budget is None else leg_budget
     _pcx = _PROBE_CONTRACT.get("c")
     if _pcx and (_pcx.get("ticker") or "").upper() == ticker.upper() and _pcx.get("occ"):
-        _ask0 = _pcx.get("alert_ask") or 5.0
+        _stu = bool(_pcx.get("student"))
+        _ask0 = ((_pcx.get("live_ask") if _stu else None) or _pcx.get("alert_ask") or 5.0)
         try:
             _dte0 = max(1, (date.fromisoformat(str(_pcx["expiry"])) - date.today()).days)
         except Exception:
             _dte0 = 30
-        return {"bullish_call": {"structure": "LONG_CALL", "occ_symbol": _pcx["occ"],
-                                 "expiry": str(_pcx.get("expiry")), "strike": _pcx.get("strike"),
-                                 "dte": _dte0, "entry_premium": _ask0,
-                                 "limit_price": round(_ask0 * 1.01, 2), "contracts": 1,
-                                 "alloc_usd": per_leg, "illiquid": False,
-                                 "target_delta": CALL_DELTA, "trigger_contract": True}}
+        # STUDENT picks (owner order 2026-09-12): the picker's contract on EITHER side, priced
+        # off the live ask it was ranked on and sized to the budget (lots = floor($1,000 /
+        # cost) - the study's engine-sizing rows). The dip strategies keep their tested
+        # one-contract call at the alert ask, byte-identical.
+        _put0 = _stu and (_pcx.get("flow_type") or "call") == "put"
+        _ct0 = max(1, int(per_leg // (_ask0 * 100))) if _stu else 1
+        _leg0 = {"structure": "LONG_PUT" if _put0 else "LONG_CALL", "occ_symbol": _pcx["occ"],
+                 "expiry": str(_pcx.get("expiry")), "strike": _pcx.get("strike"),
+                 "dte": _dte0, "entry_premium": _ask0,
+                 "limit_price": round(_ask0 * 1.01, 2), "contracts": _ct0,
+                 "alloc_usd": per_leg, "illiquid": False,
+                 "target_delta": PUT_DELTA if _put0 else CALL_DELTA, "trigger_contract": True}
+        if _stu:
+            _leg0["occ_source"] = "student_pick"
+            _leg0["band_lo"] = float((_student_pool_cfg() or {}).get("ask_min", 0.30))
+            _leg0["band_hi"] = float(_student_cfg().get("exec_max_ask", 10.0))
+        return {"bearish_put" if _put0 else "bullish_call": _leg0}
     # ^ resolved at CALL time, not def time: a default bound at import froze the probe roster's
     #   LEG_BUDGET swap out of sizing (probe.size_usd was silently decorative)
     min_ct = load_params().get("min_contracts", 2)
@@ -912,6 +995,10 @@ def audit_stale_orders(creds=None, max_minutes=None, orders=None):
 _WHALE_CANDS = []          # per-cycle side-pool of fade-shaped 400k-1M prints (FADE_WHALE probe only)
 _FULL_CANDS = []           # per-cycle snapshot of the FULL premium band (50k-1M) before the fade
                            # book's flow_band cut - the calls-family probes' tested band
+_STUDENT_CANDS = []        # per-cycle STUDENT pool: contract-level candidates under the archive
+                           # universe the pickers were trained on (both sides, 50k-1M premium,
+                           # ask-side aggressor, spread <= 2%, ask >= 0.30, DTE >= 1) - owner
+                           # order 2026-09-12; the seat executes only what fits the cap
 _PRICEY_CANDS = []         # per-cycle side-pool of EXPENSIVE-CONTRACT triggers (ask $4-9, premium
                            # 50-400k) - the split test 2026-09-01 located the dip edge here
                            # (+21.2%/day t+4.31, halves +16/+26); the $4 affordability cap had made
@@ -1582,13 +1669,15 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
             pass
         _blo = _tl.get("band_lo", 4.0)      # pricey-pool probes keep their tested $4 floor; the
                                             # affordability fallback admits the scan's own 0.30+
-        if not (_lb and _la and 0 < _lb <= _la and (_la - _lb) / _la * 100 <= 2.0 and _blo <= _la <= 9.9):
+        _bhi = _tl.get("band_hi", 9.9)      # student picks: the seat's exec cap (2026-09-12)
+        if not (_lb and _la and 0 < _lb <= _la and (_la - _lb) / _la * 100 <= 2.0 and _blo <= _la <= _bhi):
             return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": regime,
-                    "reason": f"trigger_contract fail-closed: no live quote / crossed / spread>2% / ask outside {_blo}-9.9",
+                    "reason": f"trigger_contract fail-closed: no live quote / crossed / spread>2% / ask outside {_blo}-{_bhi}",
                     "status": "SKIPPED"}
         _tl["entry_premium"] = _la
         _tl["limit_price"] = round(round(_la * 1.01 * 20) / 20, 2)   # nickel increment; caps at $10.00 = the $1k budget
-        _tl["contracts"] = 1
+        _tl["contracts"] = (max(1, int(LEG_BUDGET // (_la * 100))) if _tl.get("occ_source") == "student_pick"
+                            else 1)         # student picks are sized to the budget off the LIVE ask
         _tl["execution_cost"] = {"bid": _lb, "ask": _la,
                                  "bid_ask_spread_pct": round((_la - _lb) / _la * 100, 2),
                                  "source": "alpaca_quote_trigger"}
@@ -2089,11 +2178,59 @@ def scan_candidates(params, limit=None):
                    "XSP", "DJX", "OEX", "XEO", "MRUT", "NANOS", "VVIX"}
     agg = {}
     aggx = {}                                       # expensive-contract triggers (probe side-pool)
+    sagg = {}                                       # student pool, keyed by contract
+    _spool = _student_pool_cfg()
+    _fs_map = None
     for r in rows:
         t = (r.get("ticker") or "").upper()
         if not t or t in index_roots:               # drop index / non-equity underlyings up front
             continue
         pc = _num(r.get("price"))                   # per-contract option premium (the affordability signal)
+        # STUDENT POOL (owner order 2026-09-12, the cheap-pick path): CONTRACT-level candidates
+        # under the ARCHIVE universe the pickers were trained on (probe_tuner.build_rows): both
+        # sides, per-alert premium 50k-1M, ask-side aggressor, alert NBBO spread <= 2% of ask,
+        # ask >= 0.30 with NO upper bound (the picker scores the whole field; the seat executes
+        # only what fits the cap), DTE >= 1. Separate from the pricey pool below, which is the
+        # dip strategies' $4-9 CALL cell - scoring that alone measured the wrong slice
+        # (BREAKDOWNS 2026-09-12). Fail-open per row: a malformed alert is skipped, never fatal.
+        try:
+            if _spool and pc is not None and pc >= float(_spool["ask_min"]) and r.get("option_chain"):
+                _typ_s = (r.get("type") or "").lower()
+                _tp_s = _num(r.get("total_premium")) or 0.0
+                _asp_s = _num(r.get("total_ask_side_prem")) or 0.0
+                _bsp_s = _num(r.get("total_bid_side_prem")) or 0.0
+                _qb_s, _qa_s = _num(r.get("bid")), _num(r.get("ask"))
+                try:
+                    _dte_s = (date.fromisoformat(str(r.get("expiry"))) - date.today()).days
+                except Exception:
+                    _dte_s = -1
+                if (_typ_s in _spool["sides"] and float(_spool["prem_min"]) <= _tp_s <= float(_spool["prem_max"])
+                        and _asp_s > _bsp_s and _dte_s >= int(_spool["dte_min"])
+                        and _num(r.get("strike")) is not None and _qb_s and _qa_s and _qa_s > 0
+                        and (_qa_s - _qb_s) / _qa_s * 100 <= float(_spool["spread_max_pct"])):
+                    _occ_s = r.get("option_chain")
+                    _prev_s = sagg.get(_occ_s)
+                    if not _prev_s or _tp_s > _prev_s["total_premium"]:
+                        if _fs_map is None:                  # one pass over the rows, not one per entry
+                            _fs_map = {}
+                            for _x in rows:
+                                _oc, _ca = _x.get("option_chain"), _x.get("created_at")
+                                if _oc and _ca and (_oc not in _fs_map or _ca < _fs_map[_oc]):
+                                    _fs_map[_oc] = _ca
+                        sagg[_occ_s] = {"ticker": t, "flow_type": _typ_s, "total_premium": _tp_s,
+                                        "underlying_price": _num(r.get("underlying_price")),
+                                        "min_contract_premium": pc, "occ": _occ_s,
+                                        "expiry": r.get("expiry"), "strike": _num(r.get("strike")),
+                                        "alert_ask": _qa_s, "alert_bid": _qb_s, "student": True,
+                                        "alert": {"created_at": r.get("created_at"), "total_premium": _tp_s,
+                                                  "total_size": _num(r.get("total_size")),
+                                                  "trade_count": _num(r.get("trade_count")),
+                                                  "total_ask_side_prem": _asp_s, "total_bid_side_prem": _bsp_s,
+                                                  "open_interest": _num(r.get("open_interest")),
+                                                  "iv_start": _num(r.get("iv_start")),
+                                                  "first_seen": _fs_map.get(_occ_s) or (r.get("created_at") or "")}}
+        except Exception:
+            pass
         if pc is None or not (prem_lo <= pc <= prem_hi):    # AFFORDABILITY AT SOURCE ($0.30-$4.00 -> $800/2ct)
             # EXPENSIVE-TRIGGER pool (2026-09-01, panel-corrected build): keep the CONTRACT
             # IDENTITY, not a ticker aggregate - the +21.2/day t4.31 cell was measured on the
@@ -2186,6 +2323,12 @@ def scan_candidates(params, limit=None):
                 key=lambda x: x["total_premium"], reverse=True)
         global _PRICEY_CANDS
         _PRICEY_CANDS = sorted(aggx.values(), key=lambda x: x["total_premium"], reverse=True)[:14]
+        global _STUDENT_CANDS
+        _STUDENT_CANDS = sorted(sagg.values(), key=lambda x: x["total_premium"],
+                                reverse=True)[:int((_spool or {}).get("max_pool", 30))]
+        if len(sagg) > len(_STUDENT_CANDS):
+            print(f"  student pool: {len(sagg)} archive-universe contracts, top {len(_STUDENT_CANDS)} "
+                  f"by premium kept (pool cap)", flush=True)
         global _FULL_CANDS
         _FULL_CANDS = sorted([c for c in cands
                               if 50000 <= (c.get("total_premium") or 0) <= 1000000],
@@ -2886,16 +3029,34 @@ def run_scheduled_cycle(mock=False):
                             _scfg_all = _student_cfg()
                             if _scfg_all.get("bear_standdown", True) and fade_book.spy_regime() in (None, "BEAR"):
                                 continue    # no bear evidence yet, and an unknown regime is not a regime
-                            _ranked = _student_rank(_PRICEY_CANDS[:14], creds, _plog)
-                            print(f"  student: {len(_ranked)} eligible pick(s) across pickers ({_scfg_all.get('mode', 'shadow')})", flush=True)
+                            _ranked = _student_rank(_STUDENT_CANDS, creds, _plog)
+                            print(f"  student: {len(_STUDENT_CANDS)} pool contract(s), {len(_ranked)} eligible "
+                                  f"pick(s) across pickers ({_scfg_all.get('mode', 'shadow')})", flush=True)
                             if _scfg_all.get("mode", "shadow") != "live":
                                 continue    # shadow: scored and logged, never entered
                             _sent = 0
-                            for _sc, _mname, _c, _vec in _ranked:
+                            _exec_cap = _scfg_all.get("exec_max_ask", 10.0)
+                            for _pk, _act in _student_select(_ranked, _exec_cap, _open_tk):
                                 if _att >= 10 or _sent >= 1 or _cyc >= 2:
                                     break
-                                if (_c.get("ticker") or "").upper() in _open_tk:
+                                _sc, _mname, _c, _vec = _pk[0], _pk[1], _pk[2], _pk[3]
+                                _ask_l = _pk[4] if len(_pk) > 4 else None
+                                if _act == "open_ticker":
                                     continue
+                                if _act == "unaffordable":
+                                    # the study spent a weekly pick on EVERY pick and traded only the
+                                    # cheap ones; the seat does the same - one unit per contract per day
+                                    _today_s = date.today().isoformat()
+                                    if (_c.get("occ"), _today_s) not in (_STUDENT_CONSUMED.get(_mname) or set()):
+                                        _STUDENT_CONSUMED.setdefault(_mname, set()).add((_c.get("occ"), _today_s))
+                                        _student_log([{"ts": _now_iso_ms(), "model": _mname, "ticker": _c.get("ticker"),
+                                                       "occ": _c.get("occ"), "score": round(float(_sc), 4),
+                                                       "ask_live": _ask_l, "picked_unaffordable": True,
+                                                       "budget_consumed": True, "exec_max_ask": _exec_cap}])
+                                        print(f"  student[{_mname}]: pick {_c.get('ticker')} {_c.get('occ')} ask "
+                                              f"{_ask_l} over the cap - budget unit spent, not traded", flush=True)
+                                    continue
+                                _c["live_ask"] = _ask_l
                                 _STUDENT_LAST["p"], _STUDENT_LAST["model"] = _sc, _mname
                                 try:
                                     _ACTIVE_PROBE["name"] = _mname

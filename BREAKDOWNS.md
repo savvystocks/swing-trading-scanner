@@ -754,3 +754,26 @@ CHECK: MOT 6.15 - source order in the drill, and the MOT asserts the real score 
 byte-for-byte unchanged across its own run. LESSON: a passive logger that never raises is
 exactly the writer a harness forgets to fake - every fail-open sink needs a redirect in every
 harness that exercises the code around it.
+
+2026-09-12 (fourth entry) - THE STUDENT SEAT SCORED THE WRONG SLICE. WHAT BROKE: the STUDENT roster
+seat (landed 2026-09-11) ranked the dip strategies' side-pool - calls only, ask $4.00-9.00, premium
+50-400k, DTE >= 7 - because it was the only contract-level pool the engine had. Picker A's evidence
+lives elsewhere: its cap-fitting edge is in sub-$1 contracts on BOTH sides (spread study 2026-09-12:
+search +24.7%/trade t 1.19, holdout +52.1%/trade t 1.46, ~1.5 trades a week), and the $4-9.90 band
+is exactly where it loses (-10.9%/trade, the Thursday test). Had A gone live on Thursday's wiring it
+would have traded the losing band; the passive score log for one session measured that band and
+nothing else. No trade was affected (zero live pickers). ROOT CAUSE: "affordable" meant three
+different bands in three places - the scan's $0.30-4.00, the pricey pool's $4-9, the AFFORD cohort's
+$4-9.90 - and none of them was the evidence's universe; the seat inherited the universe of the pool
+it read. FIX (same commit): a contract-level STUDENT pool under the archive filters the pickers were
+trained on (both sides, premium 50k-1M, ask-side aggressor, alert spread <= 2%, ask >= 0.30 with no
+ceiling, DTE >= 1, top 30 by premium); the seat executes only picks whose LIVE ask is under
+exec_max_ask ($10 = the $1,000 cap) at engine sizing, and an unaffordable pick spends one weekly
+budget unit once per contract-day, as the study did; the trigger leg builds either side and sizes
+student picks to the budget (the dip strategies' one-contract call is byte-identical); the export
+judges the auto-pull rule on the EXECUTED slice; A's threshold cohort is ALL. REGRESSION CHECK: MOT
+6.17 (seat pool source, pool filters, select helper, budget dedup, sized LONG_PUT leg, dip leg
+unchanged, export executed slice, spec keys) and regime drill scenario 7 (pricey call unaffordable,
+cheap put enters as a 25-lot LONG_PUT through the dry-run entry path). LESSON: before a picker is
+wired to a pool, write down the universe its evidence was measured on and diff it against the pool's
+filters - a seat cannot find an edge in a band the evidence never contained.

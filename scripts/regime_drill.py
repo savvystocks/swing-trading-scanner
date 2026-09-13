@@ -212,6 +212,68 @@ try:
 except Exception as _e6:
     check("STUDENT: drill scenario ran", False, f"{type(_e6).__name__}: {_e6}")
 
+# --- scenario 7: STUDENT cheap-pick path (2026-09-12): a pricey call and a cheap put in the pool; the
+#     pricey pick is unaffordable and spends a budget unit, the cheap put enters as a budget-sized LONG_PUT ---
+try:
+    import json as _j7, os as _o7, tempfile as _tf7
+    lab._STUDENT_MODELS.clear()
+    _q_bak7 = lab._live_quote
+    lab._live_quote = lambda occ, creds: (0.39, 0.40) if occ.endswith("P00010000") else (24.5, 25.0)
+    _bars_bak7 = lab._alpaca_daily
+    lab._alpaca_daily = lambda t, days=60: [{"h": 10, "l": 9, "c": 10.0 + (i % 3) * 0.1, "v": 1000, "t": f"2026-08-{(i % 28) + 1:02d}"} for i in range(30)]
+    _reg_bak7 = fade_book.spy_regime
+    fade_book._REGIME.update({"date": date.today().isoformat(), "val": "MILD", "dist50_prev": 1.5, "dist20_prev": 0.8})
+    fade_book.spy_regime = lambda: "MILD"
+    _alert7 = {"created_at": "2026-09-10T14:40:00Z", "total_premium": 57000, "total_size": 110, "trade_count": 2,
+               "total_ask_side_prem": 57000, "total_bid_side_prem": 0, "open_interest": 1200, "iv_start": 0.4,
+               "first_seen": "2026-09-10T14:31:00Z"}
+    _pool7 = [{"ticker": "PRC", "flow_type": "call", "occ": "PRC261016C00100000", "alert_ask": 25.0, "alert_bid": 24.5,
+               "total_premium": 90000, "expiry": EXP_ISO, "strike": 100.0, "student": True, "alert": dict(_alert7)},
+              {"ticker": "CHP", "flow_type": "put", "occ": "CHP261016P00010000", "alert_ask": 0.45, "alert_bid": 0.44,
+               "total_premium": 60000, "expiry": EXP_ISO, "strike": 10.0, "student": True, "alert": dict(_alert7)}]
+    _fake7 = {"kind": "classifier", "baseline": 3.0, "n_features": 15, "trained": date.today().isoformat(),
+              "thresholds": {"k3": 0.5}, "trees": []}
+    _o7.makedirs("reports/fade_meta", exist_ok=True)
+    _j7.dump(_fake7, open("reports/fade_meta/student_STUDENT_DRILL7.json", "w"))
+    _spec_bak7 = fade_book._SPEC
+    _sp7 = _j7.loads(_j7.dumps(fade_book.spec()))
+    _sp7.setdefault("probe", {})["student"] = {"enabled": True, "mode": "live", "bear_standdown": True, "exec_max_ask": 10.0,
+        "probes": {"STUDENT_DRILL7": {"model": "reports/fade_meta/student_STUDENT_DRILL7.json", "k_per_week": 3, "live": True}}}
+    fade_book._SPEC = _sp7
+    _sl_bak7 = lab.STUDENT_SCORES_LOG
+    lab.STUDENT_SCORES_LOG = _o7.path.join(_tf7.gettempdir(), "drill7_scores.jsonl")
+    if _o7.path.exists(lab.STUDENT_SCORES_LOG):
+        _o7.remove(lab.STUDENT_SCORES_LOG)
+    _r7 = lab._student_rank(_pool7, ("k", "s"), [])
+    check("STUDENT 7: a pricey call and a cheap put are both scored and eligible, carrying their live asks",
+          len(_r7) == 2 and {round(x[4], 2) for x in _r7} == {25.0, 0.40}, str([(x[1], x[2]["ticker"], x[4]) for x in _r7]))
+    _sel7 = lab._student_select(_r7, 10.0, set())
+    _acts7 = {x[0][2]["ticker"]: x[1] for x in _sel7}
+    check("STUDENT 7: the pricey call is unaffordable, the cheap put enters", _acts7 == {"PRC": "unaffordable", "CHP": "enter"}, str(_acts7))
+    _cand7 = next(x[0][2] for x in _sel7 if x[1] == "enter")
+    _cand7["live_ask"] = 0.40
+    lab._ACTIVE_PROBE["name"] = "STUDENT_DRILL7"
+    lab._PROBE_CONTRACT["c"] = _cand7
+    try:
+        _rec7 = lab.enter_proactive_set("CHP", None, mock=True, candidate=_cand7, dry_run=True, positions=[], open_orders=[], probe=True)
+    finally:
+        lab._PROBE_CONTRACT["c"] = None
+        lab._ACTIVE_PROBE["name"] = None
+    _leg7 = ((_rec7 or {}).get("legs") or {}).get("bearish_put") or {}
+    check("STUDENT 7: dry-run entry builds a budget-sized LONG_PUT on the picker's own contract at the LIVE ask (stub 5.40)",
+          bool(_rec7) and not _rec7.get("skipped") and _leg7.get("structure") == "LONG_PUT"
+          and _leg7.get("contracts") == max(1, int(lab.LEG_BUDGET // 540)) and abs(_leg7.get("entry_premium", 0) - 5.40) < 1e-9
+          and _leg7.get("occ_symbol") == "CHP261016P00010000", str((_rec7 or {}).get("reason") or {k: _leg7.get(k) for k in ("structure", "contracts")}))
+    fade_book._SPEC = _spec_bak7
+    fade_book.spy_regime = _reg_bak7
+    lab._alpaca_daily = _bars_bak7
+    lab._live_quote = _q_bak7
+    lab.STUDENT_SCORES_LOG = _sl_bak7
+    lab._STUDENT_MODELS.clear()
+    _o7.remove("reports/fade_meta/student_STUDENT_DRILL7.json")
+except Exception as _e7:
+    check("STUDENT 7: drill scenario ran", False, f"{type(_e7).__name__}: {_e7}")
+
 print(f"\nDRILL: {len(PASS)} pass / {len(FAIL)} fail", flush=True)
 if FAIL:
     print("FAILED: " + ", ".join(FAIL), flush=True)

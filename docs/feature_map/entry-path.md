@@ -52,4 +52,9 @@ the spread cap, the PENDING record before the order, the OPEN record after.
 - 2026-09-01 (evening) INSTRUMENT-MISMATCH near-miss: evidence must be earned on the instrument the
   backtest measured, hence the trigger-contract identity.
 - The labels rule: entry_ref is the ask at signal, never mid; exits fill on the bid.
+- 2026-09-14 agent tests (reports/research/agent_tests_2026-09-13.md): on synthesized legs the
+  limit is set from the premium ESTIMATE, and 602 paper fills printed on average 31% BELOW their
+  limit and within half a percent of the live ask. Paper fills at the ask hide that; a real broker
+  may fill a limit 30% above the market at the limit. Before any real money, cap every limit at
+  the live ask plus one tick, as the trigger-contract path already does.
 - `mock=True` metadata is fake; `dry_run=True` routes nothing; the drill uses both.

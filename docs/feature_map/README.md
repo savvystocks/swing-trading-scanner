@@ -6,7 +6,8 @@ healthy run prints, where its evidence lands, which regression checks guard it, 
 have already bitten (from BREAKDOWNS.md). One file per subsystem. Read the file for a subsystem
 BEFORE reviewing, changing or diagnosing it, then RUN its verification command rather than reasoning
 from the code. This map is the maintained verification source for the engine; `scripts/feature_map_lint.py`
-(MOT 6.18) fails the gate when a cited file or function no longer exists.
+(MOT 6.18) fails the gate when a cited file or function no longer exists. Its healthy line is
+`feature map lint: OK (N citations resolved)`; a failure names the file and the citation.
 
 ## Where the truth lives
 - The live code is the VPS checkout: `ssh -i ~/.ssh/vultr_poller poller@64.176.178.15`, repo

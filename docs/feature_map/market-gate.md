@@ -19,6 +19,9 @@ exits, which is why it has a second opinion.
 ## Healthy
 - Closed: `market closed - no cycle: 0 orders, 0 exits, 0 harvest, no inbox commit`
 - Clock down, calendar answering: `  market gate: clock API failing (HTTPError); calendar says OPEN ... - proceeding on the calendar`
+- Clock and calendar both down: the gate returns closed with no cycle; the run log shows the
+  closed line and the inbox watchdog pages if it persists through a session.
+- MOT line to grep: `[PASS] market gate: clock API failure -> exchange-calendar answer, not a blanket closed`.
 
 ## Evidence
 - `data/last_cycle_ok` (UTC stamp + engine SHA) is written only by a successful cycle; the VPS

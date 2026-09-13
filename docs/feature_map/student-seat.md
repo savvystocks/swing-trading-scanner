@@ -20,8 +20,12 @@ shadow; C is pulled. The court judges STUDENT_FAMILY on trading days.
   (`sandbox_proactive_lab.py:_student_threshold`) and weekly budget
   (`sandbox_proactive_lab.py:_student_week_used`, which adds the deduplicated unaffordable picks
   from `sandbox_proactive_lab.py:_student_consumed_this_week`). Returns (score, picker, cand, vec, live_ask).
-- Select: `sandbox_proactive_lab.py:_student_select` - enter / unaffordable (spends a budget
-  unit once per contract-day, logged with `budget_consumed`) / open_ticker.
+- Select: `sandbox_proactive_lab.py:_student_select` - enter / unaffordable / open_ticker. The
+  test is the LIVE ask against `probe.student.exec_max_ask` (10.0 = the $1,000 cap in per-share
+  dollars); sizing (`LEG_BUDGET // (ask * 100)`) happens later in build_legs and never decides
+  affordability. An unaffordable pick spends one of the picker's `k_per_week` (3) units once per
+  contract-day, logged with `budget_consumed`; units are never refunded, exactly as the study
+  spent them.
 - Entry: the STUDENT branch in the probe loop sets `_PROBE_CONTRACT["c"]` with `student: True` and
   `live_ask`; `sandbox_proactive_lab.py:build_legs` returns the contract on its own side sized
   `LEG_BUDGET // (ask * 100)`; the trigger-leg repricing keeps that sizing off the live ask.

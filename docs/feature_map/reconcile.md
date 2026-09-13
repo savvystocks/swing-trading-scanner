@@ -27,7 +27,10 @@ unreadable book.
 - `  orphan reconcile: NBIS260918C00240000 filled <45min ago - grace period, record likely in flight`
 - `pending reconcile: 1 opened, 0 voided` (only when there was something to settle)
 - `stale-order audit: 0 unfilled limit(s) cancelled (> 30m)`
-- A `TIDY-UP: re-linked N position(s)` telegram means an adoption happened; find out why the record was missing.
+- A `TIDY-UP: re-linked N position(s)` telegram (sent from `sandbox_proactive_lab.py:reconcile_orphans`
+  through `sandbox_proactive_lab.py:_notify`) means an adoption happened; find out why the record was missing.
+- MOT lines to grep after `./.venv/bin/python v11_mot_harness.py`: `[PASS] orphan reconcile` and
+  `[PASS] pending roll-call`.
 
 ## Evidence
 - Adopted records carry `adopted_from`; voided intents carry `leg_exits[...].action`.

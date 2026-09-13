@@ -186,6 +186,7 @@ Proves the logger cannot alter or crash live execution: `run_scheduled_cycle` is
 - `test_harvest_harvester.py` — tiering, per-contract-per-day dedup, band filter, barrier-ts stamping, schema.
 - `test_harvest_poller.py` — ingest, path accumulation, label resolution (up/down/stale), re-run idempotency.
 - `v11_mot_harness.py` — full offline "MOT", **170/170** checks green (routing, exit/autopsy state machine, sizing floor, observability, sourcing filter + flush, edge sensors, spread cap).
+- `docs/feature_map/` — the maintained verification map: one file per subsystem (What, Where as file:function, Exercise command, Healthy log line, Evidence, Checks, Traps); `scripts/feature_map_lint.py` resolves every citation and MOT 6.18 fails the gate when one is stale.
 - `v12_school_mot.py` — the school MOT, **30/30** green: the load-bearing off-state byte-identity proof (`school_mode=off` produces byte-identical orders and never calls the scorer) plus the fail-closed gate-mode chain, feature-TTL enforcement, Governor-never-grants-LIVE, Treasurer-shadow, and the spread cap.
 - `test_harvest_poller.py` — **15/15** (barrier/label chain + the API-failure classifier: a rate-limit/error writes a MISSING bid_path row excluded from grading, counted in `labels.n_missing`).
 - `test_brain.py` — **15 groups** green (isolation, leakage, weights, EV, calibration, discovery, Student, Council, Governor, Treasurer, convergence).

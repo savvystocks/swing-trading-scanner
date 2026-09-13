@@ -1262,6 +1262,13 @@ check(6, "spec: student pool block, exec cap and A's ALL threshold cohort are pr
       isinstance(_spc.get("pool"), dict) and _spc.get("exec_max_ask") is not None
       and ((_spc.get("probes") or {}).get("STUDENT_A") or {}).get("threshold_cohort") == "ALL",
       str({"pool": bool(_spc.get("pool")), "exec_max_ask": _spc.get("exec_max_ask")}))
+# 6.18 FEATURE MAP LINT (learned from the 2026-09-11 Lauren Tan workshop, built 2026-09-13): the map
+# in docs/feature_map/ is the maintained verification source; every file:function it cites must
+# exist and every subsystem file must carry its seven sections, or the map is worse than nothing.
+import subprocess as _sp18
+_fm = _sp18.run([sys.executable, "scripts/feature_map_lint.py"], capture_output=True, text=True)
+check(6, "feature map: every cited file and function resolves and every subsystem file has its seven sections",
+      _fm.returncode == 0, ((_fm.stdout or "") + (_fm.stderr or "")).strip()[-240:])
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.

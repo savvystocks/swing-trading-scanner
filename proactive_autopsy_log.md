@@ -4618,3 +4618,30 @@
 
 **Determining factor:** Bullish call FAILED (-71%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 300.0 worked against it.
 
+## Autopsy - HOOD (ADOPT-998551139b)
+- entered 2026-08-20T15:04:11.915Z | trigger orphan_reconcile | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| adopted_leg | ADOPTED | +162.9% | WINNER |
+
+**Determining factor:** Range held: IV term None (ratio None) let front-month theta outrun the wings.
+
+## Autopsy - IWM (a4215d3caebc)
+- entered 2026-08-21T17:56:57.279Z | trigger regime_BEARISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +40.4% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 300.0 -> negative-gamma slide, no positive catalyst.
+
+## Autopsy - AAPL (8e9ce7038527)
+- entered 2026-09-09T17:07:17.768Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +387.5% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 325.0 fed the squeeze.
+

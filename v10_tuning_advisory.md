@@ -3070,3 +3070,21 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - [min_gex_distance] Bullish Call lost AND spot crossed below the Zero-Gamma strike -> Tighten min_gex_distance or restrict Calls when GEX is negative.
 ---
+## Tuning Advisory - HOOD (ADOPT-998551139b) - 2026-09-14T13:44:09.602Z
+trade: winner=adopted_leg loser=adopted_leg | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - IWM (a4215d3caebc) - 2026-09-14T13:44:10.537Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - AAPL (8e9ce7038527) - 2026-09-14T13:44:11.329Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

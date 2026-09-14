@@ -4645,3 +4645,21 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 325.0 fed the squeeze.
 
+## Autopsy - IREN (aada12dccad6)
+- entered 2026-09-09T14:17:20.627Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +25.0% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 49.0 -> negative-gamma slide, no positive catalyst.
+
+## Autopsy - NVDA (671eae2f96b9)
+- entered 2026-09-09T18:26:05.386Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +86.5% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 230.0 -> negative-gamma slide, no positive catalyst.
+

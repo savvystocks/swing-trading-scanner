@@ -172887,7 +172887,7 @@
         "mae_pct": -36.8,
         "stage": "initial",
         "close_fails": 0,
-        "last_ret": 7.4
+        "last_ret": 10.3
       }
     },
     "backstop": {
@@ -187007,7 +187007,7 @@
         "mfe_pct": 94.2,
         "mae_pct": -31.7,
         "stage": "initial",
-        "last_ret": 22.3,
+        "last_ret": 14.4,
         "close_fails": 3
       }
     },
@@ -188020,7 +188020,7 @@
         "mfe_pct": 61.9,
         "mae_pct": -46.0,
         "stage": "initial",
-        "last_ret": -8.9,
+        "last_ret": -14.6,
         "close_fails": 1
       }
     },
@@ -191742,7 +191742,7 @@
         "mfe_pct": 56.2,
         "mae_pct": -18.0,
         "stage": "initial",
-        "last_ret": 0.0,
+        "last_ret": 11.2,
         "close_fails": 0
       }
     },
@@ -193153,7 +193153,7 @@
         "mfe_pct": 54.3,
         "mae_pct": -38.8,
         "stage": "initial",
-        "last_ret": -38.8,
+        "last_ret": -32.4,
         "close_fails": 4
       }
     },
@@ -197336,7 +197336,7 @@
         "mfe_pct": 17.2,
         "mae_pct": -37.9,
         "stage": "initial",
-        "last_ret": -26.9
+        "last_ret": -24.1
       }
     },
     "backstop": {
@@ -198314,11 +198314,43 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BACKSTOP",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": 25.0
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 35.5,
+          "mae_pct": -5.3,
+          "stage": "trailing",
+          "last_ret": 35.5,
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 35.5,
+      "mae_pct": -5.3,
+      "determining_factor": "Bearish breakdown (move 0.0%): spot below zero-gamma 49.0 -> negative-gamma slide, no positive catalyst.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "probe_strategy": "EXEC_BASELINE",
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "IREN261009P00045000",
+        "closed_at": "2026-09-14T13:53:47.117876531Z",
+        "return_pct": 25.0,
+        "filled_qty": 1,
+        "reason": "broker backstop filled 1 @ 4.75",
+        "action": "CLOSE_BACKSTOP",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 35.5,
@@ -198334,7 +198366,9 @@
         "prior_order_ids": [
           "9b2ce42f-3205-488f-8fff-bd8ca947b262"
         ],
-        "reconciled_ids": [],
+        "reconciled_ids": [
+          "c2266f1e-e1c4-4e66-a2c3-0de75aec8831"
+        ],
         "stop_price": 4.88,
         "qty": 1,
         "entry_px": 3.8,
@@ -198342,7 +198376,8 @@
         "stage": "trailing",
         "at": "2026-09-14T13:44:12.992Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "reconciled": true
       }
     }
   },
@@ -199575,11 +199610,43 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BACKSTOP",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": 86.5
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 109.4,
+          "mae_pct": -3.1,
+          "stage": "trailing",
+          "last_ret": 108.3,
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 109.4,
+      "mae_pct": -3.1,
+      "determining_factor": "Bearish breakdown (move 0.0%): spot below zero-gamma 230.0 -> negative-gamma slide, no positive catalyst.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "probe_strategy": "EXEC_BASELINE",
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "NVDA261009P00215000",
+        "closed_at": "2026-09-14T13:49:55.541989644Z",
+        "return_pct": 86.5,
+        "filled_qty": 1,
+        "reason": "broker backstop filled 1 @ 8.95",
+        "action": "CLOSE_BACKSTOP",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 109.4,
@@ -199599,7 +199666,9 @@
           "dd0836ea-7bd3-4c7c-9ec4-09283f492535",
           "7e599b41-f322-4361-80af-b552c829c43a"
         ],
-        "reconciled_ids": [],
+        "reconciled_ids": [
+          "1028219d-9001-4161-a576-c52e596b39ac"
+        ],
         "stop_price": 9.0,
         "qty": 1,
         "entry_px": 4.8,
@@ -199607,7 +199676,8 @@
         "stage": "trailing",
         "at": "2026-09-14T13:34:29.164Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "reconciled": true
       }
     }
   },
@@ -200184,7 +200254,7 @@
         "mfe_pct": 4.5,
         "mae_pct": -20.5,
         "stage": "initial",
-        "last_ret": -13.4
+        "last_ret": -19.6
       }
     },
     "backstop": {
@@ -200472,7 +200542,7 @@
         "mfe_pct": 3.7,
         "mae_pct": -18.5,
         "stage": "initial",
-        "last_ret": -11.1
+        "last_ret": -18.5
       }
     },
     "backstop": {
@@ -200759,7 +200829,7 @@
       "bullish_call": {
         "mfe_pct": -2.6,
         "mae_pct": -13.6,
-        "last_ret": -4.5,
+        "last_ret": -5.2,
         "stage": "initial"
       }
     },
@@ -201045,10 +201115,10 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 74.4,
+        "mfe_pct": 94.8,
         "mae_pct": -7.0,
         "stage": "trailing",
-        "last_ret": 69.8,
+        "last_ret": 94.8,
         "close_fails": 0,
         "scaled_out": {
           "at": "2026-09-14T13:34:24.679Z",
@@ -201058,18 +201128,19 @@
     },
     "backstop": {
       "bullish_call": {
-        "order_id": "59c1373f-749c-4d7c-b88d-175f8c689ab1",
+        "order_id": "99d566f7-c427-455a-a67b-d7c0544e53fb",
         "prior_order_ids": [
           "c64ff6e0-3499-4e3f-8bb2-20103e206e3b",
-          "b8e5702c-a61b-4124-87f5-f8a4abdcee99"
+          "b8e5702c-a61b-4124-87f5-f8a4abdcee99",
+          "59c1373f-749c-4d7c-b88d-175f8c689ab1"
         ],
         "reconciled_ids": [],
-        "stop_price": 2.74,
+        "stop_price": 3.02,
         "qty": 2,
         "entry_px": 1.72,
         "type": "stop",
         "stage": "trailing",
-        "at": "2026-09-14T13:44:13.223Z",
+        "at": "2026-09-14T13:54:12.912Z",
         "status": "pending_new",
         "error": null
       }
@@ -201663,9 +201734,9 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 6.5,
-        "mae_pct": -38.1,
+        "mae_pct": -43.2,
         "stage": "initial",
-        "last_ret": -38.1
+        "last_ret": -43.2
       }
     },
     "backstop": {
@@ -202305,5 +202376,270 @@
     "sample_orphan": [
       "SPY"
     ]
+  },
+  {
+    "trade_set_id": "231df67cc4b4",
+    "ticker": "NVDA",
+    "regime": "BEARISH",
+    "trigger": "regime_BEARISH_loose",
+    "book": "PROBE",
+    "router_state": "MILD",
+    "entry_ts_utc": "2026-09-14T13:55:25.682Z",
+    "leg_budget_usd": 1000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 15,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5,
+      "backstop_note": "2026-08-25: canary GRADUATED (was pinned to FCEL260821C00022000, which expired 2026-08-21 - backstops were armed on ZERO positions since). Ford -87% autopsy: no broker stop + unquotable option = unmanaged decay to expiry. Backstops now arm on ALL eligible open legs from day 2 (same ratchet/fill-capture machinery the canary proved). Broker-side stops protect precisely the positions the engine cannot price."
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-09-14T13:55:25.682Z",
+      "macro": {
+        "spot": 210.75,
+        "sma20": 219.47,
+        "distance_to_sma20_pct": -3.972,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 36.6,
+        "iv_back": 35.6,
+        "iv_ratio": 1.028,
+        "structure": "backwardation",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 446789.2,
+        "zero_gamma_strike": 265.0,
+        "distance_to_zero_gamma_pct": -25.741,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 258.8,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 7.73,
+        "atr_pct": 3.67,
+        "rvol_10min": 0.2,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Semiconductors",
+        "market_cap": 5091877715968,
+        "short_pct_float": 1.29,
+        "short_ratio": 2.33,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 0.08,
+        "vader_compound": 0.214,
+        "news_type": "Product",
+        "top_headline": "OpenAI, Anthropic Call for AI Slowdown: Chips Sink, Cybersecurity Stocks Jump",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -3.972,
+        "market_spy_dist_pct": -0.764,
+        "sector_etf": "XLK",
+        "sector_dist_pct": -0.979,
+        "sector_vs_market_spread": -0.215,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 36.2,
+        "call_iv_25d": 33.5,
+        "skew_ratio": 1.08,
+        "skew_bias": "crash_hedging",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 7.44,
+        "ask_sweep_prem": 1844862.0,
+        "total_flow_prem": 24798209.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 210.75,
+        "node_size": 235649.0,
+        "n_prints": 200,
+        "window_start": "2026-09-14T13:52:01Z",
+        "window_end": "2026-09-14T13:54:29Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 19,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 64,
+        "next_earnings_date": "2026-11-17",
+        "iv_rank_1y": 13.34,
+        "last_earnings_date": "2026-08-26",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 45.42,
+        "front_iv": 36.6,
+        "vrp": -8.82,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -18014056.0,
+        "flow_persistence_pct": 72.37,
+        "flow_direction": "bearish",
+        "closing_accel": 5013340.0,
+        "n_ticks": 25,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 930.09,
+        "vwma_20": 220.31,
+        "rsi_5": 0.0,
+        "rsi_15": 47.56,
+        "gap_pct": -3.197,
+        "day_range": 1.234,
+        "candle_body": 0.171,
+        "dist_sma50": -1.017,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 1.0,
+        "vix_level": 17.62,
+        "execution_hour": 13,
+        "day_of_week": 0,
+        "sector_vs_spy": -0.789,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 175755821.0,
+        "net_vanna": 207896405.0,
+        "net_charm": -257017599.0,
+        "delta_imbalance": 2.306,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.014,
+        "bid": 210.8,
+        "ask": 210.83,
+        "bid_size": 200.0,
+        "ask_size": 100.0,
+        "obi": 0.3333,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.2,
+        "gap_pct": -3.197,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 1.29,
+        "float_shares": 23130698000,
+        "shares_short": 298301619,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.214,
+      "sweep_aggression_pct": 7.44,
+      "distance_to_zero_gamma_pct": -25.741,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 19,
+      "days_to_earnings": 64,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 72.37
+    },
+    "legs": {
+      "bearish_put": {
+        "structure": "LONG_PUT",
+        "occ_symbol": "NVDA261016P00200000",
+        "expiry": "2026-10-16",
+        "strike": 200.0,
+        "dte": 35,
+        "entry_premium": 9.55,
+        "limit_price": 9.65,
+        "contracts": 1,
+        "alloc_usd": 1000.0,
+        "illiquid": false,
+        "target_delta": -0.35,
+        "open_interest": "42123",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 4.09,
+          "ask": 4.14,
+          "mid": 4.115,
+          "bid_ask_spread_pct": 1.215,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 41320.0,
+          "oi_prev": 42123.0,
+          "oi_change": -803.0,
+          "source": "uw_historic"
+        },
+        "client_order_id": "231df67cc4b4-bearish_put"
+      }
+    },
+    "orders": {
+      "bearish_put": {
+        "status": "pending_new",
+        "order_id": "81c8571b-bda4-48f5-8318-61485c558b63",
+        "error": null,
+        "submitted": true,
+        "limit_price": 9.65,
+        "contracts": 1
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "intent_ts_utc": "2026-09-14T13:55:29.654Z",
+    "probe_strategy": "EXEC_BASELINE",
+    "buy_alert_delivered": true
   }
 ]

@@ -10,10 +10,10 @@ Archive analogue: the POOL, every whale trigger of the corpus on the executable 
 Live: its own PROBE records since the 2026-08-18 $1,000 reset.
 
 ## Numbers
-- live: [[strategies.EXEC_BASELINE.live.n_closed = 27]] closed, [[strategies.EXEC_BASELINE.live.per_trade = +2.6]] per trade,
-  win [[strategies.EXEC_BASELINE.live.win = 37%]], best trade removed [[strategies.EXEC_BASELINE.live.best_removed_per_trade = -10.7]],
-  day mean [[strategies.EXEC_BASELINE.live.unit_mean = +10.6]] over [[strategies.EXEC_BASELINE.live.units = 15]] days,
-  halves [[strategies.EXEC_BASELINE.live.h1 = +33.6]] / [[strategies.EXEC_BASELINE.live.h2 = -9.5]], dollars [[strategies.EXEC_BASELINE.live.total_usd = +1,727]].
+- live: [[strategies.EXEC_BASELINE.live.n_closed = 33]] closed, [[strategies.EXEC_BASELINE.live.per_trade = +5.9]] per trade,
+  win [[strategies.EXEC_BASELINE.live.win = 42%]], best trade removed [[strategies.EXEC_BASELINE.live.best_removed_per_trade = -4.7]],
+  day mean [[strategies.EXEC_BASELINE.live.unit_mean = +16.9]] over [[strategies.EXEC_BASELINE.live.units = 18]] days,
+  halves [[strategies.EXEC_BASELINE.live.h1 = +25.3]] / [[strategies.EXEC_BASELINE.live.h2 = +8.6]], dollars [[strategies.EXEC_BASELINE.live.total_usd = +2,892]].
 - archive (pool): [[strategies.EXEC_BASELINE.archive.per_day = -4.5]] per day over [[strategies.EXEC_BASELINE.archive.days = 455]] days,
   halves [[strategies.EXEC_BASELINE.archive.h1 = -2.7]] / [[strategies.EXEC_BASELINE.archive.h2 = -6.3]].
 

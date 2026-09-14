@@ -9,9 +9,9 @@ with a scoreable court day.
 Archive: calls only, every regime, BASE exit, executable basis. Live: PROBE records since the roster.
 
 ## Numbers
-- live: [[strategies.FOLLOW_CALLS.live.n_closed = 2]] closed, [[strategies.FOLLOW_CALLS.live.per_trade = -57.2]] per trade,
-  day mean [[strategies.FOLLOW_CALLS.live.unit_mean = -57.2]] over [[strategies.FOLLOW_CALLS.live.units = 2]] days,
-  shared with the control [[strategies.FOLLOW_CALLS.live.shared_units = 1]], t vs control [[strategies.FOLLOW_CALLS.live.t_vs_control = n/a]].
+- live: [[strategies.FOLLOW_CALLS.live.n_closed = 3]] closed, [[strategies.FOLLOW_CALLS.live.per_trade = -61.9]] per trade,
+  day mean [[strategies.FOLLOW_CALLS.live.unit_mean = -61.9]] over [[strategies.FOLLOW_CALLS.live.units = 3]] days,
+  shared with the control [[strategies.FOLLOW_CALLS.live.shared_units = 3]], t vs control [[strategies.FOLLOW_CALLS.live.t_vs_control = -2.19]].
 - archive: [[strategies.FOLLOW_CALLS.archive.per_day = -0.0]] per day (pool on the same days
   [[strategies.FOLLOW_CALLS.archive.pool_per_day_same_days = -4.5]]), t vs pool [[strategies.FOLLOW_CALLS.archive.t_vs_pool = +4.04]],
   [[strategies.FOLLOW_CALLS.archive.trades = 40954]] trades over [[strategies.FOLLOW_CALLS.archive.days = 455]] days,

@@ -13,7 +13,7 @@ cell at a t of 0.68 against the pool, which is noise. Live: its own PROBE record
 
 ## Numbers
 - live: [[strategies.WINNER_PROFILE.live.n_closed = 0]] closed, [[strategies.WINNER_PROFILE.live.per_trade = n/a]] per trade,
-  open [[strategies.WINNER_PROFILE.live.open = 1]].
+  open [[strategies.WINNER_PROFILE.live.open = 3]].
 - archive (partial cell): [[strategies.WINNER_PROFILE.archive.per_day = -4.6]] per day (pool
   [[strategies.WINNER_PROFILE.archive.pool_per_day_same_days = -4.5]]), t vs pool [[strategies.WINNER_PROFILE.archive.t_vs_pool = -2.90]].
 

@@ -4672,3 +4672,12 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 380.0 worked against it.
 
+## Autopsy - SPCX (e39e479a71f8)
+- entered 2026-08-25T16:44:43.060Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +36.7% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 450.0 fed the squeeze.
+

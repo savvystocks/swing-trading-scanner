@@ -4600,3 +4600,21 @@
 
 **Determining factor:** Bullish call FAILED (-100%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 200.0 worked against it.
 
+## Autopsy - INTC (0fba59628f87)
+- entered 2026-09-08T16:15:45.434Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -70.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-71%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 100.0 worked against it.
+
+## Autopsy - NBIS (ef8abd77bf35)
+- entered 2026-09-11T19:51:13.956Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -71.2% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-71%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 300.0 worked against it.
+

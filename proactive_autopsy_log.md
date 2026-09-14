@@ -4663,3 +4663,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 230.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - TSLA (25150c52b0ea)
+- entered 2026-09-11T14:27:42.516Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -49.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 380.0 worked against it.
+

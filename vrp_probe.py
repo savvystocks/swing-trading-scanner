@@ -24,7 +24,7 @@ def _cfg():
 
 def _xsp_close_series():
     import yfinance as yf
-    s = yf.download("^XSP", period="10d", progress=False, auto_adjust=True)["Close"].dropna()
+    s = yf.download("^XSP", period="120d", progress=False, auto_adjust=True)["Close"].dropna()   # 120d: a settle delayed past ten days must still find its expiry close (2026-09-14)
     return s.iloc[:, 0] if hasattr(s, "columns") else s
 
 
@@ -57,8 +57,8 @@ def _sell(occ, limit, creds, qty=1):
 def cycle(creds, allow_entries=True):
     """Each engine cycle: settle expired VRP records; enter once daily after 15:00 UTC."""
     cfg = _cfg()
-    if not cfg.get("enabled") or not creds or not all(creds):
-        return
+    if not creds or not all(creds):        # 2026-09-14: the enabled flag gates ENTRIES only - a
+        return                             # retired probe's records still need settling (5 ghosts)
     import sandbox_proactive_lab as lab
     now = datetime.now(timezone.utc)
     today = now.date()
@@ -97,7 +97,7 @@ def cycle(creds, allow_entries=True):
         n_open += 1
     if dirty:
         lab._save_log_list(log)
-    if not allow_entries or entered_today or n_open >= int(cfg.get("max_open", 3)) or now.hour < 15:
+    if not cfg.get("enabled") or not allow_entries or entered_today or n_open >= int(cfg.get("max_open", 3)) or now.hour < 15:
         return
     try:
         s = _xsp_close_series()

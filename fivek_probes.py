@@ -25,7 +25,7 @@ def _cfg():
 
 def _xsp_close_series():
     import yfinance as yf
-    s = yf.download("^XSP", period="10d", progress=False, auto_adjust=True)["Close"].dropna()
+    s = yf.download("^XSP", period="120d", progress=False, auto_adjust=True)["Close"].dropna()   # 120d: a settle delayed past ten days must still find its expiry close (2026-09-14)
     return s.iloc[:, 0] if hasattr(s, "columns") else s
 
 

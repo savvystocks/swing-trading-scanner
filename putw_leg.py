@@ -34,7 +34,7 @@ def _next_friday(today):
 
 def _xsp_close_series():
     import yfinance as yf
-    s = yf.download("^XSP", period="10d", progress=False, auto_adjust=True)["Close"].dropna()
+    s = yf.download("^XSP", period="120d", progress=False, auto_adjust=True)["Close"].dropna()   # 120d: a settle delayed past ten days must still find its expiry close (2026-09-14)
     return s.iloc[:, 0] if hasattr(s, "columns") else s
 
 
@@ -67,8 +67,8 @@ def _sell_put(occ, limit, creds, qty=1):
 def weekly_cycle(creds):
     """Called once per engine cycle, fail-open. Settles expired PUTW records; enters weekly."""
     cfg = _cfg()
-    if not cfg.get("enabled") or not creds or not all(creds):
-        return
+    if not creds or not all(creds):        # 2026-09-14: the enabled flag gates ENTRIES only - a
+        return                             # retired book's records still need settling (2 ghosts)
     import sandbox_proactive_lab as lab
     log = lab._load_log_list()
     now = datetime.now(timezone.utc)
@@ -103,6 +103,8 @@ def weekly_cycle(creds):
                 open_putw = r
     if dirty:
         lab._save_log_list(log)
+    if not cfg.get("enabled"):
+        return                                          # retired: settles above ran, no entries
     if open_putw is not None:
         return                                          # one position at a time, hold to expiry
     # ENTRY: once weekly, first cycle at/after 15:00 UTC, green gate (prior week up)

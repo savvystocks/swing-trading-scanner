@@ -1973,6 +1973,18 @@ def manage_open_positions(creds, params, positions=None):
                        "stage": path.get("stage", "initial")}
                                                                   # day-trade flags); the exit rule
                                                                   # fires from tomorrow's first cycle
+            if dec["action"] == "SCALE_OUT_50" and int((rec["legs"].get(leg_name) or {}).get("contracts") or 1) <= 1:
+                # ONE-LOT WALL (BREAKDOWNS 2026-09-14): half of one contract cannot be sold, so the
+                # old path retried the half-sale forever and the trail never armed - HOOD gave back
+                # +369 -> +145 behind a -50% stop. Arm the trail instead and let the trail rule
+                # decide NOW; the backstop ratchet mirrors the stage on this same cycle.
+                path["stage"] = "trailing"
+                path["close_fails"] = 0
+                print(f"  {rec.get('ticker')} {occ}: 1-lot scale-out impossible - trail armed at peak {path.get('mfe_pct')}%", flush=True)
+                dirty = True
+                dec = manage_exit(rec["entry_ts_utc"], ret_pct, params, expiry_iso=_occ_expiry(occ),
+                                  stage="trailing", mfe_pct=path["mfe_pct"],
+                                  book=rec.get("book"), probe=rec.get("probe_strategy"))
             if dec["action"] == "SCALE_OUT_50":                          # tier 1: sell half, runner continues
                 if not _retire_stop(rec, leg_name, occ, creds, log, closed_legs):
                     dirty = True                                          # stop live / cancel unconfirmed ->

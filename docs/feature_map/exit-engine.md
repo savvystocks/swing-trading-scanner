@@ -44,3 +44,11 @@ stops sit under every position so a blind engine still has a floor. No same-day 
   mfe_pct on a slow fill) -> defensive reads, `missing_cycles` reset.
 - 2026-09-12 A NEVER-FILLED ORDER WAS BOOKED AS A -100% LOSS -> the VOID rule.
 - A blind window (gate outage) means no exits; the backstops are the only floor then.
+- 2026-09-14 THE ONE-LOT SCALE-OUT WALL: the V10 grammar's SCALE_OUT_50 cannot sell half of one
+  contract; the stage stayed initial, the trail never armed, the backstop stayed at -50% while HOOD
+  gave back +369 -> +145. A one-contract leg now arms the trail instead and the rule is re-evaluated
+  in the same cycle. Grep `1-lot scale-out impossible` in a cycle log to see it fire.
+- 2026-09-14 (second entry) RETIRING A PROBE SWITCHED OFF ITS SETTLE SWEEP: `vrp_probe.py:cycle` and
+  `putw_leg.py:weekly_cycle` returned early when disabled, and the ^XSP window was ten days. Settles
+  now run regardless of enabled with a 120-day window; the sentinel's "expired legs still open" row
+  is the alarm.

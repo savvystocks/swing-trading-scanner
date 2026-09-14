@@ -55,3 +55,8 @@ and the scoreboard that reports where the system stands against the North Star.
   entry); 2026-09-11 CORPUS LEAKS #2 and #3 (first-print entry; entry-day regime) -> v3 basis.
 - All numbers before 2026-09-11 on the old bases are superseded; quote only v3 cells.
 - A t-stat from the search window is selection-biased by construction; only the holdout row is evidence.
+- UW-side print gaps happen: 2026-09-09 and 09-10 returned zero prints per contract and 09-08 was
+  thin, confirmed directly against the API on 09-14, while contracts_daily had all four days. The
+  v3 corpus cannot build rows for such days (no qualifying print), so it stops at the last complete
+  day; the puller's zero-result defer retries for seven days, then the days stay holes. Read the
+  sentinel's "uw prints cohort density" and "session_holes" rows before trusting a recent cell.

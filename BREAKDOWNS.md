@@ -795,3 +795,36 @@ in full before the corrective commit. REGRESSION CHECK: MOT 6.20 asserts verify_
 through gate_fresh.sh and that gate_fresh.sh reports STALE after a change to the tree; the map's
 gate-and-ship.md carries the trap. LESSON: "the gate is green" must be a statement about a tree,
 not about a file; a sentinel without an identity is a lie waiting for the next `&&` to break.
+
+2026-09-14 - THE ONE-LOT SCALE-OUT WALL: A +369% WINNER SAT BEHIND A -50% STOP (found in the
+pre-open diagnosis). WHAT BROKE: HOOD260918C00100000 (adopted 2026-08-20, one contract) peaked at
++369% and gave back to +145% with its trail never armed and its broker backstop still at the
+initial -50% level; AAPL260918C00325000 (one contract) peaked at +515% and sat at +350% the same
+way. ROOT CAUSE: the V10 exit grammar's first tier is SCALE_OUT_50, "sell half"; on a ONE-contract
+position the broker cannot sell half, the close is rejected (HOOD: close_fails 2), the stage stays
+"initial" so the scale-out is retried instead of the trail arming, and the backstop ratchet, which
+mirrors the stage, never moves off the -50% level. Every one-contract position under that grammar
+(every trigger-contract probe buy, the control's pricey fills) has the same wall. FIX (same night):
+in the exit pass, a SCALE_OUT_50 decision on a one-contract leg arms the trail instead (stage ->
+trailing, close_fails reset, one log line) and the trail rule is re-evaluated in the same cycle, so
+a runner past its give-back closes at once and the backstop ratchets to the peak-based level.
+REGRESSION CHECK: MOT 6.21 asserts the one-lot branch exists in the exit pass ahead of the scale-out
+sale and re-evaluates the rule at stage trailing; a functional exit-pass fixture for a one-contract
+runner is owed. LESSON: a rule written for a $4,000 book with multi-lot positions has a tier that a
+$1,000 one-lot book can never execute; every grammar tier needs a "what if the quantity is one" case.
+
+2026-09-14 (second entry) - RETIRING A PROBE SWITCHED OFF ITS SETTLE SWEEP: FIVE EXPIRED XSP
+RECORDS OPEN FOR 26 DAYS. WHAT BROKE: three VRP_DAILY and two PUTW cash-settled short puts that
+expired 2026-08-19/20/21 stayed status OPEN; the freshness sentinel printed "expired legs still open
+... settle/exit machinery broken" and "ghost open records" every morning from 2026-09-08 and nobody
+acted. ROOT CAUSE (two): (1) vrp_probe.cycle and putw_leg.weekly_cycle return immediately when the
+probe is not enabled in the spec, and both probes were retired by disabling them, so the settle
+loop that runs before the entry gate never ran again; (2) both settle paths, and the credit
+spread's, price expiry from a yfinance ^XSP series with period="10d", so any record not settled
+within ten days of expiry becomes unsettleable forever. Also found: the VPS venv lacked yfinance
+(the 2026-09-01 dependency-drift class). FIX (same night): the enabled flag now gates ENTRIES only,
+settles run for any open record regardless; the ^XSP window is 120 days in all three modules;
+yfinance installed in the venv. The five ghosts settle on Monday's first cycle. REGRESSION CHECK:
+MOT 6.21 asserts neither settle sweep is gated on enabled and no module uses the ten-day window;
+the sentinel's "expired legs still open" row is the live alarm. LESSON: retire a strategy's ENTRIES,
+never its bookkeeping; a probe's records outlive the probe.

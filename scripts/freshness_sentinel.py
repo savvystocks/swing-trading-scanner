@@ -66,7 +66,7 @@ CHECKS = [
     ("harvest poller log", "schedule", "data/poller.log", (21, 0, WEEKDAYS), "TRADE"),
     ("harvest state", "schedule", "data/harvest_state.json", (19, 30, WEEKDAYS), "TRADE"),
     ("engine watch log", "schedule", H + "/engine_watch.log", (19, 30, WEEKDAYS), "TRADE"),
-    ("telegram commands log", "mtime", H + "/telegram_commands.log", 100.0, "MONITOR"),
+    ("telegram commands state", "mtime", H + "/telegram_commands_state.json", 1.0, "MONITOR"),
     # -- harvest data: labels and candidates must track the market
     ("harvest candidates day", "data_day", "data/harvest.db",
      ("select date(cast(substr(cast(max(signal_ts_utc) as text),1,10) as int), 'unixepoch') from candidates", 2), "TRADE"),

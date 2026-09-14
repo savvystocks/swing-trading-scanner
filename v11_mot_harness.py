@@ -1295,6 +1295,17 @@ try:                                                   # with the sentinel set a
           _gfr.returncode != 0 and "no green sentinel" in (_gfr.stdout or ""), (_gfr.stdout or "").strip()[-100:])
 except Exception as _gfe:
     check(6, "gate freshness: with no green sentinel for this tree the check refuses", False, type(_gfe).__name__)
+# 6.21 PRE-OPEN DIAGNOSIS 2026-09-14: the one-lot scale-out wall and the retired-probe settle sweep.
+_lab_21 = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+_i_wall = _lab_21.find("1-lot scale-out impossible"); _i_so = _lab_21.find('if dec["action"] == "SCALE_OUT_50":')
+check(6, "exit pass: a one-contract SCALE_OUT_50 arms the trail and re-evaluates the rule before any half-sale",
+      0 < _i_wall < _i_so and 'stage="trailing", mfe_pct=path["mfe_pct"]' in _lab_21[_i_wall - 800:_i_so])
+_vrp = open("vrp_probe.py", encoding="utf-8").read(); _putw = open("putw_leg.py", encoding="utf-8").read(); _fk = open("fivek_probes.py", encoding="utf-8").read()
+check(6, "retired probes still settle: neither vrp_probe.cycle nor putw_leg.weekly_cycle returns on 'not enabled' before its settle loop",
+      'if not cfg.get("enabled") or not creds' not in _vrp and 'if not cfg.get("enabled") or not creds' not in _putw
+      and "SETTLE" in _putw and "settle" in _vrp)
+check(6, "the ^XSP settle window is no longer ten days in any module",
+      'period="10d"' not in _vrp and 'period="10d"' not in _putw and 'period="10d"' not in _fk)
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.

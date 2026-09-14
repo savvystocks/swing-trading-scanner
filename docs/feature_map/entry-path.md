@@ -58,3 +58,7 @@ the spread cap, the PENDING record before the order, the OPEN record after.
   may fill a limit 30% above the market at the limit. Before any real money, cap every limit at
   the live ask plus one tick, as the trigger-contract path already does.
 - `mock=True` metadata is fake; `dry_run=True` routes nothing; the drill uses both.
+- 2026-09-14 (third entry) THE EIGHT-MINUTE WALL: the earnings sensor inside `sandbox_proactive_lab.py:collect_metadata`
+  asked Yahoo per candidate per cycle with no cache, 10-84 s per fund; a quarter of cycles died at the job's
+  8-minute cap. Funds are skipped and lookups cached per cycle now (MOT 6.22). A slow sensor is an exit-pass
+  outage: the entry path runs before the exit pass in the cycle order.

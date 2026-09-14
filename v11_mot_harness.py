@@ -1306,6 +1306,23 @@ check(6, "retired probes still settle: neither vrp_probe.cycle nor putw_leg.week
       and "SETTLE" in _putw and "settle" in _vrp)
 check(6, "the ^XSP settle window is no longer ten days in any module",
       'period="10d"' not in _vrp and 'period="10d"' not in _putw and 'period="10d"' not in _fk)
+# 6.22 THE EIGHT-MINUTE WALL (BREAKDOWNS 2026-09-14, third entry): the earnings sensor never asks
+# Yahoo for a fund and asks once per ticker per cycle; the result is unchanged (null, fail-open).
+_oyf22 = sys.modules.get("yfinance"); _ouw22 = v11._uw; _calls22 = []
+sys.modules["yfinance"] = SN(Ticker=lambda b: (_calls22.append(b), SN(get_earnings_dates=lambda limit=12: SN(index=_idx)))[1])
+v11._uw = lambda: None
+v11._EARNINGS_CACHE.clear()
+_pe_fund = v11.post_earnings_drift("SOXX", mock=False)
+_pe_a = v11.post_earnings_drift("ZZTOP", mock=False); _pe_b = v11.post_earnings_drift("ZZTOP", mock=False)
+v11._uw = _ouw22
+if _oyf22 is not None:
+    sys.modules["yfinance"] = _oyf22
+else:
+    sys.modules.pop("yfinance", None)
+check(6, "earnings sensor: a fund never reaches Yahoo and fails open to nulls (source unavailable)",
+      "SOXX" not in _calls22 and _pe_fund["days_to_earnings"] is None and _pe_fund["source"] == "unavailable", f"{_calls22} {_pe_fund}")
+check(6, "earnings sensor: one Yahoo lookup per ticker per cycle, the second call is served from the cache unchanged",
+      _calls22.count("ZZTOP") == 1 and _pe_a == _pe_b and _pe_a["days_since_earnings"] == 3 and _pe_a["days_to_earnings"] == 30, f"{_calls22} {_pe_a}")
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.

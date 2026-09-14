@@ -13,6 +13,31 @@ import time
 from datetime import date, datetime, timedelta, timezone
 
 _PROFILE_CACHE = {}        # ticker -> (day, profile)   in-process, dedups within a cycle
+_EARNINGS_CACHE = {}       # ticker -> (day, result)    one Yahoo earnings lookup per ticker per cycle
+                           # (BREAKDOWNS 2026-09-14 third entry: the eight-minute wall)
+_FUND_HINTS = frozenset("""
+SPY QQQ IWM DIA XSP MDY RSP SPLG VOO IVV VTI VTV VUG IWF IWD IWB IWN IWO IJR IJH MTUM QUAL USMV SPHB SPLV
+XLK XLF XLV XLY XLP XLE XLI XLB XLU XLRE XLC SMH SOXX SOXL SOXS TQQQ SQQQ SPXL SPXS UPRO SPXU TNA TZA
+LQD HYG JNK TLT TBT TMF TMV IEF SHY TYD TYO BND AGG GLD IAU SLV GDX GDXJ NUGT DUST JNUG JDST UGL AGQ
+USO UNG BOIL KOLD UCO SCO XOP OIH CRAK URA URNM GUSH DRIP ERX ERY NRGU NRGD XME TAN ICLN LIT DBA DBC PDBC
+CORN WEAT SOYB CPER PPLT PALL ARKK ARKG ARKW ARKF ARKQ EEM EFA EWZ EWJ EWY EWT EWW EWU EWG EWC EWA EWH
+EWI EWP EWQ EWL EWN EWS EWM EIDO ILF ARGT EPI EZA TUR FXI KWEB MCHI INDA VWO VEA VXUS FEZ VGK YINN YANG
+EDZ EDC IBIT ETHA FBTC BITO GBTC ETHE BITX IGV CIBR HACK XBI IBB LABU LABD KRE KBE FAS FAZ IYR VNQ XHB
+ITB DRN DRV NAIL JETS XRT DPST TECL TECS WEBL CURE BNKU HIBL HIBS SRTY URTY DFEN UVXY SVXY VXX UVIX SVIX
+VIXY VIXM SH PSQ DOG RWM SDS QID SCHD DVY VYM JEPI JEPQ QYLD XYLD RYLD NVDL TSLL TSLS CONL MSTU MSTX
+MSTZ AMZU AAPU GGLL METU NVDX TSLQ NVDS SMCX PLTU COIW HOOX
+""".split())        # funds Yahoo has no earnings dates for: each lookup retried 10-84 s and answered null anyway
+
+
+def _is_fund(base):
+    """A fund reports no earnings: asking Yahoo costs 10-84 s of retries per call and answers null
+    regardless, so the sensor answers null without the call (the earnings blackout stays fail-open)."""
+    if base in _FUND_HINTS:
+        return True
+    cached = _PROFILE_CACHE.get(base)
+    prof = cached[1] if cached else None
+    return bool(prof and prof.get("source") == "yfinance" and prof.get("sector") is None
+                and prof.get("industry") is None and prof.get("market_cap") is None)
 
 SECTOR_ETF = {
     "Technology": "XLK", "Financial Services": "XLF", "Healthcare": "XLV",
@@ -372,25 +397,29 @@ def post_earnings_drift(ticker, mock=False, crush_iv_rank=30.0):
     if mock:
         return out
     base = ticker.split(".")[0]
+    today = date.today()
+    cached = _EARNINGS_CACHE.get((base, crush_iv_rank))
+    if cached and cached[0] == today:
+        return dict(cached[1])                              # one Yahoo lookup per ticker per cycle
     days, last_ed, days_to, next_ed = None, None, None, None
-    try:
-        import yfinance as yf
-        ed = yf.Ticker(base).get_earnings_dates(limit=12)
-        idx = getattr(ed, "index", None)
-        idx = list(idx) if idx is not None else []          # never boolean-test a DatetimeIndex (ambiguous)
-        today = date.today()
-        past = [d.date() for d in idx if hasattr(d, "date") and d.date() <= today]
-        if past:
-            last_ed = max(past)
-            days = (today - last_ed).days
-        # TIER B: forward calendar off the SAME fetch (no extra call) - powers the 3-day earnings
-        # blackout in enter_proactive_set. Fail-open: null -> the blackout never blocks.
-        future = [d.date() for d in idx if hasattr(d, "date") and d.date() > today]
-        if future:
-            next_ed = min(future)
-            days_to = (next_ed - today).days
-    except Exception:
-        pass
+    if not _is_fund(base):                                  # funds: null without the 10-84 s retry
+        try:
+            import yfinance as yf
+            ed = yf.Ticker(base).get_earnings_dates(limit=12)
+            idx = getattr(ed, "index", None)
+            idx = list(idx) if idx is not None else []          # never boolean-test a DatetimeIndex (ambiguous)
+            past = [d.date() for d in idx if hasattr(d, "date") and d.date() <= today]
+            if past:
+                last_ed = max(past)
+                days = (today - last_ed).days
+            # TIER B: forward calendar off the SAME fetch (no extra call) - powers the 3-day earnings
+            # blackout in enter_proactive_set. Fail-open: null -> the blackout never blocks.
+            future = [d.date() for d in idx if hasattr(d, "date") and d.date() > today]
+            if future:
+                next_ed = min(future)
+                days_to = (next_ed - today).days
+        except Exception:
+            pass
     ivr = None
     try:
         uw = _uw()
@@ -402,10 +431,12 @@ def post_earnings_drift(ticker, mock=False, crush_iv_rank=30.0):
         pass
     flag = bool(days is not None and days <= 5 and ivr is not None and ivr < crush_iv_rank) if days is not None else None
     src = "yfinance+uw" if (days is not None or days_to is not None or ivr is not None) else "unavailable"
-    return {"days_since_earnings": days, "post_earnings_iv_crush_flag": flag,
-            "days_to_earnings": days_to, "next_earnings_date": next_ed.isoformat() if next_ed else None,
-            "iv_rank_1y": round(ivr, 2) if ivr is not None else None,
-            "last_earnings_date": last_ed.isoformat() if last_ed else None, "source": src}
+    res = {"days_since_earnings": days, "post_earnings_iv_crush_flag": flag,
+           "days_to_earnings": days_to, "next_earnings_date": next_ed.isoformat() if next_ed else None,
+           "iv_rank_1y": round(ivr, 2) if ivr is not None else None,
+           "last_earnings_date": last_ed.isoformat() if last_ed else None, "source": src}
+    _EARNINGS_CACHE[(base, crush_iv_rank)] = (today, res)
+    return dict(res)
 
 
 # EDGE 5 - Variance Risk Premium: front IV minus 20-day annualised realized vol

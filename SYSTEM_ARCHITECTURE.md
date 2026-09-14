@@ -69,7 +69,7 @@ Guarantees:
 - **`enter_proactive_set` is untouched** by the harvester — no shared mutable state on the execution path.
 - Proven empirically by `test_harvest_passivity.py` (Section 7): orders are byte-identical with harvest on, off, and crashing.
 
-Sensors (`sandbox_v11_sensors.py`) follow the same "log, don't block" contract: every sensor fails open to `null` and never gates, filters, or sizes a trade.
+Sensors (`sandbox_v11_sensors.py`) follow the same "log, don't block" contract: every sensor fails open to `null` and never gates, filters, or sizes a trade. The earnings sensor answers `null` for funds without asking Yahoo and caches one lookup per ticker per cycle (2026-09-14: uncached fund lookups cost 2-4 minutes of every cycle against the job's 8-minute cap).
 
 ---
 

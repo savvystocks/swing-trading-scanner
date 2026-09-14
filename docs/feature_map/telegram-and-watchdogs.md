@@ -45,3 +45,7 @@ when the engine, the snapshot landing, or the data freshness goes quiet.
 - 2026-09-11 the inbox watchdog was the one that caught the 55-minute blind window: it watches the
   DATA, not exit codes. Keep it that way.
 - Never put n8n or LLM judgment in the trade path; the morning brief is the one adopted agent pattern.
+- 2026-09-14 (third entry) THE EIGHT-MINUTE WALL: a GitHub run cancelled at its timeout is not a failure;
+  the cycle sentinel is stamped only on success, but one successful run inside the heartbeat window keeps
+  `scripts/engine_watch.sh` green, so a quarter of cycles died for a week unseen. Count cancelled runs; the
+  heartbeat only proves the last one finished.

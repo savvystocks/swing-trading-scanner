@@ -828,3 +828,27 @@ yfinance installed in the venv. The five ghosts settle on Monday's first cycle. 
 MOT 6.21 asserts neither settle sweep is gated on enabled and no module uses the ten-day window;
 the sentinel's "expired legs still open" row is the live alarm. LESSON: retire a strategy's ENTRIES,
 never its bookkeeping; a probe's records outlive the probe.
+
+2026-09-14 (third entry) - THE EIGHT-MINUTE WALL: A QUARTER OF ENGINE CYCLES CANCELLED SINCE 9 SEP.
+WHAT BROKE: the engine job carries timeout-minutes 8; cycles were taking 6-9 minutes and the slow
+ones were cancelled part-way: 4 of 51 on Mon 8 Sep, 17 of 51 on Tue 9, 15 of 52 on Wed 10, 11 of 52
+on Thu 11, 7 of 24 by 17:45 BST on Mon 14 (four in a row 15:10-15:40 BST, so no completed exit pass
+for about 40 minutes of the first hour). A cancelled cycle skips whatever it had not reached, usually
+the later exit checks, the backstop pass and the student scoring; records survived because the
+persist step runs on `always()`, and no lost money was found. Nobody was told: the run is cancelled,
+not failed, the cycle sentinel is only stamped on success but a successful run always followed within
+the heartbeat window, so engine_watch stayed "ok" throughout; the Saturday 12 Sep pre-open diagnosis
+checked that the last runs were green and missed the rate. ROOT CAUSE: the earnings sensor
+(`sandbox_v11_sensors.py:post_earnings_drift`) asked Yahoo for earnings dates for every candidate
+ticker on every cycle with no cache (the profile sensor beside it has had one since it was built),
+so the same ticker was fetched once per contract; for funds (SOXX, SOXL, IBIT, IWM, EWZ, LQD, URA,
+TQQQ, SMH, ARKK...) Yahoo has nothing and yfinance retried for 10-84 seconds per call, 2-4 minutes of
+every cycle. FIX (same day, shipped after the close): funds never reach Yahoo (a symbol list plus the
+cached profile: source yfinance with no sector, industry or market cap), and one lookup per ticker
+per cycle is cached; the sensor's answer is unchanged (null, fail-open, the 3-day earnings blackout
+never blocked on a fund before and does not now). NOT DONE HERE, owed: an engine_watch row that counts
+cancelled runs per hour so a cycle that dies at the cap pages instead of hiding behind the heartbeat.
+REGRESSION CHECK: MOT 6.22 asserts a fund symbol never calls Yahoo and that a second call for the same
+ticker in a cycle is served from the cache unchanged. LESSON: "cancelled" is not "failed" to GitHub,
+so it is not "failed" to any alarm that reads the sentinel; count the runs that never finished, not
+just the ones that broke.

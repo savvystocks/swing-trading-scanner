@@ -62,6 +62,7 @@ spread, in `fivek_probes.py`), plus the STUDENT seat when `probe.student.enabled
   cap (3%), DIP_CONVEXITY's band (SPY below 50d) and the held-name rule were loosened (decision 41, MOT 6.23).
 - 2026-09-15 (decision 42) the fade book's shape check inside `sandbox_proactive_lab.py:enter_proactive_set` runs
   AFTER `sandbox_proactive_lab.py:collect_metadata`, so the fade loop sweeps ~5.5 unheld names per cycle before
-  rejecting them as not fade-shaped, for a book with no entry since 2026-08-20. Owner decision pending: retire
-  its entries or hoist the check. Two "inert" spec blocks have live readers (early_strength, momentum) and
+  rejecting them as not fade-shaped, for a book with no entry since 2026-08-20. Owner ruling (decision 43): the
+  regime stand-down is hoisted before the sweep (`fade_book.py:stood_down`, MOT 6.25, drill scenario 9); the
+  full shape check still runs on BEAR days. Two "inert" spec blocks have live readers (early_strength, momentum) and
   `entry.max_spy_dist_pct` is tuner-wired: do not delete them as dead weight.

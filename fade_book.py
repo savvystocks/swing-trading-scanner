@@ -149,6 +149,16 @@ def direction(md, candidate):
     return None
 
 
+def stood_down():
+    """The regime-router term of direction(), hoisted (owner ruling 2026-09-15 02:05 BST): with the
+    router on, BULL and MILD stand the fade book down whatever the candidate looks like, so the
+    caller can skip the sensor sweep (5.5 wasted sweeps per cycle on 2026-09-14 for a book with no
+    entry since 2026-08-20). BEAR and an unknown regime return False and fall through to the full
+    shape check, fail-open exactly as direction() always was."""
+    e = spec().get("entry") or {}
+    return bool(e.get("regime_router")) and spy_regime() in ("BULL", "MILD")
+
+
 def spread_cap(default_cap):
     return (spec().get("entry") or {}).get("max_spread_pct", default_cap) if active() else default_cap
 

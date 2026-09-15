@@ -1611,6 +1611,16 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
                                   probe_name=(_ACTIVE_PROBE.get("name") if probe else None))
     if blocked:
         return {"trade_set_id": None, "ticker": ticker, "skipped": True, "reason": why, "status": "SKIPPED"}
+    if fade_book.active() and not probe and fade_book.stood_down():
+        # HOISTED (owner ruling 2026-09-15): the regime-router term of fade_book.direction is
+        # candidate-independent - with the router on, BULL and MILD stand the fade book down
+        # whatever the candidate looks like - so the sensor sweep below is skipped. Same reason
+        # prefix (same harvest skip code) as the full check; BEAR and an unknown regime fall
+        # through to it unchanged (MOT 6.25, drill scenario 9).
+        return {"trade_set_id": None, "ticker": ticker, "skipped": True, "regime": "FADE_SKIP",
+                "reason": "fade_book: not fade-shaped (needs flow side contra trend AND contra SPY)"
+                          f" - stood down in {fade_book.spy_regime()} before the sweep",
+                "status": "SKIPPED"}
 
     md = collect_metadata(ticker, mock=mock)
     if md["macro"]["spot"] is None or md["iv_term"]["iv_front"] is None:    # core data unavailable ->

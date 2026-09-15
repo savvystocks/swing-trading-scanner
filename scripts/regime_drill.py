@@ -294,6 +294,29 @@ try:
 except Exception as _e8:
     check("DIP_CONVEXITY 8: drill scenario ran", False, f"{type(_e8).__name__}: {_e8}")
 
+# --- scenario 9: the fade book's stand-down is decided before the sensor sweep (owner ruling 2026-09-15) ---
+try:
+    _reg_bak9 = dict(fade_book._REGIME); _cm9 = lab.collect_metadata
+    def _raise9(t, mock=False):
+        raise AssertionError("sensor sweep ran for a stood-down fade candidate")
+    try:
+        fade_book._REGIME.update({"date": date.today().isoformat(), "val": "MILD"})
+        lab.collect_metadata = _raise9
+        rec9 = lab.enter_proactive_set("MI", None, mock=False, candidate={"ticker": "MI", "flow_type": "call", "total_premium": 120000},
+                                       dry_run=True, positions=[], open_orders=[], probe=False)
+        check("FADE 9: MILD stands the fade book down before any sensor sweep",
+              isinstance(rec9, dict) and rec9.get("skipped") and "not fade-shaped" in str(rec9.get("reason")), str(rec9.get("reason"))[:70])
+        fade_book._REGIME.update({"val": "BEAR"})
+        lab.collect_metadata = lambda t, mock=False: json.loads(json.dumps(MD_BR))
+        rec9b = lab.enter_proactive_set("BR", None, mock=False, candidate=bear_cand, dry_run=True, positions=[], open_orders=[], probe=False)
+        check("FADE 9: BEAR still reaches the full shape check and takes the fade-shaped candidate",
+              isinstance(rec9b, dict) and not rec9b.get("skipped"), str(rec9b.get("reason"))[:70] if isinstance(rec9b, dict) else "no rec")
+    finally:
+        lab.collect_metadata = _cm9
+        fade_book._REGIME.clear(); fade_book._REGIME.update(_reg_bak9)
+except Exception as _e9:
+    check("FADE 9: drill scenario ran", False, f"{type(_e9).__name__}: {_e9}")
+
 print(f"\nDRILL: {len(PASS)} pass / {len(FAIL)} fail", flush=True)
 if FAIL:
     print("FAILED: " + ", ".join(FAIL), flush=True)

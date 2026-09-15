@@ -1399,6 +1399,33 @@ check(6, "ledger: DIP_CONVEXITY's archive cell is the live cell (calls, SPY belo
 _lab24 = open("sandbox_proactive_lab.py", encoding="utf-8").read()
 check(6, "probe pool: generic probes take candidates[:12]; the fade book's two-name reservation is gone",
       "else candidates[:12])" in _lab24 and "candidates[2:12]" not in _lab24)
+# 6.25 THE FADE STAND-DOWN HOIST (owner ruling 2026-09-15 02:05 BST): with the regime router on, BULL
+# and MILD stand the fade book down BEFORE the sensor sweep; BEAR and an unknown regime fall through.
+import fade_book as _fb25
+_rb25 = dict(_fb25._REGIME); _sd25 = {}
+try:
+    for _v25 in ("MILD", "BULL", "BEAR", None):
+        _fb25._REGIME.update({"date": date.today().isoformat(), "val": _v25})
+        _sd25[_v25] = _fb25.stood_down()
+finally:
+    _fb25._REGIME.clear(); _fb25._REGIME.update(_rb25)
+_router25 = bool(((_json23.load(open("fade_book_spec.json", encoding="utf-8")).get("entry") or {}).get("regime_router")))
+check(6, "fade stand-down: BULL and MILD stand down, BEAR and an unknown regime fall through (router on in the live spec)",
+      _router25 and _sd25["MILD"] and _sd25["BULL"] and not _sd25["BEAR"] and not _sd25[None], f"{_sd25} router={_router25}")
+_cm25, _ll25, _act25, _calls25 = lab.collect_metadata, lab._load_log_list, _fb25.active, []
+try:
+    _fb25.active = lambda: True                 # the MOT keeps the fade book OFF for byte-identity; force it ON for this call
+    lab.collect_metadata = lambda t, mock=False: (_calls25.append(t), _cm25(t, mock=mock))[1]
+    lab._load_log_list = lambda: []
+    _fb25._REGIME.update({"date": date.today().isoformat(), "val": "MILD"})
+    _r25 = lab.enter_proactive_set("ZZFADE", None, mock=True, candidate={"flow_type": "call"}, dry_run=True, positions=[], open_orders=[])
+finally:
+    lab.collect_metadata, lab._load_log_list, _fb25.active = _cm25, _ll25, _act25
+    _fb25._REGIME.clear(); _fb25._REGIME.update(_rb25)
+check(6, "fade stand-down: in MILD the entry function skips as not fade-shaped BEFORE any sensor sweep (same skip code)",
+      bool(_r25.get("skipped")) and "not fade-shaped" in str(_r25.get("reason")) and _calls25 == []
+      and lab._skip_code(str(_r25.get("reason"))) == lab._skip_code("fade_book: not fade-shaped (needs flow side contra trend AND contra SPY)"),
+      f"{str(_r25.get('reason'))[:80]} sweeps={_calls25}")
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.

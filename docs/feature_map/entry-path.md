@@ -10,7 +10,9 @@ the spread cap, the PENDING record before the order, the OPEN record after.
 1. `sandbox_proactive_lab.py:ticker_blocked` - one position per underlying for non-probe books (OPEN
    and PENDING records); a probe blocks only on its own strategy's record, any same-day record, or a
    pending entry order on the name (2026-09-15); the subordinated `max_contracts_per_ticker`, cool-off.
-2. `sandbox_proactive_lab.py:collect_metadata` - the sensor sweep (macro, IV term, GEX, alt
+2. `fade_book.py:stood_down` - before any sweep, a fade-book (non-probe) candidate is skipped when the
+   regime router says BULL or MILD (2026-09-15; the decision is unchanged, only earlier); then
+   `sandbox_proactive_lab.py:collect_metadata` - the sensor sweep (macro, IV term, GEX, alt
    catalyst, V11 sensors); missing spot or IV -> skip, never fabricate.
 3. probe_filter (the strategy's lambda) -> `sandbox_proactive_lab.py:classify_regime` (flow side
    dominates; NEUTRAL is skipped: the calendar route is disabled) -> earnings blackout.

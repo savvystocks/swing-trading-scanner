@@ -11,6 +11,9 @@ spread, in `fivek_probes.py`), plus the STUDENT seat when `probe.student.enabled
 - The roster tuple list and each strategy's filter lambda: search `("FOLLOW_CALLS", lambda md, c:`
   in `sandbox_proactive_lab.py:run_scheduled_cycle`; the loop that runs it starts at the
   `# PROBE ROSTER v3` comment in the same function.
+- Pools: generic probes take `candidates[:12]` (the top of the scan; until 2026-09-15 the fade book
+  reserved the top two, decision 42); FOLLOW_CALLS and WINNER_PROFILE `_FULL_CANDS[:16]`; DIP_CONF_MILD
+  `_PRICEY_CANDS[:14]`; FADE_WHALE `_WHALE_CANDS[:8]`.
 - Rotation: the start index rotates by cycle so tail probes get lead slots; the attempt budget is
   10 sensor sweeps per cycle (`_att`) and `_PROBE_MAX_ATT = 4` per probe; two entries per cycle max.
 - Live pre-quote: `sandbox_proactive_lab.py:_live_spread_pct` quotes the alert contract before any
@@ -57,3 +60,8 @@ spread, in `fivek_probes.py`), plus the STUDENT seat when `probe.student.enabled
   cell to the $4-9.90 band, where the archive shows no edge (all five cells flat or negative on own return;
   every one positive above $16). Loosening regime or dip conditions adds fills that lose; only the spread
   cap (3%), DIP_CONVEXITY's band (SPY below 50d) and the held-name rule were loosened (decision 41, MOT 6.23).
+- 2026-09-15 (decision 42) the fade book's shape check inside `sandbox_proactive_lab.py:enter_proactive_set` runs
+  AFTER `sandbox_proactive_lab.py:collect_metadata`, so the fade loop sweeps ~5.5 unheld names per cycle before
+  rejecting them as not fade-shaped, for a book with no entry since 2026-08-20. Owner decision pending: retire
+  its entries or hoist the check. Two "inert" spec blocks have live readers (early_strength, momentum) and
+  `entry.max_spy_dist_pct` is tuner-wired: do not delete them as dead weight.

@@ -3157,7 +3157,9 @@ def run_scheduled_cycle(mock=False):
                     _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
                              else _PRICEY_CANDS[:14] if _pname in ("DIP_CONF_MILD", "BULL_DIP_X")
                              else _FULL_CANDS[:16] if _pname in ("FOLLOW_CALLS", "WINNER_PROFILE")
-                             else candidates[2:12])   # skim BELOW the fade book's 2-per-cycle picks
+                             else candidates[:12])    # the top of the scan (owner 2026-09-15: the fade book
+                                                      # no longer reserves the top two names; a same-day fade
+                                                      # entry still blocks the name through _open_tk)
                              # DIP_CONF_MILD buys THE TRIGGER CONTRACT via _PROBE_CONTRACT (panel-
                              # corrected 2026-09-01): the +21.2/day t4.31 cell was measured on the
                              # expensive contract itself, so the live evidence is earned on it too

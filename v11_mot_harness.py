@@ -1394,6 +1394,11 @@ check(6, "ledger: DIP_CONVEXITY's archive cell is the live cell (calls, SPY belo
       and not _dcx23({"side": "C", "reg": 0.3, "sp": -0.2}) and not _dcx23({"side": "P", "reg": -0.3, "sp": -0.2})
       and all(tuple(_rl23.DEFAULT_EXITS.get(_k, ())) == (-abs(_v["stop"]), _v["trig"], _v["give"]) for _k, _v in lab.PROBE_EXITS.items())
       and set(_rl23.DEFAULT_EXITS) == set(lab.PROBE_EXITS))
+# 6.24 THE FADE RESERVATION (owner ruling 2026-09-15 01:45 BST): the generic probe pool is the top of the
+# scan; the fade book no longer reserves the two biggest-flow names per cycle.
+_lab24 = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+check(6, "probe pool: generic probes take candidates[:12]; the fade book's two-name reservation is gone",
+      "else candidates[:12])" in _lab24 and "candidates[2:12]" not in _lab24)
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.

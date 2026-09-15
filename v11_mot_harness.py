@@ -1323,6 +1323,77 @@ check(6, "earnings sensor: a fund never reaches Yahoo and fails open to nulls (s
       "SOXX" not in _calls22 and _pe_fund["days_to_earnings"] is None and _pe_fund["source"] == "unavailable", f"{_calls22} {_pe_fund}")
 check(6, "earnings sensor: one Yahoo lookup per ticker per cycle, the second call is served from the cache unchanged",
       _calls22.count("ZZTOP") == 1 and _pe_a == _pe_b and _pe_a["days_since_earnings"] == 3 and _pe_a["days_to_earnings"] == 30, f"{_calls22} {_pe_a}")
+# 6.23 PROBE FUNNEL LOOSENINGS (owner ruling 2026-09-15, reports/research/probe_funnel_2026-09-15.md):
+# spread cap 3%, DIP_CONVEXITY on SPY-below-50d, probes freed from other strategies' older names,
+# and the ledger's DIP_CONVEXITY cell pinned to the live cell and the engine's exit (BREAKDOWNS 2026-09-15).
+import fade_book as _fb23
+import json as _json23
+_spec23 = _json23.load(open("fade_book_spec.json", encoding="utf-8"))
+check(6, "spread cap: the live spec's entry.max_spread_pct is 3.0 (owner ruling 2026-09-15)",
+      float(((_spec23.get("entry") or {}).get("max_spread_pct") or 0)) == 3.0, str((_spec23.get("entry") or {}).get("max_spread_pct")))
+_rb23 = dict(_fb23._REGIME)
+try:
+    _fb23._REGIME.update({"date": date.today().isoformat(), "val": "MILD", "dist": 0.3, "dist50_prev": -0.6, "dist20_prev": -0.3})
+    _ok_mild_neg = lab._dip_convexity_regime_ok()             # prior close below both; today's bar above (ignored)
+    _fb23._REGIME.update({"val": "MILD", "dist": -0.5, "dist50_prev": 0.4, "dist20_prev": -0.3})
+    _ok_mild_pos = lab._dip_convexity_regime_ok()             # prior close above the 50d; today's bar below (ignored)
+    _fb23._REGIME.update({"val": "MILD", "dist": -0.5, "dist50_prev": -0.6, "dist20_prev": 0.2})
+    _ok_no20 = lab._dip_convexity_regime_ok()                 # 50d yes, 20d confirmation missing
+    _fb23._REGIME.update({"val": "BEAR", "dist": -3.1, "dist50_prev": -3.0, "dist20_prev": -1.0})
+    _ok_bear = lab._dip_convexity_regime_ok()
+    _fb23._REGIME.update({"val": None, "dist": -3.1, "dist50_prev": -3.0, "dist20_prev": -1.0})
+    _ok_none = lab._dip_convexity_regime_ok()
+finally:
+    _fb23._REGIME.clear(); _fb23._REGIME.update(_rb23)
+check(6, "DIP_CONVEXITY gate: PRIOR-CLOSE SPY below its 50d and 20d passes in MILD and BEAR; above the 50d, no 20d confirmation, or no reading fails closed; today's bar is ignored",
+      _ok_mild_neg and _ok_bear and not _ok_mild_pos and not _ok_no20 and not _ok_none,
+      f"mild-={_ok_mild_neg} bear={_ok_bear} mild+={_ok_mild_pos} no20={_ok_no20} none={_ok_none}")
+_lab23 = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+_i23 = _lab23.find('("DIP_CONVEXITY", lambda')
+check(6, "DIP_CONVEXITY gate: one definition - the filter lambda and the loop gate both call the helper, the BEAR label is gone from both",
+      _lab23.count("_dip_convexity_regime_ok()") >= 2 and '"DIP_CONVEXITY": "BEAR"' not in _lab23
+      and _i23 > 0 and 'spy_regime() == "BEAR"' not in _lab23[_i23:_i23 + 400]
+      and "market_spy_dist_pct" not in _lab23[_i23:_i23 + 300] and "spy_dist50()" not in _lab23[_lab23.find("def _dip_convexity_regime_ok"):_lab23.find("def _dip_convexity_regime_ok") + 1500])
+_td23 = date.today().isoformat()
+_ot23, _ob23 = lab._roster_open_sets([
+    {"status": "OPEN", "book": "PROBE", "probe_strategy": "EXEC_BASELINE", "ticker": "QQQ", "entry_ts_utc": "2026-09-02T14:00:00Z"},
+    {"status": "PENDING", "book": "PROBE", "probe_strategy": "FOLLOW_CALLS", "ticker": "NVDA", "entry_ts_utc": _td23 + "T14:00:00Z"},
+    {"status": "OPEN", "book": "FADE", "ticker": "AMZN", "entry_ts_utc": "2026-09-10T14:00:00Z"},
+    {"status": "CLOSED", "book": "PROBE", "probe_strategy": "BULL_DIP", "ticker": "SLV", "entry_ts_utc": _td23 + "T14:00:00Z"}], _td23)
+_loop23 = _lab23[_lab23.find("_open_tk, _open_by_tk = _roster_open_sets("):]
+check(6, "roster pre-filter: only same-day names are skipped for everyone; an older name is skipped only for the strategy holding it; the loop and the student seat use the helper",
+      _ot23 == {"NVDA"} and _ob23.get("QQQ") == {"EXEC_BASELINE"} and _ob23.get("AMZN") == {"FADE"} and "SLV" not in _ob23
+      and 'in _open_tk or _pname in _open_by_tk.get(t.upper(), ())' in _loop23 and "_student_select(_ranked, _exec_cap, _open_tk |" in _loop23
+      and '(r.get("book") == "PROBE"\n' not in _lab23, f"today={_ot23} by_tk={_ob23}")
+_old_ll23 = lab._load_log_list
+_today23 = date.today().isoformat()
+_pos23 = [{"symbol": "QQQ261016C00730000", "qty": "1", "avg_entry_price": "8.82"}]
+_params23 = {"one_position_per_underlying": True, "max_contracts_per_ticker": 3, "ticker_cooloff_hours": 0}
+try:
+    lab._load_log_list = lambda: [{"status": "OPEN", "book": "PROBE", "probe_strategy": "EXEC_BASELINE", "entry_ts_utc": "2026-09-02T14:00:00Z",
+                                   "legs": {"bullish_call": {"occ_symbol": "QQQ261016C00730000"}}}]
+    _b_other = lab.ticker_blocked("QQQ", _pos23, _params23, open_orders=[], probe=True, probe_name="BULL_DIP")[0]
+    _b_same = lab.ticker_blocked("QQQ", _pos23, _params23, open_orders=[], probe=True, probe_name="EXEC_BASELINE")[0]
+    _b_noname = lab.ticker_blocked("QQQ", _pos23, _params23, open_orders=[], probe=True, probe_name=None)[0]
+    lab._load_log_list = lambda: [{"status": "PENDING", "book": "PROBE", "probe_strategy": "FOLLOW_CALLS", "entry_ts_utc": _today23 + "T14:00:00Z",
+                                   "legs": {"bullish_call": {"occ_symbol": "QQQ261016C00730000"}}}]
+    _b_today = lab.ticker_blocked("QQQ", _pos23, _params23, open_orders=[], probe=True, probe_name="BULL_DIP")[0]
+    lab._load_log_list = lambda: [{"status": "OPEN", "book": "FADE", "entry_ts_utc": "2026-09-02T14:00:00Z",
+                                   "legs": {"bullish_call": {"occ_symbol": "QQQ261016C00730000"}}}]
+    _b_fade = lab.ticker_blocked("QQQ", _pos23, _params23, open_orders=[], probe=False)[0]
+finally:
+    lab._load_log_list = _old_ll23
+check(6, "held-name rule: a probe is not blocked by another strategy's older position on the name; its own record, any same-day record, a non-probe caller and a probe WITHOUT a name still block",
+      (not _b_other) and _b_same and _b_today and _b_fade and _b_noname, f"other={_b_other} same={_b_same} today={_b_today} fade={_b_fade} noname={_b_noname}")
+import sys as _sys23
+_sys23.path.insert(0, "scripts")
+import returns_ledger as _rl23
+_dcx23 = _rl23.ARCHIVE_FILTER["DIP_CONVEXITY"][1]
+check(6, "ledger: DIP_CONVEXITY's archive cell is the live cell (calls, SPY below 50d and 20d) and its exit is the engine's PROBE_EXITS default",
+      _dcx23({"side": "C", "reg": -0.3, "sp": -0.2}) and not _dcx23({"side": "C", "reg": -0.3, "sp": 0.2})
+      and not _dcx23({"side": "C", "reg": 0.3, "sp": -0.2}) and not _dcx23({"side": "P", "reg": -0.3, "sp": -0.2})
+      and all(tuple(_rl23.DEFAULT_EXITS.get(_k, ())) == (-abs(_v["stop"]), _v["trig"], _v["give"]) for _k, _v in lab.PROBE_EXITS.items())
+      and set(_rl23.DEFAULT_EXITS) == set(lab.PROBE_EXITS))
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.

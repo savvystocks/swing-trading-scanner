@@ -5,9 +5,10 @@
   "flow_min": 50000,
   "flow_max": 400000,
   "direction": "contra_trend_and_spy",
-  "max_spread_pct": 2.0,
+  "max_spread_pct": 3.0,
   "max_spy_dist_pct": 99.0,
-  "regime_router": true
+  "regime_router": true,
+  "max_spread_pct_note": "3.0 since 2026-09-15 (owner ruling; reports/research/probe_funnel_2026-09-15.md: every cell's t vs pool unchanged or higher at alert spread <= 3%; was 2.0)"
  },
  "exit": {
   "scale_out": null,
@@ -144,6 +145,13 @@
     "stop": -70,
     "trail_activate": 80,
     "trail_drawdown": 30
+   },
+   "regime_gate": {
+    "spy_50d_dist_max": 0.0,
+    "spy_below_20d": true,
+    "applied": "2026-09-15",
+    "was": "the BEAR label (SPY 50d distance < -2) until 2026-09-15",
+    "evidence": "probe_funnel_2026-09-15: live cell (calls, SPY below 20d), wide exit: < -2 own +19.2/day t 3.33 on 56 days; < 0 own +8.75 t 3.72 on 103 days, halves +5.3/+12.2. Loosened to SPY below its 50-day; the 20d confirmation stays."
    }
   },
   "bull_dip": {

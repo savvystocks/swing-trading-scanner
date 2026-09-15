@@ -60,3 +60,7 @@ and the scoreboard that reports where the system stands against the North Star.
   v3 corpus cannot build rows for such days (no qualifying print), so it stops at the last complete
   day; the puller's zero-result defer retries for seven days, then the days stay holes. Read the
   sentinel's "uw prints cohort density" and "session_holes" rows before trusting a recent cell.
+- 2026-09-15 THE LEDGER'S DIP_CONVEXITY CELL WAS NOT THE LIVE CELL: it omitted the SPY-below-20d
+  confirmation and ran the BASE exit while the seat runs -70/+80/0.30. Re-cut; MOT 6.23 pins the ledger's
+  cell and exit to the engine's (`sandbox_proactive_lab.py:PROBE_EXITS` mirrored as `DEFAULT_EXITS` in
+  `scripts/returns_ledger.py`). A cell must mirror the live filter AND the exit the seat runs.

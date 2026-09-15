@@ -15,8 +15,14 @@ spread, in `fivek_probes.py`), plus the STUDENT seat when `probe.student.enabled
   10 sensor sweeps per cycle (`_att`) and `_PROBE_MAX_ATT = 4` per probe; two entries per cycle max.
 - Live pre-quote: `sandbox_proactive_lab.py:_live_spread_pct` quotes the alert contract before any
   sweep; > 4% or no quote skips the name for the whole roster without spending an attempt.
-- Regime gates: BULL_DIP needs BULL, DIP_CONVEXITY needs BEAR, DIP_CONF_MILD needs MILD
-  (`fade_book.spy_regime`); calls-only set `_CALLS_ONLY`.
+- Regime gates: BULL_DIP needs BULL and DIP_CONF_MILD needs MILD (`fade_book.spy_regime`);
+  DIP_CONVEXITY needs the PRIOR-CLOSE SPY below its 50-day and 20-day (`sandbox_proactive_lab.py:_dip_convexity_regime_ok`,
+  spec `probe.dip_convexity.regime_gate`, fail-closed; the BEAR label until 2026-09-15); DIP_CONF_MILD keeps
+  the hoisted intraday SPY-below-20d check; calls-only set `_CALLS_ONLY`.
+- Held-name pre-filter: `sandbox_proactive_lab.py:_roster_open_sets` - a name with a record entered today
+  is skipped for every probe; a name another strategy holds from an earlier day is skipped only for that
+  strategy; the student seat also skips names any STUDENT_* record holds. `ticker_blocked` repeats the
+  rule inside `enter_proactive_set`; `occ_collision` keeps one record per contract.
 - Per-strategy tuning: `sandbox_proactive_lab.py:_tuned` reads `probe.tuning.<name>` from the spec
   (size_usd, struct, band); `probe.per_strategy_max_per_day` = 8.
 - Trigger-contract override: `_PROBE_CONTRACT["c"]` makes `build_legs` return the alert's own
@@ -47,3 +53,7 @@ spread, in `fivek_probes.py`), plus the STUDENT seat when `probe.student.enabled
 - 2026-09-10 (third entry) ROSTER STARVATION, STRUCTURAL FIX: per-probe ceiling 4 + live pre-quote.
 - The tuner's incumbent pool for every fixed strategy is `pricey_4_9`; the court's clock restarts
   on `probe.tuning.<name>.applied`.
+- 2026-09-15 THE PROBE FUNNEL (reports/research/probe_funnel_2026-09-15.md): the $1,000 slot confines every
+  cell to the $4-9.90 band, where the archive shows no edge (all five cells flat or negative on own return;
+  every one positive above $16). Loosening regime or dip conditions adds fills that lose; only the spread
+  cap (3%), DIP_CONVEXITY's band (SPY below 50d) and the held-name rule were loosened (decision 41, MOT 6.23).

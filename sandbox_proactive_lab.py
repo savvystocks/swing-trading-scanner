@@ -434,6 +434,44 @@ def _tuned(name, kind):
         pass
     return (PROBE_STRUCT if kind == "struct" else PROBE_EXITS).get(name or "")
 _ACTIVE_PROBE = {"name": None}
+
+
+def _roster_open_sets(plog, today):
+    """Held-name pre-filter for the roster loop (panel 2026-09-15: the loop skipped any name held by
+    ANY probe record before ticker_blocked ever ran, so the 2026-09-15 softening was dead on arrival).
+    Returns (open_today, open_by_tk): the underlyings with a record entered TODAY (any book - the
+    same-day double-claim), and every open underlying -> the set of strategies holding it, so the
+    loop can skip a name only for the strategy that already holds it. Mirrors ticker_blocked."""
+    open_today, open_by_tk = set(), {}
+    for r in plog or []:
+        if r.get("status") not in ("OPEN", "PENDING"):
+            continue
+        tk = (r.get("ticker") or "").upper()
+        if not tk:
+            continue
+        if (r.get("entry_ts_utc") or "")[:10] == today:
+            open_today.add(tk)
+        open_by_tk.setdefault(tk, set()).add(r.get("probe_strategy") or r.get("book") or "")
+    return open_today, open_by_tk
+
+
+def _dip_convexity_regime_ok():
+    """DIP_CONVEXITY's market gate (owner ruling 2026-09-15, reports/research/probe_funnel_2026-09-15.md):
+    SPY below its 50-day (spec probe.dip_convexity.regime_gate.spy_50d_dist_max, default 0.0; the
+    rule was the BEAR label, < -2, until then) - the SPY-below-20d confirmation the tuner added on
+    2026-09-01 is checked here too, on the same prior-close basis as the archive cell (panel
+    2026-09-15: the old lambda read an intraday 20d distance). Fail-CLOSED: no regime reading -> no
+    trade. The filter lambda and the loop gate both call this, so the cell has one definition
+    (MOT 6.23, drill scenario 8)."""
+    try:
+        _thr = float((((fade_book.spec().get("probe") or {}).get("dip_convexity") or {}).get("regime_gate") or {}).get("spy_50d_dist_max", 0.0))
+    except Exception:
+        _thr = 0.0
+    if fade_book.spy_regime() is None:
+        return False
+    _p50, _p20 = fade_book.spy_prev_readings()          # PRIOR-CLOSE readings (panel 2026-09-15): the
+    return (isinstance(_p50, (int, float)) and isinstance(_p20, (int, float))   # archive cell is d1_close
+            and _p50 < _thr and _p20 < 0)                 # (CORPUS LEAK #3 basis), so the live gate is too
 # ---------------------------------------------------------------------------------------------
 # STUDENT PICKERS (owner order 2026-09-11 02:04: "build it and get it live ... more student
 # oriented picks, not strategies"; panel 2026-09-11 required changes applied). ONE roster seat,
@@ -1014,7 +1052,7 @@ def _occ_matches_base(sym, base):
     return sym == base or (sym.startswith(base) and sym[len(base):len(base) + 1].isdigit())
 
 
-def ticker_blocked(ticker, positions, params, open_orders=None, now=None, log=None, probe=False):
+def ticker_blocked(ticker, positions, params, open_orders=None, now=None, log=None, probe=False, probe_name=None):
     """Entry guard. TIER B (owner decision 21): ONE POSITION PER UNDERLYING - a hard block that
     SUPERSEDES max_contracts_per_ticker (the old cap is kept only as a subordinated belt-and-braces
     ceiling below). Exemptions, from the 2026-07-06 audit: broker positions with NO OPEN tracking
@@ -1026,20 +1064,22 @@ def ticker_blocked(ticker, positions, params, open_orders=None, now=None, log=No
         tracked = set()
         for rec in log:
             if rec.get("status") in ("OPEN", "PENDING"):       # PARKED / FLUSHED / CLOSED never block
-                if probe and rec.get("book") != "PROBE":
-                    # CROSS-BOOK SOFTENING (owner 2026-09-02): a $1k probe is no longer blocked by a
-                    # DIFFERENT book's old position on the same name - July/August legacies were
-                    # throttling discovery on exactly the names where flow concentrates (7 of 16
-                    # candidates blocked on 09-02). Probes still block on other PROBES (below) and on
-                    # any book's RECENT entry (<=5 days) - same-week entries can synthesize the same
-                    # contract, and two records on one occ is the double-claim disease.
-                    ts = str(rec.get("entry_ts_utc") or "")[:10]
-                    try:
-                        from datetime import date as _d
-                        if ts and (_d.today() - _d.fromisoformat(ts)).days > 5:
-                            continue
-                    except Exception:
-                        pass
+                if probe and probe_name:      # a probe WITHOUT a name keeps the full one-per-underlying
+                                              # rule (panel 2026-09-15: never default to the most permissive)
+                    # PROBE SOFTENING v2 (owner ruling 2026-09-15, reports/research/probe_funnel_2026-09-15.md):
+                    # a $1k probe blocks only on ITS OWN strategy's open record on the name and on any
+                    # record entered TODAY (same-day double-claim); the contract itself is guarded
+                    # downstream by the occ_collision rule (one record per contract, ever), which is
+                    # what the 2026-09-02 rule's 5-day cross-book window existed for. 71 candidate
+                    # names on 09-14 were blocked by OTHER strategies' older positions, the control's
+                    # above all (QQQ 10, SPY 7, NVDA 7, SLV 7, IBIT 7). Non-probe callers keep the
+                    # one-per-underlying rule unchanged.
+                    _own = (rec.get("probe_strategy") or rec.get("book"))
+                    _same = _own == probe_name
+                    _today_rec = (str(rec.get("entry_ts_utc") or "")[:10]
+                                  == (now or datetime.now(timezone.utc)).date().isoformat())
+                    if not _same and not _today_rec:
+                        continue
                 for occ in _record_leg_occs(rec).values():
                     tracked.add((occ or "").upper())
         for p in positions or []:
@@ -1567,7 +1607,8 @@ def enter_proactive_set(ticker, regime, mock=False, candidate=None, dry_run=True
     creds = _paper_creds()
     if positions is None:
         positions = get_open_positions(creds) if all(creds) else []
-    blocked, why = ticker_blocked(ticker, positions, params, open_orders=open_orders, probe=probe)
+    blocked, why = ticker_blocked(ticker, positions, params, open_orders=open_orders, probe=probe,
+                                  probe_name=(_ACTIVE_PROBE.get("name") if probe else None))
     if blocked:
         return {"trade_set_id": None, "ticker": ticker, "skipped": True, "reason": why, "status": "SKIPPED"}
 
@@ -2888,12 +2929,12 @@ def run_scheduled_cycle(mock=False):
             global LEG_BUDGET
             _today = _now_iso_ms()[:10]
             _plog = _load_log_list()
-            _recent_cut = (datetime.now(timezone.utc) - timedelta(days=5)).date().isoformat()
-            _open_tk = {(r.get("ticker") or "").upper() for r in _plog if r.get("status") in ("OPEN", "PENDING")
-                        and (r.get("book") == "PROBE"
-                             or (r.get("entry_ts_utc") or "")[:10] >= _recent_cut)}
-            # cross-book softening (owner 2026-09-02): probes block on other PROBES and on any
-            # book's RECENT (<=5d) entry; old legacy positions no longer freeze discovery names
+            _open_tk, _open_by_tk = _roster_open_sets(_plog, _today)
+            # held-name rule v2 (owner ruling 2026-09-15, panel-corrected): _open_tk holds the names
+            # with a record entered TODAY (any book); a name another strategy holds from an earlier
+            # day is skipped only for THAT strategy (_open_by_tk, checked per probe below). The
+            # contract itself is guarded by occ_collision inside enter_proactive_set. The 2026-09-02
+            # rule (any probe record, any book <=5d) blocked 71 names on 09-14.
             _pcount = {}                       # _plog is loaded AFTER this cycle's fade entries, so
             for _pr in _plog:                  # _open_tk sees them - no same-cycle duplicate underlying
                 if _pr.get("book") == "PROBE" and (_pr.get("entry_ts_utc") or "")[:10] == _today:
@@ -2943,10 +2984,8 @@ def run_scheduled_cycle(mock=False):
                                              # bull battery 2026-08-28: ticker dip + market BULL
                                              # + calls = +11.2%/day t+5.86 over 240 days, both
                                              # halves positive - the bull book's anchor candidate
-                ("DIP_CONVEXITY", lambda md, c: fade_book.spy_regime() == "BEAR"
-                                                and isinstance((md.get("regime_stack") or {}).get("market_spy_dist_pct"), (int, float))
-                                                and (md.get("regime_stack") or {}).get("market_spy_dist_pct") < 0
-                                                and (c or {}).get("flow_type") == "call"),
+                ("DIP_CONVEXITY", lambda md, c: _dip_convexity_regime_ok()      # prior-close SPY below its
+                                                and (c or {}).get("flow_type") == "call"),   # 50d AND 20d (one helper)
                                                 # + SPY<20d confirmation (tuner 2026-09-01: spyconf
                                                 # wide +29.5/day t2.89 vs fullband -7 first half)
                                              # everything-sweep winner 2026-08-27: bear-regime
@@ -3048,7 +3087,8 @@ def run_scheduled_cycle(mock=False):
                                 continue    # shadow: scored and logged, never entered
                             _sent = 0
                             _exec_cap = _scfg_all.get("exec_max_ask", 10.0)
-                            for _pk, _act in _student_select(_ranked, _exec_cap, _open_tk):
+                            for _pk, _act in _student_select(_ranked, _exec_cap, _open_tk | {
+                                    _tk for _tk, _ss in _open_by_tk.items() if any(str(_x).startswith("STUDENT") for _x in _ss)}):
                                 if _att >= 10 or _sent >= 1 or _cyc >= 2:
                                     break
                                 _sc, _mname, _c, _vec = _pk[0], _pk[1], _pk[2], _pk[3]
@@ -3101,16 +3141,18 @@ def run_scheduled_cycle(mock=False):
                         continue
                     if _pcount.get(_pname, 0) >= _per:
                         continue
-                    _rg_need = {"BULL_DIP": "BULL", "BULL_DIP_X": "BULL", "DIP_CONVEXITY": "BEAR",
-                                "DIP_CONF_MILD": "MILD"}.get(_pname)
+                    _rg_need = {"BULL_DIP": "BULL", "BULL_DIP_X": "BULL",
+                                "DIP_CONF_MILD": "MILD"}.get(_pname)   # DIP_CONVEXITY: the helper below
+                    if _pname == "DIP_CONVEXITY" and not _dip_convexity_regime_ok():
+                        continue            # SPY below its 50d (owner ruling 2026-09-15), fail-closed
                     if _rg_need and fade_book.spy_regime() != _rg_need:
                         continue            # candidate-independent regime gate checked BEFORE the
                                             # sensor sweep (panel 2026-09-01: evaluating it inside
                                             # enter_proactive_set burned the whole attempt budget
                                             # on wrong-regime days); spy_regime is cached per day
-                    if _pname in ("DIP_CONVEXITY", "DIP_CONF_MILD") and not (
+                    if _pname == "DIP_CONF_MILD" and not (
                             isinstance(_mkt20, (int, float)) and _mkt20 < 0):
-                        continue            # their SPY<20d confirmation is market-level - hoisted
+                        continue            # its SPY<20d confirmation is market-level - hoisted
                                             # here so 50d/20d divergence days can't burn the budget
                     _pool = (_WHALE_CANDS[:8] if _pname == "FADE_WHALE"
                              else _PRICEY_CANDS[:14] if _pname in ("DIP_CONF_MILD", "BULL_DIP_X")
@@ -3124,8 +3166,8 @@ def run_scheduled_cycle(mock=False):
                         if _att >= 10 or _patt >= _PROBE_MAX_ATT:
                             break
                         t = c["ticker"]
-                        if t.upper() in _open_tk:
-                            continue            # never stack a probe on any book's open underlying
+                        if t.upper() in _open_tk or _pname in _open_by_tk.get(t.upper(), ()):
+                            continue            # same-day name (any book) or this strategy's own name
                         if _pname in _CALLS_ONLY and (c or {}).get("flow_type") != "call":
                             continue            # candidate-level hypothesis check is FREE - never pay
                                                 # a sensor sweep to learn a put isn't a call (panel

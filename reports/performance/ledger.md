@@ -1,4 +1,4 @@
-# RETURNS LEDGER - 2026-09-14T22:24:03+00:00
+# RETURNS LEDGER - 2026-09-15T00:32:25+00:00
 
 live from proactive_sandbox_logs.json (1009 records, the court's construction); archive from reports/research/probe_tuner_rows_v3.jsonl (72659 rows, last day 2026-09-04, ask_at_qualifying_print / d1_close).
 
@@ -8,7 +8,7 @@ live from proactive_sandbox_logs.json (1009 records, the court's construction); 
 | FOLLOW_CALLS | 3 | -61.9 | 0% | -68.0 | days | 3 | -61.9 | 3 | -2.19 | -49.6/-68.0 | -1,366 | -0.0 (-4.5) | +4.04 | +3.0/-3.0 | 1/8 live virgin days vs control - HOLD |
 | BULL_DIP | 0 | n/a | n/a | n/a | days | 0 | n/a | 0 | n/a | n/a/n/a | n/a | +2.9 (-4.5) | +3.94 | +9.8/-4.0 | 0/8 live virgin days vs control - HOLD |
 | DIP_CONF_MILD | 0 | n/a | n/a | n/a | days | 0 | n/a | 0 | n/a | n/a/n/a | n/a | +0.2 (-7.1) | +2.25 | +2.4/-2.0 | 0/8 live virgin days vs control - HOLD |
-| DIP_CONVEXITY | 0 | n/a | n/a | n/a | days | 0 | n/a | 0 | n/a | n/a/n/a | n/a | +8.1 (+0.1) | +2.07 | -3.4/+19.1 | 0/8 live virgin days vs control - HOLD |
+| DIP_CONVEXITY | 0 | n/a | n/a | n/a | days | 0 | n/a | 0 | n/a | n/a/n/a | n/a | +8.8 (-4.1) | +3.72 | +5.3/+12.2 | 0/8 live virgin days vs control - HOLD |
 | WINNER_PROFILE | 0 | n/a | n/a | n/a | days | 0 | n/a | 0 | n/a | n/a/n/a | n/a | -4.6 (-4.5) | -2.90 | -2.7/-6.4 | - |
 | CREDIT_SPREAD_W | 5 | +3.0 | 100% | +2.2 | weeks | 4 | +3.5 | 4 | -0.82 | +3.7/+3.3 | +151 | n/a (n/a) | n/a | n/a/n/a | 3/8 live virgin weeks vs control - HOLD |
 | STUDENT_FAMILY | 0 | n/a | n/a | n/a | days | 0 | n/a | 0 | n/a | n/a/n/a | n/a | n/a (n/a) | n/a | n/a/n/a | 0/8 live virgin weeks vs control - HOLD |

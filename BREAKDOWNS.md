@@ -852,3 +852,18 @@ REGRESSION CHECK: MOT 6.22 asserts a fund symbol never calls Yahoo and that a se
 ticker in a cycle is served from the cache unchanged. LESSON: "cancelled" is not "failed" to GitHub,
 so it is not "failed" to any alarm that reads the sentinel; count the runs that never finished, not
 just the ones that broke.
+
+2026-09-15 - THE LEDGER'S DIP_CONVEXITY CELL WAS NOT THE LIVE CELL. WHAT BROKE: the returns ledger
+(the one source every performance number is supposed to come from) scored DIP_CONVEXITY's archive
+cell as "calls, SPY 50d < -2" on the BASE exit (-50/+50/0.20): +8.1/day, t 2.07, 63 days. The seat
+actually trades calls with SPY below its 50d AND below its 20d (the tuner's 2026-09-01 confirmation),
+and runs the engine's hardcoded wide exit (-70/+80/0.30, `PROBE_EXITS`): +19.2/day, t 3.33, 56 days.
+Found while testing the owner's loosening request on the archive. ROOT CAUSE: `ARCHIVE_FILTER` was
+written from the seat's NAME, not its filter lambda, and `exit_idx` only knew `probe.tuning.<name>.exit`
+- the spec never had that key for this seat, so the map's own line "the ledger snaps to what the
+spec says" described a key that did not exist. FIX (same commit as the loosenings): the cell is
+re-cut to the live cell (and to the new SPY-below-50d band, decision 41); `DEFAULT_EXITS` mirrors
+`PROBE_EXITS`. REGRESSION CHECK: MOT 6.23 asserts the ledger's DIP_CONVEXITY predicate equals the live
+cell and its exit equals `sandbox_proactive_lab.PROBE_EXITS`. LESSON: a cell must mirror the live filter
+AND the exit the seat runs; both live in the engine, so the ledger must read them from the engine or
+be pinned to it by a check.

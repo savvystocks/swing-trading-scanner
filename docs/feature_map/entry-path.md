@@ -7,8 +7,9 @@ the spread cap, the PENDING record before the order, the OPEN record after.
 
 ## Where
 `sandbox_proactive_lab.py:enter_proactive_set`, in order:
-1. `sandbox_proactive_lab.py:ticker_blocked` - one position per underlying (OPEN and PENDING
-   records; cross-book softening for probes), the subordinated `max_contracts_per_ticker`, cool-off.
+1. `sandbox_proactive_lab.py:ticker_blocked` - one position per underlying for non-probe books (OPEN
+   and PENDING records); a probe blocks only on its own strategy's record, any same-day record, or a
+   pending entry order on the name (2026-09-15); the subordinated `max_contracts_per_ticker`, cool-off.
 2. `sandbox_proactive_lab.py:collect_metadata` - the sensor sweep (macro, IV term, GEX, alt
    catalyst, V11 sensors); missing spot or IV -> skip, never fabricate.
 3. probe_filter (the strategy's lambda) -> `sandbox_proactive_lab.py:classify_regime` (flow side
@@ -23,7 +24,8 @@ the spread cap, the PENDING record before the order, the OPEN record after.
 7. Trigger-leg live repricing - a fresh indicative quote; no quote, crossed, spread > 2%, or ask
    outside `band_lo`-`band_hi` -> skip; entry_premium and the nickel limit come from the live ask.
 8. One record per contract, ever: any OPEN or PENDING record or broker position on the OCC -> skip.
-9. Spread cap (`fade_book.spread_cap`) on the real quote, with one budgeted retry for non-probes.
+9. Spread cap (`fade_book.spread_cap`, `entry.max_spread_pct` = 3.0 since 2026-09-15) on the real quote,
+   with one budgeted retry for non-probes.
 10. PENDING record appended (`sandbox_proactive_lab.py:_append_log`) with `client_order_id` per leg
     BEFORE `sandbox_proactive_lab.py:route_to_alpaca_paper` (`_order_payload`, `_submit_paper_order`);
     then the record is rewritten OPEN with the orders, the buy telegram is sent and the flag stored.
@@ -62,3 +64,7 @@ the spread cap, the PENDING record before the order, the OPEN record after.
   asked Yahoo per candidate per cycle with no cache, 10-84 s per fund; a quarter of cycles died at the job's
   8-minute cap. Funds are skipped and lookups cached per cycle now (MOT 6.22). A slow sensor is an exit-pass
   outage: the entry path runs before the exit pass in the cycle order.
+- 2026-09-15 THE PROBE FUNNEL: on 09-14, 71 candidate names were blocked for probes by OTHER strategies'
+  older positions (the control's above all) and 154 died at the 2% cap; median 2 names per cycle reached the
+  probe filters. Held-name rule and cap loosened (decision 41); the price band is the real limiter
+  (probe-roster.md). The court does not demote for silence.

@@ -41,12 +41,16 @@ ACTIVE = ["EXEC_BASELINE", "FOLLOW_CALLS", "BULL_DIP", "DIP_CONF_MILD", "DIP_CON
           "WINNER_PROFILE", "CREDIT_SPREAD_W", "STUDENT_FAMILY"]
 EXITS = [(-50.0, 50.0, 0.20), (-50.0, 80.0, 0.30), (-50.0, 80.0, 0.20), (-50.0, 50.0, 0.30),
          (-70.0, 50.0, 0.20), (-70.0, 80.0, 0.30), (-70.0, 80.0, 0.20), (-70.0, 50.0, 0.30)]
+DEFAULT_EXITS = {"DIP_CONVEXITY": (-70.0, 80.0, 0.30),     # mirror of sandbox_proactive_lab.PROBE_EXITS (the
+                 "BULL_DIP_X": (-70.0, 80.0, 0.30)}         # engine's hardcoded per-strategy exits when the spec
+                                                           # has no probe.tuning override); MOT 6.23 pins every key equal
 ARCHIVE_FILTER = {
     "EXEC_BASELINE": ("POOL: every archive trigger (the control's universe)", lambda r: True),
     "FOLLOW_CALLS": ("calls, all regimes", lambda r: r["side"] == "C"),
     "BULL_DIP": ("calls, SPY 50d > +2, ticker below its 20d", lambda r: r["side"] == "C" and r["reg"] > 2 and r["smd"] < 0),
     "DIP_CONF_MILD": ("calls, SPY 50d within +-2, ticker below 20d, SPY below 20d", lambda r: r["side"] == "C" and -2 <= r["reg"] <= 2 and r["smd"] < 0 and r["sp"] < 0),
-    "DIP_CONVEXITY": ("calls, SPY 50d < -2", lambda r: r["side"] == "C" and r["reg"] < -2),
+    "DIP_CONVEXITY": ("calls, SPY below its 50d and below its 20d (prior close; the live cell since 2026-09-15)",
+                      lambda r: r["side"] == "C" and r["reg"] < 0 and r["sp"] < 0),
     "WINNER_PROFILE": ("PARTIAL: premium > 73.2k only (the corpus has no IV column for the second leg)", lambda r: r["prem"] > 73200),
 }
 
@@ -158,6 +162,10 @@ def archive_side(spec):
             best = min(range(len(EXITS)), key=lambda i: sum(abs(a - b) for a, b in zip(EXITS[i], cfg)))
             return best, EXITS[best], "spec probe.tuning.exit snapped to the tuner exit list"
         except Exception:
+            if name in DEFAULT_EXITS:                      # BREAKDOWNS 2026-09-15: the seat runs its wide
+                cfg = DEFAULT_EXITS[name]                  # default, so the cell must be scored on it
+                best = min(range(len(EXITS)), key=lambda i: sum(abs(a - b) for a, b in zip(EXITS[i], cfg)))
+                return best, EXITS[best], "engine default PROBE_EXITS (wide) snapped to the tuner exit list"
             return 0, EXITS[0], "BASE (-50 / +50 / 0.20)"
 
     def daymeans(pred, ei):

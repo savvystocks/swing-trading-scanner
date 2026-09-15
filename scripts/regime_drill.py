@@ -274,6 +274,26 @@ try:
 except Exception as _e7:
     check("STUDENT 7: drill scenario ran", False, f"{type(_e7).__name__}: {_e7}")
 
+# --- scenario 8: DIP_CONVEXITY's market gate (owner ruling 2026-09-15): SPY below its 50d passes in MILD,
+# above it stands down, BULL stands down; the 20d confirmation is the hoisted loop check, unchanged ---
+try:
+    _reg_bak8 = dict(fade_book._REGIME)
+    try:
+        fade_book._REGIME.update({"date": date.today().isoformat(), "val": "MILD", "dist": 0.2, "dist50_prev": -0.7, "dist20_prev": -0.4})
+        check("DIP_CONVEXITY 8: MILD with the PRIOR close below its 50d and 20d passes the market gate", lab._dip_convexity_regime_ok())
+        fade_book._REGIME.update({"val": "MILD", "dist": -0.4, "dist50_prev": 0.9, "dist20_prev": -0.4})
+        check("DIP_CONVEXITY 8: MILD with the prior close above its 50d stands down (today's bar ignored)", not lab._dip_convexity_regime_ok())
+        fade_book._REGIME.update({"val": "MILD", "dist": -0.4, "dist50_prev": -0.7, "dist20_prev": 0.3})
+        check("DIP_CONVEXITY 8: without the 20d confirmation it stands down", not lab._dip_convexity_regime_ok())
+        fade_book._REGIME.update({"val": "BULL", "dist": 2.6, "dist50_prev": 2.5, "dist20_prev": 1.0})
+        check("DIP_CONVEXITY 8: BULL stands down", not lab._dip_convexity_regime_ok())
+        fade_book._REGIME.update({"val": None, "dist": -2.6, "dist50_prev": -2.5, "dist20_prev": -1.0})
+        check("DIP_CONVEXITY 8: no regime reading fails closed", not lab._dip_convexity_regime_ok())
+    finally:
+        fade_book._REGIME.clear(); fade_book._REGIME.update(_reg_bak8)
+except Exception as _e8:
+    check("DIP_CONVEXITY 8: drill scenario ran", False, f"{type(_e8).__name__}: {_e8}")
+
 print(f"\nDRILL: {len(PASS)} pass / {len(FAIL)} fail", flush=True)
 if FAIL:
     print("FAILED: " + ", ".join(FAIL), flush=True)

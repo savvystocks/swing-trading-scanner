@@ -4699,3 +4699,12 @@
 
 **Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 19.5 worked against it.
 
+## Autopsy - AMZN (0a669185f7a8)
+- entered 2026-08-31T14:46:46.951Z | trigger regime_BEARISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +41.6% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 270.0 -> negative-gamma slide, no positive catalyst.
+

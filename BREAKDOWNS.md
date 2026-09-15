@@ -867,3 +867,70 @@ re-cut to the live cell (and to the new SPY-below-50d band, decision 41); `DEFAU
 cell and its exit equals `sandbox_proactive_lab.PROBE_EXITS`. LESSON: a cell must mirror the live filter
 AND the exit the seat runs; both live in the engine, so the ledger must read them from the engine or
 be pinned to it by a check.
+
+2026-09-15 - THE RESERVED CONTRACT: THREE POSITIONS COULD NOT BE CLOSED, ONE EXPIRING IN THREE DAYS.
+WHAT BROKE: ON260918P00075000 (QUIET_TAPE, expires 2026-09-18) was decided CLOSE_EXPIRY by the exit
+engine on every cycle from 17:47Z and never closed. The broker had no record of the attempts at all
+(zero orders on the symbol today) and the position showed qty_available 0. QQQ261016C00730000 and
+SPY260925P00740000 were in the same state. The failure counter climbed to 4, reset at 5 because a
+bid existed, and looped: never closed, never parked, nothing printed, no alert. Found in the Tuesday
+evening department review, not by any alarm. ROOT CAUSE (two): (1) `sandbox_proactive_lab.py:_retire_stop`
+returned True immediately when the RECORD said `backstop.retired` - a claim about the broker, taken
+as the broker's state. All three records claimed retired while their stop still rested (status
+pending_new since 2026-08-25 on ON), so the cancel was skipped, the resting stop kept the only
+contract reserved, and `_close_position` was rejected before it ever reached an order id. (2)
+`_note_close_failure` knows only one failure mode, the zero-bid corpse; a rejection with a live bid
+reset the counter, which is what made it silent and infinite. FIX (same evening): _retire_stop now
+sweeps the BROKER for any resting sell on the contract (the recorded id, a superseded one, or an
+orphan), cancels each, re-confirms none survive, and returns False on unknown state - the record's
+flag can no longer authorise a close; _note_close_failure gets a reserved-contract branch that prints
+every cycle and sends ONE telegram.
+
+WHAT THE BROKER ACTUALLY SHOWED (checked contract by contract the same night, all 17 resting sells vs
+their records): 14 healthy positions matched their record's order id exactly. The three stuck ones
+diverged in TWO different ways, and the fix covers both. (a) QQQ261016C00730000: the record's id WAS
+the resting order and the record said retired=True - the flag lied about the very order it named.
+(b) SPY260925P00740000 and ON260918P00075000: the record named one id (1798669e, da341230) while a
+DIFFERENT order rested (fd15045c, 9cac7cbd), and the resting id was not in prior_order_ids either -
+an orphan stop the record knew nothing about. Sweeping by contract, not by remembered id, is the only
+thing that catches (b). LIKELY MECHANISM, and a latent defect of the same class left for a separate
+fix: `_cancel_order` returns True on HTTP 204, which means the cancel was ACCEPTED, not completed -
+proved tonight, when cancelling these three with the market shut left all three in `pending_cancel`
+and still resting, to complete only at the next open. `manage_backstops` treats that True as "the old
+stop is gone" and submits a replacement, which is how one contract ends up with a stop the record does
+not name. OWED: make the ratchet's cancel confirm terminal the way _retire_stop now does.
+
+The three stale stops were cancelled by hand the same night; with the market shut they sit in
+pending_cancel and complete at the 2026-09-16 open, after which the first cycle can close them.
+
+PANEL, BEFORE THE SHIP (two reviewers, one DO-NOT-SHIP, both applied): the first draft of this fix
+reproduced the very class it closes, three ways. (1) _retire_stop now BLOCKS the close before
+_close_position is reached, so _note_close_failure - the only path that alerts - became unreachable
+for exactly this incident: a stop that will not die printed to the cycle log and paged nobody, and a
+degraded orders endpoint was silent entirely. Both call sites now route a blocked close through
+_note_close_failure, so it counts and alerts like a rejected one. (2) _qty_available returns None on
+any failure and `None == 0` is False, so a failed broker read fell through to the zero-bid branch that
+resets the counter - the silent loop again. Unknown is now treated as blocked. (3) the alert was once
+per record for its LIFETIME (the ON stop had rested three weeks); it is now once per record per day,
+and always when expiry is within a day, because a physically settled option left open through Friday
+is ASSIGNED into shares and this engine manages OCC-keyed legs only, never a stock position. Also
+caught: MOT 6.26 as first written called the real _notify and the real _order_state, so the ship gate
+would have paged the owner and hit Alpaca on every run. REGRESSION CHECK: MOT 6.26 (a retired flag with a live resting order
+cancels it and refuses the close; a clean contract proceeds; a reserved contract is flagged and
+alerted, never parked). LESSON: our record of the broker is a claim, not the broker. Any step that
+can collide with live broker state must read the broker, and a failure mode with only one branch will
+one day be the wrong branch.
+
+2026-09-15 (second entry) - THE CONTRACT CAP KEPT THE HELD-NAME LOOSENING FROM WORKING. WHAT BROKE:
+STUDENT_A produced its first eligible live pick since going live (XLE 66 call, score 34.69 vs
+threshold 14.58, ask $0.49) and did not enter: "student[STUDENT_A] skip XLE: ticker cap: 5 held + 5
+pending on XLE >= 3". WINNER_PROFILE was refused the same name the same cycle. ROOT CAUSE: the
+subordinated `max_contracts_per_ticker` (3) in `sandbox_proactive_lab.py:ticker_blocked` counts
+contracts across the WHOLE account, so EXEC_BASELINE's 5-lot XLE put from 09-14 plus its own resting
+5-lot stop made 10 on a cap of 3 for every other strategy - the exact block the 2026-09-15 held-name
+loosening (decision 41) was meant to remove, one layer below it. Two gates, one intent: loosening the
+first without the second bought nothing for the seats that most needed it. FIX: for a named probe the
+cap counts only that strategy's own contracts (its own OPEN/PENDING records' OCCs); every other caller
+keeps the account-wide count. REGRESSION CHECK: MOT 6.26 (another strategy's 5+5 does not block a
+different probe; the owning strategy and non-probe callers still capped). LESSON: when a rule exists
+in two places, change both or neither; a "subordinated belt-and-braces" cap is still a cap.

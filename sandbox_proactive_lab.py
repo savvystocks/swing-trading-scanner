@@ -1092,14 +1092,36 @@ def ticker_blocked(ticker, positions, params, open_orders=None, now=None, log=No
             syms = [o.get("symbol")] + [l.get("symbol") for l in (o.get("legs") or [])]
             if any(_occ_matches_base(s, base) for s in syms if s):
                 return True, f"one-per-underlying: pending entry order on {base}"
+    # OWN-STRATEGY SCOPE (owner ruling 2026-09-15 22:5x, ROADMAP decision 44): the subordinated
+    # contract cap counted every book's contracts on the name, so one multi-contract position locked
+    # the ticker for everyone - it refused STUDENT_A's first live pick and WINNER_PROFILE on XLE
+    # ("5 held + 5 pending on XLE >= 3") the day after the held-name rule was loosened for exactly
+    # that reason. For a named probe the cap now measures only THAT strategy's own exposure; every
+    # other caller keeps the account-wide count.
+    _own_occs = None
+    if probe and probe_name:
+        _own_occs = set()
+        for rec in (log if log is not None else _load_log_list()):
+            if rec.get("status") not in ("OPEN", "PENDING"):
+                continue
+            if (rec.get("probe_strategy") or rec.get("book")) != probe_name:
+                continue
+            for occ in _record_leg_occs(rec).values():
+                _own_occs.add((occ or "").upper())
+            if rec.get("occ"):
+                _own_occs.add((rec.get("occ") or "").upper())
     held = 0
     for p in positions or []:
         sym = (p.get("symbol") or "").upper()
+        if _own_occs is not None and sym not in _own_occs:
+            continue
         if sym != base and _occ_matches_base(sym, base):    # equity shares (probes) are not contracts
             held += abs(int(float(p.get("qty", 0) or 0)))
     pending = 0
     for o in open_orders or []:
         syms = [o.get("symbol")] + [l.get("symbol") for l in (o.get("legs") or [])]
+        if _own_occs is not None and not any((x or "").upper() in _own_occs for x in syms if x):
+            continue
         if any(_occ_matches_base(s, base) for s in syms if s and s.upper() != base):
             pending += abs(int(float(o.get("qty", 0) or 0)))
     cap = params.get("max_contracts_per_ticker", 3)
@@ -1286,24 +1308,79 @@ def _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs):
     return booked_full
 
 
-def _retire_stop(rec, leg_name, occ, creds, log, closed_legs):
+def _resting_sells(occ, creds, orders=None):
+    """Every resting SELL order the broker holds on this contract - the recorded backstop, a
+    superseded id the record lost, or anything else. Broker truth, not record truth."""
+    try:
+        orders = orders if orders is not None else get_open_orders(creds)
+    except Exception:
+        return None                                      # unknown -> caller must not close blind
+    out = []
+    for o in orders or []:
+        if (o.get("side") or "").lower() != "sell":
+            continue
+        syms = [o.get("symbol")] + [l.get("symbol") for l in (o.get("legs") or [])]
+        if any((x or "").upper() == (occ or "").upper() for x in syms):
+            out.append(o)
+    return out
+
+
+def _qty_available(occ, creds):
+    """The position's UNRESERVED quantity. 0 means every contract is held by a resting order and
+    any close will be rejected before it reaches an order id (BREAKDOWNS 2026-09-15)."""
+    import urllib.parse
+    key, sec = creds
+    req = urllib.request.Request(PAPER_BASE + "/v2/positions/" + urllib.parse.quote(occ),
+                                 headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            p = json.loads(r.read())
+        v = p.get("qty_available")
+        return abs(int(float(v))) if v is not None else None
+    except Exception:
+        return None
+
+
+def _retire_stop(rec, leg_name, occ, creds, log, closed_legs, orders=None):
     """Safely take down a resting broker stop BEFORE a cron close/scale. Best-effort cancel, then
     CONFIRM terminal via GET and capture any fill during its life. Returns True ONLY when the stop is
     confirmed gone (so _close_position can't collide with a live stop holding the qty). A cancel we
     cannot confirm returns False -> the caller skips the close this cycle and retries next cycle
     (the CRITICAL fix: never mark a stop cancelled on an unconfirmed DELETE)."""
-    bs = (rec.get("backstop") or {}).get(leg_name)
-    if not bs or not bs.get("order_id") or bs.get("retired"):
-        return True
-    _cancel_order(bs["order_id"], creds)                 # best-effort; the GET below is the authority
-    o = _order_state(bs["order_id"], creds)
-    _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs)   # book any fill during its life
-    if o is None:
-        return False                                     # cannot confirm terminal -> do NOT close blind
-    if (o.get("status") or "").lower() in _TERMINAL_ORDER:
+    bs = (rec.get("backstop") or {}).get(leg_name) or {}
+    if bs.get("order_id") and not bs.get("retired"):
+        _cancel_order(bs["order_id"], creds)             # best-effort; the GET below is the authority
+        o = _order_state(bs["order_id"], creds)
+        _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs)   # book any fill during its life
+        if o is None:
+            return False                                 # cannot confirm terminal -> do NOT close blind
+        if (o.get("status") or "").lower() not in _TERMINAL_ORDER:
+            return False                                 # still active / partially_filled -> retry next cycle
         bs["retired"] = True
+    # BROKER TRUTH (BREAKDOWNS 2026-09-15): the record's "retired" flag is a claim ABOUT the broker,
+    # and it was wrong - ON/QQQ/SPY each carried retired=True while their stop still rested, so the
+    # contract stayed reserved (qty_available 0), every close was rejected before it reached an
+    # order id, and the leg could never exit. The sweep below is the authority: any resting sell on
+    # this contract (the recorded id, a superseded one, or an orphan) is cancelled and CONFIRMED
+    # gone before a close is attempted. Unknown state -> False (retry), never a blind close.
+    stray = _resting_sells(occ, creds, orders)          # `orders`: the cycle's single listing (panel
+    if stray is None:                                   # 2026-09-15 - two full listings per closing
+        print(f"  {rec.get('ticker')} {occ}: cannot read the broker's resting orders - close deferred "
+              f"(never close blind against a live stop)", flush=True)
+        return False                                    # leg is the eight-minute-wall shape again)
+    if not stray:
         return True
-    return False                                         # still active / partially_filled -> retry next cycle
+    for o in stray:
+        _cancel_order(o.get("id"), creds)
+    _capture_backstop_fill(rec, leg_name, occ, creds, log, closed_legs)   # one may have filled as we cancelled
+    still = _resting_sells(occ, creds)
+    if still is None or still:
+        bs["retired"] = False                            # the record was lying: let the normal path retry
+        print(f"  {rec.get('ticker')} {occ}: {len(still) if still else '?'} resting sell(s) still live - "
+              f"close deferred to the next cycle", flush=True)
+        return False
+    bs["retired"] = True
+    return True
 
 
 def _backstop_level(entry_px, stage, peak_mfe, params, probe=None):
@@ -1436,6 +1513,43 @@ def _note_close_failure(rec, path, leg_name, occ, params, creds=None):
     but a corpse must not leave a live GTC stop behind)."""
     fails = path["close_fails"] = path.get("close_fails", 0) + 1
     if fails < params.get("close_fail_park_after", 5):
+        return
+    # RESERVED CONTRACT (BREAKDOWNS 2026-09-15): a close rejected because a resting order holds the
+    # quantity is NOT a zero-bid corpse. Before this branch the bid check below reset the counter
+    # every fifth cycle, so ON/QQQ/SPY looped silently for hours and never parked and never closed.
+    # Say it once, loudly, and leave the retry running - _retire_stop clears the stop from now on.
+    _avail = _qty_available(occ, creds) if creds else None
+    if creds and (_avail is None or _avail == 0):
+        # RESERVED, OR UNKNOWN (panel 2026-09-15): _qty_available returns None on ANY failure, and
+        # `None == 0` is False, so the first draft fell straight through to the bid branch below -
+        # which resets the counter and is the exact silent loop this commit exists to kill. Unknown
+        # is treated as blocked: say so, keep retrying, never park what we cannot measure. WITHOUT
+        # creds nothing can be checked, so the zero-bid park below still stands (MOT 6.6).
+        _why = "reserved by a resting order (qty_available 0)" if _avail == 0 else "UNKNOWN - the broker did not answer"
+        path["close_fails"] = 0
+        path["close_blocked_by_resting_order"] = _now_iso_ms()
+        _dte = None
+        try:
+            _x = _occ_expiry(occ)
+            _dte = (date.fromisoformat(_x) - datetime.now(timezone.utc).date()).days if _x else None
+        except Exception:
+            _dte = None
+        print(f"  {rec.get('ticker')} {occ}: close REJECTED - contract {_why} after {fails} attempts"
+              f"{'' if _dte is None else f' ({_dte}d to expiry)'}", flush=True)
+        # Alert once per record per DAY, not once per lifetime (panel 2026-09-15: a record blocked for
+        # three weeks would have paged once), and ALWAYS when expiry is near enough that a physically
+        # settled option would assign instead of closing.
+        _today_s = datetime.now(timezone.utc).date().isoformat()
+        _urgent = isinstance(_dte, int) and _dte <= 1
+        if rec.get("reserved_alerted", "")[:10] != _today_s or _urgent:
+            rec["reserved_alerted"] = _now_iso_ms()
+            _notify(f"<b>{'URGENT: ' if _urgent else ''}CLOSE BLOCKED</b> {rec.get('ticker')} {occ}: "
+                    f"the contract is {_why}, so my exit cannot fill"
+                    f"{'' if _dte is None else f' and it expires in {_dte} day(s)'}. I cancel the resting "
+                    f"order and retry every cycle."
+                    + (" CLOSE THIS BY HAND if it is still open at Friday's close - a physically settled "
+                       "option that expires in the money is assigned into shares, which this engine does "
+                       "not manage." if _urgent else ""))
         return
     bid = None
     try:
@@ -1942,6 +2056,7 @@ def manage_open_positions(creds, params, positions=None):
     pos_by_occ = {(p.get("symbol") or "").upper(): p for p in positions}
     log = _load_log_list()
     closed_legs, autopsies, dirty = [], [], False
+    _cycle_orders = [None]          # filled once, on the first leg that actually closes this cycle
     for rec in log:
         if rec.get("status") != "OPEN" or not isinstance(rec.get("legs"), dict):
             continue
@@ -2024,6 +2139,11 @@ def manage_open_positions(creds, params, positions=None):
                        "stage": path.get("stage", "initial")}
                                                                   # day-trade flags); the exit rule
                                                                   # fires from tomorrow's first cycle
+            if dec.get("action", "").startswith(("CLOSE", "SCALE")) and _cycle_orders[0] is None:
+                try:
+                    _cycle_orders[0] = get_open_orders(creds)     # ONE listing per cycle, shared by every
+                except Exception:                                # _retire_stop below (panel 2026-09-15)
+                    _cycle_orders[0] = None
             if dec["action"] == "SCALE_OUT_50" and int((rec["legs"].get(leg_name) or {}).get("contracts") or 1) <= 1:
                 # ONE-LOT WALL (BREAKDOWNS 2026-09-14): half of one contract cannot be sold, so the
                 # old path retried the half-sale forever and the trail never armed - HOOD gave back
@@ -2037,9 +2157,10 @@ def manage_open_positions(creds, params, positions=None):
                                   stage="trailing", mfe_pct=path["mfe_pct"],
                                   book=rec.get("book"), probe=rec.get("probe_strategy"))
             if dec["action"] == "SCALE_OUT_50":                          # tier 1: sell half, runner continues
-                if not _retire_stop(rec, leg_name, occ, creds, log, closed_legs):
-                    dirty = True                                          # stop live / cancel unconfirmed ->
-                    continue                                             # do NOT sell against it; retry next cycle
+                if not _retire_stop(rec, leg_name, occ, creds, log, closed_legs, _cycle_orders[0]):
+                    _note_close_failure(rec, path, leg_name, occ, params, creds)   # panel 2026-09-15: a close
+                    dirty = True                                          # BLOCKED before the attempt is still a
+                    continue                                             # failed close - count it and alert
                 if leg_name in rec["leg_exits"]:                          # a full backstop fill during retire closed it
                     dirty = True
                     continue
@@ -2057,9 +2178,10 @@ def manage_open_positions(creds, params, positions=None):
                     _note_close_failure(rec, path, leg_name, occ, params, creds)   # park a zero-bid corpse after N fails
                 dirty = True
             elif dec["action"].startswith("CLOSE"):          # stop / break-even / trail / expiry -> full close
-                if not _retire_stop(rec, leg_name, occ, creds, log, closed_legs):
-                    dirty = True                                          # a filled close + live stop would double-sell:
-                    continue                                             # skip until the stop is confirmed gone
+                if not _retire_stop(rec, leg_name, occ, creds, log, closed_legs, _cycle_orders[0]):
+                    _note_close_failure(rec, path, leg_name, occ, params, creds)   # panel 2026-09-15: without this
+                    dirty = True                                          # the alert was unreachable for exactly the
+                    continue                                             # incident this commit exists to fix
                 if leg_name in rec["leg_exits"]:                          # backstop already fully closed the leg
                     dirty = True
                     continue

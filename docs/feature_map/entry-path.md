@@ -9,7 +9,8 @@ the spread cap, the PENDING record before the order, the OPEN record after.
 `sandbox_proactive_lab.py:enter_proactive_set`, in order:
 1. `sandbox_proactive_lab.py:ticker_blocked` - one position per underlying for non-probe books (OPEN
    and PENDING records); a probe blocks only on its own strategy's record, any same-day record, or a
-   pending entry order on the name (2026-09-15); the subordinated `max_contracts_per_ticker`, cool-off.
+   pending entry order on the name (2026-09-15); the subordinated `max_contracts_per_ticker` (3), which
+   for a named probe counts only THAT strategy's own contracts since 2026-09-15; cool-off.
 2. `fade_book.py:stood_down` - before any sweep, a fade-book (non-probe) candidate is skipped when the
    regime router says BULL or MILD (2026-09-15; the decision is unchanged, only earlier); then
    `sandbox_proactive_lab.py:collect_metadata` - the sensor sweep (macro, IV term, GEX, alt
@@ -70,3 +71,7 @@ the spread cap, the PENDING record before the order, the OPEN record after.
   older positions (the control's above all) and 154 died at the 2% cap; median 2 names per cycle reached the
   probe filters. Held-name rule and cap loosened (decision 41); the price band is the real limiter
   (probe-roster.md). The court does not demote for silence.
+- 2026-09-15 (second entry) THE CONTRACT CAP: `max_contracts_per_ticker` counted every book's contracts,
+  so a 5-lot position plus its own resting stop made 10 against a cap of 3 and refused STUDENT_A's first
+  live pick and WINNER_PROFILE on XLE - one layer below the held-name rule loosened the same day.
+  Scoped to the probe's own contracts (MOT 6.26). When a rule lives in two places, change both.

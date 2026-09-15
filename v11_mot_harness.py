@@ -1426,6 +1426,70 @@ check(6, "fade stand-down: in MILD the entry function skips as not fade-shaped B
       bool(_r25.get("skipped")) and "not fade-shaped" in str(_r25.get("reason")) and _calls25 == []
       and lab._skip_code(str(_r25.get("reason"))) == lab._skip_code("fade_book: not fade-shaped (needs flow side contra trend AND contra SPY)"),
       f"{str(_r25.get('reason'))[:80]} sweeps={_calls25}")
+# 6.26 THE RESERVED CONTRACT (BREAKDOWNS 2026-09-15): a stop the record called retired was still
+# resting, the contract stayed reserved and every close was rejected; and the contract cap counted
+# other strategies' contracts, refusing STUDENT_A's first live pick.
+_lab26 = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+_rs26 = _lab26[_lab26.index("def _retire_stop("):_lab26.index("def _backstop_level(")]
+check(6, "retire-stop: the record's retired flag no longer short-circuits the cancel; broker resting sells are swept and re-confirmed",
+      "_resting_sells(occ, creds)" in _rs26 and 'bs.get("retired")' in _rs26
+      and "if not bs or not bs.get(\"order_id\") or bs.get(\"retired\"):\n        return True" not in _rs26
+      and _rs26.count("return False") >= 3)
+_oo26, _ord26, _co26, _nt26, _cc26 = lab.get_open_orders, lab._order_state, lab._cancel_order, lab._notify, []
+_stub = [{"id": "x1", "side": "sell", "symbol": "ZZ260918P00075000", "qty": "1"}]
+try:
+    lab.get_open_orders = lambda creds=None: list(_stub)
+    lab._cancel_order = lambda oid, creds: (_cc26.append(oid), True)[1]
+    lab._order_state = lambda oid, creds: None       # no live network call inside the ship gate (panel 2026-09-15)
+    lab._notify = lambda text: True                  # and NEVER page the owner from a test (telegram policy)
+    _r26 = {"ticker": "ZZ", "backstop": {"l": {"order_id": "x1", "retired": True}}}
+    _live = lab._retire_stop(_r26, "l", "ZZ260918P00075000", ("k", "s"), [], [])
+    lab.get_open_orders = lambda creds=None: []
+    _r26b = {"ticker": "ZZ", "backstop": {"l": {"order_id": "x1", "retired": True}}}
+    _clean = lab._retire_stop(_r26b, "l", "ZZ260918P00075000", ("k", "s"), [], [])
+finally:
+    lab.get_open_orders, lab._order_state, lab._cancel_order, lab._notify = _oo26, _ord26, _co26, _nt26
+check(6, "retire-stop: a 'retired' backstop whose order is STILL resting cancels it and refuses the close; with nothing resting the close proceeds",
+      _live is False and _cc26 == ["x1"] and _clean is True, f"live={_live} cancels={_cc26} clean={_clean}")
+_avail26 = lab._qty_available
+_old_ll26 = lab._load_log_list
+_nt26b, _sent26 = lab._notify, []
+try:
+    lab._notify = lambda text: (_sent26.append(text), True)[1]     # stubbed: a test never pages the owner
+    lab._qty_available = lambda occ, creds: 0
+    _rec26 = {"ticker": "ZZ"}; _p26 = {"close_fails": 4}
+    lab._note_close_failure(_rec26, _p26, "l", "ZZ260918P00075000", {"close_fail_park_after": 5}, ("k", "s"))
+    lab._qty_available = lambda occ, creds: None                   # broker unreadable: must NOT fall through
+    _rec26u = {"ticker": "ZZ"}; _p26u = {"close_fails": 9}
+    lab._note_close_failure(_rec26u, _p26u, "l", "ZZ260918P00075000", {"close_fail_park_after": 5}, ("k", "s"))
+finally:
+    lab._qty_available, lab._notify = _avail26, _nt26b
+check(6, "close failure: a reserved contract is flagged and alerted, never parked as a zero-bid corpse and never silently looped",
+      _rec26.get("status") != "PARKED" and _p26.get("close_blocked_by_resting_order")
+      and _rec26.get("reserved_alerted") and len(_sent26) == 2, f"{_rec26.get('status')} {_p26} sent={len(_sent26)}")
+check(6, "close failure: a broker read that FAILS is treated as blocked, never as a zero-bid corpse (the None == 0 trap)",
+      _rec26u.get("status") != "PARKED" and _p26u.get("close_blocked_by_resting_order")
+      and "UNKNOWN" in (_sent26[-1] if _sent26 else ""), f"{_rec26u.get('status')} {_p26u}")
+_lab26b = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+_mop26 = _lab26b[_lab26b.index("def manage_open_positions("):]
+check(6, "exit pass: a close BLOCKED before the attempt (live stop, or a broker we cannot read) goes through the same counter and alert as a rejected one",
+      _mop26.count("_note_close_failure(rec, path, leg_name, occ, params, creds)") >= 4
+      and _mop26.count("_retire_stop(rec, leg_name, occ, creds, log, closed_legs, _cycle_orders[0])") == 2
+      and "get_open_orders(creds)     # ONE listing per cycle" in _mop26)
+_pos26 = [{"symbol": "XLE261016P00063000", "qty": "5", "avg_entry_price": "1.08"}]
+_ord26b = [{"symbol": "XLE261016P00063000", "side": "sell", "qty": "5"}]
+_par26 = {"one_position_per_underlying": True, "max_contracts_per_ticker": 3, "ticker_cooloff_hours": 0}
+_book26 = [{"status": "OPEN", "book": "PROBE", "probe_strategy": "EXEC_BASELINE", "ticker": "XLE",
+            "entry_ts_utc": "2026-09-14T14:00:00Z", "legs": {"bearish_put": {"occ_symbol": "XLE261016P00063000"}}}]
+try:
+    lab._load_log_list = lambda: list(_book26)
+    _b_student = lab.ticker_blocked("XLE", _pos26, _par26, open_orders=_ord26b, probe=True, probe_name="STUDENT_A")
+    _b_owner = lab.ticker_blocked("XLE", _pos26, _par26, open_orders=_ord26b, probe=True, probe_name="EXEC_BASELINE")
+    _b_plain = lab.ticker_blocked("XLE", _pos26, _par26, open_orders=_ord26b, probe=False)
+finally:
+    lab._load_log_list = _old_ll26
+check(6, "contract cap: another strategy's 5 held + 5 pending no longer block a different probe; the owning strategy and non-probe callers are still capped",
+      (not _b_student[0]) and _b_owner[0] and _b_plain[0], f"student={_b_student} owner={_b_owner} plain={_b_plain}")
 # 6.11 STUDENT PICKERS (owner order 2026-09-11; panel-corrected design): shared 15-feature
 # vector, dependency-free evaluator parity, prior-close regime inputs, one roster seat that
 # ranks best-first, fail-closed model loading, passive score log, court membership.

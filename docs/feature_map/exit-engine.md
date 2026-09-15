@@ -52,3 +52,16 @@ stops sit under every position so a blind engine still has a floor. No same-day 
   `putw_leg.py:weekly_cycle` returned early when disabled, and the ^XSP window was ten days. Settles
   now run regardless of enabled with a 120-day window; the sentinel's "expired legs still open" row
   is the alarm.
+- 2026-09-15 THE RESERVED CONTRACT: `sandbox_proactive_lab.py:_retire_stop` trusted the record's
+  `backstop.retired` flag, so a stop that was still resting kept the contract reserved
+  (qty_available 0) and every close was rejected before it reached an order id - three positions,
+  one expiring in three days, looping silently for hours. The sweep now reads the broker
+  (`sandbox_proactive_lab.py:_resting_sells`) and a reserved contract alerts once
+  (`sandbox_proactive_lab.py:_note_close_failure`, `sandbox_proactive_lab.py:_qty_available`). MOT 6.26.
+- A close that fails has THREE modes, not one: no bid (park the corpse), reserved contract (cancel the
+  resting order and retry), and UNKNOWN because a broker read failed. Unknown is treated as blocked -
+  the first draft of the 2026-09-15 fix let a failed `_qty_available` fall through to the bid branch,
+  which is the silent loop it was written to kill (panel finding, caught before the ship).
+- Alerts on a blocked close are once per record per DAY, and always when expiry is <= 1 day away: a
+  physically settled option left open through Friday is ASSIGNED into shares, which this engine does
+  not manage (`_record_leg_occs` is OCC-keyed and would never see the stock position).

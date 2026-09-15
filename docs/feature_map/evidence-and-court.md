@@ -64,3 +64,9 @@ and the scoreboard that reports where the system stands against the North Star.
   confirmation and ran the BASE exit while the seat runs -70/+80/0.30. Re-cut; MOT 6.23 pins the ledger's
   cell and exit to the engine's (`sandbox_proactive_lab.py:PROBE_EXITS` mirrored as `DEFAULT_EXITS` in
   `scripts/returns_ledger.py`). A cell must mirror the live filter AND the exit the seat runs.
+- 2026-09-15 CROSS-STRATEGY OVERLAP IS NOW POSSIBLE AND THE COURT DOES NOT MODEL IT: decisions 41 and 44
+  let several probes hold the SAME underlying on the same day (held-name rule loosened; the contract cap
+  scoped to each probe's own contracts). The court compares each strategy's day means against a shared
+  control and treats days as independent samples. Same-name overlap correlates them, which flatters a
+  t-stat built on the assumption of independence. Nothing de-duplicates or flags same-name-same-day
+  overlap yet; read a promotion case with that in mind and check the trades behind it.

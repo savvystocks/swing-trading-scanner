@@ -4789,3 +4789,21 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 470.0 fed the squeeze.
 
+## Autopsy - SPY (c3a8ac4ab43a)
+- entered 2026-08-27T15:26:21.956Z | trigger regime_BEARISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +37.1% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 771.0 -> negative-gamma slide, no positive catalyst.
+
+## Autopsy - QQQ (b462a131d4bc)
+- entered 2026-09-02T18:25:06.681Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.9% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 709.0 worked against it.
+

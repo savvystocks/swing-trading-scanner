@@ -4753,3 +4753,12 @@
 
 **Determining factor:** Bullish call FAILED (-52%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 118.0 worked against it.
 
+## Autopsy - AAPL (ab0c071083d4)
+- entered 2026-09-15T14:15:13.310Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +28.2% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 330.0 fed the squeeze.
+

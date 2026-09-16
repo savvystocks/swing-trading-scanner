@@ -1366,7 +1366,8 @@ check(6, "roster pre-filter: only same-day names are skipped for everyone; an ol
       and 'in _open_tk or _pname in _open_by_tk.get(t.upper(), ())' in _loop23 and "_student_select(_ranked, _exec_cap, _open_tk |" in _loop23
       and '(r.get("book") == "PROBE"\n' not in _lab23, f"today={_ot23} by_tk={_ob23}")
 _old_ll23 = lab._load_log_list
-_today23 = date.today().isoformat()
+_now23 = datetime.now(timezone.utc)      # PINNED (2026-09-16 00:00Z: the gate failed
+_today23 = _now23.date().isoformat()     # spuriously when a run crossed UTC midnight)
 _pos23 = [{"symbol": "QQQ261016C00730000", "qty": "1", "avg_entry_price": "8.82"}]
 _params23 = {"one_position_per_underlying": True, "max_contracts_per_ticker": 3, "ticker_cooloff_hours": 0}
 try:
@@ -1377,7 +1378,7 @@ try:
     _b_noname = lab.ticker_blocked("QQQ", _pos23, _params23, open_orders=[], probe=True, probe_name=None)[0]
     lab._load_log_list = lambda: [{"status": "PENDING", "book": "PROBE", "probe_strategy": "FOLLOW_CALLS", "entry_ts_utc": _today23 + "T14:00:00Z",
                                    "legs": {"bullish_call": {"occ_symbol": "QQQ261016C00730000"}}}]
-    _b_today = lab.ticker_blocked("QQQ", _pos23, _params23, open_orders=[], probe=True, probe_name="BULL_DIP")[0]
+    _b_today = lab.ticker_blocked("QQQ", _pos23, _params23, open_orders=[], probe=True, probe_name="BULL_DIP", now=_now23)[0]
     lab._load_log_list = lambda: [{"status": "OPEN", "book": "FADE", "entry_ts_utc": "2026-09-02T14:00:00Z",
                                    "legs": {"bullish_call": {"occ_symbol": "QQQ261016C00730000"}}}]
     _b_fade = lab.ticker_blocked("QQQ", _pos23, _params23, open_orders=[], probe=False)[0]
@@ -1402,7 +1403,7 @@ check(6, "probe pool: generic probes take candidates[:12]; the fade book's two-n
 # 6.25 THE FADE STAND-DOWN HOIST (owner ruling 2026-09-15 02:05 BST): with the regime router on, BULL
 # and MILD stand the fade book down BEFORE the sensor sweep; BEAR and an unknown regime fall through.
 import fade_book as _fb25
-_rb25 = dict(_fb25._REGIME); _sd25 = {}
+_rb25 = dict(_fb25._REGIME); _sd25 = {}; _sr25 = _fb25.spy_regime
 try:
     for _v25 in ("MILD", "BULL", "BEAR", None):
         _fb25._REGIME.update({"date": date.today().isoformat(), "val": _v25})
@@ -1417,10 +1418,10 @@ try:
     _fb25.active = lambda: True                 # the MOT keeps the fade book OFF for byte-identity; force it ON for this call
     lab.collect_metadata = lambda t, mock=False: (_calls25.append(t), _cm25(t, mock=mock))[1]
     lab._load_log_list = lambda: []
-    _fb25._REGIME.update({"date": date.today().isoformat(), "val": "MILD"})
+    _fb25.spy_regime = lambda: "MILD"           # PINNED: not the date-keyed cache (midnight race)
     _r25 = lab.enter_proactive_set("ZZFADE", None, mock=True, candidate={"flow_type": "call"}, dry_run=True, positions=[], open_orders=[])
 finally:
-    lab.collect_metadata, lab._load_log_list, _fb25.active = _cm25, _ll25, _act25
+    lab.collect_metadata, lab._load_log_list, _fb25.active, _fb25.spy_regime = _cm25, _ll25, _act25, _sr25
     _fb25._REGIME.clear(); _fb25._REGIME.update(_rb25)
 check(6, "fade stand-down: in MILD the entry function skips as not fade-shaped BEFORE any sensor sweep (same skip code)",
       bool(_r25.get("skipped")) and "not fade-shaped" in str(_r25.get("reason")) and _calls25 == []

@@ -4807,3 +4807,21 @@
 
 **Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 709.0 worked against it.
 
+## Autopsy - IWM (c555c3628c96)
+- entered 2026-09-14T14:38:27.452Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +33.8% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 287.5 -> negative-gamma slide, no positive catalyst.
+
+## Autopsy - SPY (e67df40d8f5f)
+- entered 2026-09-15T13:35:41.225Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +41.8% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 759.0 -> negative-gamma slide, no positive catalyst.
+

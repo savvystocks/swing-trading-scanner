@@ -85,14 +85,43 @@ Measurement incompatibility, not signal. The correction between the two clocks i
 across price bands (+3.35, +8.33, +4.18), so the two bases cannot be ordered against each other at
 all. Nothing about the flip survives as a tradeable claim, and the v3 basis remains the court's.
 
-## 4. One live thread, stated with its caveat
+## 4. The one live thread, re-run on matched rows - and it does NOT survive
 
-Qualifying-print CALLS in the affordable band, entered at the print and managed hourly, returned
-+3.91% a day (t 2.15, halves +6.6 / +1.2, 4,444 trades). That is positive, in the band the archive
-elsewhere says is dead. CAVEAT, and it is a real one: the hourly arm only covers contracts present
-in `data/hourly_paths.db` (4,444 of 5,879 rows in that cell), so the hourly population is a subset
-and may be the more liquid one. Before this is treated as anything, it needs re-running on rows where
-both clocks exist, which is the obvious next study and is not claimed here.
+Flagged in the first draft: qualifying-print CALLS in the affordable band, entered at the print and
+managed hourly, returned +3.91% a day (t 2.15) - positive, in the band the archive elsewhere calls
+dead. It was published with the caveat that the hourly arm covers only contracts present in
+`data/hourly_paths.db` and needed a re-run on rows where BOTH clocks exist. That re-run
+(`scripts/entry_timing_bothclocks.py`) is done.
+
+**Does bar coverage select winners? No.** Tested on the daily clock, which exists for every row:
+
+| Rows | Daily clock | t |
+|---|---|---|
+| covered by hourly bars (4,261) | +2.35%/day | +0.85 |
+| NOT covered (1,618) | +4.36%/day | +1.65 |
+| paired, same day, covered minus uncovered | **-0.97 pts/day** | -0.33 |
+
+Coverage is not picking winners - if anything the covered rows are slightly worse, and not
+significantly. It does select on liquidity and tenor (covered mean DTE 68 vs 126; covered names are
+SPY, IWM, QQQ, uncovered are TLT, IBIT, SOFI), but that selection does not move the outcome.
+
+**So what happened to +3.91%?** It was fragile. Restricting to rows where both clocks exist - 4,261
+instead of 4,444, a difference of 183 rows - moves the cell to:
+
+| Matched rows, calls $0.30-9.90 at the print | Mean per day | t | Halves |
+|---|---|---|---|
+| daily clock | +2.35% | +0.85 | +3.3 / +1.4 |
+| hourly clock | **+2.75%** | **+1.56** | **+5.7 / -0.2** |
+| paired hourly minus daily | +0.40 pts | +0.22 | +2.4 / -1.6 |
+
+**Verdict: it fails the pre-registered bar on both counts** - t 1.56 is under 2, and the second half
+is negative. A hundred and eighty-three rows carrying more than a point a day of the headline is the
+signature of a few outliers, not an edge. The thread is closed and this cell is NOT evidence of
+anything. Anyone citing +3.91% is citing a number this report has withdrawn.
+
+Note also that the clock effect inside THIS cell is only +0.40 points (t 0.22), an order of magnitude
+smaller than the +3.35 to +8.33 in section 2. The large clock effect lives elsewhere - in the puts
+and the wider bands - not in affordable calls.
 
 ## 5. What this settles
 
@@ -102,7 +131,9 @@ both clocks exist, which is the obvious next study and is not claimed here.
    for the first time.
 3. **Exit cadence is worth more than entry cadence**, by roughly an order of magnitude, and we
    already have it.
-4. **Retire cross-basis comparisons.** Daily-resolution and intraday-resolution numbers are not
+4. **The affordable-calls thread is closed** (section 4): it fails its own pre-registered bar on
+   matched rows and is withdrawn.
+5. **Retire cross-basis comparisons.** Daily-resolution and intraday-resolution numbers are not
    comparable, in either direction, at any price band.
 
 ## 6. Honesty notes

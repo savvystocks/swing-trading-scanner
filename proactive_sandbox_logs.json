@@ -215038,5 +215038,270 @@
   "intent_ts_utc": "2026-09-16T17:42:45.733Z",
   "probe_strategy": "DIP_CONF_MILD",
   "buy_alert_delivered": true
+ },
+ {
+  "trade_set_id": "7a28200f3946",
+  "ticker": "AMZN",
+  "regime": "BULLISH",
+  "trigger": "regime_BULLISH_loose",
+  "book": "PROBE",
+  "router_state": "MILD",
+  "entry_ts_utc": "2026-09-16T17:49:57.447Z",
+  "leg_budget_usd": 1000.0,
+  "execution_mode": "LIVE_PAPER",
+  "occ_resolution": "alpaca_real",
+  "ticker_guard": "clear",
+  "open_positions_checked": 43,
+  "params_snapshot": {
+   "regime_compass_bypass": true,
+   "max_bid_ask_spread_pct": 5.0,
+   "earnings_blackout_days": 3,
+   "alt_reddit_min_mentions": 10,
+   "alt_insider_min_dollar_value": 10000,
+   "portfolio_max_sector_concentration": 0.5,
+   "min_hold_hours": 24,
+   "take_profit_pct": 30,
+   "scale_out_pct": 50,
+   "break_even_pct": 0,
+   "trail_activate_pct": 50,
+   "trail_drawdown_pct": 20,
+   "stop_loss_pct": 50,
+   "expiry_exit_dte": 3,
+   "min_contracts": 2,
+   "one_position_per_underlying": true,
+   "max_contracts_per_ticker": 3,
+   "ticker_cooloff_hours": 4,
+   "stale_order_max_minutes": 30,
+   "daily_brake_stopouts": 3,
+   "daily_brake_loss_multiple": 2.0,
+   "brake_mode": "shadow",
+   "backstop_enabled": true,
+   "backstop_canary_occ": "",
+   "backstop_type": "stop",
+   "backstop_limit_buffer_pct": 25,
+   "backstop_min_delta": 0.01,
+   "close_fail_park_after": 5,
+   "scanner_min_premium": 25000,
+   "scanner_flow_limit": 600,
+   "scanner_premium_min": 0.3,
+   "scanner_premium_max": 4.0,
+   "harvest_topn": 20,
+   "harvest_random": 10,
+   "harvest_random_p": 0.007,
+   "harvest_daily_cap": 300,
+   "harvest_api_budget_per_day": 6000,
+   "harvest_calls_per_payload": 3,
+   "poller_chunk": 100,
+   "poller_runs_per_day": 26,
+   "scanner_barrier_up": 0.3,
+   "scanner_barrier_down": -0.5,
+   "backstop_note": "2026-08-25: canary GRADUATED (was pinned to FCEL260821C00022000, which expired 2026-08-21 - backstops were armed on ZERO positions since). Ford -87% autopsy: no broker stop + unquotable option = unmanaged decay to expiry. Backstops now arm on ALL eligible open legs from day 2 (same ratchet/fill-capture machinery the canary proved). Broker-side stops protect precisely the positions the engine cannot price."
+  },
+  "metadata": {
+   "entry_ts_utc": "2026-09-16T17:49:57.447Z",
+   "macro": {
+    "spot": 247.57,
+    "sma20": 257.24,
+    "distance_to_sma20_pct": -3.756,
+    "source": "alpaca"
+   },
+   "iv_term": {
+    "iv_front": 29.3,
+    "iv_back": 31.2,
+    "iv_ratio": 0.939,
+    "structure": "contango",
+    "source": "alpaca"
+   },
+   "gex": {
+    "net_gex": 552945.6,
+    "zero_gamma_strike": 275.0,
+    "distance_to_zero_gamma_pct": -11.08,
+    "regime": "positive_gamma",
+    "source": "uw"
+   },
+   "alt_catalyst": {
+    "reddit_mention_delta_pct": 25.9,
+    "insider_10d_buy_usd": 0,
+    "insider_cluster_flag": false,
+    "source": "apewisdom+edgartools"
+   },
+   "technical": {
+    "atr": 5.75,
+    "atr_pct": 2.32,
+    "rvol_10min": 0.68,
+    "source": "alpaca"
+   },
+   "fundamentals": {
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "market_cap": 2670421344256,
+    "short_pct_float": 0.94,
+    "short_ratio": 2.16,
+    "source": "yfinance"
+   },
+   "news": {
+    "headline_count": 8,
+    "latest_age_hours": 1.31,
+    "vader_compound": 0.296,
+    "news_type": "Product",
+    "top_headline": "What's Going On With Amazon Stock Today?",
+    "source": "alpaca_news+vader"
+   },
+   "regime_stack": {
+    "ticker_dist_pct": -3.756,
+    "market_spy_dist_pct": -0.699,
+    "sector_etf": "XLY",
+    "sector_dist_pct": -3.381,
+    "sector_vs_market_spread": -2.682,
+    "source": "alpaca_bars"
+   },
+   "skew": {
+    "put_iv_25d": 31.5,
+    "call_iv_25d": 38.6,
+    "skew_ratio": 0.818,
+    "skew_bias": "call_skew",
+    "delta_source": "greeks",
+    "source": "alpaca_snapshots"
+   },
+   "flow_aggression": {
+    "sweep_aggression_pct": 10.41,
+    "ask_sweep_prem": 2873259.0,
+    "total_flow_prem": 27588383.0,
+    "source": "uw_flow"
+   },
+   "dark_pool": {
+    "distance_to_heaviest_dp_node_pct": 0.0,
+    "heaviest_node_price": 247.57,
+    "node_size": 723514.0,
+    "n_prints": 200,
+    "window_start": "2026-09-16T17:02:45Z",
+    "window_end": "2026-09-16T17:47:46Z",
+    "source": "uw_darkpool"
+   },
+   "pemd": {
+    "days_since_earnings": 48,
+    "post_earnings_iv_crush_flag": false,
+    "days_to_earnings": 43,
+    "next_earnings_date": "2026-10-29",
+    "iv_rank_1y": 26.35,
+    "last_earnings_date": "2026-07-30",
+    "source": "yfinance+uw"
+   },
+   "vrp": {
+    "realized_vol_20d": 27.07,
+    "front_iv": 29.3,
+    "vrp": 2.23,
+    "vrp_regime": "rich",
+    "source": "alpaca_bars"
+   },
+   "flow_persistence": {
+    "net_directional_prem": -24079342.0,
+    "flow_persistence_pct": 27.2,
+    "flow_direction": "bearish",
+    "closing_accel": 7936167.0,
+    "n_ticks": 260,
+    "source": "uw_net_prem_ticks"
+   },
+   "price_action": {
+    "nvi": 976.85,
+    "vwma_20": 257.57,
+    "rsi_5": 33.38,
+    "rsi_15": 37.04,
+    "gap_pct": -0.103,
+    "day_range": 1.01,
+    "candle_body": 0.248,
+    "dist_sma50": -3.13,
+    "source": "alpaca_bars"
+   },
+   "macro_context": {
+    "iv_term_skew": -1.9,
+    "vix_level": 16.81,
+    "execution_hour": 17,
+    "day_of_week": 2,
+    "sector_vs_spy": -0.709,
+    "source": "yfinance+alpaca"
+   },
+   "dealer_greeks": {
+    "net_dex": 41732484.0,
+    "net_vanna": 68698764.0,
+    "net_charm": -94614279.0,
+    "delta_imbalance": 1.921,
+    "source": "uw_greek_exposure"
+   },
+   "liquidity_and_slippage": {
+    "equity_spread_pct_of_ask": 0.012,
+    "bid": 247.5,
+    "ask": 247.53,
+    "bid_size": 100.0,
+    "ask_size": 100.0,
+    "obi": 0.0,
+    "source": "alpaca_quote"
+   },
+   "relative_momentum": {
+    "rvol_20d": 0.66,
+    "gap_pct": -0.103,
+    "source": "alpaca_bars"
+   },
+   "float_mechanics": {
+    "short_pct_float": 0.94,
+    "float_shares": 9810475783,
+    "shares_short": 92067423,
+    "source": "yfinance"
+   },
+   "news_sentiment_score": 0.296,
+   "sweep_aggression_pct": 10.41,
+   "distance_to_zero_gamma_pct": -11.08,
+   "distance_to_heaviest_dp_node_pct": 0.0,
+   "days_since_earnings": 48,
+   "days_to_earnings": 43,
+   "post_earnings_iv_crush_flag": false,
+   "flow_persistence_pct": 27.2
+  },
+  "legs": {
+   "bullish_call": {
+    "structure": "LONG_CALL",
+    "occ_symbol": "AMZN261016C00255000",
+    "expiry": "2026-10-16",
+    "strike": 255.0,
+    "dte": 35,
+    "entry_premium": 8.98,
+    "limit_price": 9.07,
+    "contracts": 1,
+    "alloc_usd": 1000.0,
+    "illiquid": false,
+    "target_delta": 0.35,
+    "open_interest": "5711",
+    "occ_source": "alpaca_resolved",
+    "execution_cost": {
+     "bid": 5.9,
+     "ask": 5.98,
+     "mid": 5.94,
+     "bid_ask_spread_pct": 1.347,
+     "source": "alpaca_quote"
+    },
+    "oi_change": {
+     "oi_today": 6013.0,
+     "oi_prev": 5711.0,
+     "oi_change": 302.0,
+     "source": "uw_historic"
+    },
+    "client_order_id": "7a28200f3946-bullish_call"
+   }
+  },
+  "orders": {
+   "bullish_call": {
+    "status": "pending_new",
+    "order_id": "baa5111d-ffde-4fb9-99cc-5f4144765b38",
+    "error": null,
+    "submitted": true,
+    "limit_price": 9.07,
+    "contracts": 1
+   }
+  },
+  "exit": null,
+  "status": "OPEN",
+  "intent_ts_utc": "2026-09-16T17:50:06.302Z",
+  "probe_strategy": "FOLLOW_CALLS",
+  "buy_alert_delivered": true
  }
 ]

@@ -172876,18 +172876,49 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_EXPIRY",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -13.2
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 86.8,
+          "mae_pct": -36.8,
+          "stage": "closed",
+          "close_fails": 0,
+          "last_ret": -13.2
+        }
+      },
+      "mfe_pct": 86.8,
+      "mae_pct": -36.8,
+      "determining_factor": "Bearish put FAILED (-13%, move 0.0%): no breakdown materialised; spot held above zero-gamma 25.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "probe_strategy": "QUIET_TAPE",
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "ON260918P00075000",
+        "closed_at": "2026-09-16T13:34:23.239Z",
+        "return_pct": -13.2,
+        "reason": "2d to expiry -> close before decay/assignment",
+        "action": "CLOSE_EXPIRY",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 86.8,
         "mae_pct": -36.8,
-        "stage": "initial",
-        "close_fails": 4,
-        "last_ret": -14.4
+        "stage": "closed",
+        "close_fails": 0,
+        "last_ret": -13.2
       }
     },
     "backstop": {
@@ -172916,7 +172947,14 @@
         "error": null,
         "retired": true
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "f73f5de5-3911-4523-acf1-33ab55998527",
+        "at": "2026-09-16T13:34:23.239Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "41ada3692bff",
@@ -188057,13 +188095,13 @@
         "mfe_pct": 61.9,
         "mae_pct": -46.0,
         "stage": "initial",
-        "last_ret": 1.3,
+        "last_ret": -24.2,
         "close_fails": 1
       }
     },
     "backstop": {
       "bearish_put": {
-        "order_id": "1798669e-4eba-47c0-8f71-983effe6b806",
+        "order_id": "39acd330-80c0-49eb-a7c1-c041d8d93f88",
         "prior_order_ids": [
           "339af23f-f006-4e29-88dd-de0a71d15590",
           "769290c0-0837-479e-b40a-bf3c62dff677",
@@ -188072,7 +188110,8 @@
           "e06ebe7f-e634-4964-a303-119816767c12",
           "8166e3f2-466a-41ec-8e69-286ed1a277f9",
           "8d294d8d-d354-4c7c-9dde-3d2959f8353f",
-          "da99852a-2ad4-4086-97c1-90c364420270"
+          "da99852a-2ad4-4086-97c1-90c364420270",
+          "1798669e-4eba-47c0-8f71-983effe6b806"
         ],
         "reconciled_ids": [],
         "stop_price": 1.51,
@@ -188080,10 +188119,9 @@
         "entry_px": 3.02,
         "type": "stop",
         "stage": "initial",
-        "at": "2026-09-01T17:13:51.759Z",
+        "at": "2026-09-16T13:34:26.134Z",
         "status": "pending_new",
-        "error": null,
-        "retired": true
+        "error": null
       }
     }
   },
@@ -193227,13 +193265,13 @@
         "mfe_pct": 54.3,
         "mae_pct": -45.0,
         "stage": "initial",
-        "last_ret": -44.4,
+        "last_ret": -36.7,
         "close_fails": 4
       }
     },
     "backstop": {
       "bullish_call": {
-        "order_id": "52ed2ebf-3f7e-454c-96b5-34d8dac0fe81",
+        "order_id": "52f35939-8330-4341-ad7c-0b6e4bf57d83",
         "prior_order_ids": [
           "eb223a86-0724-45a1-a9e1-4abccb50bd16",
           "3de3f729-4532-4353-9330-ff26eb45253b",
@@ -193243,7 +193281,8 @@
           "85600226-306d-487b-b13c-ca5535303110",
           "b9b0c92b-c0f5-43f9-b340-00aea8f841b3",
           "d28890ea-916c-417b-abe8-b2152c945958",
-          "290ff509-a54b-42f9-9601-5c63e40a1968"
+          "290ff509-a54b-42f9-9601-5c63e40a1968",
+          "52ed2ebf-3f7e-454c-96b5-34d8dac0fe81"
         ],
         "reconciled_ids": [],
         "stop_price": 4.41,
@@ -193251,10 +193290,9 @@
         "entry_px": 8.82,
         "type": "stop",
         "stage": "initial",
-        "at": "2026-09-03T19:55:51.503Z",
+        "at": "2026-09-16T13:34:26.182Z",
         "status": "pending_new",
-        "error": null,
-        "retired": true
+        "error": null
       }
     }
   },
@@ -200108,17 +200146,49 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -52.3
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 11.2,
+          "mae_pct": -52.3,
+          "stage": "closed",
+          "last_ret": -52.3,
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 11.2,
+      "mae_pct": -52.3,
+      "determining_factor": "Bullish call FAILED (-52%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 8.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "probe_strategy": "EXEC_BASELINE",
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "CCL261009C00023000",
+        "closed_at": "2026-09-16T13:34:24.604Z",
+        "return_pct": -52.3,
+        "reason": "-52.3% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 11.2,
-        "mae_pct": -37.4,
-        "stage": "initial",
-        "last_ret": -32.7
+        "mae_pct": -52.3,
+        "stage": "closed",
+        "last_ret": -52.3,
+        "close_fails": 0
       }
     },
     "backstop": {
@@ -200133,9 +200203,17 @@
         "stage": "initial",
         "at": "2026-09-11T13:34:18.168Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "retired": true
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "3bbc404f-0ead-4df7-b815-c162ac33c6bd",
+        "at": "2026-09-16T13:34:24.604Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "9aadec67c291",
@@ -200734,7 +200812,7 @@
         "mfe_pct": 7.4,
         "mae_pct": -35.2,
         "stage": "initial",
-        "last_ret": 1.9
+        "last_ret": -5.6
       }
     },
     "backstop": {
@@ -201021,7 +201099,7 @@
       "bullish_call": {
         "mfe_pct": 4.5,
         "mae_pct": -26.0,
-        "last_ret": -25.3,
+        "last_ret": -22.1,
         "stage": "initial"
       }
     },
@@ -202296,7 +202374,7 @@
         "mfe_pct": -1.8,
         "mae_pct": -13.6,
         "stage": "initial",
-        "last_ret": -9.1
+        "last_ret": -1.8
       }
     },
     "backstop": {
@@ -202919,9 +202997,9 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": -1.2,
-        "mae_pct": -24.4,
+        "mae_pct": -25.6,
         "stage": "initial",
-        "last_ret": -14.6
+        "last_ret": -25.6
       }
     },
     "backstop": {
@@ -203211,7 +203289,7 @@
         "mfe_pct": 42.4,
         "mae_pct": -20.3,
         "stage": "initial",
-        "last_ret": -6.8
+        "last_ret": -20.3
       }
     },
     "backstop": {
@@ -203501,7 +203579,7 @@
         "mfe_pct": 18.1,
         "mae_pct": -20.1,
         "stage": "initial",
-        "last_ret": 10.9
+        "last_ret": -5.1
       }
     },
     "backstop": {
@@ -203791,7 +203869,7 @@
         "mfe_pct": 39.8,
         "mae_pct": -11.1,
         "stage": "initial",
-        "last_ret": -8.3
+        "last_ret": 14.8
       }
     },
     "backstop": {
@@ -204111,10 +204189,10 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 4.4,
+        "mfe_pct": 16.8,
         "mae_pct": -6.2,
         "stage": "initial",
-        "last_ret": -0.9
+        "last_ret": 16.8
       }
     },
     "backstop": {
@@ -204402,9 +204480,9 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -0.9,
-        "mae_pct": -25.3,
+        "mae_pct": -37.8,
         "stage": "initial",
-        "last_ret": -25.3
+        "last_ret": -37.8
       }
     },
     "backstop": {
@@ -204694,7 +204772,7 @@
         "mfe_pct": 1.3,
         "mae_pct": -40.3,
         "stage": "initial",
-        "last_ret": -30.8
+        "last_ret": -37.7
       }
     },
     "backstop": {
@@ -204984,7 +205062,7 @@
         "mfe_pct": 20.5,
         "mae_pct": -14.8,
         "stage": "initial",
-        "last_ret": 3.4
+        "last_ret": -4.5
       }
     },
     "backstop": {
@@ -205274,7 +205352,7 @@
         "mfe_pct": 26.8,
         "mae_pct": -7.3,
         "stage": "initial",
-        "last_ret": 12.2
+        "last_ret": -7.3
       }
     },
     "backstop": {
@@ -205564,7 +205642,7 @@
         "mfe_pct": -3.2,
         "mae_pct": -19.7,
         "stage": "initial",
-        "last_ret": -14.8
+        "last_ret": -3.2
       }
     },
     "backstop": {
@@ -205862,9 +205940,24 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 16.5,
-        "mae_pct": -2.2,
+        "mae_pct": -5.5,
         "stage": "initial",
-        "last_ret": 11.0
+        "last_ret": -5.5
+      }
+    },
+    "backstop": {
+      "bearish_put": {
+        "order_id": "e28ac078-a15d-494c-a726-51d2b45ff075",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 0.46,
+        "qty": 1,
+        "entry_px": 0.91,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:26.258Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -206139,7 +206232,22 @@
         "mfe_pct": 8.2,
         "mae_pct": -15.7,
         "stage": "initial",
-        "last_ret": -11.9
+        "last_ret": 6.0
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "3ab555a4-763c-4503-a6ec-9d8367f61a7e",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 3.35,
+        "qty": 1,
+        "entry_px": 6.7,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:26.338Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -206414,7 +206522,22 @@
         "mfe_pct": 3.0,
         "mae_pct": -10.1,
         "stage": "initial",
-        "last_ret": -3.6
+        "last_ret": 0.6
+      }
+    },
+    "backstop": {
+      "bearish_put": {
+        "order_id": "2a17a969-75d6-472f-bd73-5f80838d8717",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 0.84,
+        "qty": 2,
+        "entry_px": 1.68,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:26.384Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -206689,7 +206812,22 @@
         "mfe_pct": 15.6,
         "mae_pct": -14.3,
         "stage": "initial",
-        "last_ret": -0.7
+        "last_ret": -7.5
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "465f1e8b-87df-4471-b28d-101b1d15458a",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 3.67,
+        "qty": 1,
+        "entry_px": 7.35,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:26.451Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -206961,10 +207099,25 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 9.0,
+        "mfe_pct": 34.6,
         "mae_pct": -6.4,
         "stage": "initial",
-        "last_ret": 7.7
+        "last_ret": 34.6
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "f69ec21b-267a-4638-9b58-2f065d5baed9",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 1.95,
+        "qty": 1,
+        "entry_px": 3.9,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:26.551Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -207236,10 +207389,25 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 1.9,
+        "mfe_pct": 7.5,
         "mae_pct": -8.4,
         "stage": "initial",
-        "last_ret": -2.8
+        "last_ret": 7.5
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "7d75040c-1ed1-4999-be14-9ebe5a77d482",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 2.67,
+        "qty": 1,
+        "entry_px": 5.35,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:26.641Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -207512,9 +207680,24 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 12.2,
-        "mae_pct": -6.1,
+        "mae_pct": -24.5,
         "stage": "initial",
-        "last_ret": 10.2
+        "last_ret": -24.5
+      }
+    },
+    "backstop": {
+      "bearish_put": {
+        "order_id": "b5feb936-601f-469f-9934-275cae1f5c3e",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 2.45,
+        "qty": 1,
+        "entry_px": 4.9,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:26.710Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -207787,9 +207970,24 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 20.6,
-        "mae_pct": -2.5,
+        "mae_pct": -11.2,
         "stage": "initial",
-        "last_ret": 0.0
+        "last_ret": -11.2
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "75fcc806-5b66-411c-b1e5-804604b38373",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 0.8,
+        "qty": 4,
+        "entry_px": 1.6,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:26.770Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -208064,7 +208262,22 @@
         "mfe_pct": 15.7,
         "mae_pct": 0.0,
         "stage": "initial",
-        "last_ret": 2.8
+        "last_ret": 13.9
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "9b5734ea-9e87-44a2-bc58-4a5385eeb1ef",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 1.08,
+        "qty": 1,
+        "entry_px": 2.16,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:26.824Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -208633,10 +208846,25 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": -3.8,
+        "mfe_pct": 3.8,
         "mae_pct": -12.8,
         "stage": "initial",
-        "last_ret": -9.0
+        "last_ret": 3.8
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "5ad73fd0-6d0f-4810-b642-2dcdafb1538c",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 3.33,
+        "qty": 1,
+        "entry_px": 6.65,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:26.883Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -208907,10 +209135,25 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 13.8,
+        "mfe_pct": 33.8,
         "mae_pct": -3.4,
         "stage": "initial",
-        "last_ret": 2.1
+        "last_ret": 33.8
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "1c33e3ac-d531-404d-bd6a-3e15844fa321",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 0.72,
+        "qty": 1,
+        "entry_px": 1.45,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:26.960Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -209198,9 +209441,24 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 1.0,
-        "mae_pct": -14.6,
+        "mae_pct": -18.4,
         "stage": "initial",
-        "last_ret": -13.6
+        "last_ret": -18.4
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "c22a57ae-d157-4138-a374-7e1563383516",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 2.58,
+        "qty": 1,
+        "entry_px": 5.15,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:27.007Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -209472,9 +209730,24 @@
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 3.6,
-        "mae_pct": -2.8,
+        "mae_pct": -18.3,
         "stage": "initial",
-        "last_ret": 3.1
+        "last_ret": -18.3
+      }
+    },
+    "backstop": {
+      "bearish_put": {
+        "order_id": "5fb4f0d6-641f-4894-a79c-3259c243b797",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 1.8,
+        "qty": 1,
+        "entry_px": 3.6,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:27.058Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -209746,9 +210019,24 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 6.9,
-        "mae_pct": -15.6,
+        "mae_pct": -18.1,
         "stage": "initial",
-        "last_ret": -15.6
+        "last_ret": -18.1
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "9314b306-9429-4ac4-9a18-290f32749c7e",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 4.0,
+        "qty": 1,
+        "entry_px": 8.0,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:27.116Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -210021,8 +210309,23 @@
       "bullish_call": {
         "mfe_pct": 3.7,
         "mae_pct": -28.9,
-        "last_ret": -23.5,
+        "last_ret": -22.2,
         "stage": "initial"
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "59d1182e-330c-4a7c-aaf2-ccfbeec51c9e",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 2.02,
+        "qty": 1,
+        "entry_px": 4.05,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:27.164Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -210297,7 +210600,22 @@
         "mfe_pct": 9.4,
         "mae_pct": -25.0,
         "stage": "initial",
-        "last_ret": 6.2
+        "last_ret": -18.8
+      }
+    },
+    "backstop": {
+      "bearish_put": {
+        "order_id": "3bbe074f-244a-4655-81dd-e3f9501856c0",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 0.16,
+        "qty": 8,
+        "entry_px": 0.32,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:27.220Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -210569,10 +210887,25 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 5.0,
+        "mfe_pct": 14.7,
         "mae_pct": -1.7,
         "stage": "initial",
-        "last_ret": 0.0
+        "last_ret": 14.7
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "ee403ea6-1969-4367-a042-bc0cd18241a5",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 1.19,
+        "qty": 3,
+        "entry_px": 2.38,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:27.264Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -210845,9 +211178,24 @@
     "leg_path": {
       "bullish_call": {
         "mfe_pct": -3.7,
-        "mae_pct": -8.8,
+        "mae_pct": -33.5,
         "stage": "initial",
-        "last_ret": -3.7
+        "last_ret": -33.5
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "bb07a49f-fc62-416f-8c91-257f40ede9cd",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 1.07,
+        "qty": 3,
+        "entry_px": 2.15,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:27.336Z",
+        "status": "pending_new",
+        "error": null
       }
     }
   },
@@ -211119,11 +211467,567 @@
     "leg_exits": {},
     "leg_path": {
       "bullish_call": {
-        "mfe_pct": 2.3,
+        "mfe_pct": 6.2,
         "mae_pct": -7.8,
         "stage": "initial",
-        "last_ret": -7.8
+        "last_ret": 6.2
+      }
+    },
+    "backstop": {
+      "bullish_call": {
+        "order_id": "ceb27654-bfa7-4453-bbdf-9b74fa2a4c5c",
+        "prior_order_ids": [],
+        "reconciled_ids": [],
+        "stop_price": 0.64,
+        "qty": 6,
+        "entry_px": 1.28,
+        "type": "stop",
+        "stage": "initial",
+        "at": "2026-09-16T13:34:27.394Z",
+        "status": "pending_new",
+        "error": null
       }
     }
+  },
+  {
+    "type": "reconcile",
+    "ts_utc": "2026-09-16T13:34:25.710Z",
+    "open_records_no_position": 0,
+    "positions_no_record": 2,
+    "sample_stale": [],
+    "sample_orphan": [
+      "SPY",
+      "XSP260918P00729000"
+    ]
+  },
+  {
+    "trade_set_id": "f22b2a7280b3",
+    "ticker": "NOK",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "book": "PROBE",
+    "router_state": "MILD",
+    "entry_ts_utc": "2026-09-16T13:35:55.607Z",
+    "leg_budget_usd": 1000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 37,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5,
+      "backstop_note": "2026-08-25: canary GRADUATED (was pinned to FCEL260821C00022000, which expired 2026-08-21 - backstops were armed on ZERO positions since). Ford -87% autopsy: no broker stop + unquotable option = unmanaged decay to expiry. Backstops now arm on ALL eligible open legs from day 2 (same ratchet/fill-capture machinery the canary proved). Broker-side stops protect precisely the positions the engine cannot price."
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-09-16T13:35:55.607Z",
+      "macro": {
+        "spot": 10.36,
+        "sma20": 10.23,
+        "distance_to_sma20_pct": 1.236,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 61.1,
+        "iv_back": 67.6,
+        "iv_ratio": 0.904,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 12634816.7,
+        "zero_gamma_strike": 11.0,
+        "distance_to_zero_gamma_pct": -6.178,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": -60.0,
+        "insider_10d_buy_usd": 0,
+        "insider_cluster_flag": false,
+        "source": "apewisdom+edgartools"
+      },
+      "technical": {
+        "atr": 0.49,
+        "atr_pct": 4.68,
+        "rvol_10min": 0.03,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Technology",
+        "industry": "Communication Equipment",
+        "market_cap": 57956610048,
+        "short_pct_float": 1.04,
+        "short_ratio": 0.83,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.5,
+        "vader_compound": 0.127,
+        "news_type": "Unknown",
+        "top_headline": "12 Information Technology Stocks Moving In Wednesday's Pre-Market Session",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": 1.236,
+        "market_spy_dist_pct": -0.739,
+        "sector_etf": "XLK",
+        "sector_dist_pct": 0.059,
+        "sector_vs_market_spread": 0.798,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 63.7,
+        "call_iv_25d": 75.5,
+        "skew_ratio": 0.844,
+        "skew_bias": "call_skew",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 1.82,
+        "ask_sweep_prem": 297228.0,
+        "total_flow_prem": 16369443.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 10.36,
+        "node_size": 245821.0,
+        "n_prints": 47,
+        "window_start": "2026-09-16T08:01:25Z",
+        "window_end": "2026-09-16T13:34:22Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 55,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 36,
+        "next_earnings_date": "2026-10-22",
+        "iv_rank_1y": 40.76,
+        "last_earnings_date": "2026-07-23",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 68.63,
+        "front_iv": 61.1,
+        "vrp": -7.53,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 235197.0,
+        "flow_persistence_pct": 80.56,
+        "flow_direction": "bullish",
+        "closing_accel": 178970.0,
+        "n_ticks": 5,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 786.57,
+        "vwma_20": 10.27,
+        "rsi_5": 43.13,
+        "rsi_15": 50.2,
+        "gap_pct": 5.601,
+        "day_range": 1.062,
+        "candle_body": 0.091,
+        "dist_sma50": 1.431,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -6.5,
+        "vix_level": 16.75,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": -1.141,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 30760162.0,
+        "net_vanna": 110261038.0,
+        "net_charm": -130120030.0,
+        "delta_imbalance": 1.833,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.097,
+        "bid": 10.33,
+        "ask": 10.34,
+        "bid_size": 15900.0,
+        "ask_size": 8700.0,
+        "obi": 0.2927,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.03,
+        "gap_pct": 5.601,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 1.04,
+        "float_shares": 4445435784,
+        "shares_short": 58011999,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.127,
+      "sweep_aggression_pct": 1.82,
+      "distance_to_zero_gamma_pct": -6.178,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": 55,
+      "days_to_earnings": 36,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 80.56
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "NOK261016C00011000",
+        "expiry": "2026-10-16",
+        "strike": 11.0,
+        "dte": 35,
+        "entry_premium": 0.78,
+        "limit_price": 0.79,
+        "contracts": 12,
+        "alloc_usd": 1000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "28631",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 0.4,
+          "ask": 0.41,
+          "mid": 0.405,
+          "bid_ask_spread_pct": 2.469,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 29283.0,
+          "oi_prev": 28631.0,
+          "oi_change": 652.0,
+          "source": "uw_historic"
+        },
+        "client_order_id": "f22b2a7280b3-bullish_call"
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "e4ecdb84-3b00-46d2-be20-819091ba9597",
+        "error": null,
+        "submitted": true,
+        "limit_price": 0.79,
+        "contracts": 12
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "intent_ts_utc": "2026-09-16T13:35:59.997Z",
+    "probe_strategy": "EXEC_BASELINE",
+    "buy_alert_delivered": true
+  },
+  {
+    "trade_set_id": "53f31c021d84",
+    "ticker": "IBIT",
+    "regime": "BULLISH",
+    "trigger": "regime_BULLISH_loose",
+    "book": "PROBE",
+    "router_state": "MILD",
+    "entry_ts_utc": "2026-09-16T13:36:17.464Z",
+    "leg_budget_usd": 1000.0,
+    "execution_mode": "LIVE_PAPER",
+    "occ_resolution": "alpaca_real",
+    "ticker_guard": "clear",
+    "open_positions_checked": 37,
+    "params_snapshot": {
+      "regime_compass_bypass": true,
+      "max_bid_ask_spread_pct": 5.0,
+      "earnings_blackout_days": 3,
+      "alt_reddit_min_mentions": 10,
+      "alt_insider_min_dollar_value": 10000,
+      "portfolio_max_sector_concentration": 0.5,
+      "min_hold_hours": 24,
+      "take_profit_pct": 30,
+      "scale_out_pct": 50,
+      "break_even_pct": 0,
+      "trail_activate_pct": 50,
+      "trail_drawdown_pct": 20,
+      "stop_loss_pct": 50,
+      "expiry_exit_dte": 3,
+      "min_contracts": 2,
+      "one_position_per_underlying": true,
+      "max_contracts_per_ticker": 3,
+      "ticker_cooloff_hours": 4,
+      "stale_order_max_minutes": 30,
+      "daily_brake_stopouts": 3,
+      "daily_brake_loss_multiple": 2.0,
+      "brake_mode": "shadow",
+      "backstop_enabled": true,
+      "backstop_canary_occ": "",
+      "backstop_type": "stop",
+      "backstop_limit_buffer_pct": 25,
+      "backstop_min_delta": 0.01,
+      "close_fail_park_after": 5,
+      "scanner_min_premium": 25000,
+      "scanner_flow_limit": 600,
+      "scanner_premium_min": 0.3,
+      "scanner_premium_max": 4.0,
+      "harvest_topn": 20,
+      "harvest_random": 10,
+      "harvest_random_p": 0.007,
+      "harvest_daily_cap": 300,
+      "harvest_api_budget_per_day": 6000,
+      "harvest_calls_per_payload": 3,
+      "poller_chunk": 100,
+      "poller_runs_per_day": 26,
+      "scanner_barrier_up": 0.3,
+      "scanner_barrier_down": -0.5,
+      "backstop_note": "2026-08-25: canary GRADUATED (was pinned to FCEL260821C00022000, which expired 2026-08-21 - backstops were armed on ZERO positions since). Ford -87% autopsy: no broker stop + unquotable option = unmanaged decay to expiry. Backstops now arm on ALL eligible open legs from day 2 (same ratchet/fill-capture machinery the canary proved). Broker-side stops protect precisely the positions the engine cannot price."
+    },
+    "metadata": {
+      "entry_ts_utc": "2026-09-16T13:36:17.464Z",
+      "macro": {
+        "spot": 42.78,
+        "sma20": 43.85,
+        "distance_to_sma20_pct": -2.437,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 38.4,
+        "iv_back": 38.4,
+        "iv_ratio": 1.0,
+        "structure": "flat",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 3271130.4,
+        "zero_gamma_strike": 49.0,
+        "distance_to_zero_gamma_pct": -14.54,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.37,
+        "atr_pct": 3.2,
+        "rvol_10min": 0.02,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": null,
+        "industry": null,
+        "market_cap": null,
+        "short_pct_float": null,
+        "short_ratio": null,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 1.82,
+        "vader_compound": 0.211,
+        "news_type": "Macro",
+        "top_headline": "Bitcoin, Ethereum ETFs Lose $592 Million Ahead of Fed Decision",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -2.437,
+        "market_spy_dist_pct": -0.729,
+        "sector_etf": null,
+        "sector_dist_pct": null,
+        "sector_vs_market_spread": null,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 40.2,
+        "call_iv_25d": 38.9,
+        "skew_ratio": 1.035,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 9.99,
+        "ask_sweep_prem": 1224170.0,
+        "total_flow_prem": 12249593.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": 0.0,
+        "heaviest_node_price": 42.78,
+        "node_size": 137535.0,
+        "n_prints": 51,
+        "window_start": "2026-09-16T08:00:06Z",
+        "window_end": "2026-09-16T13:34:55Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": null,
+        "post_earnings_iv_crush_flag": null,
+        "days_to_earnings": null,
+        "next_earnings_date": null,
+        "iv_rank_1y": 13.7,
+        "last_earnings_date": null,
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 48.83,
+        "front_iv": 38.4,
+        "vrp": -10.43,
+        "vrp_regime": "cheap",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": 352385.0,
+        "flow_persistence_pct": 57.03,
+        "flow_direction": "bullish",
+        "closing_accel": -276671.0,
+        "n_ticks": 6,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1116.23,
+        "vwma_20": 43.49,
+        "rsi_5": 29.24,
+        "rsi_15": 42.29,
+        "gap_pct": -0.603,
+        "day_range": 0.199,
+        "candle_body": 0.647,
+        "dist_sma50": 8.771,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": 0.0,
+        "vix_level": 16.75,
+        "execution_hour": 13,
+        "day_of_week": 2,
+        "sector_vs_spy": null,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 64985745.0,
+        "net_vanna": 144601853.0,
+        "net_charm": -179978653.0,
+        "delta_imbalance": 1.934,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.023,
+        "bid": 42.79,
+        "ask": 42.8,
+        "bid_size": 13600.0,
+        "ask_size": 800.0,
+        "obi": 0.8889,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.02,
+        "gap_pct": -0.603,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": null,
+        "float_shares": null,
+        "shares_short": null,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.211,
+      "sweep_aggression_pct": 9.99,
+      "distance_to_zero_gamma_pct": -14.54,
+      "distance_to_heaviest_dp_node_pct": 0.0,
+      "days_since_earnings": null,
+      "days_to_earnings": null,
+      "post_earnings_iv_crush_flag": null,
+      "flow_persistence_pct": 57.03
+    },
+    "legs": {
+      "bullish_call": {
+        "structure": "LONG_CALL",
+        "occ_symbol": "IBIT261030C00043500",
+        "expiry": "2026-10-30",
+        "strike": 43.5,
+        "dte": 50,
+        "entry_premium": 2.43,
+        "limit_price": 2.45,
+        "contracts": 4,
+        "alloc_usd": 1000.0,
+        "illiquid": false,
+        "target_delta": 0.35,
+        "open_interest": "132",
+        "occ_source": "alpaca_resolved",
+        "execution_cost": {
+          "bid": 2.06,
+          "ask": 2.12,
+          "mid": 2.09,
+          "bid_ask_spread_pct": 2.871,
+          "source": "alpaca_quote"
+        },
+        "oi_change": {
+          "oi_today": 145.0,
+          "oi_prev": 132.0,
+          "oi_change": 13.0,
+          "source": "uw_historic"
+        },
+        "client_order_id": "53f31c021d84-bullish_call"
+      }
+    },
+    "orders": {
+      "bullish_call": {
+        "status": "pending_new",
+        "order_id": "c8cd5a3d-90f6-4442-a8c5-1cb1dfda6b18",
+        "error": null,
+        "submitted": true,
+        "limit_price": 2.45,
+        "contracts": 4
+      }
+    },
+    "exit": null,
+    "status": "OPEN",
+    "intent_ts_utc": "2026-09-16T13:36:20.899Z",
+    "probe_strategy": "DIP_CONVEXITY",
+    "buy_alert_delivered": true
   }
 ]

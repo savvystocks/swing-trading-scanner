@@ -4726,3 +4726,21 @@
 
 **Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 220.0.
 
+## Autopsy - ON (bb5081ec8cd9)
+- entered 2026-08-18T18:37:54.220Z | trigger regime_BEARISH_loose | exit CLOSE_EXPIRY | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -13.2% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-13%, move 0.0%): no breakdown materialised; spot held above zero-gamma 25.0.
+
+## Autopsy - CCL (f4a4463276cd)
+- entered 2026-09-10T15:36:41.291Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -52.3% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-52%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 8.0 worked against it.
+

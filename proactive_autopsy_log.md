@@ -4762,3 +4762,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 330.0 fed the squeeze.
 
+## Autopsy - SPCX (ad26d6c40882)
+- entered 2026-09-15T13:57:41.165Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +44.8% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 185.0 fed the squeeze.
+

@@ -4825,3 +4825,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 759.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - XLE (b1c91effb29c)
+- entered 2026-09-14T14:57:13.461Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +46.3% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 65.0 -> negative-gamma slide, no positive catalyst.
+

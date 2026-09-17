@@ -4834,3 +4834,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 65.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - NVDA (231df67cc4b4)
+- entered 2026-09-14T13:55:25.682Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -58.3% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-58%, move 0.0%): no breakdown materialised; spot held above zero-gamma 265.0.
+

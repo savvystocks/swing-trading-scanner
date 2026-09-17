@@ -4888,3 +4888,12 @@
 
 **Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 14.5 worked against it.
 
+## Autopsy - NVDA (c2ac5e67dd3b)
+- entered 2026-09-15T14:15:22.299Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +41.1% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 230.0 fed the squeeze.
+

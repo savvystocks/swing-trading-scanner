@@ -4861,3 +4861,21 @@
 
 **Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 110.0.
 
+## Autopsy - RKLB (582d3efd9bdb)
+- entered 2026-09-14T17:15:57.728Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +36.4% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 40.0 fed the squeeze.
+
+## Autopsy - WULF (5784a769f60f)
+- entered 2026-09-15T18:54:34.608Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +53.9% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 21.0 fed the squeeze.
+

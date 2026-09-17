@@ -934,3 +934,38 @@ cap counts only that strategy's own contracts (its own OPEN/PENDING records' OCC
 keeps the account-wide count. REGRESSION CHECK: MOT 6.26 (another strategy's 5+5 does not block a
 different probe; the owning strategy and non-probe callers still capped). LESSON: when a rule exists
 in two places, change both or neither; a "subordinated belt-and-braces" cap is still a cap.
+
+2026-09-17 - TWO YEARS OF ARCHIVE WERE SILENTLY TRUNCATED AT 500 CONTRACTS A DAY. WHAT BROKE: the
+option archive that every backtest, corpus and court verdict is built on holds only the 500
+busiest contracts per ticker per day. 111,320 of 138,030 ticker-days (80.6%) sit at exactly 500
+rows and no ticker-day anywhere in the 61,006,588-row table exceeds 500. Because the feed returns
+volume-descending, the missing rows are the low-volume far-OTM tail - on 2026-09-10 any SPY
+contract trading under 1,262 lots is simply absent (QQQ 819, NVDA 293, IWM 209, TSLA 178, AAPL 152,
+META 123). For SPY expiring 2026-09-18 with spot ~758 we hold 31 call strikes topping out at 790:
+nothing above +4.2% exists. That is precisely the strike a debit spread sells, so every
+spread-access study ran against a chain that could not contain its own short leg. ROOT CAUSE:
+scripts/uw_history_pull.py line ~125 (and the same in scripts/uw_flow_prints.py) requested
+"?date={dd}&limit=500" and no pagination existed anywhere in the repo - no page, offset, cursor or
+page_token. Nothing logged or flagged a day that came back exactly at the cap, so it never
+surfaced in two years. Verified live 2026-09-17: limit is a hard SERVER cap (limit=1000 and 2000
+both return 500) and `offset`/`skip` are ignored, but `&page=2` returns a genuinely different 500
+rows reaching down to volume 200. The data was always there and always paid for; we asked for one
+page. SECOND FINDING, same audit: START was 2024-09-03 while the UW token's floor is a ROLLING
+730-TRADING-day window - a live 403 returned "The earliest date currently available to this token
+is 2023-10-17". About 230 trading days we are entitled to had never been pulled and expire
+permanently at one day per day; 2023-10-17 itself rolled off during the audit. FIX: pagination
+added to the puller, capped at UW_MAX_PAGES (5) and entered only while a page came back FULL and
+its tail still had volume, so we fetch the real missing tail and not zero-volume chain padding on
+all 260 names; START moved to 2023-10-17 (reversed(days) already pulls recent days first, so the
+backfill only ever spends leftover budget); a 3 GiB disk guard added because pagination grows the
+archive. 3,916 ticker-days already recovered by an out-of-band run were adopted into the puller's
+checkpoint so the cron does not repay for them. REGRESSION CHECK: the puller now counts ticker-days
+that hit the page cap while their tail still has volume and prints "TRUNCATION WARNING: N
+ticker-days hit the N-page cap with volume still in the tail" at session end; silence is the
+healthy state and the nightly log carries it. NOT CLOSED BY THIS FIX: the 510 days already stored
+keep their truncated chains, because the `pulled` checkpoint marks them done - re-paging days whose
+stored row count is exactly 500 is a separate job and is owed. LESSON: a cap that is also a
+plausible answer is invisible. Any paged endpoint must either page to exhaustion or record that it
+stopped early, and "the vendor gives us two years" is a claim to test against the vendor, not to
+inherit from a comment.
+

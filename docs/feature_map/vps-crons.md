@@ -39,6 +39,14 @@ cadence; a red row is the first place to look.
 - 2026-04-28 CRON DRIFT; 2026-08-05 WATCHDOG CRON SILENTLY LOST; 2026-09-04 (evening) FRIDAY CHAIN
   TRIPPED ON AN UNCOMMITTED SCRIPT; 2026-09-04 (late) NIGHTLY BOUNDARY SILENT 3 NIGHTS; 2026-09-07
   THE WATCHDOG'S MESSENGER FAILED SILENTLY.
+- 2026-09-17 TWO YEARS OF ARCHIVE TRUNCATED AT 500 A DAY: `scripts/uw_history_pull.py` asked for
+  `limit=500` and never for page 2, so 80.6% of ticker-days sat at exactly the cap and the
+  low-volume far-OTM tail was silently absent (SPY cut at volume 1,262). `limit` is a hard SERVER
+  cap; `&page=N` is the only way past it and `offset`/`skip` are ignored. START was also 2024-09-03
+  against a ROLLING 730-TRADING-day token floor, so entitled history was expiring unpulled. The
+  puller now pages while a page comes back full with volume still in its tail, and prints
+  TRUNCATION WARNING when it stops early. Days already stored keep their truncated chains -
+  re-paging them is owed.
 - 2026-09-01 VENV DEPENDENCY DRIFT: jobs that import sklearn or pandas must use `./.venv/bin/python`.
 - A dirty working tree on the VPS makes `git pull --ff-only` fail for every job that follows; never
   leave uncommitted edits on the VPS overnight.

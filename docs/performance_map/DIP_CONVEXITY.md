@@ -15,9 +15,9 @@ Live: PROBE records on days whose prior close had SPY below its 50-day and 20-da
 - live: [[strategies.DIP_CONVEXITY.live.n_closed = 0]] closed, [[strategies.DIP_CONVEXITY.live.per_trade = n/a]] per trade,
   day mean [[strategies.DIP_CONVEXITY.live.unit_mean = n/a]] over [[strategies.DIP_CONVEXITY.live.units = 0]] days,
   t vs control [[strategies.DIP_CONVEXITY.live.t_vs_control = n/a]].
-- archive: [[strategies.DIP_CONVEXITY.archive.per_day = +8.8]] per day (pool [[strategies.DIP_CONVEXITY.archive.pool_per_day_same_days = -4.1]]),
-  t vs pool [[strategies.DIP_CONVEXITY.archive.t_vs_pool = +3.72]], [[strategies.DIP_CONVEXITY.archive.trades = 5768]] trades over
-  [[strategies.DIP_CONVEXITY.archive.days = 103]] days, halves [[strategies.DIP_CONVEXITY.archive.h1 = +5.3]] / [[strategies.DIP_CONVEXITY.archive.h2 = +12.2]].
+- archive: [[strategies.DIP_CONVEXITY.archive.per_day = +8.4]] per day (pool [[strategies.DIP_CONVEXITY.archive.pool_per_day_same_days = -4.8]]),
+  t vs pool [[strategies.DIP_CONVEXITY.archive.t_vs_pool = +3.84]], [[strategies.DIP_CONVEXITY.archive.trades = 7227]] trades over
+  [[strategies.DIP_CONVEXITY.archive.days = 103]] days, halves [[strategies.DIP_CONVEXITY.archive.h1 = +4.6]] / [[strategies.DIP_CONVEXITY.archive.h2 = +12.2]].
 
 ## Recompute
 `./.venv/bin/python scripts/returns_ledger.py` (row DIP_CONVEXITY).

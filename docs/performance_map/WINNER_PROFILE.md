@@ -12,10 +12,10 @@ an upper bound on what the full filter would keep. The 2026-09-09 grid (old basi
 cell at a t of 0.68 against the pool, which is noise. Live: its own PROBE records.
 
 ## Numbers
-- live: [[strategies.WINNER_PROFILE.live.n_closed = 0]] closed, [[strategies.WINNER_PROFILE.live.per_trade = n/a]] per trade,
-  open [[strategies.WINNER_PROFILE.live.open = 3]].
-- archive (partial cell): [[strategies.WINNER_PROFILE.archive.per_day = -4.6]] per day (pool
-  [[strategies.WINNER_PROFILE.archive.pool_per_day_same_days = -4.5]]), t vs pool [[strategies.WINNER_PROFILE.archive.t_vs_pool = -2.90]].
+- live: [[strategies.WINNER_PROFILE.live.n_closed = 4]] closed, [[strategies.WINNER_PROFILE.live.per_trade = -6.1]] per trade,
+  open [[strategies.WINNER_PROFILE.live.open = 7]].
+- archive (partial cell): [[strategies.WINNER_PROFILE.archive.per_day = -5.0]] per day (pool
+  [[strategies.WINNER_PROFILE.archive.pool_per_day_same_days = -5.0]]), t vs pool [[strategies.WINNER_PROFILE.archive.t_vs_pool = -1.79]].
 
 ## Recompute
 `./.venv/bin/python scripts/returns_ledger.py` (row WINNER_PROFILE).

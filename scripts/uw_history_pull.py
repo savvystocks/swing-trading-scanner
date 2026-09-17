@@ -13,6 +13,7 @@ import json
 import os
 import sqlite3
 import sys
+import shutil
 import time
 import urllib.request
 from datetime import date, timedelta
@@ -22,6 +23,7 @@ os.chdir(REPO)
 DB = "data/uw_history.db"
 TOKEN = os.environ.get("UNUSUAL_WHALES_TOKEN", "")
 H = {"Authorization": "Bearer " + TOKEN, "Accept": "application/json"}
+MAX_PAGES = int(os.environ.get("UW_MAX_PAGES", "5"))
 DAILY_BUDGET = int(os.environ.get("UW_PULL_BUDGET", "30000"))
 TICKERS = ("SPY QQQ IWM NVDA TSLA AAPL MSFT AMZN META GOOGL AMD SLV GLD TLT COIN PLTR NFLX MU INTC BA "
            "AVGO SMCI MSTR HOOD IBIT XLE XLF GDX TQQQ SQQQ KO CHWY HIMS PYPL ETHA RIOT CLSK QCOM "
@@ -46,7 +48,11 @@ TICKERS = ("SPY QQQ IWM NVDA TSLA AAPL MSFT AMZN META GOOGL AMD SLV GLD TLT COIN
            "TTD ROKU SPOT PINS SNAP RDDT DUOL "
            "IONQ RGTI ARQQ QUBT "
            "USO UNG BNO XOP OIH URA LIT REMX COPX SILJ NUGT DUST JNUG").split()
-START = date(2024, 9, 3)
+START = date(2023, 10, 17)   # the UW token's floor: a ROLLING 730-TRADING-day window, verified
+                             # 2026-09-17 by a live 403 ("earliest date currently available ...
+                             # 2023-10-17"). It moves forward a day at a time, so unpulled history
+                             # expires permanently. reversed(days) below keeps recent days first,
+                             # so the backfill only ever spends leftover budget.
 END = date.today() - timedelta(days=1)  # ROLLING - a hardcoded END froze the archive at 08-21
                                         # and every corpus downstream went silently stale while
                                         # 30k calls/night backfilled ancient days (2026-09-04)
@@ -113,6 +119,7 @@ def main():
     n_calls = 0
     d0 = date.today()
     n_def = 0
+    n_trunc = 0
     _floor = (date.today() - timedelta(days=7)).isoformat()   # ZERO-RESULT-DEFER window
     for dd, t in todo:
         if date.today() != d0:
@@ -122,9 +129,31 @@ def main():
         if used_today(con) >= DAILY_BUDGET:
             print("daily budget reached - resume tomorrow", flush=True)
             break
-        rows = get(f"https://api.unusualwhales.com/api/stock/{t}/option-contracts?date={dd}&limit=500")
-        bump(con)
-        n_calls += 1
+        if shutil.disk_usage(".").free / 2 ** 30 < 3.0:
+            print("DISK GUARD: under 3 GiB free - stopping", flush=True)
+            break
+        # PAGINATION (2026-09-17). limit is a hard server cap of 500 and `page` is the only way
+        # past it; `offset`/`skip` are ignored. Two years were silently truncated because nothing
+        # ever asked for page 2 - 80.6% of ticker-days sat at exactly 500 rows. Page on only while
+        # the page came back FULL and its tail still has volume, so we fetch the real missing tail
+        # on SPY/QQQ/NVDA and not zero-volume chain padding on all 260 names.
+        rows = []
+        for _pg in range(1, MAX_PAGES + 1):
+            _u = f"https://api.unusualwhales.com/api/stock/{t}/option-contracts?date={dd}&limit=500"
+            if _pg > 1:
+                _u += f"&page={_pg}"
+            _page = get(_u)
+            bump(con)
+            n_calls += 1
+            if _page is None:
+                rows = None if _pg == 1 else rows
+                break
+            rows.extend(_page)
+            _v = [int(x.get("volume") or 0) for x in _page]
+            if len(_page) < 500 or not _v or min(_v) <= 0:
+                break
+            if _pg == MAX_PAGES:
+                n_trunc += 1        # still full AND still has volume at the page cap = truncated
         if rows is None:
             continue
         for r in rows:
@@ -141,13 +170,18 @@ def main():
                             # window is "not published yet", never "done" - retried next session
         else:
             con.execute("insert or replace into pulled values (?,?,?)", (dd, t, len(rows)))
-        if n_calls % 50 == 0:
+        if n_calls % 50 < MAX_PAGES:
             con.commit()
             print(f"{n_calls} calls, latest {dd} {t} ({len(rows)} contracts)", flush=True)
         time.sleep(0.25)
     con.commit()
     tot = con.execute("select count(*) from contracts_daily").fetchone()[0]
     print(f"session done: {n_calls} calls, {tot} contract-days stored, {n_def} recent zero-results deferred", flush=True)
+    if n_trunc:
+        # REGRESSION SENTINEL for the 2026-09-17 truncation: a ticker-day that hits the page cap
+        # while its tail still has volume is still being cut. Silence here is the healthy state.
+        print(f"TRUNCATION WARNING: {n_trunc} ticker-days hit the {MAX_PAGES}-page cap with volume "
+              f"still in the tail - raise UW_MAX_PAGES", flush=True)
 
 
 if __name__ == "__main__":

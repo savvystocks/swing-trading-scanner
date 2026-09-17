@@ -25,7 +25,7 @@ traded under the cap; it is context, not the promise. The spread variant was rej
 `./.venv/bin/python scripts/student_export.py` (restarts the court clock).
 
 ## Healthy
-Court standing: [[strategies.STUDENT_FAMILY.court.standing = 0/8 live virgin weeks vs control - HOLD]]. About one and a half trades a
+Court standing: [[strategies.STUDENT_FAMILY.court.standing = 0/8 live virgin days vs control - HOLD]]. About one and a half trades a
 week expected; long losing runs are normal for sub-$1 weeklies; the mean rides rare large winners.
 The exit search on live fills runs once twenty have closed.
 

@@ -14,13 +14,13 @@ weekly record is the evidence.
 - live: [[strategies.CREDIT_SPREAD_W.live.n_closed = 5]] settled weeks, [[strategies.CREDIT_SPREAD_W.live.per_trade = +3.0]]
   per week as a percentage of $1,000, dollars [[strategies.CREDIT_SPREAD_W.live.total_usd = +151]],
   weeks shared with the control [[strategies.CREDIT_SPREAD_W.live.shared_units = 4]],
-  t vs control [[strategies.CREDIT_SPREAD_W.live.t_vs_control = -0.82]].
+  t vs control [[strategies.CREDIT_SPREAD_W.live.t_vs_control = -0.38]].
 
 ## Recompute
 `./.venv/bin/python scripts/returns_ledger.py` (row CREDIT_SPREAD_W).
 
 ## Healthy
-Court standing: [[strategies.CREDIT_SPREAD_W.court.standing = 3/8 live virgin weeks vs control - HOLD]]. The weekly court needs eight
+Court standing: [[strategies.CREDIT_SPREAD_W.court.standing = 4/8 live virgin weeks vs control - HOLD]]. The weekly court needs eight
 shared weeks, the same trimmed t of 1.8, and a weekly floor of +5%.
 
 ## Live

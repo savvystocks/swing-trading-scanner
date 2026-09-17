@@ -4879,3 +4879,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 21.0 fed the squeeze.
 
+## Autopsy - RKT (528f443eb1dd)
+- entered 2026-09-14T14:18:46.931Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 14.5 worked against it.
+

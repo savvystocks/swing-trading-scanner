@@ -4978,3 +4978,12 @@
 
 **Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 420.0.
 
+## Autopsy - QQQ (0b0071393344)
+- entered 2026-09-17T13:48:47.759Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 715.0.
+

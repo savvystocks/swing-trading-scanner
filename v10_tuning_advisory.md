@@ -3310,3 +3310,9 @@ trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - QQQ (0b0071393344) - 2026-09-18T19:40:31.059Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

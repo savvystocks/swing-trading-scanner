@@ -4915,3 +4915,21 @@
 
 **Determining factor:** Bullish call FAILED (-42%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 56.0 worked against it.
 
+## Autopsy - UBER (0f7a064b6a3b)
+- entered 2026-09-14T16:07:35.485Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.7% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-51%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 32.5 worked against it.
+
+## Autopsy - SQQQ (2815221ffeb4)
+- entered 2026-09-15T18:06:32.654Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -53.0% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 40.0 worked against it.
+

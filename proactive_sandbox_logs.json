@@ -202454,7 +202454,7 @@
     "mfe_pct": 10.0,
     "mae_pct": -18.2,
     "stage": "initial",
-    "last_ret": 9.1
+    "last_ret": 10.0
    }
   },
   "backstop": {
@@ -219211,19 +219211,50 @@
     "ledger_terminal": "filled"
    }
   },
-  "exit": null,
-  "status": "OPEN",
+  "exit": {
+   "reason": "CLOSE_STOP_LOSS",
+   "underlying_move_pct": 0.0,
+   "entry_slippage_pct": null,
+   "leg_returns_pct": {
+    "bearish_put": -50.5
+   },
+   "winner": "bearish_put",
+   "loser": "bearish_put",
+   "leg_path": {
+    "bearish_put": {
+     "mfe_pct": 7.6,
+     "mae_pct": -51.4,
+     "stage": "closed",
+     "last_ret": -50.5,
+     "close_fails": 0
+    }
+   },
+   "mfe_pct": 7.6,
+   "mae_pct": -51.4,
+   "determining_factor": "Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 47.0.",
+   "tuning_recommendations": []
+  },
+  "status": "CLOSED",
   "intent_ts_utc": "2026-09-17T14:35:22.283Z",
   "probe_strategy": "WINNER_PROFILE",
   "buy_alert_delivered": true,
-  "leg_exits": {},
+  "leg_exits": {
+   "bearish_put": {
+    "occ": "IBIT261023P00041500",
+    "closed_at": "2026-09-18T17:16:28.378Z",
+    "return_pct": -50.5,
+    "reason": "-50.5% <= -50% hard stop",
+    "action": "CLOSE_STOP_LOSS",
+    "closed_ok": true
+   }
+  },
   "leg_path": {
    "bearish_put": {
     "mfe_pct": 7.6,
     "mae_pct": -51.4,
-    "stage": "initial",
-    "last_ret": -49.5,
-    "close_fails": 1
+    "stage": "closed",
+    "last_ret": -50.5,
+    "close_fails": 0
    }
   },
   "backstop": {
@@ -219242,7 +219273,14 @@
     "status": "ERROR",
     "error": "HTTP Error 422: Unprocessable Entity"
    }
-  }
+  },
+  "exit_order_ids": [
+   {
+    "order_id": "dbeb7472-c5fb-4e41-8621-6b34abb006fd",
+    "at": "2026-09-18T17:16:28.378Z",
+    "ledger_terminal": "filled"
+   }
+  ]
  },
  {
   "trade_set_id": "46626691baa7",
@@ -226238,14 +226276,24 @@
     "error": null,
     "submitted": true,
     "limit_price": 3.45,
-    "contracts": 1
+    "contracts": 1,
+    "ledger_terminal": "filled"
    }
   },
   "exit": null,
   "status": "OPEN",
   "intent_ts_utc": "2026-09-18T17:07:09.845Z",
   "probe_strategy": "FOLLOW_CALLS",
-  "buy_alert_delivered": true
+  "buy_alert_delivered": true,
+  "leg_exits": {},
+  "leg_path": {
+   "bullish_call": {
+    "mfe_pct": -1.4,
+    "mae_pct": -1.4,
+    "stage": "initial",
+    "last_ret": -1.4
+   }
+  }
  },
  {
   "trade_set_id": "e5ddaf13f8fe",
@@ -226502,13 +226550,23 @@
     "error": null,
     "submitted": true,
     "limit_price": 2.4,
-    "contracts": 1
+    "contracts": 1,
+    "ledger_terminal": "filled"
    }
   },
   "exit": null,
   "status": "OPEN",
   "intent_ts_utc": "2026-09-18T17:07:33.247Z",
   "probe_strategy": "WINNER_PROFILE",
-  "buy_alert_delivered": true
+  "buy_alert_delivered": true,
+  "leg_exits": {},
+  "leg_path": {
+   "bullish_call": {
+    "mfe_pct": -1.7,
+    "mae_pct": -1.7,
+    "stage": "initial",
+    "last_ret": -1.7
+   }
+  }
  }
 ]

@@ -4960,3 +4960,12 @@
 
 **Determining factor:** Bearish put FAILED (-52%, move 0.0%): no breakdown materialised; spot held above zero-gamma 64.0.
 
+## Autopsy - IBIT (5f71af74684a)
+- entered 2026-09-17T14:35:16.161Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 47.0.
+

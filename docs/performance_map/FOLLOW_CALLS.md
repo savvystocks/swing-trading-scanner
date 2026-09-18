@@ -9,13 +9,13 @@ with a scoreable court day.
 Archive: calls only, every regime, BASE exit, executable basis. Live: PROBE records since the roster.
 
 ## Numbers
-- live: [[strategies.FOLLOW_CALLS.live.n_closed = 8]] closed, [[strategies.FOLLOW_CALLS.live.per_trade = -18.6]] per trade,
-  day mean [[strategies.FOLLOW_CALLS.live.unit_mean = -40.3]] over [[strategies.FOLLOW_CALLS.live.units = 6]] days,
-  shared with the control [[strategies.FOLLOW_CALLS.live.shared_units = 6]], t vs control [[strategies.FOLLOW_CALLS.live.t_vs_control = -0.96]].
-- archive: [[strategies.FOLLOW_CALLS.archive.per_day = -0.2]] per day (pool on the same days
-  [[strategies.FOLLOW_CALLS.archive.pool_per_day_same_days = -5.0]]), t vs pool [[strategies.FOLLOW_CALLS.archive.t_vs_pool = +4.58]],
-  [[strategies.FOLLOW_CALLS.archive.trades = 49395]] trades over [[strategies.FOLLOW_CALLS.archive.days = 473]] days,
-  halves [[strategies.FOLLOW_CALLS.archive.h1 = +2.5]] / [[strategies.FOLLOW_CALLS.archive.h2 = -3.0]].
+- live: [[strategies.FOLLOW_CALLS.live.n_closed = 12]] closed, [[strategies.FOLLOW_CALLS.live.per_trade = -14.4]] per trade,
+  day mean [[strategies.FOLLOW_CALLS.live.unit_mean = -38.3]] over [[strategies.FOLLOW_CALLS.live.units = 7]] days,
+  shared with the control [[strategies.FOLLOW_CALLS.live.shared_units = 7]], t vs control [[strategies.FOLLOW_CALLS.live.t_vs_control = -0.95]].
+- archive: [[strategies.FOLLOW_CALLS.archive.per_day = -0.3]] per day (pool on the same days
+  [[strategies.FOLLOW_CALLS.archive.pool_per_day_same_days = -5.2]]), t vs pool [[strategies.FOLLOW_CALLS.archive.t_vs_pool = +4.79]],
+  [[strategies.FOLLOW_CALLS.archive.trades = 50716]] trades over [[strategies.FOLLOW_CALLS.archive.days = 482]] days,
+  halves [[strategies.FOLLOW_CALLS.archive.h1 = +2.1]] / [[strategies.FOLLOW_CALLS.archive.h2 = -2.6]].
 
 ## Recompute
 `./.venv/bin/python scripts/returns_ledger.py` (row FOLLOW_CALLS).

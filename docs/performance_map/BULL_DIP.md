@@ -12,9 +12,9 @@ the roster runs, executable basis. Live: PROBE records on bull days only.
 - live: [[strategies.BULL_DIP.live.n_closed = 0]] closed, [[strategies.BULL_DIP.live.per_trade = n/a]] per trade,
   day mean [[strategies.BULL_DIP.live.unit_mean = n/a]] over [[strategies.BULL_DIP.live.units = 0]] days,
   shared [[strategies.BULL_DIP.live.shared_units = 0]], t vs control [[strategies.BULL_DIP.live.t_vs_control = n/a]].
-- archive: [[strategies.BULL_DIP.archive.per_day = +2.5]] per day (pool [[strategies.BULL_DIP.archive.pool_per_day_same_days = -4.9]]),
-  t vs pool [[strategies.BULL_DIP.archive.t_vs_pool = +4.28]], [[strategies.BULL_DIP.archive.trades = 5874]] trades over
-  [[strategies.BULL_DIP.archive.days = 220]] days, halves [[strategies.BULL_DIP.archive.h1 = +8.1]] / [[strategies.BULL_DIP.archive.h2 = -3.2]].
+- archive: [[strategies.BULL_DIP.archive.per_day = +2.7]] per day (pool [[strategies.BULL_DIP.archive.pool_per_day_same_days = -5.3]]),
+  t vs pool [[strategies.BULL_DIP.archive.t_vs_pool = +4.77]], [[strategies.BULL_DIP.archive.trades = 6203]] trades over
+  [[strategies.BULL_DIP.archive.days = 229]] days, halves [[strategies.BULL_DIP.archive.h1 = +7.7]] / [[strategies.BULL_DIP.archive.h2 = -2.2]].
 
 ## Recompute
 `./.venv/bin/python scripts/returns_ledger.py` (row BULL_DIP).

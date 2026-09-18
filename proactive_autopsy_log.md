@@ -4942,3 +4942,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 97.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - AMZN (7a28200f3946)
+- entered 2026-09-16T17:49:57.447Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +33.1% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 275.0 fed the squeeze.
+

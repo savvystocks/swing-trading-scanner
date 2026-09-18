@@ -21,7 +21,7 @@ roster runs, executable basis. Live: the trigger contract via `_PROBE_CONTRACT`,
 `./.venv/bin/python scripts/returns_ledger.py` (row DIP_CONF_MILD).
 
 ## Healthy
-Court standing: [[strategies.DIP_CONF_MILD.court.standing = 0/8 live virgin days vs control - HOLD]]. Mild days are a minority of the
+Court standing: [[strategies.DIP_CONF_MILD.court.standing = 1/8 live virgin days vs control - HOLD]]. Mild days are a minority of the
 calendar; expect weeks with nothing to score.
 
 ## Live

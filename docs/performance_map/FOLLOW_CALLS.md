@@ -21,7 +21,7 @@ Archive: calls only, every regime, BASE exit, executable basis. Live: PROBE reco
 `./.venv/bin/python scripts/returns_ledger.py` (row FOLLOW_CALLS).
 
 ## Healthy
-Court standing: [[strategies.FOLLOW_CALLS.court.standing = 5/8 live virgin days vs control - HOLD]]. Promotion needs eight shared
+Court standing: [[strategies.FOLLOW_CALLS.court.standing = 7/8 live virgin days vs control - HOLD]]. Promotion needs eight shared
 days, trimmed t of 1.8, own mean above +3%/day, both halves positive.
 
 ## Live

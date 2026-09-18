@@ -4933,3 +4933,12 @@
 
 **Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 40.0 worked against it.
 
+## Autopsy - NFLX (2846b9ea8abe)
+- entered 2026-09-15T14:06:46.073Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +164.9% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 97.0 -> negative-gamma slide, no positive catalyst.
+

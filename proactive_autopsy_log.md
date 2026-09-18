@@ -4897,3 +4897,21 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 230.0 fed the squeeze.
 
+## Autopsy - QQQ (e51ad2c142b9)
+- entered 2026-09-15T16:35:17.871Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -55.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-55%, move 0.0%): no breakdown materialised; spot held above zero-gamma 705.0.
+
+## Autopsy - NFLX (def07bb0a1ec)
+- entered 2026-09-16T14:17:22.966Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -41.5% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-42%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 56.0 worked against it.
+

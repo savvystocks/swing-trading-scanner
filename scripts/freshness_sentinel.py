@@ -95,6 +95,8 @@ CHECKS = [
     ("uw pull log", "schedule", H + "/uw_pull.log", (22, 30, DAILY), "EVIDENCE"),
     ("uw prints log", "schedule", H + "/prints.log", (0, 15, DAILY), "EVIDENCE"),
     ("xsp quote log", "schedule", H + "/xsp_quotes.log", (19, 50, WEEKDAYS), "EVIDENCE"),
+    ("cs legs pull", "schedule", H + "/cs_legs.log", (12, 0, {5}), "EVIDENCE"),
+    ("cs legs newest expiry", "data_day", "data/cs_legs.db", ("select max(expiry) from asked", 7), "EVIDENCE"),
     ("friday tuner chain", "schedule", H + "/tuner_apply.log", (21, 45, {4}), "EVIDENCE"),
     ("trajectory scoreboard", "schedule", H + "/scoreboard.log", (22, 25, {4}), "MONITOR"),
     # -- v1.1 (registry sweep 2026-09-04): failure modes mtime checks cannot see

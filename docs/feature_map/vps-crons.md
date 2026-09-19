@@ -27,6 +27,7 @@ cadence; a red row is the first place to look.
 | 08:10 Mon-Fri | `scripts/morning_analyst.py` | analyst.log | morning brief telegram |
 | Wed 10:00 | `scripts/sunday_boundary.py` report-only | sunday_boundary.log | standings |
 | Fri 20:15 | `scripts/probe_tuner.py` (tuner report) | tuner.log | anchors vs incumbents |
+| Sat 12:00 | `scripts/cs_legs_pull.py` then `scripts/cs_live_fills.py` (the credit spread's own legs asked for by name, XSP and SPY; then the book's real fills, read-only) | cs_legs.log | `cs legs session done:` with the newest expiry = yesterday, a `cs legs backup:` line with a byte count, and `cs live fills: n/n records with both fills` |
 | Fri 21:45 | hourly_library -> glide_sim -> `scripts/tuner_apply.py` | tuner.log | HOLD or an applied change with verify-after-push |
 | Fri 22:25 | `scripts/trajectory_scoreboard.py` | scoreboard.log | North Star block |
 | Fri 22:35 | `scripts/sunday_boundary.py` (the court) | sunday_boundary.log | verdict lines |

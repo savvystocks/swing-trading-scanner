@@ -22,6 +22,8 @@ os.chdir(REPO)
 DB = "data/uw_history.db"
 H = {"Authorization": "Bearer " + os.environ.get("UNUSUAL_WHALES_TOKEN", ""),
      "Accept": "application/json"}
+STATE_FILE = os.path.expanduser("~/uw_prints_state.json")
+REASK_DAYS = int(os.environ.get("UW_PRINTS_REASK_DAYS", "12"))
 DAILY_BUDGET = int(os.environ.get("UW_PULL_BUDGET", "30000"))
 
 
@@ -51,6 +53,38 @@ def get(url):
     return None
 
 
+def _session_state(status, path=None, **kw):
+    """One line of truth for scripts/landing_watch.sh: a session that crashes, is killed or hangs
+    leaves this file stale or marked crashed, and the watch pages. Never raises."""
+    try:
+        kw.update({"status": status, "ended_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
+        with open(path or STATE_FILE, "w", encoding="utf-8") as fh:
+            json.dump(kw, fh)
+    except Exception:
+        pass
+
+
+def is_final(day, reask_floor):
+    """UW serves a day's prints late, then in full, then THINS them: contract-days pulled fresh on
+    2026-09-11 hold 149-484 prints and the same requests a week later return 2-9. Inside the re-ask
+    window no answer is final - the contract-day is asked again every night and `insert or ignore`
+    keeps the fullest tape ever seen. Only a day older than the window may be marked done."""
+    return day < reask_floor
+
+
+def commit_retry(con, tries=10, wait=30, _sleep=time.sleep):
+    for i in range(tries):
+        try:
+            con.commit()
+            return True
+        except sqlite3.OperationalError as e:
+            if "locked" not in str(e).lower():
+                raise
+            print(f"LOCK RETRY {i + 1}/{tries}: {e}", flush=True)
+            _sleep(wait)
+    raise sqlite3.OperationalError("database is locked after %d retries" % tries)
+
+
 def main():
     con = sqlite3.connect(DB, timeout=60)
     con.execute("""create table if not exists flow_prints (
@@ -72,7 +106,9 @@ def main():
              and (nbbo_ask - nbbo_bid) / ((nbbo_ask + nbbo_bid) / 2.0) * 100 <= 2.0
            order by day desc""").fetchall()
     done = {(r[0], r[1]) for r in con.execute("select day, occ from prints_pulled")}
-    todo = [(d, occ) for t, occ, d in rows if t in tks and (d, occ) not in done]
+    _reask = date.fromordinal(date.today().toordinal() - REASK_DAYS).isoformat()
+    todo = [(d, occ) for t, occ, d in rows if t in tks and ((d, occ) not in done or not is_final(d, _reask))]
+    _win = {}
     print(f"cohort contract-days to pull: {len(todo)}; budget used today "
           f"{used_today(con)}/{DAILY_BUDGET}", flush=True)
     n = 0
@@ -103,22 +139,36 @@ def main():
                              "ask" if (pr.get("ask_vol") or 0) >= (pr.get("bid_vol") or 0) else "bid"))
             except Exception:
                 continue
-        if len(prints) == 0 and d >= _floor:
+        if not is_final(d, _reask):
+            _w = _win.setdefault(d, [0, 0])
+            _w[0] += 1
+            _w[1] += len(prints)
             n_def += 1      # ZERO-RESULT-DEFER (2026-09-10): UW publishes a day's prints with a
                             # lag; pulling at 00:15 the next morning returned EMPTY for Sep 1/2/3/8
                             # and the mark made them "done" forever - September held 14 corpus rows
                             # while every newest-day check passed. Inside the recent window an
                             # empty result is "not yet", never "none": retried next session.
         else:
-            con.execute("insert or replace into prints_pulled values (?,?,?)", (d, occ, len(prints)))
+            con.execute("insert into prints_pulled values (?,?,?) on conflict(day, occ) do update "
+                        "set n = max(n, excluded.n)", (d, occ, len(prints)))
         if n % 100 == 0:
-            con.commit()
+            commit_retry(con)
             print(f"{n} contract-days pulled ({d} {occ}: {len(prints)} prints)", flush=True)
         time.sleep(0.2)
-    con.commit()
+    commit_retry(con)
+    for _d in sorted(_win):     # the vendor's window, learned one night at a time
+        _held = con.execute("select count(*) from flow_prints where day = ?", (_d,)).fetchone()[0]
+        _age = (date.today() - date.fromisoformat(_d)).days
+        print(f"window {_d} (age {_age}d): asked {_win[_d][0]}, API returned {_win[_d][1]} prints tonight, "
+              f"archive holds {_held}", flush=True)
     tot = con.execute("select count(*) from flow_prints").fetchone()[0]
     print(f"session done: {n} requests, {tot} prints stored total, {n_def} recent zero-results deferred", flush=True)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+        _session_state("done")
+    except Exception as _e:
+        _session_state("crashed", error=f"{type(_e).__name__}: {_e}"[:200])
+        raise

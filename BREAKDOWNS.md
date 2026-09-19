@@ -990,3 +990,36 @@ the freshness sentinel only notices days later when the newest day goes stale. L
 writes a shared archive must assume a reader is always there. The 2026-09-17 fix was verified against
 the API and never against its neighbours in the crontab.
 
+2026-09-19 - THE LANDING WATCH PAGED A FALSE ALARM EVERY NIGHT. WHAT BROKE: at 22:45 UTC on at least three
+nights running (16, 17 and 18 September) the owner's phone received "LANDING WATCH: integrity gate: no run logged
+today (22:05 job)" while the gate had run at 22:05 and printed INTEGRITY GATE GREEN each night. Found by
+a full-system diagnosis; nobody had questioned the page. ROOT CAUSE: `scripts/landing_watch.sh` proved
+the gate ran by grepping today's date in `tail -5` of the gate's log. The gate gained checks until its
+dated header sat seven lines from the end, outside the window - so a healthy job read as absent. FIX:
+the window is 40 lines. REGRESSION CHECK: MOT 6.28 (the window is parsed out of the script and must be
+at least 20). LESSON: an alarm that is wrong every night teaches its reader to ignore it, which is worse
+than no alarm. A watch must key on something the watched job promises - a dated final line or a state
+file - never on how many lines it happens to print.
+
+2026-09-19 (second entry) - THE FLOW-PRINT TAPE WAS BEING CAPTURED BY LUCK, AND A MISSED TAPE IS GONE FOR
+GOOD. WHAT BROKE: `flow_prints` holds a real print tape on 2 of its 475 days (2026-09-04 and 09-11, ~130
+prints per contract-day); every other day holds about two. The diagnosis of 2026-09-19 asked the vendor
+again for the puller's own cohort: contract-days stored with 149, 484, 278 and 452 prints on 09-11 now
+return 9, 3, 7 and 2, days 09-15 to 09-17 return nothing at all, and 09-14 returns 1-9. Unusual Whales
+publishes a day late, serves it in full for a short while, then THINS it. ROOT CAUSE: the puller marked a
+contract-day done on its first non-empty answer, whatever its size, and spent the rest of its budget on a
+two-year backlog the vendor had already thinned; whether a day was caught full depended on which night
+the first non-empty answer arrived. FIX: `is_final` keeps every contract-day inside a 12-day window open -
+it is asked again each night, `insert or ignore` keeps the fullest tape ever seen, `prints_pulled.n` keeps
+the maximum - and each session logs one `window` line per day (asked / returned tonight / held) so the
+vendor's real clock can be read off a week of logs and the window tightened. Same change: both archive
+pullers write a session-state file on a clean end and on a crash, and the landing watch pages when either
+is stale for 26 hours or marked crashed - closing the gap left open by the 2026-09-18 entry; and the
+history puller re-pages, with leftover budget, the ~41,800 stored ticker-days that were genuinely cut at
+the old 500-row cap, skipping tails that trade 10 lots or fewer (owner ruling 2026-09-19, the free route:
+the disk cannot hold every tail). REGRESSION CHECK: MOT 6.29 (no answer is final inside the window; a
+crashed session leaves a readable mark) and the re-page rule check beside it. NOT RECOVERABLE: the full
+tapes of the 473 thin days. LESSON: some data can be collected exactly once. For any vendor feed, ask
+what happens to yesterday's answer next week BEFORE designing the checkpoint - a "done" flag is a bet
+that the answer will never get better or worse.
+

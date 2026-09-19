@@ -26,8 +26,15 @@ else
   fi
   # integrity gate runs 22:05 Tue-Sat
   if [ "$DOW" -ge 2 ] && [ "$DOW" -le 6 ]; then
-    grep -q "INTEGRITY GATE" "$HOME/integrity_gate.log" 2>/dev/null &&       grep -q "$(date -u +%Y-%m-%d)" <(tail -5 "$HOME/integrity_gate.log") || MISS+=("integrity gate: no run logged today (22:05 job)")
+    grep -q "INTEGRITY GATE" "$HOME/integrity_gate.log" 2>/dev/null &&       grep -q "$(date -u +%Y-%m-%d)" <(tail -40 "$HOME/integrity_gate.log") || MISS+=("integrity gate: no run logged today (22:05 job)")
   fi
+  # archive pullers (22:30 history, 00:15 prints) write a state file when a session ENDS. A crash,
+  # a kill or a hang leaves it stale or marked crashed; both feeds have a vendor clock (2026-09-19).
+  for S in uw_pull uw_prints; do
+    PAGE=$(( $(date +%s) - $(stat -c %Y "$HOME/${S}_state.json" 2>/dev/null || echo 0) ))
+    [ "$PAGE" -lt 93600 ] || MISS+=("archive puller ${S}: no finished session in 26h - vendor-clocked data is being lost")
+    grep -q '"status": "crashed"' "$HOME/${S}_state.json" 2>/dev/null && MISS+=("archive puller ${S}: last session CRASHED - read its log")
+  done
   # kill-switch poller: state file must be fresh (runs every 15 min)
   AGE=$(( $(date +%s) - $(stat -c %Y "$HOME/telegram_commands_state.json" 2>/dev/null || echo 0) ))
   [ "$AGE" -lt 2700 ] || MISS+=("telegram command poller: state stale ${AGE}s - the /halt channel may be dead")

@@ -23,6 +23,8 @@ os.chdir(REPO)
 DB = "data/uw_history.db"
 TOKEN = os.environ.get("UNUSUAL_WHALES_TOKEN", "")
 H = {"Authorization": "Bearer " + TOKEN, "Accept": "application/json"}
+STATE_FILE = os.path.expanduser("~/uw_pull_state.json")
+MIN_TAIL_VOL = int(os.environ.get("UW_MIN_TAIL_VOL", "10"))   # owner 2026-09-19: a tail trading <= 10 lots is noise
 MAX_PAGES = int(os.environ.get("UW_MAX_PAGES", "12"))   # 5 tripped the sentinel on night one (91 ticker-days)
 DAILY_BUDGET = int(os.environ.get("UW_PULL_BUDGET", "30000"))
 TICKERS = ("SPY QQQ IWM NVDA TSLA AAPL MSFT AMZN META GOOGL AMD SLV GLD TLT COIN PLTR NFLX MU INTC BA "
@@ -70,6 +72,65 @@ def init():
     con.execute("create table if not exists budget (utc_day text primary key, used int)")
     con.commit()
     return con
+
+
+def _session_state(status, path=None, **kw):
+    """One line of truth for scripts/landing_watch.sh: a session that crashes, is killed or hangs
+    leaves this file stale or marked crashed, and the watch pages. Never raises."""
+    try:
+        kw.update({"status": status, "ended_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
+        with open(path or STATE_FILE, "w", encoding="utf-8") as fh:
+            json.dump(kw, fh)
+    except Exception:
+        pass
+
+
+def needs_repage(n_rows, min_volume, floor=None):
+    """A stored ticker-day was cut by the old one-page cap iff it holds EXACTLY 500 rows and its
+    thinnest stored row still trades above the floor - then real contracts sit on page 2."""
+    floor = MIN_TAIL_VOL if floor is None else floor
+    return n_rows == 500 and (min_volume or 0) > floor
+
+
+def _store(con, dd, t, rows):
+    for r in rows:
+        con.execute("insert or replace into contracts_daily values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (dd, t, r.get("option_symbol"), r.get("volume"), r.get("ask_volume"), r.get("bid_volume"),
+                     r.get("mid_volume"), r.get("no_side_volume"), r.get("sweep_volume"),
+                     r.get("multi_leg_volume"), r.get("floor_volume"), f(r.get("total_premium")),
+                     r.get("open_interest"), r.get("prev_oi"), f(r.get("nbbo_bid")), f(r.get("nbbo_ask")),
+                     f(r.get("avg_price")), f(r.get("last_price")), f(r.get("implied_volatility")),
+                     f(r.get("delta")), f(r.get("gamma")), f(r.get("theta")), f(r.get("vega")),
+                     r.get("last_tape_time")))
+
+
+def _pages(con, dd, t, first_page):
+    """Pages first_page..MAX_PAGES. Returns (rows or None, calls, hit_cap_with_volume)."""
+    rows, calls = [], 0
+    for _pg in range(first_page, MAX_PAGES + 1):
+        _u = f"https://api.unusualwhales.com/api/stock/{t}/option-contracts?date={dd}&limit=500"
+        if _pg > 1:
+            _u += f"&page={_pg}"
+        _page = get(_u)
+        bump(con)
+        calls += 1
+        if _page is None:
+            return (None if _pg == first_page else rows), calls, False
+        rows.extend(_page)
+        _v = [int(x.get("volume") or 0) for x in _page]
+        if len(_page) < 500 or not _v or min(_v) <= MIN_TAIL_VOL:
+            return rows, calls, False
+    return rows, calls, True
+
+
+def _halt_reason(con, d0):
+    if date.today() != d0:
+        return "UTC day rolled - stop; the new budget belongs to the new day's crons"
+    if used_today(con) >= DAILY_BUDGET:
+        return "daily budget reached - resume tomorrow"
+    if shutil.disk_usage(".").free / 2 ** 30 < 3.0:
+        return "DISK GUARD: under 3 GiB free - stopping"
+    return None
 
 
 def commit_retry(con, tries=10, wait=30, _sleep=time.sleep):
@@ -137,50 +198,22 @@ def main():
     n_def = 0
     n_trunc = 0
     _floor = (date.today() - timedelta(days=7)).isoformat()   # ZERO-RESULT-DEFER window
+    halted = None
     for dd, t in todo:
-        if date.today() != d0:
-            print("UTC day rolled - stop; the new budget belongs to the new day's crons", flush=True)
-            break               # crossing midnight let one session eat two days' budgets and
-                                # starve every other puller (2026-09-04)
-        if used_today(con) >= DAILY_BUDGET:
-            print("daily budget reached - resume tomorrow", flush=True)
-            break
-        if shutil.disk_usage(".").free / 2 ** 30 < 3.0:
-            print("DISK GUARD: under 3 GiB free - stopping", flush=True)
+        halted = _halt_reason(con, d0)      # day roll (2026-09-04), budget, disk
+        if halted:
+            print(halted, flush=True)
             break
         # PAGINATION (2026-09-17). limit is a hard server cap of 500 and `page` is the only way
-        # past it; `offset`/`skip` are ignored. Two years were silently truncated because nothing
-        # ever asked for page 2 - 80.6% of ticker-days sat at exactly 500 rows. Page on only while
-        # the page came back FULL and its tail still has volume, so we fetch the real missing tail
-        # on SPY/QQQ/NVDA and not zero-volume chain padding on all 260 names.
-        rows = []
-        for _pg in range(1, MAX_PAGES + 1):
-            _u = f"https://api.unusualwhales.com/api/stock/{t}/option-contracts?date={dd}&limit=500"
-            if _pg > 1:
-                _u += f"&page={_pg}"
-            _page = get(_u)
-            bump(con)
-            n_calls += 1
-            if _page is None:
-                rows = None if _pg == 1 else rows
-                break
-            rows.extend(_page)
-            _v = [int(x.get("volume") or 0) for x in _page]
-            if len(_page) < 500 or not _v or min(_v) <= 0:
-                break
-            if _pg == MAX_PAGES:
-                n_trunc += 1        # still full AND still has volume at the page cap = truncated
+        # past it; `offset`/`skip` are ignored. Page on only while the page came back FULL and its
+        # tail still trades above MIN_TAIL_VOL, so we fetch the real missing tail on SPY/QQQ/NVDA
+        # and not chain padding on all 260 names.
+        rows, _c, _cap = _pages(con, dd, t, 1)
+        n_calls += _c
+        n_trunc += int(_cap)
         if rows is None:
             continue
-        for r in rows:
-            con.execute("insert or replace into contracts_daily values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                        (dd, t, r.get("option_symbol"), r.get("volume"), r.get("ask_volume"), r.get("bid_volume"),
-                         r.get("mid_volume"), r.get("no_side_volume"), r.get("sweep_volume"),
-                         r.get("multi_leg_volume"), r.get("floor_volume"), f(r.get("total_premium")),
-                         r.get("open_interest"), r.get("prev_oi"), f(r.get("nbbo_bid")), f(r.get("nbbo_ask")),
-                         f(r.get("avg_price")), f(r.get("last_price")), f(r.get("implied_volatility")),
-                         f(r.get("delta")), f(r.get("gamma")), f(r.get("theta")), f(r.get("vega")),
-                         r.get("last_tape_time")))
+        _store(con, dd, t, rows)
         if len(rows) == 0 and dd >= _floor:
             n_def += 1      # ZERO-RESULT-DEFER (2026-09-10): an empty day inside the recent
                             # window is "not published yet", never "done" - retried next session
@@ -190,6 +223,44 @@ def main():
             commit_retry(con)
             print(f"{n_calls} calls, latest {dd} {t} ({len(rows)} contracts)", flush=True)
         time.sleep(0.25)
+    commit_retry(con)
+    # RE-PAGE (2026-09-19): every day stored before 2026-09-17 kept page 1 only. Once the todo list
+    # is empty, leftover budget goes back over those days, newest first, and fetches page 2 onward
+    # for the ticker-days needs_repage() says were genuinely cut. A day is marked in `repaged` only
+    # when every one of its ticker-days has been handled, so an interrupted night simply resumes.
+    n_rp = 0
+    if not halted:
+        con.execute("create table if not exists repaged (day text primary key, n_repaged int)")
+        _rd = {r[0] for r in con.execute("select day from repaged")}
+        for (dd,) in con.execute("select distinct day from pulled where n = 500 order by day desc").fetchall():
+            if dd in _rd:
+                continue
+            _per = con.execute("select ticker, count(*), min(volume) from contracts_daily where day = ? "
+                               "group by ticker", (dd,)).fetchall()
+            _need = [t for t, n, mv in _per if needs_repage(n, mv)]
+            _k = 0
+            for t in _need:
+                halted = _halt_reason(con, d0)
+                if halted:
+                    break
+                extra, _c, _cap = _pages(con, dd, t, 2)
+                n_calls += _c
+                n_trunc += int(_cap)
+                if extra is None:
+                    continue
+                _store(con, dd, t, extra)
+                con.execute("insert or replace into pulled values (?,?,?)", (dd, t, 500 + len(extra)))
+                _k += 1
+                n_rp += 1
+                if n_rp % 25 == 0:
+                    commit_retry(con)
+                    print(f"re-page: {n_rp} ticker-days, latest {dd} {t} (+{len(extra)} contracts)", flush=True)
+                time.sleep(0.25)
+            if halted:
+                print(halted, flush=True)
+                break
+            con.execute("insert or replace into repaged values (?,?)", (dd, _k))
+        print(f"re-page: {n_rp} truncated ticker-days completed this session", flush=True)
     commit_retry(con)
     tot = con.execute("select count(*) from contracts_daily").fetchone()[0]
     print(f"session done: {n_calls} calls, {tot} contract-days stored, {n_def} recent zero-results deferred", flush=True)
@@ -201,4 +272,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+        _session_state("done")
+    except Exception as _e:
+        _session_state("crashed", error=f"{type(_e).__name__}: {_e}"[:200])
+        raise

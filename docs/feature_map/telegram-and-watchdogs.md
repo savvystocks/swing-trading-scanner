@@ -39,6 +39,10 @@ when the engine, the snapshot landing, or the data freshness goes quiet.
 - MOT dimension 5 observability (6 checks); the digest renders the scoreboard and reconciliation lines.
 
 ## Traps
+- 2026-09-19 THE LANDING WATCH PAGED A FALSE ALARM EVERY NIGHT: `scripts/landing_watch.sh` looked for today's date
+  in the last 5 lines of the integrity gate's log, and the gate had grown to 7 lines below its dated header. A
+  watch that greps a fixed tail of another job's log breaks the day that job prints one more line; the window is
+  40 now and MOT 6.28 holds it above 20. The same watch now reads both archive pullers' session-state files.
 - 2026-07-08 SILENT-DEATH ALARM OFF; 2026-08-07 8 FALSE "ENGINE DEAD" PAGES; 2026-08-18/20 auto-
   rollback with collateral and a false rollback (twin schedulers).
 - 2026-09-07 THE WATCHDOG'S MESSENGER FAILED SILENTLY (sentinel ran, telegram did not send).

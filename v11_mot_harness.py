@@ -1643,6 +1643,31 @@ except _sq27.OperationalError:
     _other27 = True
 check(6, "archive puller: a locked database is waited out, never fatal; any other database error still raises",
       _ok27 and _other27, f"calls={_c27.calls} sleeps={len(_slept27)} other_raises={_other27}")
+# 6.28 THE LANDING WATCH CAN SEE THE INTEGRITY GATE AND BOTH ARCHIVE PULLERS (BREAKDOWNS 2026-09-19)
+import re as _re28
+_lw28 = open("scripts/landing_watch.sh", encoding="utf-8").read()
+_win28 = _re28.search(r'tail -(\d+) "\$HOME/integrity_gate\.log"', _lw28)
+check(6, "landing watch: the integrity-gate window outgrows the gate's own output and both archive pullers are watched",
+      bool(_win28) and int(_win28.group(1)) >= 20 and "for S in uw_pull uw_prints" in _lw28
+      and "CRASHED" in _lw28, f"window={_win28.group(1) if _win28 else None}")
+# 6.29 THE PRINTS PULLER NEVER CALLS A FRESH DAY FINAL (BREAKDOWNS 2026-09-19 second entry)
+import json as _js29
+import tempfile as _tf29
+_sp29 = _ilu27.spec_from_file_location("uw_flow_prints_29", os.path.join("scripts", "uw_flow_prints.py"))
+_m29 = _ilu27.module_from_spec(_sp29)
+_sp29.loader.exec_module(_m29)
+_p29 = os.path.join(_tf29.gettempdir(), "mot_puller_state_29.json")
+_m29._session_state("crashed", path=_p29, error="x")
+_st29 = _js29.load(open(_p29, encoding="utf-8"))
+os.remove(_p29)
+check(6, "prints puller: no answer is final inside the vendor's re-ask window; a crashed session leaves a mark the watch reads",
+      _m29.is_final("2026-09-01", "2026-09-07") is True and _m29.is_final("2026-09-07", "2026-09-07") is False
+      and _m29.is_final("2026-09-10", "2026-09-07") is False and _st29.get("status") == "crashed"
+      and "ended_utc" in _st29, str(_st29))
+check(6, "history puller: a stored ticker-day is re-paged only when it sits exactly at the old cap with real volume in its tail",
+      _m27.needs_repage(500, 25) is True and _m27.needs_repage(500, 10) is False
+      and _m27.needs_repage(500, None) is False and _m27.needs_repage(499, 900) is False
+      and _m27.needs_repage(1000, 900) is False)
 # 6.15 DRILLS AND THE MOT LEAVE THE PASSIVE SCORE LOG ALONE (BREAKDOWNS 2026-09-12 third entry)
 _dr15 = open("scripts/regime_drill.py", encoding="utf-8").read()
 check(6, "regime drill redirects the student score log and neutralises the record rewrite before any entry or rank call",

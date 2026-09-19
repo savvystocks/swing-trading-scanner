@@ -35,6 +35,11 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
 ## Evidence
 - Records with `settle`; the court's weekly unit (`scripts/sunday_boundary.py` `weekmeans`);
   the 2.5-year backtest in `scripts/fivek_backtests.py` (+$2.3k over 114 weeks, superseded-basis caveats apply).
+- `scripts/xsp_quote_log.py` (2026-09-19, VPS cron, off the trade path): every backtest of this book priced SPY while the
+  book trades XSP, so it logs bid/ask on the would-be XSP legs and the matched SPY legs at the same instant, through
+  `fivek_probes.py:_quote` and `fivek_probes.py:_occ` (the engine's own INDICATIVE feed), into `reports/research/xsp_quotes.jsonl`.
+  The decision rule is fixed in its docstring: median entry-window excess friction <= $5 a spread and the SPY backtests
+  transfer; >= $20 and XSP's own spread consumes the edge. Four weeks, weeks as the unit of evidence.
 
 ## Checks
 - Drill scenario 5 (bear-only PUT_DEBIT_W, wings first); the court's weekly cadence branch.

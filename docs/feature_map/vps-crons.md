@@ -10,6 +10,7 @@ cadence; a red row is the first place to look.
 | */15 13-22 Mon-Fri | `scripts/watchdog_vps.sh` (inbox / heartbeat dead-man) | watchdog log | no page |
 | */15 14-21 Mon-Fri | `scripts/engine_watch.sh` (engine heartbeat, `data/last_cycle_ok`, auto-rollback to the last-good SHA) | engine_watch.log | `ok` lines, no rollback |
 | */15 always | `scripts/telegram_commands.py` (owner commands) | telegram log | commands acknowledged |
+| 15:05 and 19:50 Mon-Fri | `scripts/xsp_quote_log.py` (passive: XSP vs SPY quote width on the legs the credit spread would trade) | xsp_quotes.log | one line per run; `reports/research/xsp_quotes.jsonl` grows by two rows a day |
 | 21:30 Mon-Fri | `/home/poller/backup_snapshot.sh` | - | snapshot landed (landing_watch) |
 | 21:50 Mon-Fri | `scripts/shadow_lab_nightly.sh` | - | ledger rows appended |
 | 22:00 Mon-Fri | `scripts/sunday_boundary.py` report-only, sequential apply (trajectory) | trajectory log | nightly line |

@@ -23,7 +23,7 @@ os.chdir(REPO)
 DB = "data/uw_history.db"
 TOKEN = os.environ.get("UNUSUAL_WHALES_TOKEN", "")
 H = {"Authorization": "Bearer " + TOKEN, "Accept": "application/json"}
-MAX_PAGES = int(os.environ.get("UW_MAX_PAGES", "5"))
+MAX_PAGES = int(os.environ.get("UW_MAX_PAGES", "12"))   # 5 tripped the sentinel on night one (91 ticker-days)
 DAILY_BUDGET = int(os.environ.get("UW_PULL_BUDGET", "30000"))
 TICKERS = ("SPY QQQ IWM NVDA TSLA AAPL MSFT AMZN META GOOGL AMD SLV GLD TLT COIN PLTR NFLX MU INTC BA "
            "AVGO SMCI MSTR HOOD IBIT XLE XLF GDX TQQQ SQQQ KO CHWY HIMS PYPL ETHA RIOT CLSK QCOM "
@@ -59,7 +59,7 @@ END = date.today() - timedelta(days=1)  # ROLLING - a hardcoded END froze the ar
 
 
 def init():
-    con = sqlite3.connect(DB, timeout=60)
+    con = sqlite3.connect(DB, timeout=300)
     con.execute("""create table if not exists contracts_daily (
         day text, ticker text, option_symbol text, volume int, ask_volume int, bid_volume int,
         mid_volume int, no_side_volume int, sweep_volume int, multi_leg_volume int, floor_volume int,
@@ -70,6 +70,22 @@ def init():
     con.execute("create table if not exists budget (utc_day text primary key, used int)")
     con.commit()
     return con
+
+
+def commit_retry(con, tries=10, wait=30, _sleep=time.sleep):
+    """A long READ elsewhere (fade_meta walks this archive for ~30 minutes) holds a shared lock and the
+    commit cannot take its exclusive one. On 2026-09-18 that killed the session at call 900 of a
+    night's 18,000 while an expiring window was being backfilled. Wait it out; only a lock is retried."""
+    for i in range(tries):
+        try:
+            con.commit()
+            return True
+        except sqlite3.OperationalError as e:
+            if "locked" not in str(e).lower():
+                raise
+            print(f"LOCK RETRY {i + 1}/{tries}: {e}", flush=True)
+            _sleep(wait)
+    raise sqlite3.OperationalError("database is locked after %d retries" % tries)
 
 
 def used_today(con):
@@ -171,10 +187,10 @@ def main():
         else:
             con.execute("insert or replace into pulled values (?,?,?)", (dd, t, len(rows)))
         if n_calls % 50 < MAX_PAGES:
-            con.commit()
+            commit_retry(con)
             print(f"{n_calls} calls, latest {dd} {t} ({len(rows)} contracts)", flush=True)
         time.sleep(0.25)
-    con.commit()
+    commit_retry(con)
     tot = con.execute("select count(*) from contracts_daily").fetchone()[0]
     print(f"session done: {n_calls} calls, {tot} contract-days stored, {n_def} recent zero-results deferred", flush=True)
     if n_trunc:

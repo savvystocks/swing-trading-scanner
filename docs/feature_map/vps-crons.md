@@ -47,6 +47,11 @@ cadence; a red row is the first place to look.
   puller now pages while a page comes back full with volume still in its tail, and prints
   TRUNCATION WARNING when it stops early. Days already stored keep their truncated chains -
   re-paging them is owed.
+- 2026-09-18 THE ARCHIVE PULLER DIED ON A LOCKED DATABASE: `scripts/fade_meta.py` (22:10, ~30 minutes) reads
+  `data/uw_history.db` while `scripts/uw_history_pull.py` (22:30) writes it; a commit that cannot take its
+  exclusive lock inside the timeout raised and ended the night at call 900. `scripts/uw_history_pull.py:commit_retry`
+  now waits a lock out (MOT 6.27). The page cap is 12 after 5 tripped the truncation sentinel on night one.
+  Any new job that scans the archive in the 22:30-02:00 UTC window shares this lock.
 - 2026-09-01 VENV DEPENDENCY DRIFT: jobs that import sklearn or pandas must use `./.venv/bin/python`.
 - A dirty working tree on the VPS makes `git pull --ff-only` fail for every job that follows; never
   leave uncommitted edits on the VPS overnight.

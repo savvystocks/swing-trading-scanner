@@ -969,3 +969,24 @@ plausible answer is invisible. Any paged endpoint must either page to exhaustion
 stopped early, and "the vendor gives us two years" is a claim to test against the vendor, not to
 inherit from a comment.
 
+2026-09-18 - THE ARCHIVE PULLER DIED ON A LOCKED DATABASE, ONE NIGHT AFTER IT WAS FIXED. WHAT BROKE:
+the nightly `scripts/uw_history_pull.py` session of Friday 2026-09-18 ended at 22:38:42 UTC with
+`sqlite3.OperationalError: database is locked` after 900 of roughly 18,000 calls, so a night of
+backfill into a ROLLING window (entitled history expires at one trading day per day) recovered one
+day instead of about fifty. Found on 2026-09-19 by a full-system diagnosis, not by any alarm: the
+traceback sat in `uw_pull.log` and nothing reads that log. ROOT CAUSE: the archive is a rollback-
+journal SQLite file with one writer and several readers. `fade_meta.py` starts at 22:10 on weekdays,
+runs about thirty minutes and reads `data/uw_history.db` throughout; its log closed at 22:39, one
+minute after the crash. A reader's shared lock blocks the writer's exclusive lock at COMMIT, the
+connection's timeout was 60 seconds, and the commit was not wrapped - so the first long overlap was
+fatal. Thursday's run survived the same overlap only by timing. FIX: `commit_retry` waits a lock out
+(ten attempts, thirty seconds apart, logged as LOCK RETRY) and re-raises anything that is not a lock;
+the connection timeout is 300 seconds; every commit in the session uses it. Same change: the page cap
+default moves 5 -> 12, because the truncation sentinel shipped on 2026-09-17 fired on its first night
+(91 ticker-days still had volume in the tail at page five). REGRESSION CHECK: MOT 6.27 (a connection
+whose commit raises `database is locked` twice is retried to success with two waits; a different
+OperationalError still raises). NOT CLOSED BY THIS FIX: a crashed nightly puller still pages nobody -
+the freshness sentinel only notices days later when the newest day goes stale. LESSON: a job that
+writes a shared archive must assume a reader is always there. The 2026-09-17 fix was verified against
+the API and never against its neighbours in the crontab.
+

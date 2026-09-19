@@ -1616,6 +1616,33 @@ fb._SPEC = None
 os.environ["FADE_BOOK_FORCE_OFF"] = _env
 
 print("\n" + "=" * 70)
+# 6.27 THE ARCHIVE PULLER SURVIVES A LOCKED DATABASE (BREAKDOWNS 2026-09-18)
+import importlib.util as _ilu27
+import sqlite3 as _sq27
+_sp27 = _ilu27.spec_from_file_location("uw_history_pull_27", os.path.join("scripts", "uw_history_pull.py"))
+_m27 = _ilu27.module_from_spec(_sp27)
+_sp27.loader.exec_module(_m27)
+
+
+class _Con27:
+    def __init__(self, fails, msg="database is locked"):
+        self.fails, self.calls, self.msg = fails, 0, msg
+
+    def commit(self):
+        self.calls += 1
+        if self.calls <= self.fails:
+            raise _sq27.OperationalError(self.msg)
+
+
+_c27, _slept27 = _Con27(2), []
+_ok27 = _m27.commit_retry(_c27, _sleep=_slept27.append) is True and _c27.calls == 3 and len(_slept27) == 2
+try:
+    _m27.commit_retry(_Con27(1, "disk I/O error"), _sleep=_slept27.append)
+    _other27 = False
+except _sq27.OperationalError:
+    _other27 = True
+check(6, "archive puller: a locked database is waited out, never fatal; any other database error still raises",
+      _ok27 and _other27, f"calls={_c27.calls} sleeps={len(_slept27)} other_raises={_other27}")
 # 6.15 DRILLS AND THE MOT LEAVE THE PASSIVE SCORE LOG ALONE (BREAKDOWNS 2026-09-12 third entry)
 _dr15 = open("scripts/regime_drill.py", encoding="utf-8").read()
 check(6, "regime drill redirects the student score log and neutralises the record rewrite before any entry or rank call",

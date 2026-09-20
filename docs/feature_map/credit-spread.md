@@ -68,3 +68,17 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
 - Settlement depends on yfinance returning ^XSP; a missing close leaves the record open until the
   next cycle that can fetch it. Check the Monday log if a week's settle line is missing.
 - Never propose a sell-to-close for these; they are cash-settled by design.
+- 2026-09-20 THE BOOK BELIEVED ITSELF class (three defects, one commit): the week's entry decision is
+  taken ONCE, on the exchange week's first session (`fivek_probes.py:_first_session`, holiday-aware,
+  Monday-only when the calendar is unreadable) and the guard stands AHEAD of the regime gate - the gate
+  used to be re-read every cycle, so a bear week entered late, a Friday flip doubled into Monday, and a
+  failed Monday retried all week. Entries book the FILL, not the quote: every leg carries its order id,
+  `fivek_probes.py:_confirm_fills` rewrites `prem` to `filled_avg_price` (keeping `quoted`) on a later
+  cycle and marks a dead leg `filled: false` so it is dropped from `net_credit` and never priced at
+  expiry. `fivek_probes.py:_closing_fills` asks the broker whether anything closed a leg early; if so
+  `fivek_probes.py:_settle_one` books the REALISED fill, annotates the record and pages the owner.
+  Guarded by MOT 6.30.
+- A leg of one of these spreads can only be closed by someone else's mistake, and it has happened once
+  (2026-08-25, collateral damage from the corrupt-log mass adoption of 2026-08-24). The reconciler has
+  known bare-occ legs since 3ee328c3 and fails closed on an unreadable book since 41e6561b; the third
+  line of defence is now that the record checks its own legs at settle.

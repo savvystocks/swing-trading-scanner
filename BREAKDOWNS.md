@@ -990,6 +990,40 @@ the freshness sentinel only notices days later when the newest day goes stale. L
 writes a shared archive must assume a reader is always there. The 2026-09-17 fix was verified against
 the API and never against its neighbours in the crontab.
 
+2026-09-20 - THE WEEKLY SPREAD TRUSTED ITS OWN QUOTES AND ITS OWN CALENDAR. An eight-agent
+audit of the credit spread's numbers (four lenses, each independently refuted) found three defects in
+the live book, none of which had cost money yet. WHAT BROKE: (1) the BEAR stand-down sat inside the
+per-cycle entry block, so the week's decision was retaken every ten minutes - a week that opened BEAR
+entered anyway once the label flipped (5 of the 17 bear weeks in three years would have), a Friday
+flip opened next week's spread while the once-a-week test only looks back to Monday so Monday opened a
+second one, and a Monday that merely failed to quote retried all week; the evidence base prices a
+first-session entry held to expiry and nothing else. (2) _enter booked the INDICATIVE QUOTE as the
+premium and marked the record OPEN without ever asking the broker what filled; in four of the first
+six spreads the short leg rested 2-17 minutes at its limit, and a short that never filled would have
+left the book claiming a credit it never received while holding only the long wing. (3) On
+2026-08-25 13:38 UTC the orphan reconciler, reading the empty book left by the previous day's
+corrupt-log incident (see 2026-08-24), adopted both legs of the 2026-08-28 spread as its own and the
+exit engine stopped them out at 13:33 for a realised +$29; the record never noticed, stayed OPEN and
+booked +$62 at expiry six days later. The adoption route is already fixed (41e6561b, fail-closed on an
+unreadable book) and the reconciler has known bare-occ legs since 3ee328c3; what was unfixed is that
+the record has no way to notice a leg closed behind its back. ROOT CAUSE, all three: the book believed
+its own intentions instead of asking the broker, and it re-decided a weekly question on a ten-minute
+clock. FIX (one commit): fivek_probes._first_session gates entries to the exchange week's first
+session (holiday-aware, Monday-only when the calendar is unreadable) ahead of the regime gate;
+_order_state + _confirm_fills rewrite each leg's prem to its filled_avg_price, keep the quote as
+`quoted`, mark a dead leg filled:false and drop it from net_credit; _closing_fills + _settle_one price
+any leg closed at the broker from its realised fill instead of expiry intrinsic, annotate the record
+and page the owner, because a European cash-settled spread must never be closed by a sweep. The six
+records already in the book carry no order ids and are left untouched. NOT CORRECTED IN PLACE: the
+2026-08-28 record still reads +$62; the realised figure was +$29 and the court's weekly unit used the
++$62 - a rewrite of a settled record is a bigger risk than the $33, so it is recorded here instead.
+REGRESSION CHECK: MOT 6.30, six checks on the real entry and settle code - the first-session guard
+stands ahead of the regime gate; a filled leg is booked at the broker's price with the quote kept; a
+dead short is wings-only and never priced at expiry; legs closed at the broker are booked realised and
+page the owner; an untouched week still settles at exactly +$62 with the ordinary telegram; a legacy
+record without order ids is left byte-identical. LESSON: a book that records what it MEANT to do
+diverges from the broker silently, and it diverges most on the days that matter; ask the broker.
+
 2026-09-19 - THE LANDING WATCH PAGED A FALSE ALARM EVERY NIGHT. WHAT BROKE: at 22:45 UTC on at least three
 nights running (16, 17 and 18 September) the owner's phone received "LANDING WATCH: integrity gate: no run logged
 today (22:05 job)" while the gate had run at 22:05 and printed INTEGRITY GATE GREEN each night. Found by

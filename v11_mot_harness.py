@@ -1676,6 +1676,69 @@ check(6, "regime drill redirects the student score log and neutralises the recor
       and _dr15.index("lab.STUDENT_SCORES_LOG") < _dr15.index("_student_rank("))
 check(6, "the MOT leaves reports/shadow_lab/student_scores.jsonl byte-for-byte unchanged",
       _ssl_size15() == _SSL_SIZE0, f"{_SSL_SIZE0} -> {_ssl_size15()}")
+# 6.30 THE WEEKLY SPREAD DECIDES ONCE, BOOKS FILLS, AND NOTICES A LEG CLOSED BEHIND ITS BACK
+# (BREAKDOWNS 2026-09-20). Three defects, one fixture each, all on the real settle/entry code.
+import fivek_probes as _f30
+from datetime import date as _d30, datetime as _dt30, timezone as _tz30
+_FS30 = _f30._first_session
+check(6, "credit spread: the entry decision belongs to the week's FIRST session, holidays included",
+      _FS30(_d30(2026, 9, 14)) == _d30(2026, 9, 14) and _FS30(_d30(2026, 9, 18)) == _d30(2026, 9, 14)
+      and _FS30(_d30(2026, 9, 8)) == _d30(2026, 9, 8) and _FS30(_d30(2026, 11, 25)) == _d30(2026, 11, 23),
+      str([_FS30(_d30(2026, 9, 14)), _FS30(_d30(2026, 9, 18)), _FS30(_d30(2026, 9, 8))]))
+_cyc30 = open("fivek_probes.py", encoding="utf-8").read()
+check(6, "credit spread: the first-session guard stands AHEAD of the regime gate, so no later cycle can re-decide the week",
+      "_first_session(now.date())" in _cyc30
+      and _cyc30.index("_fs = _first_session(now.date())") < _cyc30.index('_rg == "BEAR"')
+      and _cyc30.index("_fs = _first_session(now.date())") > _cyc30.index("entries gated (allow="))
+_REC30 = lambda: {"probe_strategy": "CREDIT_SPREAD_W", "expiry": "2026-08-28", "status": "OPEN",
+                  "entry_ts_utc": "2026-08-24T15:01:51+00:00", "net_credit": 0.62,
+                  "structure": {"short": [{"occ": "S30", "cp": "P", "k": 750, "prem": 0.84, "oid": "S", "filled": None}],
+                                "long": [{"occ": "L30", "cp": "P", "k": 735, "prem": 0.22, "oid": "L", "filled": None}]}}
+_o30, _c30, _x30 = _f30._order_state, _f30._closing_fills, _f30._xsp_close_series
+import pandas as _pd30
+_f30._xsp_close_series = lambda: _pd30.Series([771.18], index=_pd30.to_datetime(["2026-08-28"]))
+
+
+class _Lab30:
+    last = ""
+
+    @staticmethod
+    def _notify(m):
+        _Lab30.last = m
+
+
+_f30._order_state = lambda oid, creds: {"S": ("filled", 0.86, 1.0), "L": ("filled", 0.20, 1.0)}[oid]
+_r30 = _REC30()
+_ch30 = _f30._confirm_fills(_r30, ("k", "s"))
+check(6, "credit spread: the record books the price the BROKER filled, keeps the quote beside it, and re-asks nothing",
+      _ch30 is True and _r30["structure"]["short"][0]["prem"] == 0.86
+      and _r30["structure"]["short"][0]["quoted"] == 0.84 and _r30["net_credit"] == 0.66
+      and _f30._confirm_fills(_r30, ("k", "s")) is False, str(_r30["structure"]))
+_f30._order_state = lambda oid, creds: {"S": ("canceled", None, 0.0), "L": ("filled", 0.20, 1.0)}[oid]
+_r30b = _REC30()
+_f30._confirm_fills(_r30b, ("k", "s"))
+_f30._closing_fills = lambda r, creds: {}
+_f30._settle_one(_r30b, _Lab30, _dt30(2026, 9, 1, 15, 5, tzinfo=_tz30.utc))
+check(6, "credit spread: a short leg that never filled is wings-only - never a credit, never priced at expiry",
+      _r30b["structure"]["short"][0]["filled"] is False and _r30b["net_credit"] == -0.2
+      and _r30b["settle"]["pnl_usd"] == round((735 - 771.18 if 735 > 771.18 else 0) * 100 - 20.0, 2),
+      str(_r30b.get("settle")))
+_r30c = _REC30()
+_f30._closing_fills = lambda r, creds: {"S30": 0.45, "L30": 0.10}
+_f30._settle_one(_r30c, _Lab30, _dt30(2026, 9, 1, 15, 5, tzinfo=_tz30.utc), ("k", "s"))
+check(6, "credit spread: legs closed at the broker are booked at their REALISED fills and page the owner, never at expiry",
+      _r30c["settle"]["pnl_usd"] == 27.0 and sorted(_r30c["settle"]["closed_early"]) == ["L30", "S30"]
+      and "CLOSED AT THE BROKER" in _Lab30.last, str(_r30c.get("settle")) + " | " + _Lab30.last[:60])
+_r30d = _REC30()
+_f30._closing_fills = lambda r, creds: {}
+_f30._settle_one(_r30d, _Lab30, _dt30(2026, 9, 1, 15, 5, tzinfo=_tz30.utc), ("k", "s"))
+check(6, "credit spread: an untouched week still settles at expiry exactly as before, with the ordinary telegram",
+      _r30d["settle"]["pnl_usd"] == 62.0 and "closed_early" not in _r30d["settle"]
+      and "ALARM" not in _Lab30.last, str(_r30d.get("settle")))
+_r30e = {"probe_strategy": "CREDIT_SPREAD_W", "structure": {"short": [{"occ": "S30", "cp": "P", "k": 750, "prem": 0.84}], "long": []}}
+check(6, "credit spread: the six records entered before order ids existed are left exactly as they are",
+      _f30._confirm_fills(_r30e, ("k", "s")) is False and _r30e["structure"]["short"][0]["prem"] == 0.84)
+_f30._order_state, _f30._closing_fills, _f30._xsp_close_series = _o30, _c30, _x30
 total = len(RESULTS)
 passed = sum(1 for r in RESULTS if r[2])
 by_dim = {}

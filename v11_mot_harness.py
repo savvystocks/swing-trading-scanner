@@ -1739,6 +1739,63 @@ _r30e = {"probe_strategy": "CREDIT_SPREAD_W", "structure": {"short": [{"occ": "S
 check(6, "credit spread: the six records entered before order ids existed are left exactly as they are",
       _f30._confirm_fills(_r30e, ("k", "s")) is False and _r30e["structure"]["short"][0]["prem"] == 0.84)
 _f30._order_state, _f30._closing_fills, _f30._xsp_close_series = _o30, _c30, _x30
+# 6.31 THE PROOF BOOK CANNOT TRADE THE WRONG ACCOUNT (NORTH_STAR v1.9, 2026-09-20). Promotion 1 is a
+# SECOND paper account; the failure that matters is a wrong-slot paste of two valid keys.
+import proof_book as _pb31
+_env31 = {k: os.environ.get(k) for k in ("ALPACA_PROOF_API_KEY", "ALPACA_PROOF_SECRET_KEY")}
+os.environ.pop("ALPACA_PROOF_API_KEY", None)
+os.environ.pop("ALPACA_PROOF_SECRET_KEY", None)
+_none31, _why31 = _pb31.verify(("dk", "ds"), "PA3QMQJYAP59", lambda c: "PA3QMQJYAP59")
+check(6, "proof book: no credentials means no trade, with a reason in the log",
+      _none31 is None and "no proof credentials" in _why31, _why31)
+os.environ["ALPACA_PROOF_API_KEY"], os.environ["ALPACA_PROOF_SECRET_KEY"] = "dk", "ds"
+_r31a = _pb31.verify(("dk", "ds"), "PA3QMQJYAP59", lambda c: "PA3QMQJYAP59")
+os.environ["ALPACA_PROOF_API_KEY"], os.environ["ALPACA_PROOF_SECRET_KEY"] = "pk", "ps"
+_r31b = _pb31.verify(("dk", "ds"), "PA3QMQJYAP59", lambda c: "PA9999999999")
+_r31c = _pb31.verify(("dk", "ds"), "PA3QMQJYAP59", lambda c: None)
+_r31d = _pb31.verify(("dk", "ds"), "", lambda c: "PA3QMQJYAP59")
+_r31e = _pb31.verify(("dk", "ds"), "PA3QMQJYAP59", lambda c: "PA3QMQJYAP59")
+for _k31, _v31 in _env31.items():
+    os.environ.pop(_k31, None)
+    if _v31 is not None:
+        os.environ[_k31] = _v31
+check(6, "proof book: discovery keys in the proof slot are refused - the $864k book is never traded at proof size",
+      _r31a[0] is None and "DISCOVERY" in _r31a[1], _r31a[1])
+check(6, "proof book: keys that open a DIFFERENT account, no account, or an unpinned spec are all refused",
+      _r31b[0] is None and _r31c[0] is None and _r31d[0] is None
+      and "DIFFERENT account" in _r31b[1], f"{_r31b[1]} | {_r31c[1]} | {_r31d[1]}")
+check(6, "proof book: the correct keys on the pinned account are accepted", _r31e[0] == ("pk", "ps") and _r31e[1] == "ok", str(_r31e[1]))
+_ac31 = open(os.path.join("src", "alpaca_creds.py"), encoding="utf-8").read()
+check(6, "proof credentials are absent from the shared credential scan, which cannot tell two accounts apart",
+      "ALPACA_PROOF_API_KEY" not in _ac31.split("def _probe")[0].replace("ALPACA_PROOF_* must NEVER", ""))
+import tempfile as _tf31
+_bad31 = os.path.join(_tf31.gettempdir(), "mot_proof_bad_31.json")
+open(_bad31, "w").write("{not json")
+_lp31 = _pb31.LOG_PATH
+_pb31.LOG_PATH = _bad31
+try:
+    _pb31.load()
+    _raised31 = False
+except Exception:
+    _raised31 = True
+finally:
+    _pb31.LOG_PATH = _lp31
+    os.remove(_bad31)
+check(6, "proof book: an unreadable record file RAISES - blind is not flat, so the week's gate cannot re-arm on top of a live spread",
+      _raised31 is True)
+_fp31 = open("fivek_probes.py", encoding="utf-8").read()
+check(6, "proof book: entries and settles write through the book's own store, never the discovery log",
+      "_load, _save = store or (lab._load_log_list, lab._save_log_list)" in _fp31
+      and "lab._save_log_list(log)" not in _fp31.split("def cycle")[0].split("def _enter")[1]
+      and 'book="PROOF"' in open("sandbox_proactive_lab.py", encoding="utf-8").read())
+check(6, "proof book: one seat only - condor and put-debit are refused there",
+      _fp31.count('and book != "PROOF"') == 2)
+_wf31 = open(os.path.join(".github", "workflows", "v10_lab.yml"), encoding="utf-8").read()
+check(6, "proof book: its records and equity samples are in the persist step's fixed file list (an unlisted file is lost)",
+      "proof_logs.json" in _wf31 and "proof_logs_equity.jsonl" in _wf31 and "ALPACA_PROOF_API_KEY" in _wf31)
+_sen31 = open(os.path.join("scripts", "freshness_sentinel.py"), encoding="utf-8").read()
+check(6, "proof book: a freshness row watches the daily equity samples, so a silently dead proof route is seen",
+      "proof_logs_equity.jsonl" in _sen31)
 total = len(RESULTS)
 passed = sum(1 for r in RESULTS if r[2])
 by_dim = {}

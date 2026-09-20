@@ -2963,6 +2963,25 @@ def run_scheduled_cycle(mock=False):
                            allow_entries=not (brake_active or halt_active))
     except Exception as e:
         print(f"  fivek probes skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")
+    try:                                                     # THE PROOF BOOK ("promotion 1"): the same
+        import proof_book                                    # weekly XSP credit spread, one contract,
+        _pc = proof_book.cfg()                               # in its OWN $5,000 account, judged alone
+        if _pc.get("enabled"):
+            _pk, _why = proof_book.creds(creds)
+            if not _pk:
+                print(f"  PROOF: no trade - {_why}")
+                if "DIFFERENT account" in _why or "DISCOVERY keys" in _why:
+                    _notify(f"<b>PROOF ACCOUNT REFUSED</b> {_why} - nothing was traded. "
+                            f"Check ALPACA_PROOF_* in the repository secrets.")
+            else:
+                import fivek_probes as _fp
+                proof_book.sample_equity(_pk, datetime.now(timezone.utc))
+                _fp.cycle(_pk, allow_entries=not (brake_active or halt_active),
+                          book="PROOF", store=(proof_book.load, proof_book.save))
+        else:
+            print("  PROOF: disabled in the spec - no proof cycle")
+    except Exception as e:                                   # fail-CLOSED in effect: any error here
+        print(f"  PROOF skipped (fail-open): {type(e).__name__}: {str(e)[:80]}")   # means no proof trade
     try:                                                     # MOMENTUM_ROT probe (top-5 3mo, 200d gate,
         import momentum_probe                                # monthly shares rotation - fast-tracked
         momentum_probe.cycle(creds,                          # owner order 2026-08-17)

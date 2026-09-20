@@ -63,6 +63,7 @@ CHECKS = [
     # -- trade path: the engine and its lifelines
     ("engine last_cycle_ok", "schedule", "data/last_cycle_ok", (20, 30, WEEKDAYS), "TRADE"),
     ("engine records log", "schedule", "proactive_sandbox_logs.json", (19, 30, WEEKDAYS), "TRADE"),
+    ("proof book equity samples", "schedule", "proof_logs_equity.jsonl", (19, 30, WEEKDAYS), "TRADE"),
     ("harvest poller log", "schedule", "data/poller.log", (21, 0, WEEKDAYS), "TRADE"),
     ("harvest state", "schedule", "data/harvest_state.json", (19, 30, WEEKDAYS), "TRADE"),
     ("engine watch log", "schedule", H + "/engine_watch.log", (19, 30, WEEKDAYS), "TRADE"),

@@ -209,7 +209,8 @@ def _settle_one(r, lab, now, creds=None):
     return True
 
 
-def _enter(strategy, put_only, cfg, creds, lab, log, now):
+def _enter(strategy, put_only, cfg, creds, lab, log, now, book="PROBE", save=None):
+    save = save or lab._save_log_list
     try:
         s = _xsp_close_series()
         spot = float(s.iloc[-1])
@@ -261,7 +262,7 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now):
         # weekly re-entry, prices the legs at expiry, and keeps the reconciler seeing every occ.
         if struct["long"]:
             cost = -sum(l["prem"] for l in struct["long"])
-            log.append({"book": "PROBE", "probe_strategy": strategy,
+            log.append({"book": book, "probe_strategy": strategy,
                         "trade_set_id": "f5k" + now.strftime("%m%d%H%M"), "ticker": "XSP",
                         "occ": struct["long"][0]["occ"],
                         "occ_more": [l["occ"] for l in struct["long"][1:]],
@@ -269,7 +270,7 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now):
                         "net_credit": round(cost, 2), "status": "OPEN",
                         "entry_ts_utc": now.isoformat(),
                         "note": "INCOMPLETE - long wings only, short leg failed; logged to stop re-entry"})
-            lab._save_log_list(log)
+            save(log)
             print(f"  PROBE[{strategy}] INCOMPLETE - short failed, wings logged (${cost * 100:+.0f})")
             try:
                 lab._notify(f"<b>PROBE {strategy}</b> INCOMPLETE - long wings held, short leg failed; "
@@ -278,31 +279,34 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now):
                 pass
         return False
     credit = sum(l["prem"] for l in struct["short"]) - sum(l["prem"] for l in struct["long"])
-    log.append({"book": "PROBE", "probe_strategy": strategy,
-                "trade_set_id": "f5k" + now.strftime("%m%d%H%M"), "ticker": "XSP",
+    log.append({"book": book, "probe_strategy": strategy,
+                "trade_set_id": ("p5k" if book == "PROOF" else "f5k") + now.strftime("%m%d%H%M"), "ticker": "XSP",
                 "occ": struct["short"][0]["occ"],
                 "occ_more": [l["occ"] for l in struct["short"][1:] + struct["long"]],
                 "structure": struct, "expiry": exp.isoformat(), "contracts": 1,
                 "net_credit": round(credit, 2), "status": "OPEN",
                 "entry_ts_utc": now.isoformat(),
                 "note": "5k defined-risk weekly (owner order 2026-08-18)"})
-    lab._save_log_list(log)
-    print(f"  PROBE[{strategy}] entered exp {exp}, net credit ${credit * 100:+.0f}")
+    save(log)
+    print(f"  {book}[{strategy}] entered exp {exp}, net credit ${credit * 100:+.0f}")
     try:
-        lab._notify(f"<b>PROBE {strategy}</b> entered (exp {exp}, credit ${credit * 100:+.0f}, defined risk)")
+        lab._notify(f"<b>{book} {strategy}</b> entered (exp {exp}, credit ${credit * 100:+.0f}, defined risk)")
     except Exception:
         pass
     return True
 
 
-def cycle(creds, allow_entries=True):
+def cycle(creds, allow_entries=True, book="PROBE", store=None):
+    """store = (load, save) when this book keeps its own record file (the proof account does).
+    Everything else - quotes, orders, positions, settles - already rides on the creds handed in."""
     cfg = _cfg()
-    print(f"  fivek: cycle cfg={'ok' if cfg else 'EMPTY'} creds={'ok' if creds and all(creds) else 'MISSING'} allow={allow_entries}")
+    print(f"  fivek[{book}]: cycle cfg={'ok' if cfg else 'EMPTY'} creds={'ok' if creds and all(creds) else 'MISSING'} allow={allow_entries}")
     if not cfg or not creds or not all(creds):
         return
     import sandbox_proactive_lab as lab
+    _load, _save = store or (lab._load_log_list, lab._save_log_list)
     now = datetime.now(timezone.utc)
-    log = lab._load_log_list()
+    log = _load()
     week0 = (now.date() - timedelta(days=now.date().weekday())).isoformat()
     dirty = False
     have = set()
@@ -316,9 +320,9 @@ def cycle(creds, allow_entries=True):
             if now.date() > date.fromisoformat(r["expiry"]):
                 dirty = _settle_one(r, lab, now, creds) or dirty
     if dirty:
-        lab._save_log_list(log)
+        _save(log)
     if not allow_entries or now.hour < 15:
-        print(f"  fivek: entries gated (allow={allow_entries} hour={now.hour}) - settles only")
+        print(f"  fivek[{book}]: entries gated (allow={allow_entries} hour={now.hour}) - settles only")
         return
     # ONE DECISION PER WEEK, TAKEN ON ITS FIRST SESSION (2026-09-20 audit). The gate below was read
     # on EVERY cycle, so a week that started BEAR entered anyway once the label flipped (5 of 17 bear
@@ -328,7 +332,7 @@ def cycle(creds, allow_entries=True):
     # is cheap, a trade the evidence never measured is not.
     _fs = _first_session(now.date())
     if (now.date() != _fs) if _fs else (now.date().weekday() != 0):
-        print(f"  fivek: not the week's first session ({_fs or 'calendar unreadable - Monday only'}) - settles only")
+        print(f"  fivek[{book}]: not the week's first session ({_fs or 'calendar unreadable - Monday only'}) - settles only")
         return
     _rg = None
     try:
@@ -342,14 +346,14 @@ def cycle(creds, allow_entries=True):
         # (-$140/wk, worst -$923). Stand down in BEAR; trade MILD+BULL. Fail-open: unknown
         # regime -> allow (a missed income week beats a blocked settle path never).
         if cs.get("regime_gate", True) and _rg == "BEAR":
-            print("  fivek: credit spread stands down (BEAR regime - playbook gate)")
+            print(f"  fivek[{book}]: credit spread stands down (BEAR regime - playbook gate)")
         else:
-            _enter("CREDIT_SPREAD_W", True, cs, creds, lab, log, now)
-        log = lab._load_log_list()
+            _enter("CREDIT_SPREAD_W", True, cs, creds, lab, log, now, book, _save)
+        log = _load()
     co = cfg.get("condor") or {}
-    if co.get("enabled") and "CONDOR_W" not in have:
-        _enter("CONDOR_W", False, co, creds, lab, log, now)
-        log = lab._load_log_list()
+    if co.get("enabled") and "CONDOR_W" not in have and book != "PROOF":       # PROOF holds ONE seat
+        _enter("CONDOR_W", False, co, creds, lab, log, now, book, _save)
+        log = _load()
     # PUT_DEBIT_W (owner order 2026-09-01, 3x3 grid bear cell): BUY the near put, sell the far
     # put = defined-risk bearish weekly. otm_long < otm_short in cfg flips _enter's k1/k2 into
     # debit orientation; long wing still bought first (never naked). UNPROVEN by backtest -
@@ -357,8 +361,8 @@ def cycle(creds, allow_entries=True):
     # (fires ONLY in BEAR, where the credit spread stands down). Fail-CLOSED on unknown regime:
     # an unproven directional bet does not get the benefit of a data hiccup.
     pd_ = cfg.get("put_debit") or {}
-    if pd_.get("enabled") and "PUT_DEBIT_W" not in have:
+    if pd_.get("enabled") and "PUT_DEBIT_W" not in have and book != "PROOF":   # PROOF holds ONE seat
         if _rg == "BEAR":
-            _enter("PUT_DEBIT_W", True, pd_, creds, lab, log, now)
+            _enter("PUT_DEBIT_W", True, pd_, creds, lab, log, now, book, _save)
         else:
-            print(f"  fivek: put debit stands down (regime {_rg or 'unknown'} - BEAR-only grid cell)")
+            print(f"  fivek[{book}]: put debit stands down (regime {_rg or 'unknown'} - BEAR-only grid cell)")

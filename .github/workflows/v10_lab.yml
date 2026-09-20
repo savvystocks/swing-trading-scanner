@@ -70,6 +70,11 @@ jobs:
         env:
           ALPACA_PAPER_API_KEY: ${{ secrets.ALPACA_PAPER_API_KEY }}
           ALPACA_PAPER_SECRET_KEY: ${{ secrets.ALPACA_PAPER_SECRET_KEY }}
+          # PROOF BOOK ("promotion 1", 2026-09-20). These reach exactly one place: proof_book.verify,
+          # which refuses to trade unless they open the account pinned in the spec AND differ from the
+          # discovery keys. They are NOT in src/alpaca_creds.py's scan and never touch the VPS.
+          ALPACA_PROOF_API_KEY: ${{ secrets.ALPACA_PROOF_API_KEY }}
+          ALPACA_PROOF_SECRET_KEY: ${{ secrets.ALPACA_PROOF_SECRET_KEY }}
           UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -88,6 +93,7 @@ jobs:
           git config user.name "sandbox-bot"
           git config user.email "noreply@github.com"
           git add -f proactive_sandbox_logs.json 2>/dev/null || true
+          git add -f proof_logs.json proof_logs_equity.jsonl 2>/dev/null || true   # the proof book keeps its own records + daily broker equity
           git add -f sandbox_ticker_cooloff.json 2>/dev/null || true
           git add -f sandbox_watchlist.json 2>/dev/null || true
           git add -f data/last_cycle_ok 2>/dev/null || true

@@ -2,7 +2,7 @@
 
 - snapshot: harvest_20260909_2130  |  live snapshot rows: {'candidates': 73200, 'bid_path': 1297337, 'labels': 70740}
 - dataset rows: 70440 (added +70440 vs last run)  |  date range: ['2026-07-01 23:59:01.310000+00:00', '2026-09-09 19:54:08.562000+00:00']
-- runtime: 39.9s  |  features: 119
+- runtime: 24.8s  |  features: 119
 
 ## Data quality WARN
 
@@ -73,5 +73,5 @@ NO-EDGE
 
 ## Ops telemetry (school 1f)
 
-- alpaca OK: 33535 calls this week
+- no API telemetry rows yet (classifier ships with the school Phase-1 merge)
 - fill ledger events ingested: 1112; measured entry fills by spread bucket tight/medium/wide: 195/211/316

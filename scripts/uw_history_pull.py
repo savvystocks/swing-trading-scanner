@@ -191,7 +191,12 @@ def main():
             days.append(d.isoformat())
         d += timedelta(days=1)
     done = {(r[0], r[1]) for r in con.execute("select day, ticker from pulled")}
-    todo = [(dd, t) for dd in reversed(days) for t in TICKERS if (dd, t) not in done]
+    # ORDER (2026-09-20): newest-first is right while the subscription continues - it keeps the
+    # corpus fresh and spends only leftover budget on the backfill (2026-09-04 lesson). It is
+    # WRONG in the last nights before the token ends, because the window rolls forward and the
+    # OLDEST unpulled day is the one about to expire for ever. UW_PULL_ORDER=oldest flips it.
+    _order = days if os.environ.get("UW_PULL_ORDER", "newest").lower() == "oldest" else list(reversed(days))
+    todo = [(dd, t) for dd in _order for t in TICKERS if (dd, t) not in done]
     print(f"todo {len(todo)} ticker-days; budget used today {used_today(con)}/{DAILY_BUDGET}", flush=True)
     n_calls = 0
     d0 = date.today()

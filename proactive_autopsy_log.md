@@ -5005,3 +5005,30 @@
 
 **Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 220.0.
 
+## Autopsy - INTC (30b493e8b2ce)
+- entered 2026-09-17T14:25:10.442Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -57.1% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-57%, move 0.0%): no breakdown materialised; spot held above zero-gamma 105.0.
+
+## Autopsy - NVO (46626691baa7)
+- entered 2026-09-17T14:45:55.094Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -73.3% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-73%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 32.5 worked against it.
+
+## Autopsy - IREN (4da69979fb92)
+- entered 2026-09-17T15:27:11.016Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -55.1% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-55%, move 0.0%): no breakdown materialised; spot held above zero-gamma 47.0.
+

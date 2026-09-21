@@ -10,12 +10,12 @@ Archive: calls, SPY 50d within +-2, ticker below 20d, SPY below 20d, all prior-c
 roster runs, executable basis. Live: the trigger contract via `_PROBE_CONTRACT`, mild days only.
 
 ## Numbers
-- live: [[strategies.DIP_CONF_MILD.live.n_closed = 1]] closed, [[strategies.DIP_CONF_MILD.live.per_trade = -50.9]] per trade,
-  day mean [[strategies.DIP_CONF_MILD.live.unit_mean = -50.9]] over [[strategies.DIP_CONF_MILD.live.units = 1]] days,
+- live: [[strategies.DIP_CONF_MILD.live.n_closed = 2]] closed, [[strategies.DIP_CONF_MILD.live.per_trade = -11.7]] per trade,
+  day mean [[strategies.DIP_CONF_MILD.live.unit_mean = -11.7]] over [[strategies.DIP_CONF_MILD.live.units = 2]] days,
   t vs control [[strategies.DIP_CONF_MILD.live.t_vs_control = n/a]].
-- archive: [[strategies.DIP_CONF_MILD.archive.per_day = +0.6]] per day (pool [[strategies.DIP_CONF_MILD.archive.pool_per_day_same_days = -7.4]]),
-  t vs pool [[strategies.DIP_CONF_MILD.archive.t_vs_pool = +2.63]], [[strategies.DIP_CONF_MILD.archive.trades = 4196]] trades over
-  [[strategies.DIP_CONF_MILD.archive.days = 84]] days, halves [[strategies.DIP_CONF_MILD.archive.h1 = +4.0]] / [[strategies.DIP_CONF_MILD.archive.h2 = -2.9]].
+- archive: [[strategies.DIP_CONF_MILD.archive.per_day = +0.5]] per day (pool [[strategies.DIP_CONF_MILD.archive.pool_per_day_same_days = -7.4]]),
+  t vs pool [[strategies.DIP_CONF_MILD.archive.t_vs_pool = +2.69]], [[strategies.DIP_CONF_MILD.archive.trades = 4220]] trades over
+  [[strategies.DIP_CONF_MILD.archive.days = 86]] days, halves [[strategies.DIP_CONF_MILD.archive.h1 = +3.8]] / [[strategies.DIP_CONF_MILD.archive.h2 = -2.8]].
 
 ## Recompute
 `./.venv/bin/python scripts/returns_ledger.py` (row DIP_CONF_MILD).

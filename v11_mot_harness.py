@@ -1064,13 +1064,12 @@ check(6, "failover coupling: engine commit message matches engine_watch stand-do
 # 6.10d FROZEN-WINDOW CLASS LINT (three live instances found 09-04/09-07: uw_history_pull END,
 # probe_tuner closes end, historical_corpus END). No recurring script may bound a data window
 # with a hardcoded end-date literal unless the line is marked FROZEN-BY-DESIGN.
-_RECURRING = ["sandbox_proactive_lab.py", "fade_book.py", "fivek_probes.py", "harvest_logger.py",
-              "scripts/probe_tuner.py", "scripts/glide_sim.py", "scripts/tuner_apply.py",
-              "scripts/fade_meta.py", "scripts/sunday_boundary.py", "scripts/uw_history_pull.py",
-              "scripts/uw_flow_prints.py", "scripts/hourly_library.py", "scripts/historical_corpus.py",
-              "scripts/corpus_study.py", "scripts/shadow_lab.py", "scripts/shadow_breaker.py",
-              "scripts/daily_digest.py", "scripts/integrity_gate.py", "scripts/freshness_sentinel.py",
-              "scripts/trajectory_scoreboard.py", "scripts/engine_failover_exits.py", "scripts/poller.py"]
+_RECURRING = ["sandbox_proactive_lab.py", "fade_book.py", "fivek_probes.py",
+              "harvest_logger.py", "scripts/probe_tuner.py", "scripts/glide_sim.py",
+              "scripts/tuner_apply.py", "scripts/fade_meta.py", "scripts/sunday_boundary.py",
+              "scripts/uw_history_pull.py", "scripts/shadow_lab.py", "scripts/daily_digest.py",
+              "scripts/integrity_gate.py", "scripts/freshness_sentinel.py", "scripts/trajectory_scoreboard.py",
+              "scripts/engine_failover_exits.py", "scripts/poller.py"]
 _fw_pat = _re2.compile(r'(end=20[2-9][0-9]-|END\s*=\s*date\(20|end_date\s*=\s*["\']20[2-9][0-9]-)')
 _fw_hits = []
 for _rf in _RECURRING:
@@ -1115,12 +1114,11 @@ check(6, "exit engine reads leg_path excursions defensively (no path[\"mfe_pct\"
       and 'path.pop("missing_cycles"' in _lab_txt)
 # 6.10h EVIDENCE-CHAIN CURRENCY (BREAKDOWNS 2026-09-10): both UW pullers defer zero results
 # inside the recent window, the sentinel carries hole + density rows, the tuner refuses thin.
-_pp = open("scripts/uw_flow_prints.py", encoding="utf-8").read()
-_hp = open("scripts/uw_history_pull.py", encoding="utf-8").read()
+_hp = open("scripts/uw_history_pull.py", encoding="utf-8").read()   # prints puller deleted 2026-09-21
 _sn = open("scripts/freshness_sentinel.py", encoding="utf-8").read()
 _ta = open("scripts/tuner_apply.py", encoding="utf-8").read()
-check(6, "pullers defer recent zero-results instead of marking them done",
-      "ZERO-RESULT-DEFER" in _pp and "ZERO-RESULT-DEFER" in _hp)
+check(6, "the history puller defers recent zero-results instead of marking them done",
+      "ZERO-RESULT-DEFER" in _hp)
 check(6, "sentinel: the UW archive and corpus hole/density rows are retired with Unusual Whales (2026-09-21) - frozen history, not a live feed",
       "RETIRED 2026-09-21" in _sn and '("uw archive session holes"' not in _sn and '("tuner corpus v2 density"' not in _sn)
 check(6, "tuner_apply refuses to judge on a thin corpus", "DENSITY GUARD" in _ta)
@@ -1254,9 +1252,7 @@ try:
           and "occ_source" not in _lc)
 finally:
     lab._PROBE_CONTRACT["c"] = _pcb
-_ex_txt = open("scripts/student_export.py", encoding="utf-8").read()
-check(6, "student export judges the pull rule on the EXECUTED slice under the cap",
-      "def executed_slice(" in _ex_txt and "walk_forward_executed_slice=exec_slice" in _ex_txt and "_judge = exec_slice" in _ex_txt)
+# student-export check retired 2026-09-21 with scripts/student_export.py (the student seat is switched off).
 _spc = ((_fbcp.spec().get("probe") or {}).get("student") or {})
 check(6, "spec: student pool block, exec cap and A's ALL threshold cohort are present",
       isinstance(_spc.get("pool"), dict) and _spc.get("exec_max_ask") is not None
@@ -1650,20 +1646,8 @@ _win28 = _re28.search(r'tail -(\d+) "\$HOME/integrity_gate\.log"', _lw28)
 check(6, "landing watch: the integrity-gate window outgrows the gate's own output, and it no longer watches UW pullers (ended 2026-09-21)",
       bool(_win28) and int(_win28.group(1)) >= 20 and "for S in uw_pull uw_prints" not in _lw28,
       f"window={_win28.group(1) if _win28 else None}")
-# 6.29 THE PRINTS PULLER NEVER CALLS A FRESH DAY FINAL (BREAKDOWNS 2026-09-19 second entry)
-import json as _js29
-import tempfile as _tf29
-_sp29 = _ilu27.spec_from_file_location("uw_flow_prints_29", os.path.join("scripts", "uw_flow_prints.py"))
-_m29 = _ilu27.module_from_spec(_sp29)
-_sp29.loader.exec_module(_m29)
-_p29 = os.path.join(_tf29.gettempdir(), "mot_puller_state_29.json")
-_m29._session_state("crashed", path=_p29, error="x")
-_st29 = _js29.load(open(_p29, encoding="utf-8"))
-os.remove(_p29)
-check(6, "prints puller: no answer is final inside the vendor's re-ask window; a crashed session leaves a mark the watch reads",
-      _m29.is_final("2026-09-01", "2026-09-07") is True and _m29.is_final("2026-09-07", "2026-09-07") is False
-      and _m29.is_final("2026-09-10", "2026-09-07") is False and _st29.get("status") == "crashed"
-      and "ended_utc" in _st29, str(_st29))
+# 6.29 the prints-puller half retired 2026-09-21 with scripts/uw_flow_prints.py; the history puller's re-page
+# rule stays until the final Unusual Whales pull ends and that puller is deleted too.
 check(6, "history puller: a stored ticker-day is re-paged only when it sits exactly at the old cap with real volume in its tail",
       _m27.needs_repage(500, 25) is True and _m27.needs_repage(500, 10) is False
       and _m27.needs_repage(500, None) is False and _m27.needs_repage(499, 900) is False

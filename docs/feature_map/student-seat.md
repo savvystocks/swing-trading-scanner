@@ -1,6 +1,9 @@
 # Student seat
 
 ## What
+- RETIRED 2026-09-21: the student seat is switched off (`probe.student.enabled=false`, owner: credit spread
+  only) and its build and research scripts were deleted. The engine's student wiring and the exported model files
+  remain, so switching it back on needs a retrain first.
 One roster seat, `STUDENT`, that scores every contract in the student pool with every configured
 picker (dependency-free JSON models trained on the archive), ranks the picks best-first, and enters
 the top pick that clears its picker's threshold, fits the cap, and has weekly budget. Picker A
@@ -31,11 +34,11 @@ shadow; C is pulled. The court judges STUDENT_FAMILY on trading days.
   `LEG_BUDGET // (ask * 100)`; the trigger-leg repricing keeps that sizing off the live ask.
 - Models: `reports/fade_meta/student_<NAME>_<date>.json`, loaded fail-closed by
   `sandbox_proactive_lab.py:_student_model` (age, kind, n_features, sha stamp).
-- Export / retrain: `scripts/student_export.py` (walk-forward thresholds from the last 60 OOS
+- Export / retrain: scripts/student_export.py (deleted 2026-09-21) (walk-forward thresholds from the last 60 OOS
   sessions of the threshold cohort; `executed_slice` under exec_max_ask; auto-pull on wk_t <= -1.5
   with n >= 40 or AUC <= 0.50; refuses during an open case; commits the spec and models).
-- Research: `scripts/student_formula_sim.py` (the pre-registered search), `scripts/student_asof_build.py`
-  (the as-of corpus), `scripts/student_spread_sim.py` (the spread study), `scripts/student_live_exit.py`
+- Research: scripts/student_formula_sim.py (deleted 2026-09-21) (the pre-registered search), scripts/student_asof_build.py (deleted 2026-09-21)
+  (the as-of corpus), scripts/student_spread_sim.py (deleted 2026-09-21) (the spread study), scripts/student_live_exit.py (deleted 2026-09-21)
   (exit search on live fills, weekly, gated on 20 closed fills).
 
 ## Exercise
@@ -68,5 +71,5 @@ shadow; C is pulled. The court judges STUDENT_FAMILY on trading days.
 - 2026-09-12 (fourth entry) THE STUDENT SEAT SCORED THE WRONG SLICE (see candidate-scan.md).
 - Never flip a picker live without the owner's word; the flip is `probes.<name>.live` in the VPS
   spec, refused for a pulled picker.
-- `reports/research/student_asof_v3.jsonl` is rebuilt only by `scripts/student_asof_build.py`; the export uses
+- `reports/research/student_asof_v3.jsonl` is rebuilt only by scripts/student_asof_build.py (deleted 2026-09-21); the export uses
   whatever is on disk (70,976 rows as of 2026-09-13).

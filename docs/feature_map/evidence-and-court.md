@@ -1,19 +1,21 @@
 # Evidence chain and the court
 
 ## What
+- 2026-09-21: the Unusual Whales evidence chain is RETIRED - the prints puller, the hourly bar library and the
+  nightly and Friday corpus chains no longer run, and the flow archive is frozen history. The court still runs.
 The archive corpora that every backtest number comes from, the weekly tuner that judges anchor
 exits against incumbents, the Friday court that promotes or holds every probe against the control,
 and the scoreboard that reports where the system stands against the North Star.
 
 ## Where
 - Archive pull: `scripts/uw_history_pull.py` (22:30 UTC daily, `data/uw_history.db`: contracts_daily,
-  flow_prints) and `scripts/uw_flow_prints.py` (00:15 UTC, per-print NBBO); both defer zero-result
+  flow_prints) and scripts/uw_flow_prints.py (deleted 2026-09-21) (00:15 UTC, per-print NBBO); both defer zero-result
   days inside a recent window instead of marking them done.
-- Bars: `scripts/hourly_library.py` -> `data/hourly_paths.db` (hour bars for every archive contract).
+- Bars: scripts/hourly_library.py (deleted 2026-09-21) -> `data/hourly_paths.db` (hour bars for every archive contract).
 - Corpora (gitignored): `reports/research/probe_tuner_rows_v3.jsonl` (ask at the qualifying
   print + 10-minute delay, prior-close regime columns, 8 exit configs) from `scripts/probe_tuner.py`;
   `reports/research/glide_fine_rows_v3.jsonl` (210 exit configs) from `scripts/glide_sim.py`;
-  `reports/research/student_asof_v3.jsonl` from `scripts/student_asof_build.py`. Nightly chain
+  `reports/research/student_asof_v3.jsonl` from scripts/student_asof_build.py (deleted 2026-09-21). Nightly chain
   01:45 UTC Tue-Sat: hourly_library -> probe_tuner build (TUNER_BUILD_ONLY=1) -> glide_sim build,
   logged to `/home/poller/corpus_nightly.log`.
 - Tuner: Friday 20:15 UTC `scripts/probe_tuner.py` (report), 21:45 `scripts/tuner_apply.py`

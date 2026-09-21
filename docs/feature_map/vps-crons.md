@@ -35,7 +35,7 @@ monthly corpus, the nightly corpus chain and both Friday tuner jobs. The final d
 ## Traps
 - 2026-09-19 THE PRINTS TAPE IS THINNED BY THE VENDOR AND WAS BEING CAPTURED BY LUCK: contract-days pulled
   fresh hold 149-484 prints, the same requests a week later return 2-9, and recent days return nothing at all
-  for several days first. `scripts/uw_flow_prints.py:is_final` now keeps every contract-day inside a 12-day
+  for several days first. scripts/uw_flow_prints.py:is_final (deleted 2026-09-21) now keeps every contract-day inside a 12-day
   window open - asked again nightly, fullest tape kept - and the session prints one `window` line per day so the
   vendor's clock can be read off the log. A full tape that was missed cannot be re-pulled at any price.
 - 2026-09-19 TRUNCATED DAYS ARE RE-PAGED WITH LEFTOVER BUDGET: `scripts/uw_history_pull.py:needs_repage` picks the

@@ -5221,3 +5221,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 547.5 fed the squeeze.
 
+## Autopsy - SMCI (f1ecdd5e76ed)
+- entered 2026-09-17T14:15:38.942Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +37.2% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 39.0 fed the squeeze.
+

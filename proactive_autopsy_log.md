@@ -5212,3 +5212,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 175.0 fed the squeeze.
 
+## Autopsy - AMD (e5ddaf13f8fe)
+- entered 2026-09-18T17:07:25.198Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +487.5% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 547.5 fed the squeeze.
+

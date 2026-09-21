@@ -5032,3 +5032,39 @@
 
 **Determining factor:** Bearish put FAILED (-55%, move 0.0%): no breakdown materialised; spot held above zero-gamma 47.0.
 
+## Autopsy - IBIT (cbef177fd685)
+- entered 2026-09-15T14:56:47.039Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +187.5% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+
+## Autopsy - MSTR (2b42a55e664c)
+- entered 2026-09-18T13:54:36.582Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +444.4% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 135.0 fed the squeeze.
+
+## Autopsy - TSLA (71b8c2f691c7)
+- entered 2026-09-18T16:05:51.906Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +102.4% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 375.0 fed the squeeze.
+
+## Autopsy - COIN (ce840aa67a4d)
+- entered 2026-09-18T16:24:46.387Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +100.0% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 180.0 fed the squeeze.
+

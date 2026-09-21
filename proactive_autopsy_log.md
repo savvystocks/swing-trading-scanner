@@ -5131,3 +5131,21 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 220.0 fed the squeeze.
 
+## Autopsy - AMZN (7e68ca575058)
+- entered 2026-09-15T16:15:30.994Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +22.3% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 275.0 fed the squeeze.
+
+## Autopsy - USO (85b3aaed1a35)
+- entered 2026-09-18T15:07:54.557Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -52.9% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 162.0 worked against it.
+

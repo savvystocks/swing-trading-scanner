@@ -59,64 +59,37 @@ def session_windows(today, lag, lookback, ref):
 # (name, kind, target, spec, criticality)
 # schedule spec: (utc_hour, utc_minute, {dows})   data_day spec: (db, query, max_td)
 # mtime spec: max_hours
+# RETIRED 2026-09-21 (Unusual Whales ended; the directional strategies, the student, the shadow lab and
+# the harvest feed are switched off): 31 rows whose data stops by design. Recoverable from git history.
 CHECKS = [
     # -- trade path: the engine and its lifelines
     ("engine last_cycle_ok", "schedule", "data/last_cycle_ok", (20, 30, WEEKDAYS), "TRADE"),
     ("engine records log", "schedule", "proactive_sandbox_logs.json", (19, 30, WEEKDAYS), "TRADE"),
     ("proof book equity samples", "schedule", "proof_logs_equity.jsonl", (19, 30, WEEKDAYS), "TRADE"),
     ("harvest poller log", "schedule", "data/poller.log", (21, 0, WEEKDAYS), "TRADE"),
-    ("harvest state", "schedule", "data/harvest_state.json", (19, 30, WEEKDAYS), "TRADE"),
     ("engine watch log", "schedule", H + "/engine_watch.log", (19, 30, WEEKDAYS), "TRADE"),
     ("telegram commands state", "mtime", H + "/telegram_commands_state.json", 1.0, "MONITOR"),
     # -- harvest data: labels and candidates must track the market
-    ("harvest candidates day", "data_day", "data/harvest.db",
-     ("select date(cast(substr(cast(max(signal_ts_utc) as text),1,10) as int), 'unixepoch') from candidates", 2), "TRADE"),
-    ("harvest labels day", "data_day", "data/harvest.db",
-     ("select date(cast(substr(cast(max(touch_ts_utc) as text),1,10) as int), 'unixepoch') from labels", 5), "TRADE"),
     # -- evidence stores: everything tuning/promotion decisions read
-    ("uw archive contracts", "data_day", "data/uw_history.db",
-     ("select max(day) from contracts_daily", 3), "EVIDENCE"),
-    ("uw archive prints", "data_day", "data/uw_history.db",
-     ("select max(day) from flow_prints", 4), "EVIDENCE"),
-    ("hourly bar library", "data_day", "data/hourly_paths.db",
-     ("select max(substr(ts,1,10)) from bars", 8), "EVIDENCE"),
-    ("tuner coarse corpus", "schedule", "reports/research/probe_tuner_rows_v3.jsonl", (20, 15, {4}), "EVIDENCE"),
-    ("glide fine corpus", "schedule", "reports/research/glide_fine_rows_v3.jsonl", (21, 45, {4}), "EVIDENCE"),
     # -- nightly rhythm: courts, student, digests, integrity
     ("nightly boundary (SEQ_APPLY)", "schedule", H + "/trajectory_nightly.log", (22, 0, WEEKDAYS), "COURT"),
     ("friday court", "schedule", H + "/sunday_boundary.log", (22, 35, {4}), "COURT"),
-    ("nightly student", "schedule", H + "/fade_meta.log", (22, 10, WEEKDAYS), "COURT"),
-    ("shadow breaker", "schedule", "reports/shadow_lab/breaker.jsonl", (22, 12, WEEKDAYS), "COURT"),
     ("daily digest", "schedule", H + "/digest.log", (22, 20, WEEKDAYS), "MONITOR"),
     ("integrity gate", "schedule", H + "/integrity_gate.log", (22, 5, {1, 2, 3, 4, 5}), "MONITOR"),
     ("landing watch", "schedule", H + "/landing_watch.log", (22, 45, {0, 1, 2, 3, 4, 5}), "MONITOR"),
     ("archiver watch", "schedule", H + "/archiver_watch.log", (22, 15, WEEKDAYS), "MONITOR"),
     ("evening persist", "schedule", H + "/evening_persist.log", (22, 45, WEEKDAYS), "MONITOR"),
     ("off-box backup", "schedule", "data/snapshot.log", (21, 30, WEEKDAYS), "MONITOR"),
-    ("uw pull log", "schedule", H + "/uw_pull.log", (22, 30, DAILY), "EVIDENCE"),
-    ("uw prints log", "schedule", H + "/prints.log", (0, 15, DAILY), "EVIDENCE"),
     ("xsp quote log", "schedule", H + "/xsp_quotes.log", (19, 50, WEEKDAYS), "EVIDENCE"),
-    ("cs legs pull", "schedule", H + "/cs_legs.log", (12, 0, {5}), "EVIDENCE"),
-    ("cs legs newest expiry", "data_day", "data/cs_legs.db", ("select max(expiry) from asked", 7), "EVIDENCE"),
-    ("friday tuner chain", "schedule", H + "/tuner_apply.log", (21, 45, {4}), "EVIDENCE"),
     ("trajectory scoreboard", "schedule", H + "/scoreboard.log", (22, 25, {4}), "MONITOR"),
     # -- v1.1 (registry sweep 2026-09-04): failure modes mtime checks cannot see
     ("repo push sync", "push_sync", ".", None, "COURT"),
     ("off-box snapshot repo", "git_commit", H + "/harvest-snapshots", (21, 30, WEEKDAYS), "TRADE"),
-    ("student models (VPS)", "newest_file_day", "reports/fade_meta/model_*.json", 2, "COURT"),
-    ("shadow ledger content day", "jsonl_day", "reports/shadow_lab/ledger.jsonl", 3, "COURT"),
-    ("api telemetry day", "data_day", "data/harvest.db", ("select max(day) from api_telemetry", 2), "MONITOR"),
-    ("bid path day", "data_day", "data/harvest.db",
-     ("select date(cast(substr(cast(max(poll_ts_utc) as text),1,10) as int), 'unixepoch') from bid_path", 2), "TRADE"),
-    ("same-day db backup", "schedule", "data/harvest_backups", (19, 30, WEEKDAYS), "MONITOR"),
     ("spec parses", "json_ok", "fade_book_spec.json", None, "TRADE"),
     ("challengers parses", "json_ok", "challengers.json", None, "COURT"),
-    ("governor weekly reports", "mtime", "reports/governor", 240.0, "COURT"),
     ("expired legs still open", "expired_open", "proactive_sandbox_logs.json", 1, "TRADE"),
     ("ghost open records", "ghost_open", "proactive_sandbox_logs.json", 10, "TRADE"),
     # -- v1.2 (MOT coverage audit 2026-09-07): frozen-window, disk, and failover classes
-    ("tuner corpus content day", "jsonl_day", "reports/research/probe_tuner_rows_v3.jsonl", 11, "EVIDENCE"),
-    ("glide corpus content day", "jsonl_day", "reports/research/glide_fine_rows_v3.jsonl", 11, "EVIDENCE"),
     ("vps disk headroom", "disk", "/", 85, "TRADE"),
     ("failover mode stuck", "flag_age", H + "/.engine_watch_failover_mode", 2.0, "TRADE"),
     ("morning analyst", "schedule", H + "/analyst.log", (8, 10, WEEKDAYS), "MONITOR"),
@@ -126,22 +99,10 @@ CHECKS = [
     #    cannot see a hole behind the newest day or a day that is 1% of normal.
     #    session_holes: (query of days, lookback sessions, lag)   day_density / jsonl_density:
     #    (query of day,count | -, lookback, ref sessions, min ratio vs ref median, lag)
-    ("uw archive session holes", "session_holes", "data/uw_history.db",
-     ("select distinct day from contracts_daily where day >= date('now','-45 day')", 12, 2), "EVIDENCE"),
-    ("uw archive day density", "day_density", "data/uw_history.db",
-     ("select day, count(*) from contracts_daily where day >= date('now','-75 day') group by day", 5, 25, 0.4, 2), "EVIDENCE"),
     # ^ lag 2: day D lands at 22:30 UTC on D+1 (END = today-1), so at the 08:00 run on D+1 the
     #   newest complete session is D-1 - lag 1 would page every single morning
-    ("uw prints cohort density", "day_density", "data/uw_history.db",
-     ("select day, count(distinct occ) from flow_prints where day >= date('now','-75 day') group by day", 5, 25, 0.4, 3), "EVIDENCE"),
     # ^ lag 3: day D's contracts land 22:30 on D+1, the first prints attempt at 00:15 on D+2
     #   usually returns empty (vendor lag) and is deferred, the second at 00:15 on D+3 lands
-    ("hourly bars day density", "day_density", "data/hourly_paths.db",
-     ("select substr(ts,1,10), count(distinct occ) from bars where ts >= date('now','-75 day') group by 1", 5, 25, 0.4, 2), "EVIDENCE"),
-    ("tuner corpus v2 density", "jsonl_density", "reports/research/probe_tuner_rows_v3.jsonl", (5, 25, 0.4, 6), "EVIDENCE"),
-    ("glide corpus v2 density", "jsonl_density", "reports/research/glide_fine_rows_v3.jsonl", (5, 25, 0.4, 6), "EVIDENCE"),
-    ("nightly corpus chain", "schedule", H + "/corpus_nightly.log", (1, 45, {1, 2, 3, 4, 5}), "EVIDENCE"),
-    ("student models (exported)", "newest_file_day", "reports/fade_meta/student_*.json", 100, "COURT"),
 ]
 
 

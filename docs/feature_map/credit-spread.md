@@ -78,6 +78,10 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
   expiry. `fivek_probes.py:_closing_fills` asks the broker whether anything closed a leg early; if so
   `fivek_probes.py:_settle_one` books the REALISED fill, annotates the record and pages the owner.
   Guarded by MOT 6.30.
+- 2026-09-21 A QUIET MARKET OR A DEAD TOKEN WOULD HAVE STOPPED IT: `sandbox_proactive_lab.py:run_scheduled_cycle` used to
+  leave the cycle when the UW flow scanner found no candidates, and this spread, the proof book and every self-settling
+  probe run BELOW that point. The exit is gone. `uw_scanner.enabled` (false since the owner ended Unusual Whales) skips the
+  scanner and its DEGRADED page. This spread needs no UW at all. Guarded by MOT 6.32.
 - A leg of one of these spreads can only be closed by someone else's mistake, and it has happened once
   (2026-08-25, collateral damage from the corrupt-log mass adoption of 2026-08-24). The reconciler has
   known bare-occ legs since 3ee328c3 and fails closed on an unreadable book since 41e6561b; the third

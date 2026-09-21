@@ -2903,19 +2903,31 @@ def run_scheduled_cycle(mock=False):
               + ("" if brake_active else " (entries NOT suppressed)"))
 
     # 4. dynamic UW flow sourcing - enter the FIRST candidate not capped/cooled
-    candidates = scan_candidates(params)
+    # UW SCANNER SWITCH (2026-09-21). The flow scanner feeds ONLY the directional entries; the credit
+    # spread, the proof book and every self-settling probe below need no Unusual Whales at all.
+    # uw_scanner.enabled=false in the spec stops the calls and the DEGRADED page together, so ending the
+    # subscription is a config change, not an outage.
+    _uw_on = bool(((fade_book.spec().get("uw_scanner") or {}).get("enabled", True))) if fade_book.active() else True
+    candidates = scan_candidates(params) if _uw_on else []
     print(f"UW flow scan: {len(candidates)} market-wide candidates "
           f"(top: {[c['ticker'] for c in candidates[:8]]})")
     if not candidates:
-        try:
-            from src.unusual_whales_api import UnusualWhalesClient
-            reachable = bool(getattr(UnusualWhalesClient(), "enabled", False))
-        except Exception:
-            reachable = False
-        if not reachable:
-            _notify("<b>DEGRADED</b> sandbox: UW flow scanner unreachable (no token / API down) - 0 candidates")
-        print(f"\nno UW flow candidates this cycle ({'scanner UNREACHABLE' if not reachable else 'quiet market'}).")
-        return None
+        if not _uw_on:
+            print("\nUW flow scanner switched OFF in the spec - no flow candidates; "
+                  "the spreads and every self-settling probe still run.")
+        else:
+            try:
+                from src.unusual_whales_api import UnusualWhalesClient
+                reachable = bool(getattr(UnusualWhalesClient(), "enabled", False))
+            except Exception:
+                reachable = False
+            if not reachable:
+                _notify("<b>DEGRADED</b> sandbox: UW flow scanner unreachable (no token / API down) - 0 candidates")
+            print(f"\nno UW flow candidates this cycle ({'scanner UNREACHABLE' if not reachable else 'quiet market'}).")
+        # NO EARLY EXIT HERE (2026-09-21). This branch used to leave the cycle, which skipped everything
+        # below it: the credit spread, the proof book, the put-write and VRP settles, the share probes and
+        # the arming of the owner's /flatten. A quiet market or a dead token would have stopped the only
+        # live strategy silently. With no candidates the directional loops below iterate nothing.
     entered = None
     # school 1e: owner HALT (authenticated Telegram command -> snapshots-repo flag -> workflow env,
     # or a local data/HALT file). Pauses NEW ENTRIES only - exits, backstops, and harvest continue.

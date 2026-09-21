@@ -4,6 +4,11 @@ All times UTC; `crontab -l` on the VPS is the source. Every job pulls `main` fir
 `/home/poller/`. The freshness sentinel (08:00 daily) carries a row per job with its expected
 cadence; a red row is the first place to look.
 
+Retired 2026-09-21 (owner ended Unusual Whales and switched off every directional strategy): the archive and
+prints pullers, the Saturday legs pull, the shadow lab and breaker, the student gate and live exit, the
+monthly corpus, the nightly corpus chain and both Friday tuner jobs. The final data pull ran once from
+`~/cs_multi/final_pulls.sh`. The crontab backup is `~/cron.pre_uw_exit.bak`.
+
 | slot | job | log | healthy |
 |---|---|---|---|
 | */15 13-21 Mon-Fri | `scripts/run_poller_vps.sh` (harvest poller) | poller log | `data/harvest.db` max(day) = today |
@@ -12,27 +17,17 @@ cadence; a red row is the first place to look.
 | */15 always | `scripts/telegram_commands.py` (owner commands) | telegram log | commands acknowledged |
 | 15:05 and 19:50 Mon-Fri | `scripts/xsp_quote_log.py` (passive: XSP vs SPY quote width on the legs the credit spread would trade) | xsp_quotes.log | one line per run; `reports/research/xsp_quotes.jsonl` grows by two rows a day |
 | 21:30 Mon-Fri | `/home/poller/backup_snapshot.sh` | - | snapshot landed (landing_watch) |
-| 21:50 Mon-Fri | `scripts/shadow_lab_nightly.sh` | - | ledger rows appended |
 | 22:00 Mon-Fri | `scripts/sunday_boundary.py` report-only, sequential apply (trajectory) | trajectory log | nightly line |
 | 22:05 Tue-Sat | `scripts/integrity_gate.py` | - | gate green |
-| 22:10 Mon-Fri | `scripts/fade_meta.py` (student gate page) | fade_meta.log | ledger appended |
-| 22:12 Mon-Fri | `scripts/shadow_breaker.py` | breaker.log | - |
 | 22:15 Mon-Fri | `scripts/archiver_watch.sh` | archiver_watch.log | - |
 | 22:20 Mon-Fri | `scripts/daily_digest.py` | digest.log | digest telegram sent |
-| 22:30 daily | `scripts/uw_history_pull.py` (budget 30000) | - | new archive days, zero-result defer |
 | 22:45 Mon-Sat | `scripts/landing_watch.sh`, `scripts/evening_persist.sh` | landing_watch.log, evening_persist.log | - |
-| 00:15 daily | `scripts/uw_flow_prints.py` (budget 12000) | - | prints for the new day |
-| 01:45 Tue-Sat | corpus chain: hourly_library -> probe_tuner build -> glide_sim build | corpus_nightly.log | `row build complete` |
 | 08:00 daily | `scripts/freshness_sentinel.py` | freshness log | all rows green |
 | 08:10 Mon-Fri | `scripts/morning_analyst.py` | analyst.log | morning brief telegram |
 | Wed 10:00 | `scripts/sunday_boundary.py` report-only | sunday_boundary.log | standings |
-| Fri 20:15 | `scripts/probe_tuner.py` (tuner report) | tuner.log | anchors vs incumbents |
-| Sat 12:00 | `scripts/cs_legs_pull.py` then `scripts/cs_live_fills.py` (the credit spread's own legs asked for by name, XSP and SPY; then the book's real fills, read-only) | cs_legs.log | `cs legs session done:` with the newest expiry = yesterday, a `cs legs backup:` line with a byte count, and `cs live fills: n/n records with both fills` |
-| Fri 21:45 | hourly_library -> glide_sim -> `scripts/tuner_apply.py` | tuner.log | HOLD or an applied change with verify-after-push |
+| Sat 12:00 | `scripts/cs_live_fills.py` (the credit spread's real fills, read-only, Alpaca) | cs_legs.log | `cs live fills: n/n records with both fills` |
 | Fri 22:25 | `scripts/trajectory_scoreboard.py` | scoreboard.log | North Star block |
 | Fri 22:35 | `scripts/sunday_boundary.py` (the court) | sunday_boundary.log | verdict lines |
-| Sat 09:00 | `scripts/student_live_exit.py` | student_live_exit.log | `waiting` until 20 closed fills |
-| monthly Sat 08:00 | `scripts/historical_corpus.py` | - | - |
 
 ## Exercise
 - `crontab -l | grep <script>`; `tail -20 /home/poller/<log>`; `./.venv/bin/python scripts/freshness_sentinel.py`.

@@ -1121,8 +1121,8 @@ _sn = open("scripts/freshness_sentinel.py", encoding="utf-8").read()
 _ta = open("scripts/tuner_apply.py", encoding="utf-8").read()
 check(6, "pullers defer recent zero-results instead of marking them done",
       "ZERO-RESULT-DEFER" in _pp and "ZERO-RESULT-DEFER" in _hp)
-check(6, "sentinel carries session-hole and day-density rows for every evidence store",
-      _sn.count('"day_density"') >= 3 and '"session_holes"' in _sn and _sn.count('"jsonl_density"') >= 2)
+check(6, "sentinel: the UW archive and corpus hole/density rows are retired with Unusual Whales (2026-09-21) - frozen history, not a live feed",
+      "RETIRED 2026-09-21" in _sn and '("uw archive session holes"' not in _sn and '("tuner corpus v2 density"' not in _sn)
 check(6, "tuner_apply refuses to judge on a thin corpus", "DENSITY GUARD" in _ta)
 # 6.13 NEVER-FILLED RECORDS ARE VOID, NOT -100% (BREAKDOWNS 2026-09-12)
 check(6, "exit engine voids a never-filled record instead of booking a fake -100%",
@@ -1647,9 +1647,9 @@ check(6, "archive puller: a locked database is waited out, never fatal; any othe
 import re as _re28
 _lw28 = open("scripts/landing_watch.sh", encoding="utf-8").read()
 _win28 = _re28.search(r'tail -(\d+) "\$HOME/integrity_gate\.log"', _lw28)
-check(6, "landing watch: the integrity-gate window outgrows the gate's own output and both archive pullers are watched",
-      bool(_win28) and int(_win28.group(1)) >= 20 and "for S in uw_pull uw_prints" in _lw28
-      and "CRASHED" in _lw28, f"window={_win28.group(1) if _win28 else None}")
+check(6, "landing watch: the integrity-gate window outgrows the gate's own output, and it no longer watches UW pullers (ended 2026-09-21)",
+      bool(_win28) and int(_win28.group(1)) >= 20 and "for S in uw_pull uw_prints" not in _lw28,
+      f"window={_win28.group(1) if _win28 else None}")
 # 6.29 THE PRINTS PULLER NEVER CALLS A FRESH DAY FINAL (BREAKDOWNS 2026-09-19 second entry)
 import json as _js29
 import tempfile as _tf29
@@ -1796,6 +1796,54 @@ check(6, "proof book: its records and equity samples are in the persist step's f
 _sen31 = open(os.path.join("scripts", "freshness_sentinel.py"), encoding="utf-8").read()
 check(6, "proof book: a freshness row watches the daily equity samples, so a silently dead proof route is seen",
       "proof_logs_equity.jsonl" in _sen31)
+# 6.32 NO FLOW CANDIDATES MUST NEVER STOP THE SPREADS (BREAKDOWNS 2026-09-21). A zero-candidate cycle
+# used to leave run_scheduled_cycle before the credit spread, the proof book and every self-settling probe.
+# The check reads CODE lines only: its first version matched the words in the comment that explains it.
+_src32 = open("sandbox_proactive_lab.py", encoding="utf-8").read()
+_rc32 = _src32[_src32.index("def run_scheduled_cycle"):]
+_rc32 = _rc32[:_rc32.index("\ndef ", 10)]
+_s32 = _rc32.index("candidates = scan_candidates(params) if _uw_on else []")
+
+
+def _code32(a, b):
+    return [l.strip() for l in _rc32[a:b].splitlines() if l.strip() and not l.strip().startswith("#")]
+
+
+def _rets32(ls):
+    return [l for l in ls if l == "return" or l.startswith("return ") or l.startswith("return(")]
+
+
+check(6, "no return statement sits between the flow scanner and the credit spread - a quiet day or a dead token cannot stop it",
+      not _rets32(_code32(_s32, _rc32.index("fivek_probes.cycle(creds,"))),
+      str(_rets32(_code32(_s32, _rc32.index("fivek_probes.cycle(creds,")))))
+check(6, "the proof book and every self-settling probe also sit after the scanner with nothing able to cut them off",
+      all(_rc32.index(k) > _s32 for k in ("import proof_book", "putw_leg.weekly_cycle(creds)",
+                                           "vrp_probe.cycle(creds,", "shares_probes.cycle(creds,"))
+      and not _rets32(_code32(_s32, _rc32.index("import proof_book"))))
+check(6, "uw_scanner.enabled=false skips the scanner AND its DEGRADED page, so ending UW is a config change",
+      '_uw_on = bool(((fade_book.spec().get("uw_scanner") or {}).get("enabled", True)))' in _rc32
+      and "if not _uw_on:" in _rc32
+      and _rc32.index("if not _uw_on:") < _rc32.index('_notify("<b>DEGRADED</b>'))
+# 6.33 CREDIT SPREAD ONLY (owner 2026-09-21), and a probe switched off keeps closing what it holds.
+_sp33 = __import__("json").load(open("fade_book_spec.json", encoding="utf-8"))
+check(6, "credit spread only: scanner, share probes, put-debit and student OFF; credit spread and proof book ON",
+      (_sp33.get("uw_scanner") or {}).get("enabled") is False
+      and _sp33["probe"]["shares"].get("enabled") is False
+      and _sp33["probe"]["fivek"]["put_debit"].get("enabled") is False
+      and _sp33["probe"]["student"].get("enabled") is False
+      and _sp33["probe"]["fivek"]["credit_spread"].get("enabled") is True
+      and _sp33["proof_account"].get("enabled") is True)
+_sh33 = open("shares_probes.py", encoding="utf-8").read()
+_i33 = _sh33.index("def cycle(")
+_j33 = _sh33.find("\ndef ", _i33 + 5)
+_cy33 = _sh33[_i33:(_j33 if _j33 != -1 else len(_sh33))]
+check(6, "share probes: switching them off stops only the buys - the exits still run (BREAKDOWNS 2026-09-21 second entry)",
+      'if not cfg.get("enabled")' not in _cy33
+      and 'allow_entries = allow_entries and bool(cfg.get("enabled"))' in _cy33
+      and _cy33.index("allow_entries = allow_entries and bool(") < _cy33.index("_close(open_ov"))
+_sch33 = open("scripts/schema_harness.py", encoding="utf-8").read()
+check(6, "the Sunday schema harness skips Unusual Whales when the scanner is off, so it cannot page drift on a dead token",
+      '"SKIPPED"' in _sch33 and _sch33.index('"SKIPPED"') < _sch33.index("UnusualWhalesClient()"))
 total = len(RESULTS)
 passed = sum(1 for r in RESULTS if r[2])
 by_dim = {}

@@ -96,8 +96,12 @@ def cycle(creds, allow_entries=True):
     """Called each engine cycle (market already confirmed open upstream). Fail-open.
     allow_entries=False (owner HALT / active brake) still runs exits - never entries."""
     cfg = _cfg()
-    if not cfg.get("enabled") or not creds or not all(creds):
+    if not creds or not all(creds):
         return
+    # 2026-09-21: `enabled` gates ENTRIES only. It used to leave here, before the exits below, so switching
+    # the probe off would have stranded any open position - the 2026-09-14 lesson this probe missed.
+    # The exits and the broker-quantity guard still run; only the buys stop.
+    allow_entries = allow_entries and bool(cfg.get("enabled"))
     import sandbox_proactive_lab as lab
     sym = cfg.get("symbol", "SPY")
     size = float(cfg.get("size_usd", 1000))

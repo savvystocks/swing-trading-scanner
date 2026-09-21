@@ -4,8 +4,7 @@ name: brain-weekly
 # snapshot from the private harvest-snapshots repo. It NEVER touches the VPS, the live harvest.db, or
 # the trading path. Sunday evening, after the week's last nightly snapshot; plus manual dispatch.
 on:
-  schedule:
-    - cron: "0 22 * * 0"          # Sunday 22:00 UTC
+  # schedule removed 2026-09-21: the student/brain is directional research, switched off with the rest.
   workflow_dispatch:
     inputs:
       drill_fail:

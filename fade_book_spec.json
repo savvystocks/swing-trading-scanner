@@ -79,7 +79,7 @@
    "max_per_day": 5
   },
   "shares": {
-   "enabled": true,
+   "enabled": false,
    "symbol": "SPY",
    "size_usd": 1000
   },
@@ -119,7 +119,7 @@
    },
    "note": "5k defined-risk weeklies (owner 2026-08-18): XSP structures, 1 lot, self-settling; max loss = width - credit (~$1.2k put side)",
    "put_debit": {
-    "enabled": true,
+    "enabled": false,
     "otm_short": 4.0,
     "otm_long": 1.0,
     "evidence": "NONE - structural hypothesis only (3x3 bear cell 3, owner order 2026-09-01). Buy 1%-OTM put / sell 4%-OTM put weekly on XSP, BEAR regime only (fail-closed). The grand retest showed no bear-put edge on flow candidates; this tests the defined-risk index version. Tracked in priority with zero prior - it must earn everything live.",
@@ -225,7 +225,7 @@
    }
   },
   "student": {
-   "enabled": true,
+   "enabled": false,
    "mode": "live",
    "bear_standdown": true,
    "max_model_age_days": 200,
@@ -394,5 +394,9 @@
   "rising_weeks": 0,
   "week_history": [],
   "note": "NORTH_STAR v1.4-v1.9 + build contract 2026-09-06. Credentials live ONLY in GitHub Actions secrets (ALPACA_PROOF_*) and proof_book.verify re-checks every cycle that they open account_id above and are not the discovery keys: wrong account, missing keys or a wrong-slot paste means no trade and an alarm. Records live in proof_logs.json, never in the discovery book, and the discovery sweeps list positions with DISCOVERY creds so they cannot see this account. One seat only - condor and put-debit are refused on this book."
+ },
+ "uw_scanner": {
+  "enabled": false,
+  "note": "2026-09-21 owner: Unusual Whales ended. The flow scanner fed ONLY the directional entries; the credit spread, the proof book and every self-settling probe use no UW. false = the engine never calls UW and never pages DEGRADED; flipping it back to true restores the flow strategies unchanged."
  }
 }

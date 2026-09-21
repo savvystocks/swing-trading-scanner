@@ -990,6 +990,34 @@ the freshness sentinel only notices days later when the newest day goes stale. L
 writes a shared archive must assume a reader is always there. The 2026-09-17 fix was verified against
 the API and never against its neighbours in the crontab.
 
+2026-09-21 - A QUIET MARKET OR A DEAD TOKEN WOULD HAVE STOPPED THE ONLY LIVE STRATEGY. Found while checking
+whether the owner could end the Unusual Whales subscription. WHAT BROKE (latent, never fired on a Monday entry):
+sandbox_proactive_lab.run_scheduled_cycle asked the UW flow scanner for candidates and, if it got none, left the
+cycle - skipping EVERYTHING after it: the weekly credit spread, the proof book ("promotion 1"), the put-write and VRP
+settles, the share probes and the arming of the owner's /flatten. scan_candidates is correctly fail-open (a missing
+or dead token gives an empty list), so ending UW would have stopped both live spreads entering AND settling, silently,
+with a DEGRADED page every ten minutes. It also bit on any quiet cycle, and the 2026-09-20 first-session entry gate
+made that worse: a Monday with no flow candidates meant a skipped week. ROOT CAUSE: self-contained probes were added
+below a guard written for the directional entries, and nothing asked whether they needed the flow. FIX: the early exit
+is gone; with no candidates the directional loops iterate nothing and every probe still runs. uw_scanner.enabled in
+the spec skips the scanner and its page together, so ending UW is a config change - set false tonight with the owner's
+"credit spread only" ruling, and the Sunday schema harness skips UW on the same switch. ALSO: the first ship attempt
+aborted on its own safety check, which searched for the text "return None" and matched it in the comment explaining
+the fix; nothing was pushed. REGRESSION CHECK: MOT 6.32 reads code lines only (no comment can fool it): no return
+between the scanner and the credit spread; the proof book and the self-settling probes all sit after the scanner; the
+switch skips the page. LESSON: a guard placed for one family of entries silently governs everything written below it;
+and a safety check that matches text can be fooled by the comment that documents it - check code, not prose.
+
+2026-09-21 (second entry) - SWITCHING THE SHARE PROBES OFF WOULD HAVE STRANDED THEIR POSITIONS. Found while
+carrying out the owner's "credit spread only" ruling. WHAT BROKE (latent - no share position was open): shares_probes.cycle
+returned on `not cfg.get("enabled")` BEFORE its exit logic, so disabling the probe stopped the sells along with the buys;
+an open OVERNIGHT or TURN_OF_MONTH position would never have been closed. This is exactly the 2026-09-14 class
+(retiring a probe switched off its settle sweep) - that fix covered vrp_probe, putw_leg and fivek_probes and missed
+this one. FIX: `enabled` now folds into the existing allow_entries flag, which already ran exits and blocked entries;
+the early return fires only on missing credentials. REGRESSION CHECK: MOT 6.33 - no `enabled` early exit in the
+cycle, and the entries gate sits ahead of the first close call. LESSON (again): retire a strategy's ENTRIES, never its
+bookkeeping - and when a lesson is learned on three modules, sweep for the fourth.
+
 2026-09-20 - THE WEEKLY SPREAD TRUSTED ITS OWN QUOTES AND ITS OWN CALENDAR. An eight-agent
 audit of the credit spread's numbers (four lenses, each independently refuted) found three defects in
 the live book, none of which had cost money yet. WHAT BROKE: (1) the BEAR stand-down sat inside the

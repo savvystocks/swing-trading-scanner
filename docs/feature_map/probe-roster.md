@@ -50,6 +50,11 @@ spread, in `fivek_probes.py`), plus the STUDENT seat when `probe.student.enabled
 - MOT 6.10e roster focus; MOT dimension 2 routing; drill scenarios 1-5.
 
 ## Traps
+- 2026-09-21 CREDIT SPREAD ONLY: the owner switched off every directional strategy. `uw_scanner.enabled=false` stops
+  the flow candidates, so every roster probe iterates nothing; `probe.shares`, `probe.fivek.put_debit` and
+  `probe.student` are off. Flipping `uw_scanner.enabled` back to true restores the flow strategies unchanged. The share
+  probes used to leave `shares_probes.py:cycle` on `enabled` before their exits, which would have stranded an open
+  position; `enabled` now gates entries only (MOT 6.33).
 - 2026-09-01 ROTATION SENSOR-COST BLOWUP: every attempt is a full sensor sweep; unbudgeted rotation
   blew the 8-minute GHA envelope and successive runs cancelled each other.
 - 2026-09-09 CONTROL STARVED THE ROSTER: the control burned all attempts on spread-dead names.

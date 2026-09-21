@@ -34,6 +34,14 @@ def _telegram(msg):
 
 
 def check_uw():
+    try:                                          # 2026-09-21: Unusual Whales ended. The token string stays in the
+        import json as _j                         # secrets, so without this the check would call a dead API and
+        _sp = _j.load(open("fade_book_spec.json", encoding="utf-8"))   # page "schema drift" every Sunday.
+        if ((_sp.get("uw_scanner") or {}).get("enabled", True)) is False:
+            add("unusual_whales", "SKIPPED", "uw_scanner switched off in the spec - subscription ended")
+            return
+    except Exception:
+        pass
     from src.unusual_whales_api import UnusualWhalesClient
     uw = UnusualWhalesClient()
     if not getattr(uw, "enabled", False):

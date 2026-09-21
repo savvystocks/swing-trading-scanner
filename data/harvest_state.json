@@ -493,7 +493,42 @@
     "BMNR280616C00032000",
     "META260921C00715000",
     "SPCX260925C00160000",
-    "BIDU261218P00100000"
+    "BIDU261218P00100000",
+    "SPY261009C00785000",
+    "WMT270319P00110000",
+    "INTC261002C00123000",
+    "SPY261016C00770000",
+    "SPCX261009C00150000",
+    "GOOG270319C00410000",
+    "MSTR261120C00180000",
+    "META261016C00750000",
+    "IBIT271217C00100000",
+    "IWM261016P00287000",
+    "SPY261016P00750000",
+    "META260921C00725000",
+    "SPY261120P00760000",
+    "QQQ261030P00734000",
+    "QQQ261218P00705000",
+    "SPY261016C00778000",
+    "SPCX261002C00160000",
+    "QQQ261120C00745000",
+    "META260921C00720000",
+    "IWM261016C00292000",
+    "QQQ261218C00750000",
+    "QQQ261218C00780000",
+    "NVDA260925C00227500",
+    "SPCX270115C00200000",
+    "CRM270319P00210000",
+    "META261016C00685000",
+    "AEHR261009P00100000",
+    "META260923P00720000",
+    "SOXL261030P00105000",
+    "TTWO270617C00185000",
+    "QQQ260925C00750000",
+    "AMD260925C00637500",
+    "BMY261218P00062500",
+    "SAH261218P00075000",
+    "QQQ260925P00737000"
   ],
   "tickers": {
     "TSLA": {
@@ -12815,10 +12850,170 @@
       "days_to_earnings": null,
       "post_earnings_iv_crush_flag": null,
       "flow_persistence_pct": 51.47
+    },
+    "BMY": {
+      "entry_ts_utc": "2026-09-21T15:55:07.925Z",
+      "macro": {
+        "spot": 63.08,
+        "sma20": 65.47,
+        "distance_to_sma20_pct": -3.656,
+        "source": "alpaca"
+      },
+      "iv_term": {
+        "iv_front": 23.9,
+        "iv_back": 28.6,
+        "iv_ratio": 0.836,
+        "structure": "contango",
+        "source": "alpaca"
+      },
+      "gex": {
+        "net_gex": 107133.7,
+        "zero_gamma_strike": 75.0,
+        "distance_to_zero_gamma_pct": -18.897,
+        "regime": "positive_gamma",
+        "source": "uw"
+      },
+      "alt_catalyst": {
+        "reddit_mention_delta_pct": 540.0,
+        "insider_10d_buy_usd": 1250000,
+        "insider_cluster_flag": true,
+        "source": "mock"
+      },
+      "technical": {
+        "atr": 1.24,
+        "atr_pct": 1.97,
+        "rvol_10min": 0.28,
+        "source": "alpaca"
+      },
+      "fundamentals": {
+        "sector": "Healthcare",
+        "industry": "Drug Manufacturers - General",
+        "market_cap": 128793157632,
+        "short_pct_float": 2.16,
+        "short_ratio": 4.07,
+        "source": "yfinance"
+      },
+      "news": {
+        "headline_count": 8,
+        "latest_age_hours": 70.04,
+        "vader_compound": 0.475,
+        "news_type": "Unknown",
+        "top_headline": "This $3 Biotech Could Be Worth $11.45, Analyst Says",
+        "source": "alpaca_news+vader"
+      },
+      "regime_stack": {
+        "ticker_dist_pct": -3.656,
+        "market_spy_dist_pct": 0.806,
+        "sector_etf": "XLV",
+        "sector_dist_pct": -0.737,
+        "sector_vs_market_spread": -1.543,
+        "source": "alpaca_bars"
+      },
+      "skew": {
+        "put_iv_25d": 29.1,
+        "call_iv_25d": 29.2,
+        "skew_ratio": 0.997,
+        "skew_bias": "balanced",
+        "delta_source": "greeks",
+        "source": "alpaca_snapshots"
+      },
+      "flow_aggression": {
+        "sweep_aggression_pct": 17.28,
+        "ask_sweep_prem": 2160857.0,
+        "total_flow_prem": 12507606.0,
+        "source": "uw_flow"
+      },
+      "dark_pool": {
+        "distance_to_heaviest_dp_node_pct": -0.25,
+        "heaviest_node_price": 63.24,
+        "node_size": 60244.0,
+        "n_prints": 32,
+        "window_start": "2026-09-21T13:31:23Z",
+        "window_end": "2026-09-21T15:51:23Z",
+        "source": "uw_darkpool"
+      },
+      "pemd": {
+        "days_since_earnings": 53,
+        "post_earnings_iv_crush_flag": false,
+        "days_to_earnings": 38,
+        "next_earnings_date": "2026-10-29",
+        "iv_rank_1y": 27.1,
+        "last_earnings_date": "2026-07-30",
+        "source": "yfinance+uw"
+      },
+      "vrp": {
+        "realized_vol_20d": 16.32,
+        "front_iv": 23.9,
+        "vrp": 7.58,
+        "vrp_regime": "rich",
+        "source": "alpaca_bars"
+      },
+      "flow_persistence": {
+        "net_directional_prem": -17698.0,
+        "flow_persistence_pct": 2.1,
+        "flow_direction": "bearish",
+        "closing_accel": -26433.0,
+        "n_ticks": 146,
+        "source": "uw_net_prem_ticks"
+      },
+      "price_action": {
+        "nvi": 1136.52,
+        "vwma_20": 65.02,
+        "rsi_5": 16.45,
+        "rsi_15": 27.96,
+        "gap_pct": 0.111,
+        "day_range": 1.03,
+        "candle_body": 0.031,
+        "dist_sma50": -1.627,
+        "source": "alpaca_bars"
+      },
+      "macro_context": {
+        "iv_term_skew": -4.7,
+        "vix_level": 14.86,
+        "execution_hour": 15,
+        "day_of_week": 0,
+        "sector_vs_spy": -0.692,
+        "source": "yfinance+alpaca"
+      },
+      "dealer_greeks": {
+        "net_dex": 5604729.0,
+        "net_vanna": 11970643.0,
+        "net_charm": -2521765.0,
+        "delta_imbalance": 1.785,
+        "source": "uw_greek_exposure"
+      },
+      "liquidity_and_slippage": {
+        "equity_spread_pct_of_ask": 0.032,
+        "bid": 63.03,
+        "ask": 63.05,
+        "bid_size": 100.0,
+        "ask_size": 600.0,
+        "obi": -0.7143,
+        "source": "alpaca_quote"
+      },
+      "relative_momentum": {
+        "rvol_20d": 0.27,
+        "gap_pct": 0.111,
+        "source": "alpaca_bars"
+      },
+      "float_mechanics": {
+        "short_pct_float": 2.16,
+        "float_shares": 2039548448,
+        "shares_short": 44073318,
+        "source": "yfinance"
+      },
+      "news_sentiment_score": 0.475,
+      "sweep_aggression_pct": 17.28,
+      "distance_to_zero_gamma_pct": -18.897,
+      "distance_to_heaviest_dp_node_pct": -0.25,
+      "days_since_earnings": 53,
+      "days_to_earnings": 38,
+      "post_earnings_iv_crush_flag": false,
+      "flow_persistence_pct": 2.1
     }
   },
-  "payload_count": 77,
-  "topn_count": 201,
+  "payload_count": 78,
+  "topn_count": 210,
   "random_count": 1,
   "backoff_429": false,
   "cap_today": 300,

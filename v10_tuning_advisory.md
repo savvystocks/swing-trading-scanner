@@ -3370,3 +3370,15 @@ trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
 Recommendations:
 - none (no rule triggered)
 ---
+## Tuning Advisory - NKE (75f0f2fb0b59) - 2026-09-21T13:56:07.833Z
+trade: winner=bullish_call loser=bullish_call | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---
+## Tuning Advisory - TQQQ (a9c9975d9f78) - 2026-09-21T13:56:09.002Z
+trade: winner=bearish_put loser=bearish_put | move 0.0% | slippage None%
+
+Recommendations:
+- none (no rule triggered)
+---

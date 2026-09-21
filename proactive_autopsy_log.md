@@ -5176,3 +5176,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 300.0 fed the squeeze.
 
+## Autopsy - SPY (ce1b3a0a6603)
+- entered 2026-09-18T14:05:41.070Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.5% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 759.0.
+

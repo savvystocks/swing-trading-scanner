@@ -5194,3 +5194,21 @@
 
 **Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 330.0.
 
+## Autopsy - PLTR (222003174472)
+- entered 2026-09-15T16:35:27.366Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +27.5% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 177.5 fed the squeeze.
+
+## Autopsy - PLTR (6dd3837ac660)
+- entered 2026-09-18T18:44:54.463Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +23.8% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 175.0 fed the squeeze.
+

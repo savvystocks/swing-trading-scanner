@@ -5086,3 +5086,48 @@
 
 **Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 74.0.
 
+## Autopsy - DRAM (ced971cc324c)
+- entered 2026-09-14T18:47:37.570Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +77.4% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+
+## Autopsy - NVDA (bd1d63ed1f77)
+- entered 2026-09-17T13:57:20.437Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +24.5% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 220.0 fed the squeeze.
+
+## Autopsy - DRAM (056bc07f7eb0)
+- entered 2026-09-17T14:05:15.522Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +51.5% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+
+## Autopsy - MARA (3b53aa7628cb)
+- entered 2026-09-17T17:25:21.060Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +91.3% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+
+## Autopsy - NVDA (a2f51747938a)
+- entered 2026-09-18T16:24:56.998Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +34.3% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 220.0 fed the squeeze.
+

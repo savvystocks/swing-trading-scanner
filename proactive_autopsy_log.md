@@ -5149,3 +5149,21 @@
 
 **Determining factor:** Bullish call FAILED (-53%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 162.0 worked against it.
 
+## Autopsy - NOK (f22b2a7280b3)
+- entered 2026-09-16T13:35:55.607Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +46.5% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 11.0 fed the squeeze.
+
+## Autopsy - SPY (eb66d6fb0d8f)
+- entered 2026-09-17T13:35:35.870Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.4% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 761.0.
+

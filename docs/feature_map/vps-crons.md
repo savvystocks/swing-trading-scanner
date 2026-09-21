@@ -38,14 +38,14 @@ monthly corpus, the nightly corpus chain and both Friday tuner jobs. The final d
   for several days first. scripts/uw_flow_prints.py:is_final (deleted 2026-09-21) now keeps every contract-day inside a 12-day
   window open - asked again nightly, fullest tape kept - and the session prints one `window` line per day so the
   vendor's clock can be read off the log. A full tape that was missed cannot be re-pulled at any price.
-- 2026-09-19 TRUNCATED DAYS ARE RE-PAGED WITH LEFTOVER BUDGET: `scripts/uw_history_pull.py:needs_repage` picks the
+- 2026-09-19 TRUNCATED DAYS ARE RE-PAGED WITH LEFTOVER BUDGET: scripts/uw_history_pull.py:needs_repage (deleted 2026-09-21) picks the
   stored ticker-days that sit exactly at 500 rows with more than UW_MIN_TAIL_VOL (10) lots in their thinnest row;
   the `repaged` table marks a day only when all of them are done. Both pullers end every session by writing
-  `scripts/uw_history_pull.py:_session_state` to a file the landing watch reads.
+  scripts/uw_history_pull.py:_session_state (deleted 2026-09-21) to a file the landing watch reads.
 - 2026-04-28 CRON DRIFT; 2026-08-05 WATCHDOG CRON SILENTLY LOST; 2026-09-04 (evening) FRIDAY CHAIN
   TRIPPED ON AN UNCOMMITTED SCRIPT; 2026-09-04 (late) NIGHTLY BOUNDARY SILENT 3 NIGHTS; 2026-09-07
   THE WATCHDOG'S MESSENGER FAILED SILENTLY.
-- 2026-09-17 TWO YEARS OF ARCHIVE TRUNCATED AT 500 A DAY: `scripts/uw_history_pull.py` asked for
+- 2026-09-17 TWO YEARS OF ARCHIVE TRUNCATED AT 500 A DAY: scripts/uw_history_pull.py (deleted 2026-09-21) asked for
   `limit=500` and never for page 2, so 80.6% of ticker-days sat at exactly the cap and the
   low-volume far-OTM tail was silently absent (SPY cut at volume 1,262). `limit` is a hard SERVER
   cap; `&page=N` is the only way past it and `offset`/`skip` are ignored. START was also 2024-09-03
@@ -54,8 +54,8 @@ monthly corpus, the nightly corpus chain and both Friday tuner jobs. The final d
   TRUNCATION WARNING when it stops early. Days already stored keep their truncated chains -
   re-paging them is owed.
 - 2026-09-18 THE ARCHIVE PULLER DIED ON A LOCKED DATABASE: `scripts/fade_meta.py` (22:10, ~30 minutes) reads
-  `data/uw_history.db` while `scripts/uw_history_pull.py` (22:30) writes it; a commit that cannot take its
-  exclusive lock inside the timeout raised and ended the night at call 900. `scripts/uw_history_pull.py:commit_retry`
+  `data/uw_history.db` while scripts/uw_history_pull.py (deleted 2026-09-21) (22:30) writes it; a commit that cannot take its
+  exclusive lock inside the timeout raised and ended the night at call 900. scripts/uw_history_pull.py:commit_retry (deleted 2026-09-21)
   now waits a lock out (MOT 6.27). The page cap is 12 after 5 tripped the truncation sentinel on night one.
   Any new job that scans the archive in the 22:30-02:00 UTC window shares this lock.
 - 2026-09-01 VENV DEPENDENCY DRIFT: jobs that import sklearn or pandas must use `./.venv/bin/python`.

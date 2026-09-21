@@ -2,7 +2,7 @@
 Legs asked for by name (data/cs_legs.db), so a week is only missing if the VENDOR has no quote. Mirrors the live rule:
 first trading day of the week, short = round(spot x (1-a%)), long = round(spot x (1-b%)), sell the short at the BID, buy the
 long at the ASK (closing NBBO), hold to the week's last trading day, cash-settle on the index close. BEAR stand-down as live.
-Reads the database `scripts/cs_legs_pull.py` keeps current; run on demand: `./.venv/bin/python scripts/cs_legs_measure.py`."""
+Reads the frozen data/cs_legs.db (built by scripts/cs_legs_pull.py, deleted 2026-09-21 when Unusual Whales ended); run on demand: `./.venv/bin/python scripts/cs_legs_measure.py`."""
 import math, os, sqlite3, warnings
 from math import erf, log, sqrt, lgamma, exp
 import numpy as np, pandas as pd, yfinance as yf

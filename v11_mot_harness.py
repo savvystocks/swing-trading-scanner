@@ -1067,9 +1067,9 @@ check(6, "failover coupling: engine commit message matches engine_watch stand-do
 _RECURRING = ["sandbox_proactive_lab.py", "fade_book.py", "fivek_probes.py",
               "harvest_logger.py", "scripts/probe_tuner.py", "scripts/glide_sim.py",
               "scripts/tuner_apply.py", "scripts/fade_meta.py", "scripts/sunday_boundary.py",
-              "scripts/uw_history_pull.py", "scripts/shadow_lab.py", "scripts/daily_digest.py",
-              "scripts/integrity_gate.py", "scripts/freshness_sentinel.py", "scripts/trajectory_scoreboard.py",
-              "scripts/engine_failover_exits.py", "scripts/poller.py"]
+              "scripts/shadow_lab.py", "scripts/daily_digest.py", "scripts/integrity_gate.py",
+              "scripts/freshness_sentinel.py", "scripts/trajectory_scoreboard.py", "scripts/engine_failover_exits.py",
+              "scripts/poller.py"]
 _fw_pat = _re2.compile(r'(end=20[2-9][0-9]-|END\s*=\s*date\(20|end_date\s*=\s*["\']20[2-9][0-9]-)')
 _fw_hits = []
 for _rf in _RECURRING:
@@ -1114,11 +1114,9 @@ check(6, "exit engine reads leg_path excursions defensively (no path[\"mfe_pct\"
       and 'path.pop("missing_cycles"' in _lab_txt)
 # 6.10h EVIDENCE-CHAIN CURRENCY (BREAKDOWNS 2026-09-10): both UW pullers defer zero results
 # inside the recent window, the sentinel carries hole + density rows, the tuner refuses thin.
-_hp = open("scripts/uw_history_pull.py", encoding="utf-8").read()   # prints puller deleted 2026-09-21
 _sn = open("scripts/freshness_sentinel.py", encoding="utf-8").read()
 _ta = open("scripts/tuner_apply.py", encoding="utf-8").read()
-check(6, "the history puller defers recent zero-results instead of marking them done",
-      "ZERO-RESULT-DEFER" in _hp)
+# 6.10h puller checks retired 2026-09-21: both Unusual Whales pullers are deleted, the archive is frozen.
 check(6, "sentinel: the UW archive and corpus hole/density rows are retired with Unusual Whales (2026-09-21) - frozen history, not a live feed",
       "RETIRED 2026-09-21" in _sn and '("uw archive session holes"' not in _sn and '("tuner corpus v2 density"' not in _sn)
 check(6, "tuner_apply refuses to judge on a thin corpus", "DENSITY GUARD" in _ta)
@@ -1612,33 +1610,7 @@ fb._SPEC = None
 os.environ["FADE_BOOK_FORCE_OFF"] = _env
 
 print("\n" + "=" * 70)
-# 6.27 THE ARCHIVE PULLER SURVIVES A LOCKED DATABASE (BREAKDOWNS 2026-09-18)
-import importlib.util as _ilu27
-import sqlite3 as _sq27
-_sp27 = _ilu27.spec_from_file_location("uw_history_pull_27", os.path.join("scripts", "uw_history_pull.py"))
-_m27 = _ilu27.module_from_spec(_sp27)
-_sp27.loader.exec_module(_m27)
-
-
-class _Con27:
-    def __init__(self, fails, msg="database is locked"):
-        self.fails, self.calls, self.msg = fails, 0, msg
-
-    def commit(self):
-        self.calls += 1
-        if self.calls <= self.fails:
-            raise _sq27.OperationalError(self.msg)
-
-
-_c27, _slept27 = _Con27(2), []
-_ok27 = _m27.commit_retry(_c27, _sleep=_slept27.append) is True and _c27.calls == 3 and len(_slept27) == 2
-try:
-    _m27.commit_retry(_Con27(1, "disk I/O error"), _sleep=_slept27.append)
-    _other27 = False
-except _sq27.OperationalError:
-    _other27 = True
-check(6, "archive puller: a locked database is waited out, never fatal; any other database error still raises",
-      _ok27 and _other27, f"calls={_c27.calls} sleeps={len(_slept27)} other_raises={_other27}")
+# 6.27 retired 2026-09-21 with scripts/uw_history_pull.py (its locked-database lesson is in BREAKDOWNS 2026-09-18).
 # 6.28 THE LANDING WATCH CAN SEE THE INTEGRITY GATE AND BOTH ARCHIVE PULLERS (BREAKDOWNS 2026-09-19)
 import re as _re28
 _lw28 = open("scripts/landing_watch.sh", encoding="utf-8").read()
@@ -1646,12 +1618,7 @@ _win28 = _re28.search(r'tail -(\d+) "\$HOME/integrity_gate\.log"', _lw28)
 check(6, "landing watch: the integrity-gate window outgrows the gate's own output, and it no longer watches UW pullers (ended 2026-09-21)",
       bool(_win28) and int(_win28.group(1)) >= 20 and "for S in uw_pull uw_prints" not in _lw28,
       f"window={_win28.group(1) if _win28 else None}")
-# 6.29 the prints-puller half retired 2026-09-21 with scripts/uw_flow_prints.py; the history puller's re-page
-# rule stays until the final Unusual Whales pull ends and that puller is deleted too.
-check(6, "history puller: a stored ticker-day is re-paged only when it sits exactly at the old cap with real volume in its tail",
-      _m27.needs_repage(500, 25) is True and _m27.needs_repage(500, 10) is False
-      and _m27.needs_repage(500, None) is False and _m27.needs_repage(499, 900) is False
-      and _m27.needs_repage(1000, 900) is False)
+# 6.29 retired 2026-09-21: both Unusual Whales pullers are deleted.
 # 6.15 DRILLS AND THE MOT LEAVE THE PASSIVE SCORE LOG ALONE (BREAKDOWNS 2026-09-12 third entry)
 _dr15 = open("scripts/regime_drill.py", encoding="utf-8").read()
 check(6, "regime drill redirects the student score log and neutralises the record rewrite before any entry or rank call",

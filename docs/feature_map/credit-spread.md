@@ -40,11 +40,11 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
   `fivek_probes.py:_quote` and `fivek_probes.py:_occ` (the engine's own INDICATIVE feed), into `reports/research/xsp_quotes.jsonl`.
   The decision rule is fixed in its docstring: median entry-window excess friction <= $5 a spread and the SPY backtests
   transfer; >= $20 and XSP's own spread consumes the edge. Four weeks, weeks as the unit of evidence.
-- `scripts/cs_legs_pull.py` (2026-09-19, Saturday 12:00 UTC cron, off the trade path): the legs this rule could have traded,
+- scripts/cs_legs_pull.py (deleted 2026-09-21; it ran 2026-09-19 to 2026-09-21 until Unusual Whales ended, and `data/cs_legs.db` is its frozen output): the legs this rule could have traded,
   asked for BY NAME from the vendor's per-contract history (closing bid and ask, traded or not), every finished week since
-  2023-10-23, strikes 1.0-6.0% below spot in 0.5% steps, XSP and SPY, into `data/cs_legs.db` (`scripts/cs_legs_pull.py:wanted`,
-  `scripts/cs_legs_pull.py:mark_final`). Coverage of the live 2%/4% rule is 91% of weeks on XSP and 100% on SPY, against 54% from
-  the capped chain archive. `scripts/cs_legs_pull.py:backup` leaves `cs_legs.db.gz` in the snapshot folder so the nightly
+  2023-10-23, strikes 1.0-6.0% below spot in 0.5% steps, XSP and SPY, into `data/cs_legs.db` (scripts/cs_legs_pull.py:wanted (deleted 2026-09-21),
+  scripts/cs_legs_pull.py:mark_final (deleted 2026-09-21)). Coverage of the live 2%/4% rule is 91% of weeks on XSP and 100% on SPY, against 54% from
+  the capped chain archive. scripts/cs_legs_pull.py:backup (deleted 2026-09-21) leaves `cs_legs.db.gz` in the snapshot folder so the nightly
   off-box backup carries it: the vendor's floor rolls forward daily and the oldest weeks can never be pulled again.
 - `scripts/cs_legs_measure.py` (on demand: `./.venv/bin/python scripts/cs_legs_measure.py`) measures the rule on that database -
   real XSP quotes, real ^XSP settlement, the BEAR stand-down applied, coverage and the Clopper-Pearson tail bound on every row.

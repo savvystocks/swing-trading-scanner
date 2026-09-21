@@ -8,7 +8,7 @@ exits against incumbents, the Friday court that promotes or holds every probe ag
 and the scoreboard that reports where the system stands against the North Star.
 
 ## Where
-- Archive pull: `scripts/uw_history_pull.py` (22:30 UTC daily, `data/uw_history.db`: contracts_daily,
+- Archive pull: scripts/uw_history_pull.py (deleted 2026-09-21) (22:30 UTC daily, `data/uw_history.db`: contracts_daily,
   flow_prints) and scripts/uw_flow_prints.py (deleted 2026-09-21) (00:15 UTC, per-print NBBO); both defer zero-result
   days inside a recent window instead of marking them done.
 - Bars: scripts/hourly_library.py (deleted 2026-09-21) -> `data/hourly_paths.db` (hour bars for every archive contract).

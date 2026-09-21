@@ -5167,3 +5167,12 @@
 
 **Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 761.0.
 
+## Autopsy - NBIS (87327d3cb8cf)
+- entered 2026-09-18T17:07:01.354Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +50.7% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 300.0 fed the squeeze.
+

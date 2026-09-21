@@ -5230,3 +5230,12 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 39.0 fed the squeeze.
 
+## Autopsy - WULF (88352ee84c77)
+- entered 2026-09-18T14:35:43.967Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +44.2% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 18.0 fed the squeeze.
+

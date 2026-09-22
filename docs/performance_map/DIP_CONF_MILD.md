@@ -10,9 +10,9 @@ Archive: calls, SPY 50d within +-2, ticker below 20d, SPY below 20d, all prior-c
 roster runs, executable basis. Live: the trigger contract via `_PROBE_CONTRACT`, mild days only.
 
 ## Numbers
-- live: [[strategies.DIP_CONF_MILD.live.n_closed = 2]] closed, [[strategies.DIP_CONF_MILD.live.per_trade = -11.7]] per trade,
-  day mean [[strategies.DIP_CONF_MILD.live.unit_mean = -11.7]] over [[strategies.DIP_CONF_MILD.live.units = 2]] days,
-  t vs control [[strategies.DIP_CONF_MILD.live.t_vs_control = n/a]].
+- live: [[strategies.DIP_CONF_MILD.live.n_closed = 3]] closed, [[strategies.DIP_CONF_MILD.live.per_trade = +47.4]] per trade,
+  day mean [[strategies.DIP_CONF_MILD.live.unit_mean = +47.4]] over [[strategies.DIP_CONF_MILD.live.units = 3]] days,
+  t vs control [[strategies.DIP_CONF_MILD.live.t_vs_control = +0.92]].
 - archive: [[strategies.DIP_CONF_MILD.archive.per_day = +0.5]] per day (pool [[strategies.DIP_CONF_MILD.archive.pool_per_day_same_days = -7.4]]),
   t vs pool [[strategies.DIP_CONF_MILD.archive.t_vs_pool = +2.69]], [[strategies.DIP_CONF_MILD.archive.trades = 4220]] trades over
   [[strategies.DIP_CONF_MILD.archive.days = 86]] days, halves [[strategies.DIP_CONF_MILD.archive.h1 = +3.8]] / [[strategies.DIP_CONF_MILD.archive.h2 = -2.8]].

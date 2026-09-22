@@ -5338,3 +5338,21 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 58.0 worked against it.
 
+## Autopsy - SLV (397c6511d0b3)
+- entered 2026-09-15T17:24:38.241Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -0.8% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-1%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 66.0 worked against it.
+
+## Autopsy - QQQ (47452ed7ad7c)
+- entered 2026-09-21T13:57:10.684Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +98.1% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 735.0 fed the squeeze.
+

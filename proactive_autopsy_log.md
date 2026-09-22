@@ -5275,3 +5275,30 @@
 
 **Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 282.5.
 
+## Autopsy - AAPL (5889d56065f6)
+- entered 2026-09-16T15:36:22.020Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +40.6% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 330.0 fed the squeeze.
+
+## Autopsy - AAPL (7ea401366f07)
+- entered 2026-09-17T18:55:31.256Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +23.4% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 335.0 fed the squeeze.
+
+## Autopsy - SOFI (c692d5678e52)
+- entered 2026-09-18T15:47:31.281Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +38.9% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 5.0 fed the squeeze.
+

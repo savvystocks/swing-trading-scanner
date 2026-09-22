@@ -5239,3 +5239,39 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 18.0 fed the squeeze.
 
+## Autopsy - SOFI (6190e57c8ef6)
+- entered 2026-09-10T17:18:58.835Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -98.1% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-98%, move 0.0%): no breakdown materialised; spot held above zero-gamma 25.0.
+
+## Autopsy - SPY (8dae8385e95d)
+- entered 2026-09-16T17:42:36.641Z | trigger regime_BULLISH_loose | exit CLOSE_EXPIRY | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +165.5% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 760.0 fed the squeeze.
+
+## Autopsy - AMD (470a4df18eb2)
+- entered 2026-09-17T15:46:15.518Z | trigger regime_BULLISH_loose | exit CLOSE_EXPIRY | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +700.0% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 530.0 fed the squeeze.
+
+## Autopsy - IWM (dbfc3d6d159b)
+- entered 2026-09-18T15:55:09.992Z | trigger regime_BEARISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.0% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 282.5.
+

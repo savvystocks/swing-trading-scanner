@@ -490,3 +490,15 @@ proposal passes a simplicity test: does a number already in the reports justify 
   portfolio caps, and whether live runs in parallel with paper as a slippage control group (recommendation
   on record: yes, parallel).
 - **Ceiling review** - per item 10's Ceiling Review gate; only the owner raises the brain's authority.
+
+- **SHIPPED 2026-09-22 - forward data capture (daily bars).** `scripts/daily_bars_archive.py` + a 22:15 UTC weekday
+  cron store split-adjusted daily bars for 30 ETFs into `data/daily_bars.db`. Accept: the store grows every weekday
+  and the sentinel's "daily bars archive" row stays fresh. Owner reason (2026-09-22): after the Unusual Whales exit
+  the estate archived nothing at all, and the two strategies the research has cleared - the RSI(2) ETF dip-buy and
+  the 200-day switch - both run on daily bars.
+- **QUEUED - the court's docket is empty of living challengers.** All eleven challengers it judges are directional
+  and can never receive another day of evidence; the credit spread is judged by the proof stint, not the court.
+  Accept: either the docket is re-cut to challengers that can accrue evidence, or the three court crons stand down
+  with a dated note in SYSTEM_ARCHITECTURE.md. Deferred from the 2026-09-22 batch deliberately: pausing the court
+  also retires its sentinel rows, and that is a decision to take in daylight, not at midnight.
+

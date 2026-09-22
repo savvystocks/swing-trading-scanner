@@ -49,9 +49,18 @@ def _side(root, exp, k, quote, creds):
 
 
 def _spread(short, long_):
+    """A one-sided quote (zero bid, or a crossed book) makes the MID meaningless, and friction is measured against
+    the mid - the 2026-09-21 19:50 sample booked $58 of friction on a long leg quoted 0.00/1.13 (BREAKDOWNS
+    2026-09-22). Such a snapshot is dropped with its reason, never averaged into the verdict."""
     sb, sa, lb, la = short["bid"], short["ask"], long_["bid"], long_["ask"]
     if None in (sb, sa, lb, la) or sa <= 0 or la <= 0:
-        return {"credit_exec": None, "credit_mid": None, "friction_usd": None}
+        return {"credit_exec": None, "credit_mid": None, "friction_usd": None, "dropped": "missing quote"}
+    if sb <= 0 or lb <= 0:
+        return {"credit_exec": None, "credit_mid": None, "friction_usd": None, "dropped": "one-sided quote"}
+    if sb > sa or lb > la:
+        return {"credit_exec": None, "credit_mid": None, "friction_usd": None, "dropped": "crossed quote"}
+    if sb - la <= 0:
+        return {"credit_exec": None, "credit_mid": None, "friction_usd": None, "dropped": "non-positive credit"}
     ex = sb - la
     mid = (sb + sa) / 2.0 - (lb + la) / 2.0
     return {"credit_exec": round(ex, 4), "credit_mid": round(mid, 4), "friction_usd": round((mid - ex) * 100, 2)}

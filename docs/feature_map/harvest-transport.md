@@ -34,6 +34,9 @@ student and the brain. Logging is passive: it may never alter or crash the trade
 - The four harvest suites in `~/vps_ship_grid.sh`; MOT dimension 1 (input and schema).
 
 ## Traps
+- 2026-09-22: `harvest_logger.py:_flow_rows` was NOT covered by the spec's `uw_scanner` switch and kept
+  calling Unusual Whales every cycle after the scanner was switched off. A switch named for a dependency must be
+  read at every call site of that dependency (MOT 6.34).
 - 2026-07-06 HARVEST ROW LOST TO A TRIGGER RACE; 2026-07-02 MANDATORY RANDOM SAMPLE EMPTY.
 - 2026-07-16 61% OF TRAINING PILE FEATURELESS; 2026-07-26 LOOKAHEAD CONTAMINATION.
 - 2026-07-10 POLLER GIT RACES -> git-pull-first, `--ff-only`.

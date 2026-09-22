@@ -48,6 +48,27 @@ def leg_pnl(rec):
     return out
 
 
+def _charter_version(path="NORTH_STAR.md"):
+    """The charter version is read from the charter, never typed here (BREAKDOWNS 2026-09-22: the weekly telegram
+    said v1.6 while NORTH_STAR.md was at v1.9 and Promotion 1 was already live and trading)."""
+    try:
+        import re as _re
+        vs = [tuple(int(x) for x in v.split(".")) for v in _re.findall(r"v(\d+\.\d+)", open(path, encoding="utf-8").read())]
+        return "v%d.%d" % max(vs) if vs else "v?"
+    except Exception:
+        return "v?"
+
+
+def _proof_promotions(path="proof_logs.json"):
+    """How many strategies actually hold a seat in the proof account, counted from its own record book."""
+    try:
+        import json as _json
+        return len({(r.get("probe_strategy") or "?") for r in _json.load(open(path, encoding="utf-8"))
+                    if (r.get("book") or "").upper() == "PROOF"})
+    except Exception:
+        return 0
+
+
 def main():
     log = json.load(open("proactive_sandbox_logs.json", encoding="utf-8"))
     daily = {"priority": defaultdict(float), "discovery": defaultdict(float), "legacy": defaultdict(float)}
@@ -100,9 +121,9 @@ def main():
            f"({open_counts['discovery']} open)\n"
            f"V10 legacy (frozen): ${latest.get('legacy', 0):+,}\n"
            "Right direction = PRIORITY rising while DISCOVERY stays small and flat.\n"
-           "\nNORTH STAR (v1.6): promotion -> proof seat -> 8 rising weeks -> first GBP 1-5k "
+           f"\nNORTH STAR ({_charter_version()}): promotion -> proof seat -> 8 rising weeks -> first GBP 1-5k "
            "-> +5% quarters double rungs -> GBP 100k pot.\n"
-           f"Position: proof-seat promotions 0; court upgrades applied to the live spec: {len(promoted)}; "
+           f"Position: proof-seat promotions {_proof_promotions()}; court upgrades applied to the live spec: {len(promoted)}; "
            f"proof weeks {pw}/8; real capital GBP 0 of 100,000; "
            "lifetime real loss GBP 0 of the 2,500 cap.\n"
            "Nearest commitment: October-gate pre-registration written before 2026-09-18.")

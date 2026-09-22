@@ -274,6 +274,11 @@ _SAW_429 = {"flag": False}                   # set by _flow_rows on a rate-limit
 
 def _flow_rows(params):
     try:
+        import fade_book
+        if fade_book.active() and not ((fade_book.spec().get("uw_scanner") or {}).get("enabled", True)):
+            return []                        # SWITCHED OFF IN THE SPEC (BREAKDOWNS 2026-09-22): the scanner switch
+                                             # of a6967d48 guarded scan_candidates only, so this feed kept calling a
+                                             # vendor the owner was cancelling, on every open-market cycle.
         from src.unusual_whales_api import UnusualWhalesClient
         uw = UnusualWhalesClient()
         if not getattr(uw, "enabled", False):

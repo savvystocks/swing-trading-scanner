@@ -1085,3 +1085,33 @@ tapes of the 473 thin days. LESSON: some data can be collected exactly once. For
 what happens to yesterday's answer next week BEFORE designing the checkpoint - a "done" flag is a bet
 that the answer will never get better or worse.
 
+2026-09-22 - THE KILL SWITCH WAS DEAD FOR TWELVE DAYS (found in the post-exit health check, never fired in anger).
+WHAT BROKE: `/halt` and `/flatten` would have failed. `scripts/telegram_commands.py:_write_flag` publishes halt.json
+through the ~/harvest-snapshots repo and returns True only when the push confirms; every push to that repo since
+2026-09-10 was rejected by GitHub's 100 MB file limit, because the nightly harvest snapshots had grown to 122 MB.
+The same rejection meant the off-box database backup had been stale for twelve days.
+ROOT CAUSE: one repo carried two unrelated jobs - a 120-byte control flag and a 122 MB nightly database - so the
+backup's growth curve silently disabled the owner's emergency stop. The nightly alarm DID fire, eight times
+("BACKUP ALARM ... FAILED TO PUSH"), and nobody triaged it: an alarm nobody acts on is not a control.
+FIX (this commit + VPS-side, 2026-09-22): the snapshots repo no longer tracks *.db.gz (the unpushed commits were
+reset, not force-pushed, and the push confirmed); ~/backup_snapshot.sh now takes a snapshot only when harvest.db's
+content hash changes, SPLITS the gz into 90 MB parts, which is what travels off-box, and keeps 5 local copies
+instead of 30; the irreplaceable data went off-box by a second route the same night (OneDrive).
+LESSON: never let a control path share a transport with bulk data. And an alarm that fires nightly without a
+triage step is noise - the sentinel's "off-box snapshot repo" row is the check that must page, not the email.
+REGRESSION CHECK: the sentinel's existing `git_commit` row on ~/harvest-snapshots (TRADE criticality) plus
+MOT 6.12's kill-switch publish test; the new split keeps every pushed file under the limit that broke it.
+
+2026-09-22 - THE HARVEST KEPT CALLING A VENDOR WE WERE CANCELLING (near-miss, caught in the same audit).
+WHAT BROKE: nothing yet. a6967d48 switched the Unusual Whales scanner off in the spec, but that switch guarded
+`sandbox_proactive_lab.py:scan_candidates` only. `harvest_logger.py:_flow_rows` kept calling the vendor on every
+open-market cycle (about 1,000-1,500 calls a day), so the day the token died the harvest would have gone silently
+empty, and the engine would have kept paying calls into the owner's last allowance while the final archive pull
+needed it.
+ROOT CAUSE: a feature switch named for a subsystem ("uw_scanner") that only one of the subsystem's two call sites
+consulted. The map and the MOT both described the switch as "the engine no longer calls UW", which was untrue.
+FIX (this commit): `_flow_rows` reads the same switch and returns [] without calling out.
+LESSON: when a switch is named after a dependency, find every call site of that dependency, not every caller of the
+function you are editing. The proof is a grep for the vendor, not a reading of the switch.
+REGRESSION CHECK: MOT 6.34 (the harvest feed must be gated on the same switch as the scanner).
+

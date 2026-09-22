@@ -60,6 +60,9 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
 - Drill scenario 5 (bear-only PUT_DEBIT_W, wings first); the court's weekly cadence branch.
 
 ## Traps
+- 2026-09-22: `scripts/xsp_quote_log.py` booked $58 of friction from a long leg quoted 0.00/1.13 - a
+  one-sided quote makes the mid meaningless, and the instrument verdict is measured against the mid. Such
+  snapshots are now dropped with a reason (MOT 6.36).
 - Regime gate: `probe.fivek.credit_spread.regime_gate` (default true) stands the spread down in a
   BEAR week (the playbook on real SPY quotes: +$64/week in mild tape, bleeds in bear); an unknown
   regime allows the entry (fail-open, a missed income week beats a blocked settle path).

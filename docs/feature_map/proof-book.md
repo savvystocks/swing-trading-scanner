@@ -47,6 +47,9 @@ the validation, not a victory lap.
   book; an unreadable proof log raises instead of reading empty.
 
 ## Traps
+- 2026-09-22: the sentinel's `expired_open` and `ghost_open` rows pointed at `proactive_sandbox_logs.json`
+  only, so this book had neither alarm; and its equity row expected 19:30 UTC while `proof_book.py:sample_equity`
+  writes at about 13:35, which paged [TRADE] every weekday by construction. Both fixed (MOT 6.35).
 - Proof keys must NEVER be added to `src/alpaca_creds.py:_pairs` - that function probes an
   account-agnostic market-data endpoint and caches one winner process-wide, so it is structurally
   incapable of telling two accounts apart and would silently pick either.

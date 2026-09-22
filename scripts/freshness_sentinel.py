@@ -65,7 +65,9 @@ CHECKS = [
     # -- trade path: the engine and its lifelines
     ("engine last_cycle_ok", "schedule", "data/last_cycle_ok", (20, 30, WEEKDAYS), "TRADE"),
     ("engine records log", "schedule", "proactive_sandbox_logs.json", (19, 30, WEEKDAYS), "TRADE"),
-    ("proof book equity samples", "schedule", "proof_logs_equity.jsonl", (19, 30, WEEKDAYS), "TRADE"),
+    # 14:30, not 19:30 (BREAKDOWNS 2026-09-22): proof_book.sample_equity writes the first cycle of the UTC day,
+    # about 13:35, so a 19:30 expectation paged [TRADE] every weekday morning by construction.
+    ("proof book equity samples", "schedule", "proof_logs_equity.jsonl", (14, 30, WEEKDAYS), "TRADE"),
     ("harvest poller log", "schedule", "data/poller.log", (21, 0, WEEKDAYS), "TRADE"),
     ("engine watch log", "schedule", H + "/engine_watch.log", (19, 30, WEEKDAYS), "TRADE"),
     ("telegram commands state", "mtime", H + "/telegram_commands_state.json", 1.0, "MONITOR"),
@@ -89,6 +91,10 @@ CHECKS = [
     ("challengers parses", "json_ok", "challengers.json", None, "COURT"),
     ("expired legs still open", "expired_open", "proactive_sandbox_logs.json", 1, "TRADE"),
     ("ghost open records", "ghost_open", "proactive_sandbox_logs.json", 10, "TRADE"),
+    # the proof book keeps its own records, so the discovery rows above cannot see it (BREAKDOWNS 2026-09-22)
+    ("expired legs still open (proof)", "expired_open", "proof_logs.json", 1, "TRADE"),
+    ("ghost open records (proof)", "ghost_open", "proof_logs.json", 10, "TRADE"),
+    ("daily bars archive", "schedule", H + "/daily_bars.log", (22, 15, WEEKDAYS), "EVIDENCE"),
     # -- v1.2 (MOT coverage audit 2026-09-07): frozen-window, disk, and failover classes
     ("vps disk headroom", "disk", "/", 85, "TRADE"),
     ("failover mode stuck", "flag_age", H + "/.engine_watch_failover_mode", 2.0, "TRADE"),

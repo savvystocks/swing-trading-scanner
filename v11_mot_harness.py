@@ -1775,6 +1775,52 @@ check(6, "uw_scanner.enabled=false skips the scanner AND its DEGRADED page, so e
       '_uw_on = bool(((fade_book.spec().get("uw_scanner") or {}).get("enabled", True)))' in _rc32
       and "if not _uw_on:" in _rc32
       and _rc32.index("if not _uw_on:") < _rc32.index('_notify("<b>DEGRADED</b>'))
+# 6.34 THE HARVEST FEED OBEYS THE SAME SWITCH AS THE SCANNER (BREAKDOWNS 2026-09-22)
+_hl34 = open("harvest_logger.py", encoding="utf-8").read()
+_fr34 = _hl34.split("def _flow_rows(")[1].split("\ndef ")[0]
+check(6, "the harvest flow feed is gated on the spec's uw_scanner switch, like the scanner",
+      "uw_scanner" in _fr34 and "return []" in _fr34.split("uw_scanner")[1][:200])
+
+# 6.35 THE PROOF BOOK CARRIES THE TWO POSITION ALARMS THE DISCOVERY BOOK HAS (BREAKDOWNS 2026-09-22)
+_fs35 = open("scripts/freshness_sentinel.py", encoding="utf-8").read()
+check(6, "the freshness sentinel watches proof_logs.json for expired legs and ghost records",
+      '"expired_open", "proof_logs.json"' in _fs35 and '"ghost_open", "proof_logs.json"' in _fs35)
+
+# 6.36 EVIDENCE SNAPSHOTS DROP ONE-SIDED QUOTES INSTEAD OF AVERAGING THEM (BREAKDOWNS 2026-09-22)
+import importlib.util as _ilu36
+_sp36 = _ilu36.spec_from_file_location("xsp_quote_log", "scripts/xsp_quote_log.py")
+_m36 = _ilu36.module_from_spec(_sp36); _sp36.loader.exec_module(_m36)
+_ok36 = (_m36._spread({"bid": 0.50, "ask": 0.60}, {"bid": 0.0, "ask": 1.13})["credit_exec"] is None
+         and _m36._spread({"bid": 0.50, "ask": 0.60}, {"bid": 0.10, "ask": 0.15})["credit_exec"] is not None)
+check(6, "the XSP quote logger drops a one-sided leg quote and keeps a two-sided one", _ok36)
+
+# 6.37 THE WEEKLY SCOREBOARD READS ITS POSITION, IT DOES NOT TYPE IT (BREAKDOWNS 2026-09-22)
+_sb37 = open("scripts/trajectory_scoreboard.py", encoding="utf-8").read()
+check(6, "the scoreboard computes the charter version and the promotion count",
+      "_charter_version()" in _sb37 and "_proof_promotions()" in _sb37
+      and "NORTH STAR (v1.6)" not in _sb37 and "proof-seat promotions 0;" not in _sb37)
+
+# 6.38 THE DAILY BAR ARCHIVE WRITES, IS IDEMPOTENT, AND NEVER RAISES (forward capture, 2026-09-22)
+import sqlite3 as _sq38
+_sp38 = _ilu38 = _ilu36.spec_from_file_location("daily_bars_archive", "scripts/daily_bars_archive.py")
+_m38 = _ilu36.module_from_spec(_sp38); _sp38.loader.exec_module(_m38)
+_db38 = _m38.open_db(":memory:")
+_bars38 = {"SPY": [{"t": "2026-09-21T04:00:00Z", "o": 1, "h": 2, "l": 0.5, "c": 1.5, "v": 10, "n": 2, "vw": 1.2}]}
+_env38 = dict(os.environ)
+os.environ["ALPACA_PAPER_API_KEY"] = os.environ.get("ALPACA_PAPER_API_KEY") or "k"
+os.environ["ALPACA_PAPER_SECRET_KEY"] = os.environ.get("ALPACA_PAPER_SECRET_KEY") or "s"
+_m38.run(db=_db38, fetcher=lambda *a, **k: _bars38)
+_m38.run(db=_db38, fetcher=lambda *a, **k: _bars38)                      # same day twice -> still one row
+_n38 = _db38.execute("select count(*) from bars").fetchone()[0]
+_raised38 = False
+try:
+    _m38.run(db=_db38, fetcher=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("provider down")))
+except Exception:
+    _raised38 = True
+os.environ.clear(); os.environ.update(_env38)
+check(6, "the daily bar archive stores bars, is idempotent per day, and fails open on a provider error",
+      _n38 == 1 and not _raised38)
+
 # 6.33 CREDIT SPREAD ONLY (owner 2026-09-21), and a probe switched off keeps closing what it holds.
 _sp33 = __import__("json").load(open("fade_book_spec.json", encoding="utf-8"))
 check(6, "credit spread only: scanner, share probes, put-debit and student OFF; credit spread and proof book ON",

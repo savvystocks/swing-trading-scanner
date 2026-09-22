@@ -43,6 +43,7 @@ from the code. This map is the maintained verification source for the engine; `s
 | persist-and-merge.md | the GHA persist step, resolver, union guard | `merge_logs.py --selftest` |
 | harvest-transport.md | counterfactual harvest -> inbox -> VPS poller -> labels | `test_harvest_passivity.py` |
 | evidence-and-court.md | corpora, tuner, glide, court, scoreboard, student research | Friday logs |
+| daily-bars.md | the daily share-price archive, the only forward data capture | MOT 6.38 |
 | vps-crons.md | every cron slot, its log, its freshness row | `scripts/freshness_sentinel.py` |
 | telegram-and-watchdogs.md | notifications, owner commands, dead-man watchdogs, auto-rollback | watchdog logs |
 | gate-and-ship.md | how a change is verified and shipped | `bash ~/vps_ship_grid.sh` |

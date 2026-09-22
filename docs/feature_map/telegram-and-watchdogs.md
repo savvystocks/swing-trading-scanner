@@ -39,6 +39,9 @@ when the engine, the snapshot landing, or the data freshness goes quiet.
 - MOT dimension 5 observability (6 checks); the digest renders the scoreboard and reconciliation lines.
 
 ## Traps
+- 2026-09-22: the kill switch publishes through ~/harvest-snapshots, and for twelve days every push to that
+  repo was rejected on GitHub's 100 MB file limit (the nightly database snapshots), so `/halt` would have failed.
+  Control flags never share a transport with bulk data; the nightly gz is now split into 90 MB parts.
 - 2026-09-19 THE LANDING WATCH PAGED A FALSE ALARM EVERY NIGHT: `scripts/landing_watch.sh` looked for today's date
   in the last 5 lines of the integrity gate's log, and the gate had grown to 7 lines below its dated header. A
   watch that greps a fixed tail of another job's log breaks the day that job prints one more line; the window is

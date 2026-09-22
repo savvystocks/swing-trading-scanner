@@ -5311,3 +5311,12 @@
 
 **Determining factor:** Breakout triggered by a +1120% Reddit spike while IV term was in contango.
 
+## Autopsy - IWM (286c60cdb80e)
+- entered 2026-09-16T15:45:46.135Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.2% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 286.0.
+

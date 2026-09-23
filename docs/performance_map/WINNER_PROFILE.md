@@ -12,8 +12,8 @@ an upper bound on what the full filter would keep. The 2026-09-09 grid (old basi
 cell at a t of 0.68 against the pool, which is noise. Live: its own PROBE records.
 
 ## Numbers
-- live: [[strategies.WINNER_PROFILE.live.n_closed = 13]] closed, [[strategies.WINNER_PROFILE.live.per_trade = +14.0]] per trade,
-  open [[strategies.WINNER_PROFILE.live.open = 3]].
+- live: [[strategies.WINNER_PROFILE.live.n_closed = 14]] closed, [[strategies.WINNER_PROFILE.live.per_trade = +14.7]] per trade,
+  open [[strategies.WINNER_PROFILE.live.open = 2]].
 - archive (partial cell): [[strategies.WINNER_PROFILE.archive.per_day = -5.2]] per day (pool
   [[strategies.WINNER_PROFILE.archive.pool_per_day_same_days = -5.1]]), t vs pool [[strategies.WINNER_PROFILE.archive.t_vs_pool = -2.54]].
 

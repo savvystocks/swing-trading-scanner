@@ -9,9 +9,9 @@ with a scoreable court day.
 Archive: calls only, every regime, BASE exit, executable basis. Live: PROBE records since the roster.
 
 ## Numbers
-- live: [[strategies.FOLLOW_CALLS.live.n_closed = 22]] closed, [[strategies.FOLLOW_CALLS.live.per_trade = +8.3]] per trade,
-  day mean [[strategies.FOLLOW_CALLS.live.unit_mean = -7.3]] over [[strategies.FOLLOW_CALLS.live.units = 11]] days,
-  shared with the control [[strategies.FOLLOW_CALLS.live.shared_units = 11]], t vs control [[strategies.FOLLOW_CALLS.live.t_vs_control = -1.08]].
+- live: [[strategies.FOLLOW_CALLS.live.n_closed = 26]] closed, [[strategies.FOLLOW_CALLS.live.per_trade = +25.9]] per trade,
+  day mean [[strategies.FOLLOW_CALLS.live.unit_mean = -3.8]] over [[strategies.FOLLOW_CALLS.live.units = 11]] days,
+  shared with the control [[strategies.FOLLOW_CALLS.live.shared_units = 11]], t vs control [[strategies.FOLLOW_CALLS.live.t_vs_control = -0.86]].
 - archive: [[strategies.FOLLOW_CALLS.archive.per_day = -0.1]] per day (pool on the same days
   [[strategies.FOLLOW_CALLS.archive.pool_per_day_same_days = -5.1]]), t vs pool [[strategies.FOLLOW_CALLS.archive.t_vs_pool = +4.99]],
   [[strategies.FOLLOW_CALLS.archive.trades = 51806]] trades over [[strategies.FOLLOW_CALLS.archive.days = 492]] days,
@@ -21,7 +21,7 @@ Archive: calls only, every regime, BASE exit, executable basis. Live: PROBE reco
 `./.venv/bin/python scripts/returns_ledger.py` (row FOLLOW_CALLS).
 
 ## Healthy
-Court standing: [[strategies.FOLLOW_CALLS.court.standing = 7/8 live virgin days vs control - HOLD]]. Promotion needs eight shared
+Court standing: [[strategies.FOLLOW_CALLS.court.standing = 11d vs control t -1.08 (trimmed) own-mean -7.4 (floor +3) HOLD]]. Promotion needs eight shared
 days, trimmed t of 1.8, own mean above +3%/day, both halves positive.
 
 ## Live

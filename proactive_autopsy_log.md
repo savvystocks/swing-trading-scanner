@@ -5383,3 +5383,12 @@
 
 **Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
 
+## Autopsy - QQQ (78faa5724c67)
+- entered 2026-09-18T16:17:06.803Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +507.7% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 900.0 fed the squeeze.
+

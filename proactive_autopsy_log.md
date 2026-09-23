@@ -5392,3 +5392,21 @@
 
 **Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 900.0 fed the squeeze.
 
+## Autopsy - IWM (531d5761a7c1)
+- entered 2026-09-15T14:56:57.382Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.5% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 284.0 worked against it.
+
+## Autopsy - IBIT (53f31c021d84)
+- entered 2026-09-16T13:36:17.464Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +139.2% | WINNER |
+
+**Determining factor:** Insider cluster buy ($1,250,000/10d) predicted the bullish expansion; positive_gamma amplified the breakout.
+

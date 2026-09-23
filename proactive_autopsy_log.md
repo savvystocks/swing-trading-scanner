@@ -5419,3 +5419,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 420.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - CRWV (ec38283dbdbf)
+- entered 2026-09-16T17:16:13.131Z | trigger regime_BULLISH_loose | exit CLOSE_TRAIL | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +19.2% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 84.0 fed the squeeze.
+

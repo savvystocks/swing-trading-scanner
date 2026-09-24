@@ -5437,3 +5437,30 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 157.5 worked against it.
 
+## Autopsy - SLV (c1bc1906747a)
+- entered 2026-09-18T13:55:08.158Z | trigger regime_BULLISH_loose | exit CLOSE_STOP_LOSS | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -58.4% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-58%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 60.0 worked against it.
+
+## Autopsy - AMZN (a808fe435d0f)
+- entered 2026-09-18T16:45:20.805Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | +31.4% | WINNER |
+
+**Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 260.0 -> negative-gamma slide, no positive catalyst.
+
+## Autopsy - HOOD (61b3537599d8)
+- entered 2026-09-21T15:27:30.043Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -50.2% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 119.0 worked against it.
+

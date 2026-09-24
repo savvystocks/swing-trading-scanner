@@ -1809,17 +1809,22 @@ _bars38 = {"SPY": [{"t": "2026-09-21T04:00:00Z", "o": 1, "h": 2, "l": 0.5, "c": 
 _env38 = dict(os.environ)
 os.environ["ALPACA_PAPER_API_KEY"] = os.environ.get("ALPACA_PAPER_API_KEY") or "k"
 os.environ["ALPACA_PAPER_SECRET_KEY"] = os.environ.get("ALPACA_PAPER_SECRET_KEY") or "s"
-_m38.run(db=_db38, fetcher=lambda *a, **k: _bars38)
-_m38.run(db=_db38, fetcher=lambda *a, **k: _bars38)                      # same day twice -> still one row
+_idx38 = {"^XSP": [("2026-09-21", 776.47)], "^GSPC": [("2026-09-21", 7764.7)]}
+_m38.run(db=_db38, fetcher=lambda *a, **k: _bars38, index_fetcher=lambda *a, **k: _idx38)
+_m38.run(db=_db38, fetcher=lambda *a, **k: _bars38, index_fetcher=lambda *a, **k: _idx38)   # same day twice -> still one row
 _n38 = _db38.execute("select count(*) from bars").fetchone()[0]
+_i38 = _db38.execute("select count(*) from index_bars").fetchone()[0]
 _raised38 = False
 try:
-    _m38.run(db=_db38, fetcher=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("provider down")))
+    _m38.run(db=_db38, fetcher=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("provider down")),
+             index_fetcher=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("yahoo down")))
 except Exception:
     _raised38 = True
 os.environ.clear(); os.environ.update(_env38)
 check(6, "the daily bar archive stores bars, is idempotent per day, and fails open on a provider error",
       _n38 == 1 and not _raised38)
+check(6, "the daily bar archive stores the ^XSP and ^GSPC closes beside the ETF bars, idempotent and fail-open too (2026-09-24)",
+      _i38 == 2 and not _raised38)
 
 # 6.33 CREDIT SPREAD ONLY (owner 2026-09-21), and a probe switched off keeps closing what it holds.
 _sp33 = __import__("json").load(open("fade_book_spec.json", encoding="utf-8"))
@@ -1841,6 +1846,82 @@ check(6, "share probes: switching them off stops only the buys - the exits still
 _sch33 = open("scripts/schema_harness.py", encoding="utf-8").read()
 check(6, "the Sunday schema harness skips Unusual Whales when the scanner is off, so it cannot page drift on a dead token",
       '"SKIPPED"' in _sch33 and _sch33.index('"SKIPPED"') < _sch33.index("UnusualWhalesClient()"))
+# 6.39 THE EVENING DIGEST READS THE KEYS THE RECORDS CARRY (BREAKDOWNS 2026-09-24): leg_exits rows carry
+# closed_at and settle dicts carry "at"; the digest read exit_ts_utc / ts and never reported a sale or a settle.
+_sp39 = _ilu36.spec_from_file_location("daily_digest", "scripts/daily_digest.py")
+_m39 = _ilu36.module_from_spec(_sp39); _sp39.loader.exec_module(_m39)
+_recs39 = [{"ticker": "HOOD", "probe_strategy": "FADE", "entry_ts_utc": "2026-09-20T15:00:00Z",
+            "leg_exits": {"O1": {"closed_at": "2026-09-24T19:30:26.841Z", "return_pct": -50.2, "reason": "stop"}}},
+           {"ticker": "XSP", "probe_strategy": "CREDIT_SPREAD_W", "entry_ts_utc": "2026-09-14T15:01:00Z",
+            "settle": {"xsp": 776.47, "pnl_usd": 105.0, "at": "2026-09-24T13:34:30+00:00"}}]
+_txt39 = "\n".join(_m39.trade_lines(_recs39, "2026-09-24"))
+_off39 = "\n".join(_m39.trade_lines(_recs39, "2026-09-23"))
+check(6, "the evening digest lists an exit keyed closed_at and a settle keyed at on their day",
+      "Sold today: 1 position" in _txt39 and "FADE -50%" in _txt39 and "CREDIT_SPREAD_W $+105" in _txt39,
+      _txt39.replace("\n", " | "))
+check(6, "the evening digest reports nothing sold or settled on a day when nothing was",
+      "Sold today: nothing" in _off39 and "Settlements" not in _off39)
+
+# 6.40 THE VPS WATCHDOG READS THE ENGINE'S OWN COMPLETION STAMP (BREAKDOWNS 2026-09-24 second entry): the harvest
+# inbox stopped receiving commits when Unusual Whales ended, and the watchdog paged 28 times in two days.
+_wd40 = [l for l in open("scripts/watchdog_vps.sh", encoding="utf-8").read().splitlines()
+         if l.strip() and not l.strip().startswith("#")]
+check(6, "the VPS watchdog measures liveness from origin/main:data/last_cycle_ok, never from the harvest inbox",
+      not any("harvest_inbox" in l for l in _wd40)
+      and any(l.startswith("STAMP=") and "origin/main:data/last_cycle_ok" in l for l in _wd40)
+      and any("last_cycle_ok_age_min" in l for l in _wd40))
+
+# 6.41 THE PROOF EQUITY SAMPLE IS THE SESSION'S LAST MARK (BREAKDOWNS 2026-09-24 third entry): one row per UTC
+# day, rewritten on every later cycle; a sample that throws leaves the file byte-identical.
+import proof_book as _pb41
+_pe41 = os.path.join(_tf31.gettempdir(), "mot_proof_equity_41.jsonl")
+open(_pe41, "w", encoding="utf-8").write('{"day": "2026-09-23", "ts_utc": "2026-09-23T19:51:00+00:00", "equity": 5024.89}\n')
+_eq41 = _pb41.equity
+_now41 = datetime(2026, 9, 24, 13, 31, tzinfo=timezone.utc)
+try:
+    _pb41.equity = lambda c: 5000.89
+    _a41 = _pb41.sample_equity(("k", "s"), _now41, path=_pe41)
+    _pb41.equity = lambda c: 5011.40
+    _b41 = _pb41.sample_equity(("k", "s"), _now41.replace(hour=19, minute=51), path=_pe41)
+    _rows41 = [__import__("json").loads(l) for l in open(_pe41, encoding="utf-8") if l.strip()]
+    _before41 = open(_pe41, "rb").read()
+    _pb41.equity = lambda c: (_ for _ in ()).throw(RuntimeError("broker down"))
+    _c41 = _pb41.sample_equity(("k", "s"), _now41.replace(hour=19, minute=56), path=_pe41)
+    _after41 = open(_pe41, "rb").read()
+finally:
+    _pb41.equity = _eq41
+    os.remove(_pe41)
+check(6, "proof equity: two samples on one day leave one row holding the later mark, and yesterday's row survives",
+      _a41 and _b41 and [r["day"] for r in _rows41] == ["2026-09-23", "2026-09-24"]
+      and _rows41[-1]["equity"] == 5011.4 and _rows41[-1]["ts_utc"].startswith("2026-09-24T19:51"), str(_rows41))
+check(6, "proof equity: a sample that throws returns False and leaves the file byte-identical",
+      _c41 is False and _before41 == _after41)
+
+# 6.42 A SESSION YAHOO SKIPPED IN ^XSP IS FILLED FROM ^GSPC/10, AND AN EXPIRY WITH NO CLOSE IS NOT SETTLED
+# (2026-09-24): ^XSP had no 2026-09-22 row, and the settle used to take the previous session's close silently.
+_x42 = _pd30.Series([765.05, 776.47, 770.60], index=_pd30.to_datetime(["2026-09-18", "2026-09-21", "2026-09-23"]))
+_g42 = _pd30.Series([7650.5, 7764.7, 7734.0, 7706.03],
+                    index=_pd30.to_datetime(["2026-09-18", "2026-09-21", "2026-09-22", "2026-09-23"]))
+_f42 = _f30._fill_xsp_gaps(_x42, _g42)
+check(6, "credit spread: the missing ^XSP session is filled with ^GSPC/10 and the present sessions are untouched",
+      len(_f42) == 4 and approx(float(_f42[_pd30.Timestamp("2026-09-22")]), 773.4)
+      and float(_f42[_pd30.Timestamp("2026-09-21")]) == 776.47 and list(_f42.index) == sorted(_f42.index)
+      and _f30._fill_xsp_gaps(_x42, _x42 * 10).equals(_x42))
+_r42 = _REC30()
+_x42b, _c42b = _f30._xsp_close_series, _f30._closing_fills
+_f30._xsp_close_series = lambda: _pd30.Series([770.0], index=_pd30.to_datetime(["2026-08-27"]))
+_f30._closing_fills = lambda r, c: {}
+try:
+    _s42 = _f30._settle_one(_r42, _Lab30, datetime(2026, 8, 31, 13, 35, tzinfo=timezone.utc), None)
+finally:
+    _f30._xsp_close_series, _f30._closing_fills = _x42b, _c42b
+check(6, "credit spread: a series with no close on the expiry date defers the settle instead of pricing the previous session",
+      _s42 is False and _r42["status"] == "OPEN" and "settle" not in _r42)
+
+# 6.43 NO ENGINE WORKFLOW INJECTS THE CANCELLED VENDOR'S TOKEN (2026-09-24)
+check(6, "the engine and health-check workflows no longer inject UNUSUAL_WHALES_TOKEN",
+      "secrets.UNUSUAL_WHALES_TOKEN" not in open(os.path.join(".github", "workflows", "v10_lab.yml"), encoding="utf-8").read()
+      and "secrets.UNUSUAL_WHALES_TOKEN" not in open(os.path.join(".github", "workflows", "health-check.yml"), encoding="utf-8").read())
 total = len(RESULTS)
 passed = sum(1 for r in RESULTS if r[2])
 by_dim = {}

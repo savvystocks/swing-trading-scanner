@@ -1115,3 +1115,54 @@ LESSON: when a switch is named after a dependency, find every call site of that 
 function you are editing. The proof is a grep for the vendor, not a reading of the switch.
 REGRESSION CHECK: MOT 6.34 (the harvest feed must be gated on the same switch as the scanner).
 
+2026-09-24 - THE EVENING DIGEST NEVER REPORTED A SALE OR A SETTLE (found by the performance review; fatal to its purpose).
+WHAT BROKE: `scripts/daily_digest.py` (22:20 UTC, the owner's one plain-English page of the day) has said "Sold today:
+nothing" and shown no settlement on every evening since it was written on 2026-08-25 - through 64 directional exits on
+2026-09-18..24 and the credit spread's +$105 settle booked on 2026-09-21.
+ROOT CAUSE: it read `le.get("exit_ts_utc")` from `leg_exits` rows that carry `closed_at`, and `s.get("ts")` /
+`settle_ts_utc` from settle dicts that carry `at`. Neither key has ever existed on a record, so both branches were dead
+from the first run, and the fallback sentences ("nothing ... that's normal, not broken") read as healthy.
+FIX (this commit): `scripts/daily_digest.py:trade_lines` reads `closed_at` and `at` (the old names stay as fallbacks),
+reads `proof_logs.json` beside the discovery book so the proof stint's settles appear, and `main(today=None)` can be
+replayed for a past day. Replayed for 2026-09-21..24 it lists the exits and the 2026-09-21 settle.
+LESSON: a report that prints a reassuring sentence when it finds nothing must be proven against a day when something
+happened; a digest that has never once said "sold" is broken, not quiet. Read a record's keys from a record, never from
+memory.
+REGRESSION CHECK: MOT 6.39 (a fixture record with a `closed_at` exit and an `at` settle must appear in the digest text
+for their day and not for another).
+
+2026-09-24 (second entry) - THE INBOX WATCHDOG PAGED 28 TIMES IN TWO DAYS ON A DEAD PREMISE.
+WHAT BROKE: `scripts/watchdog_vps.sh` measured engine liveness as the age of the newest commit touching
+`data/harvest_inbox/` on origin/main. Unusual Whales ended on 2026-09-22 and the harvest feed went quiet with it
+(2026-09-22 second entry), so the inbox stopped receiving commits while the engine completed every cycle; the watchdog
+paged "stalled" every quarter-hour of two sessions and wrote 28 page bundles.
+ROOT CAUSE: a liveness signal borrowed from a subsystem that could be switched off independently of the thing it
+measured. The 2026-09-11 trap ("it watches the DATA, not exit codes") was right about the value of an independent
+signal and silent about the day the data would legitimately stop.
+FIX (this commit): the watchdog reads the stamp inside `origin/main:data/last_cycle_ok` (written only by a cycle that
+finished, committed by every persist) and pages when it is older than 30 minutes during the session; the alarm
+semantics, the page bundle and the status stamp are unchanged (`last_cycle_ok_age_min` replaces
+`last_inbox_commit_age_min`). An empty stamp counts as no evidence, not as midnight.
+LESSON: when a dependency is switched off, grep every watchdog and sentinel for the artefacts that dependency produced;
+a dead-man switch keyed to a feed dies with the feed, loudly.
+REGRESSION CHECK: MOT 6.40 (no code line of the watchdog references `data/harvest_inbox`; the liveness line reads
+`data/last_cycle_ok` on origin/main).
+
+2026-09-24 (third entry) - THE PROOF-EQUITY SENTINEL ROW WAS SET TWICE WITHOUT READING THE WRITER.
+WHAT BROKE: the freshness row "proof book equity samples" expected 19:30 UTC when it was created (2026-09-20), then
+14:30 after the 2026-09-22 fix. `proof_book.py:sample_equity` wrote once per UTC day on the first open-market cycle
+(13:31-13:36), and the VPS copy's mtime - what a `schedule` row actually compares - is the poller's quarter-hour reset
+that lands the change, 13:45. Both settings paged [TRADE] every weekday (freshness.log: "last update Tue 22 13:45,
+expected a run Tue 22 14:30"). Sampling at the open also meant the stint's drawdown series lagged a session.
+ROOT CAUSE: the 2026-09-22 fix was made without checking when the sampler writes, and neither setting accounted for
+the pull that gives the file its timestamp on the box that runs the sentinel.
+FIX (this commit): `proof_book.py:sample_equity` keeps one row per UTC day and rewrites it on every open-market cycle
+(atomic replace, never raises), so the stored value is the session's last mark (~19:52 UTC in summer time), and the
+row expects (19, 30, WEEKDAYS): the last change lands with the 20:00 reset in summer and the 21:00 reset in winter, so
+19:30 holds in both clock regimes. The 20:30 first proposed for this fix would have paged every summer day for exactly
+the reason above.
+LESSON: a schedule row's time is read from the writer's timestamp, never assumed - and on the VPS the timestamp is the
+pull that lands the file, quantised to the poller's quarter-hour, in both clock regimes.
+REGRESSION CHECK: MOT 6.41 (two samples on one day leave one row holding the later mark; a sample that throws leaves
+the file byte-identical) and the row itself, which pages again if the writer moves.
+

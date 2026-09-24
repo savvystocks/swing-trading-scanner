@@ -17,7 +17,9 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
   idempotency check (`fivek_probes.py:_held`) before entering; limits from `fivek_probes.py:_quote`;
   orders via `fivek_probes.py:_order`; OCCs from `fivek_probes.py:_occ`.
 - `fivek_probes.py:_settle_one` - after Friday expiry, settles each open record against the ^XSP
-  close (`fivek_probes.py:_xsp_close_series`, yfinance) and books `settle.pnl_usd`.
+  close (`fivek_probes.py:_xsp_close_series`, yfinance; a session Yahoo skipped in ^XSP is filled from
+  ^GSPC/10 by `fivek_probes.py:_fill_xsp_gaps`, logged) and books `settle.pnl_usd`; with no close dated the
+  expiry itself the settle is deferred, never priced on the previous session.
 - Config: `fivek_probes.py:_cfg` reads `probe.fivek` from `fade_book_spec.json`.
 - Records: `book: PROBE`, `probe_strategy: CREDIT_SPREAD_W`, NO legs dict (the options exit engine
   ignores them), `occ` + `occ_more` so the orphan reconciler knows every leg.
@@ -58,6 +60,8 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
 
 ## Checks
 - Drill scenario 5 (bear-only PUT_DEBIT_W, wings first); the court's weekly cadence branch.
+- MOT 6.42: a missing ^XSP session is filled from ^GSPC/10 with present sessions untouched; an expiry with no
+  close is deferred, not settled on the previous session.
 
 ## Traps
 - 2026-09-22: `scripts/xsp_quote_log.py` booked $58 of friction from a long leg quoted 0.00/1.13 - a
@@ -68,8 +72,13 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
   regime allows the entry (fail-open, a missed income week beats a blocked settle path).
 - 2026-08-11 FRIENDLY-FIRE ADOPTION class: bare-occ records must stay known to
   `sandbox_proactive_lab.py:reconcile_orphans` (they are: occ + occ_more).
-- Settlement depends on yfinance returning ^XSP; a missing close leaves the record open until the
-  next cycle that can fetch it. Check the Monday log if a week's settle line is missing.
+- Settlement depends on Yahoo returning a close for the expiry date: ^XSP first, ^GSPC/10 for a session ^XSP
+  skipped, and with neither the record stays OPEN (a `settle deferred` line each cycle; the sentinel's
+  `expired_open` row pages) until the close arrives. Check the Monday log if a week's settle line is missing.
+- 2026-09-24: Yahoo published no 2026-09-22 row for ^XSP - and none for ^GSPC or ^SPX either (only SPY has the
+  day), so the fallback covers a hole in one series, not a hole in Yahoo. Before this fix `_settle_one` took the
+  last close at or before expiry, so a missing expiry close would have settled the week on Thursday's number,
+  silently (MOT 6.42).
 - Never propose a sell-to-close for these; they are cash-settled by design.
 - 2026-09-20 THE BOOK BELIEVED ITSELF class (three defects, one commit): the week's entry decision is
   taken ONCE, on the exchange week's first session (`fivek_probes.py:_first_session`, holiday-aware,

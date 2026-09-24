@@ -18,7 +18,7 @@ jobs:
         run: pip install -r requirements.txt
       - name: Provider schema harness
         env:
-          UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+          # UNUSUAL_WHALES_TOKEN removed 2026-09-24: the schema harness skips the vendor while uw_scanner is off (MOT 6.33)
           ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
           ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
           ALPACA_PAPER_API_KEY: ${{ secrets.ALPACA_PAPER_API_KEY }}

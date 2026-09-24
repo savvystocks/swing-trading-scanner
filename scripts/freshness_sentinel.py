@@ -65,9 +65,12 @@ CHECKS = [
     # -- trade path: the engine and its lifelines
     ("engine last_cycle_ok", "schedule", "data/last_cycle_ok", (20, 30, WEEKDAYS), "TRADE"),
     ("engine records log", "schedule", "proactive_sandbox_logs.json", (19, 30, WEEKDAYS), "TRADE"),
-    # 14:30, not 19:30 (BREAKDOWNS 2026-09-22): proof_book.sample_equity writes the first cycle of the UTC day,
-    # about 13:35, so a 19:30 expectation paged [TRADE] every weekday morning by construction.
-    ("proof book equity samples", "schedule", "proof_logs_equity.jsonl", (14, 30, WEEKDAYS), "TRADE"),
+    # 19:30 (BREAKDOWNS 2026-09-24, third setting): proof_book.sample_equity rewrites the day's row on every
+    # open-market cycle, the last at ~19:52 UTC in summer time (~20:52 in winter), and this file's mtime on the
+    # VPS is the poller's quarter-hour reset that lands it (20:00 / 21:00). 14:30 paged every weekday because
+    # the one write was at 13:3x and landed at 13:45; 20:30 would page every summer day for the same reason.
+    # A schedule row's time is read from the writer's timestamp AND the pull that lands it, never assumed.
+    ("proof book equity samples", "schedule", "proof_logs_equity.jsonl", (19, 30, WEEKDAYS), "TRADE"),
     ("harvest poller log", "schedule", "data/poller.log", (21, 0, WEEKDAYS), "TRADE"),
     ("engine watch log", "schedule", H + "/engine_watch.log", (19, 30, WEEKDAYS), "TRADE"),
     ("telegram commands state", "mtime", H + "/telegram_commands_state.json", 1.0, "MONITOR"),

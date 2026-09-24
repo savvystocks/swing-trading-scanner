@@ -496,6 +496,15 @@ proposal passes a simplicity test: does a number already in the reports justify 
   and the sentinel's "daily bars archive" row stays fresh. Owner reason (2026-09-22): after the Unusual Whales exit
   the estate archived nothing at all, and the two strategies the research has cleared - the RSI(2) ETF dip-buy and
   the 200-day switch - both run on daily bars.
+- **SHIPPED 2026-09-24 - tidy-up after the vendor exit (six fixes, one batch).** The evening digest reads the keys
+  the records carry (`closed_at`, `at`) and covers both books; the VPS watchdog reads the engine's completion stamp
+  instead of the harvest inbox; the proof equity sample is the session's last mark and its sentinel row expects
+  19:30; a session Yahoo skips in ^XSP is filled from ^GSPC/10 and an expiry with no close is deferred, never
+  mis-priced; the daily bar archive stores the ^XSP and ^GSPC closes; the engine and health-check workflows inject
+  no Unusual Whales token. Accept: MOT 6.38-6.43 green; the 2026-09-25 digest names the day's exits; no watchdog
+  page on a completed session; the equity row's `ts_utc` is after 19:30. Deferred with reasons: the cs_legs off-box
+  refresh is a VPS-side edit to `~/backup_snapshot.sh` (block proposed in the batch notes); the court docket (row
+  below) and the harvest poller's idle cohort are separate decisions.
 - **QUEUED - the court's docket is empty of living challengers.** All eleven challengers it judges are directional
   and can never receive another day of evidence; the credit spread is judged by the proof stint, not the court.
   Accept: either the docket is re-cut to challengers that can accrue evidence, or the three court crons stand down

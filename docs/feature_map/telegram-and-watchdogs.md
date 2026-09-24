@@ -15,7 +15,11 @@ when the engine, the snapshot landing, or the data freshness goes quiet.
 - Engine watchdog: `scripts/engine_watch.sh` - reads `origin/main:data/last_cycle_ok`; a stale
   stamp during session hours pages "engine dead"; a crash loop rolls the workflow back to the
   last-good SHA recorded in that file.
-- Inbox / heartbeat watchdog: `scripts/watchdog_vps.sh`; snapshot landing: `scripts/landing_watch.sh`.
+- Second dead-man, independent of the first: `scripts/watchdog_vps.sh` reads the stamp in
+  `origin/main:data/last_cycle_ok` and pages when it is older than 30 minutes during the session (until
+  2026-09-24 it read the harvest inbox's newest commit); snapshot landing: `scripts/landing_watch.sh`.
+- Evening digest: `scripts/daily_digest.py:trade_lines` (22:20 UTC) reads exits by `closed_at` and settles
+  by `at` from both books; `scripts/daily_digest.py:main` takes a day for a replay.
 - Freshness: `scripts/freshness_sentinel.py` (08:00 UTC): one row per evidence store and job with
   lag limits (session holes, day density, jsonl density, schedule rows, student model age).
 - Failover exits: `scripts/engine_failover_exits.py` (the VPS can run exits if GHA is down).
@@ -37,6 +41,8 @@ when the engine, the snapshot landing, or the data freshness goes quiet.
 
 ## Checks
 - MOT dimension 5 observability (6 checks); the digest renders the scoreboard and reconciliation lines.
+- MOT 6.39 (the evening digest lists a `closed_at` exit and an `at` settle on their day, nothing on another) and
+  6.40 (the VPS watchdog reads the cycle stamp, never the harvest inbox).
 
 ## Traps
 - 2026-09-22: the kill switch publishes through ~/harvest-snapshots, and for twelve days every push to that
@@ -49,8 +55,14 @@ when the engine, the snapshot landing, or the data freshness goes quiet.
 - 2026-07-08 SILENT-DEATH ALARM OFF; 2026-08-07 8 FALSE "ENGINE DEAD" PAGES; 2026-08-18/20 auto-
   rollback with collateral and a false rollback (twin schedulers).
 - 2026-09-07 THE WATCHDOG'S MESSENGER FAILED SILENTLY (sentinel ran, telegram did not send).
-- 2026-09-11 the inbox watchdog was the one that caught the 55-minute blind window: it watches the
-  DATA, not exit codes. Keep it that way.
+- 2026-09-11 the inbox watchdog was the one that caught the 55-minute blind window: it watched the
+  DATA, not exit codes - and on 2026-09-24 that data had stopped: the harvest inbox went quiet when Unusual
+  Whales ended and the watchdog paged 28 times in two days. It now reads the engine's completion stamp; when a
+  feed is switched off, grep every watchdog and sentinel for the artefacts the feed produced (MOT 6.40).
+- 2026-09-24 THE EVENING DIGEST NEVER REPORTED A SALE OR A SETTLE: `scripts/daily_digest.py` read
+  `exit_ts_utc` and `ts` from records that carry `closed_at` and `at`, so every evening since 2026-08-25 said
+  "Sold today: nothing". A report that prints a reassuring sentence must be proven on a day when something
+  happened (MOT 6.39).
 - Never put n8n or LLM judgment in the trade path; the morning brief is the one adopted agent pattern.
 - 2026-09-14 (third entry) THE EIGHT-MINUTE WALL: a GitHub run cancelled at its timeout is not a failure;
   the cycle sentinel is stamped only on success, but one successful run inside the heartbeat window keeps

@@ -91,21 +91,26 @@ def save(data):
 
 
 def sample_equity(creds_, now, path=LOG_PATH.replace(".json", "_equity.jsonl")):
-    """A DAILY equity sample, appended once per UTC date. The stint grammar (NORTH_STAR v1.7) measures
-    its drawdown bound from daily equity, never from Friday-only marks, and the broker's equity is the
-    only number that cannot be flattered by our own bookkeeping."""
+    """ONE equity row per UTC date, rewritten on every open-market cycle so it holds the session's LAST
+    mark (~19:52 UTC), not the open (2026-09-24: sampled at the open the drawdown series lagged a day).
+    The stint grammar (NORTH_STAR v1.7) measures its drawdown bound from daily equity, never from
+    Friday-only marks, and the broker's equity is the only number that cannot be flattered by our own
+    bookkeeping. Atomic replace: a sample that fails leaves the file exactly as it was."""
     day = now.date().isoformat()
     try:
-        if os.path.exists(path):
-            with open(path, encoding="utf-8") as fh:
-                for line in fh:
-                    if ('"day": "' + day + '"') in line:
-                        return False
         eq = equity(creds_)
         if eq is None:
             return False
-        with open(path, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps({"day": day, "ts_utc": now.isoformat(), "equity": round(eq, 2)}) + "\n")
+        rows = []
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as fh:
+                rows = [line.rstrip("\n") for line in fh if line.strip()]
+        keep = [line for line in rows if ('"day": "' + day + '"') not in line]
+        keep.append(json.dumps({"day": day, "ts_utc": now.isoformat(), "equity": round(eq, 2)}))
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(keep) + "\n")
+        os.replace(tmp, path)
         return True
     except Exception:
         return False

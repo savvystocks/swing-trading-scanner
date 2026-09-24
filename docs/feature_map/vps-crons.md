@@ -12,7 +12,7 @@ monthly corpus, the nightly corpus chain and both Friday tuner jobs. The final d
 | slot | job | log | healthy |
 |---|---|---|---|
 | */15 13-21 Mon-Fri | `scripts/run_poller_vps.sh` (harvest poller) | poller log | `data/harvest.db` max(day) = today |
-| */15 13-22 Mon-Fri | `scripts/watchdog_vps.sh` (inbox / heartbeat dead-man) | watchdog log | no page |
+| */15 13-22 Mon-Fri | `scripts/watchdog_vps.sh` (engine dead-man on the `data/last_cycle_ok` stamp, 30 min) | watchdog log | no page |
 | */15 14-21 Mon-Fri | `scripts/engine_watch.sh` (engine heartbeat, `data/last_cycle_ok`, auto-rollback to the last-good SHA) | engine_watch.log | `ok` lines, no rollback |
 | */15 always | `scripts/telegram_commands.py` (owner commands) | telegram log | commands acknowledged |
 | 15:05 and 19:50 Mon-Fri | `scripts/xsp_quote_log.py` (passive: XSP vs SPY quote width on the legs the credit spread would trade) | xsp_quotes.log | one line per run; `reports/research/xsp_quotes.jsonl` grows by two rows a day |
@@ -20,7 +20,7 @@ monthly corpus, the nightly corpus chain and both Friday tuner jobs. The final d
 | 22:00 Mon-Fri | `scripts/sunday_boundary.py` report-only, sequential apply (trajectory) | trajectory log | nightly line |
 | 22:05 Tue-Sat | `scripts/integrity_gate.py` | - | gate green |
 | 22:15 Mon-Fri | `scripts/archiver_watch.sh` | archiver_watch.log | - |
-| 22:20 Mon-Fri | `scripts/daily_digest.py` | digest.log | digest telegram sent |
+| 22:20 Mon-Fri | `scripts/daily_digest.py` (exits by `closed_at`, settles by `at`, both books) | digest.log | digest telegram sent |
 | 22:45 Mon-Sat | `scripts/landing_watch.sh`, `scripts/evening_persist.sh` | landing_watch.log, evening_persist.log | - |
 | 08:00 daily | `scripts/freshness_sentinel.py` | freshness log | all rows green |
 | 08:10 Mon-Fri | `scripts/morning_analyst.py` | analyst.log | morning brief telegram |

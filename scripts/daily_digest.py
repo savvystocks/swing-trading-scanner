@@ -29,8 +29,46 @@ def tg(msg):
     print(msg)
 
 
-def main():
-    today = date.today().isoformat()
+def trade_lines(recs, today):
+    L = []
+    buys = Counter(); sells = []; setl = []; tidy = 0
+    for r in recs:
+        who = r.get("probe_strategy") or r.get("book") or ""
+        if r.get("book") == "PROOF":
+            who = who + " (proof)"
+        if r.get("adopted") and (r.get("entry_ts_utc") or "")[:10] == today:
+            tidy += 1
+            continue
+        if (r.get("entry_ts_utc") or "")[:10] == today and who:
+            buys[who] += 1
+        for le in (r.get("leg_exits") or {}).values():
+            # leg_exits rows carry closed_at and settle dicts carry "at" (BREAKDOWNS 2026-09-24: the digest
+            # read exit_ts_utc / ts, keys no record has ever carried, and never reported a sale or a settle)
+            if (le.get("closed_at") or le.get("exit_ts_utc") or "")[:10] == today and le.get("return_pct") is not None:
+                sells.append((who or r.get("ticker", "?"), le["return_pct"]))
+        s = r.get("settle") or {}
+        if (s.get("at") or s.get("ts") or s.get("settle_ts_utc") or "")[:10] == today and s.get("pnl_usd") is not None:
+            setl.append((who or r.get("ticker", "?"), s["pnl_usd"]))
+    if buys:
+        L.append("Bought today: " + ", ".join(f"{k} x{v}" for k, v in buys.most_common()))
+    else:
+        L.append("Bought today: nothing (no setups passed the filters - that's normal, not broken).")
+    if sells:
+        pl = sum(x / 100.0 * 1000 for _, x in sells)
+        L.append(f"Sold today: {len(sells)} position(s), roughly ${pl:+,.0f} realized "
+                 f"({', '.join(f'{k} {x:+.0f}%' for k, x in sells[:5])})")
+    else:
+        L.append("Sold today: nothing (your no-same-day-sell rule defers new buys to tomorrow+).")
+    if setl:
+        L.append(f"Settlements: {', '.join(f'{k} ${p:+,.0f}' for k, p in setl)}")
+    if tidy:
+        L.append(f"Tidy-ups: {tidy} record(s) re-linked with the broker (bookkeeping only - "
+                 "no money involved).")
+    return L
+
+
+def main(today=None):
+    today = today or date.today().isoformat()
     L = [f"EVENING SUMMARY - {today}", ""]
 
     # regime + was fade allowed out
@@ -48,38 +86,12 @@ def main():
         L.append("Market regime: unavailable this evening.")
     L.append("")
 
-    # trades today
+    # trades today (both books: the proof stint's settles are the felt events now)
     try:
         recs = json.load(open("proactive_sandbox_logs.json", encoding="utf-8"))
-        buys = Counter(); sells = []; setl = []; tidy = 0
-        for r in recs:
-            who = r.get("probe_strategy") or r.get("book") or ""
-            if r.get("adopted") and (r.get("entry_ts_utc") or "")[:10] == today:
-                tidy += 1
-                continue
-            if (r.get("entry_ts_utc") or "")[:10] == today and who:
-                buys[who] += 1
-            for le in (r.get("leg_exits") or {}).values():
-                if (le.get("exit_ts_utc") or "")[:10] == today and le.get("return_pct") is not None:
-                    sells.append((who or r.get("ticker", "?"), le["return_pct"]))
-            s = r.get("settle") or {}
-            if (s.get("ts") or s.get("settle_ts_utc") or "")[:10] == today and s.get("pnl_usd") is not None:
-                setl.append((who or r.get("ticker", "?"), s["pnl_usd"]))
-        if buys:
-            L.append("Bought today: " + ", ".join(f"{k} x{v}" for k, v in buys.most_common()))
-        else:
-            L.append("Bought today: nothing (no setups passed the filters - that's normal, not broken).")
-        if sells:
-            pl = sum(x / 100.0 * 1000 for _, x in sells)
-            L.append(f"Sold today: {len(sells)} position(s), roughly ${pl:+,.0f} realized "
-                     f"({', '.join(f'{k} {x:+.0f}%' for k, x in sells[:5])})")
-        else:
-            L.append("Sold today: nothing (your no-same-day-sell rule defers new buys to tomorrow+).")
-        if setl:
-            L.append(f"Settlements: {', '.join(f'{k} ${p:+,.0f}' for k, p in setl)}")
-        if tidy:
-            L.append(f"Tidy-ups: {tidy} record(s) re-linked with the broker (bookkeeping only - "
-                     "no money involved).")
+        if os.path.exists("proof_logs.json"):
+            recs = recs + json.load(open("proof_logs.json", encoding="utf-8"))
+        L += trade_lines(recs, today)
     except Exception:
         L.append("Trade summary: log unavailable this evening.")
     L.append("")

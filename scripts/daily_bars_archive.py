@@ -24,6 +24,7 @@ DB = os.path.join(REPO, "data", "daily_bars.db")
 SYMBOLS = ("SPY QQQ IWM DIA MDY EFA EEM TLT IEF LQD HYG GLD SLV XLE XLF XLK XLV XLI XLP XLU XLB XLRE XBI SMH "
            "SSO QLD UPRO TQQQ VTI VOO").split()
 LOOKBACK_DAYS = int(os.environ.get("BARS_LOOKBACK_DAYS", "10"))   # a small rolling window closes weekend/holiday gaps
+INDEX_SYMBOLS = ("^XSP", "^GSPC")   # what the credit spread settles on, and the S&P itself (XSP = SPX/10 by definition)
 
 
 def open_db(path=DB):
@@ -31,6 +32,7 @@ def open_db(path=DB):
     db.execute("create table if not exists bars(symbol text, day text, open real, high real, low real, close real, "
                "volume real, trade_count real, vwap real, primary key(symbol, day))")
     db.execute("create index if not exists i_bars_day on bars(day)")
+    db.execute("create table if not exists index_bars(symbol text, day text, close real, primary key(symbol, day))")
     db.commit()
     return db
 
@@ -53,34 +55,57 @@ def fetch(symbols, start, key, secret, timeout=20):
             return out
 
 
-def run(db=None, now=None, fetcher=fetch):
+def fetch_index(symbols, start):
+    """Yahoo daily closes for the cash indices - Alpaca carries no index data, and ^XSP is what the credit spread settles on."""
+    import yfinance as yf
+    out = {}
+    for sym in symbols:
+        s = yf.download(sym, start=start, progress=False, auto_adjust=True)["Close"].dropna()
+        s = s.iloc[:, 0] if hasattr(s, "columns") else s
+        out[sym] = [(str(d)[:10], float(v)) for d, v in s.items()]
+    return out
+
+
+def run(db=None, now=None, fetcher=fetch, index_fetcher=fetch_index):
     key = (os.environ.get("ALPACA_PAPER_API_KEY") or os.environ.get("ALPACA_API_KEY") or "").strip()
     secret = (os.environ.get("ALPACA_PAPER_SECRET_KEY") or os.environ.get("ALPACA_SECRET_KEY") or "").strip()
-    if not (key and secret):
-        print("daily bars: no Alpaca keys in env - nothing pulled", flush=True)
-        return 0
     now = now or datetime.now(timezone.utc)
     start = (now.date() - timedelta(days=LOOKBACK_DAYS)).isoformat()
     close_db = db is None
     db = db or open_db()
     n = 0
     try:
-        data = fetcher(SYMBOLS, start, key, secret)
-        for sym, rows in data.items():
-            for b in rows:
-                day = (b.get("t") or "")[:10]
-                if not day:
-                    continue
-                db.execute("insert or replace into bars values (?,?,?,?,?,?,?,?,?)",
-                           (sym, day, b.get("o"), b.get("h"), b.get("l"), b.get("c"),
-                            b.get("v"), b.get("n"), b.get("vw")))
-                n += 1
-        db.commit()
-        tot, syms, first, last = db.execute("select count(*), count(distinct symbol), min(day), max(day) from bars").fetchone()
-        print(f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} daily bars: {n} rows written for "
-              f"{len(data)} symbols; store now {tot:,} rows over {syms} symbols, {first} .. {last}", flush=True)
+        if not (key and secret):
+            print("daily bars: no Alpaca keys in env - nothing pulled", flush=True)
+        else:
+            data = fetcher(SYMBOLS, start, key, secret)
+            for sym, rows in data.items():
+                for b in rows:
+                    day = (b.get("t") or "")[:10]
+                    if not day:
+                        continue
+                    db.execute("insert or replace into bars values (?,?,?,?,?,?,?,?,?)",
+                               (sym, day, b.get("o"), b.get("h"), b.get("l"), b.get("c"),
+                                b.get("v"), b.get("n"), b.get("vw")))
+                    n += 1
+            db.commit()
+            tot, syms, first, last = db.execute("select count(*), count(distinct symbol), min(day), max(day) from bars").fetchone()
+            print(f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} daily bars: {n} rows written for "
+                  f"{len(data)} symbols; store now {tot:,} rows over {syms} symbols, {first} .. {last}", flush=True)
     except Exception as e:                               # an evidence job never pages and never raises
         print(f"daily bars failed open: {type(e).__name__}: {e}", flush=True)
+    try:                                                 # the index closes (2026-09-24): same fail-open, own block
+        idx = index_fetcher(INDEX_SYMBOLS, start)
+        m = 0
+        for sym, rows in idx.items():
+            for day, close in rows:
+                db.execute("insert or replace into index_bars values (?,?,?)", (sym, day, close))
+                m += 1
+        db.commit()
+        newest = db.execute("select max(day) from index_bars").fetchone()[0]
+        print(f"index closes: {m} rows written for {', '.join(idx)}; newest {newest}", flush=True)
+    except Exception as e:
+        print(f"index closes failed open: {type(e).__name__}: {e}", flush=True)
     finally:
         if close_db:
             db.close()

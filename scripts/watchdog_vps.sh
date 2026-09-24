@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # 30-MINUTE WATCHDOG (owner decision 28) - cross-watching, VPS side. During US market hours, if the
-# newest inbox commit on origin/main is older than 30 minutes the engine has stalled -> Telegram.
+# engine's own completion stamp on origin/main (data/last_cycle_ok, written only by a cycle that finished
+# and committed by every persist) is older than 30 minutes the engine has stalled -> Telegram. Until
+# 2026-09-24 it read the age of the newest harvest-inbox commit, a premise that died with Unusual Whales
+# (28 false pages in two days).
 # Every run stamps watchdog_status.json into the local harvest-snapshots checkout; the nightly
 # snapshot push carries it off-box, and the Sunday brain report renders the weekly self-test line
 # from it. Deploy: */15 13-22 * * 1-5 on the VPS crontab (the market gate below is DST-correct, so a
@@ -23,7 +26,9 @@ NOW=$(date -u +%s)
 PY="$REPO/.venv/bin/python"; [ -x "$PY" ] || PY=python3
 MARKET=$("$PY" -c "import sys; sys.path.insert(0,'$REPO'); from poller import _stale_watch_eligible; print(1 if _stale_watch_eligible() else 0)" 2>/dev/null || echo 0)
 case "$MARKET" in 0|1) ;; *) MARKET=0 ;; esac
-LAST=$(git log origin/main -1 --format=%ct -- data/harvest_inbox/ 2>/dev/null || echo 0)
+STAMP=$(git show origin/main:data/last_cycle_ok 2>/dev/null | head -1)
+LAST=0    # no stamp = no evidence of a finished cycle (an empty string would make `date` return midnight)
+[ -n "$STAMP" ] && LAST=$(date -u -d "$STAMP" +%s 2>/dev/null || echo 0)
 AGE=$(( (NOW - LAST) / 60 ))
 STATUS=ok
 if [ "$MARKET" = "1" ] && [ "$AGE" -gt 30 ]; then
@@ -31,11 +36,11 @@ if [ "$MARKET" = "1" ] && [ "$AGE" -gt 30 ]; then
   if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
     curl -fsS -m 10 "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
       -d chat_id="${TELEGRAM_CHAT_ID}" \
-      -d text="WATCHDOG: no inbox commit for ${AGE}m during market hours - the engine may be stalled (check cron-job.org + GHA v10-lab runs)" \
+      -d text="WATCHDOG: no completed engine cycle for ${AGE}m during market hours (data/last_cycle_ok on origin/main is stale) - the engine may be stalled (check cron-job.org + GHA v10-lab runs)" \
       >/dev/null 2>&1
   fi
   # evidence bundle for the page (2026-09-13): never blocks or fails the alarm
-  bash "$REPO/scripts/page_bundle.sh" "watchdog: no inbox commit for ${AGE}m" >/dev/null 2>&1 || true
+  bash "$REPO/scripts/page_bundle.sh" "watchdog: no completed cycle for ${AGE}m" >/dev/null 2>&1 || true
 fi
 DISK_PCT=$(df / --output=pcent 2>/dev/null | tail -1 | tr -dc '0-9')
 if [ -n "$DISK_PCT" ] && [ "$DISK_PCT" -gt 85 ]; then
@@ -48,5 +53,5 @@ if [ -n "$DISK_PCT" ] && [ "$DISK_PCT" -gt 85 ]; then
       >/dev/null 2>&1
   fi
 fi
-printf '{"ts_utc":"%s","market_open":%s,"last_inbox_commit_age_min":%s,"status":"%s"}\n' \
+printf '{"ts_utc":"%s","market_open":%s,"last_cycle_ok_age_min":%s,"status":"%s"}\n' \
   "$(date -u +%FT%TZ)" "$MARKET" "$AGE" "$STATUS" > "$SNAP/watchdog_status.json" 2>/dev/null || true

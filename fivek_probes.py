@@ -23,10 +23,29 @@ def _cfg():
     return ((fade_book.spec().get("probe") or {}).get("fivek") or {}) if fade_book.active() else {}
 
 
-def _xsp_close_series():
+def _yf_closes(sym):
     import yfinance as yf
-    s = yf.download("^XSP", period="120d", progress=False, auto_adjust=True)["Close"].dropna()   # 120d: a settle delayed past ten days must still find its expiry close (2026-09-14)
+    s = yf.download(sym, period="120d", progress=False, auto_adjust=True)["Close"].dropna()   # 120d: a settle delayed past ten days must still find its expiry close (2026-09-14)
     return s.iloc[:, 0] if hasattr(s, "columns") else s
+
+
+def _fill_xsp_gaps(xsp, spx):
+    """A session Yahoo skipped in ^XSP is taken from ^GSPC / 10 - the same number by definition (XSP is one
+    tenth of SPX; 2026-09-22 was missing). Sessions ^XSP has are never touched."""
+    missing = [d for d in spx.index if d not in xsp.index]
+    if not missing:
+        return xsp
+    filled = xsp.combine_first(spx.loc[missing] / 10.0).sort_index()
+    print(f"  fivek: ^XSP missing {', '.join(str(d)[:10] for d in missing)} - filled from ^GSPC/10")
+    return filled
+
+
+def _xsp_close_series():
+    s = _yf_closes("^XSP")
+    try:
+        return _fill_xsp_gaps(s, _yf_closes("^GSPC"))
+    except Exception:
+        return s
 
 
 def _quote(occ, creds):
@@ -174,6 +193,9 @@ def _settle_one(r, lab, now, creds=None):
         exp = date.fromisoformat(r["expiry"])
         sd = [d for d in s.index.date if d <= exp]
         settle = float(s[s.index.date == sd[-1]].iloc[-1]) if sd else None
+        if sd and sd[-1] != exp:               # the expiry session itself is missing (Yahoo skipped 2026-09-22 in
+            print(f"  PROBE[{r['probe_strategy']}] settle deferred: no {exp} close in the series yet (last {sd[-1]})")
+            settle = None                      # ^XSP and ^GSPC alike): never settle on the previous session's close
     except Exception:
         settle = None
     if settle is None:

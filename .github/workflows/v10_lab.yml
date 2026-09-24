@@ -75,7 +75,7 @@ jobs:
           # discovery keys. They are NOT in src/alpaca_creds.py's scan and never touch the VPS.
           ALPACA_PROOF_API_KEY: ${{ secrets.ALPACA_PROOF_API_KEY }}
           ALPACA_PROOF_SECRET_KEY: ${{ secrets.ALPACA_PROOF_SECRET_KEY }}
-          UNUSUAL_WHALES_TOKEN: ${{ secrets.UNUSUAL_WHALES_TOKEN }}
+          # UNUSUAL_WHALES_TOKEN removed 2026-09-24: the vendor was cancelled on 2026-09-22 and nothing here calls it (spec uw_scanner.enabled=false; MOT 6.32-6.34)
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           PROACTIVE_MOCK: "0"        # capture REAL macro/GEX/alt metadata, not mock

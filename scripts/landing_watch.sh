@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # UNIVERSAL LANDING WATCH (owner order 2026-07-29): every scheduled job that only alarms on FAILURE
 # is blind to ABSENCE - this pages the moment any expected DAILY ARTIFACT is missing by deadline.
-# Runs 22:45 UTC Mon-Sat. One Telegram lists every missing artifact. The archiver has its own
-# dedicated watch at 21:15; it is re-checked here as the single pane of glass.
+# Runs 22:45 UTC Mon-Sat. One Telegram lists every missing artifact.
 set -u
 REPO="$HOME/swing-trading-scanner"
 SNAP="$HOME/harvest-snapshots"
@@ -15,19 +14,9 @@ MISS=()
 if [ "${DRILL:-0}" = "1" ]; then
   MISS+=("DRILL: simulated missing artifact (test, no action needed)")
 else
-  # weekday market jobs
-  if [ "$DOW" -le 5 ]; then
-    grep -q "=== ${TODAY_ISO}" "$REPO/data/poller.log" 2>/dev/null || MISS+=("poller: no run logged today")
-    ls "$SNAP"/harvest_${TODAY_C}_*.db.gz >/dev/null 2>&1 || MISS+=("nightly DB backup: no snapshot file for today (21:30 job)")
-    git -C "$SNAP" pull --rebase --autostash -q origin main 2>/dev/null
-    # 2026-09-01: the manifest workflow died Aug 5 and was replaced by the 21:30 snapshot
-    # push (checked above and by archiver_watch.sh) - the manifest check alarmed nightly on a
-    # retired artifact. The snapshot IS the archive now; no second file to demand.
-  fi
-  # integrity gate runs 22:05 Tue-Sat
-  if [ "$DOW" -ge 2 ] && [ "$DOW" -le 6 ]; then
-    grep -q "INTEGRITY GATE" "$HOME/integrity_gate.log" 2>/dev/null &&       grep -q "$(date -u +%Y-%m-%d)" <(tail -40 "$HOME/integrity_gate.log") || MISS+=("integrity gate: no run logged today (22:05 job)")
-  fi
+  # 2026-09-26: the harvest poller, the nightly DB snapshot and the integrity gate are retired (the harvest froze
+  # on 2026-09-25 with its last label; data/harvest.db is a record). Their artefacts are no longer demanded here -
+  # a watch that greps a retired job's log pages every night (the 2026-09-19 class, in reverse).
   # archive pullers: retired 2026-09-21 - the Unusual Whales subscription ended and nothing pulls from it.
   # kill-switch poller: state file must be fresh (runs every 15 min)
   AGE=$(( $(date +%s) - $(stat -c %Y "$HOME/telegram_commands_state.json" 2>/dev/null || echo 0) ))

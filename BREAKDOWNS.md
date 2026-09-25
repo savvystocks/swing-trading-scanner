@@ -1166,3 +1166,64 @@ pull that lands the file, quantised to the poller's quarter-hour, in both clock 
 REGRESSION CHECK: MOT 6.41 (two samples on one day leave one row holding the later mark; a sample that throws leaves
 the file byte-identical) and the row itself, which pages again if the writer moves.
 
+2026-09-26 - THE PROOF STINT HAD NO JUDGE (found by the 2026-09-24 learning review, section 1.14; no money lost).
+WHAT BROKE: the one live strategy was seated on the proof account on 2026-09-20 under a pre-registered 8-rising-week
+rule (NORTH_STAR v1.4/v1.6/v1.7/v1.9; build contract 2026-09-06 item 6), and nothing computed the rule.
+`proof_account.rising_weeks` and `week_history` were created as placeholders in the seating commit (22ea21a8) and
+written by nothing; `scripts/trajectory_scoreboard.py` printed "proof weeks 0/8" from them every Friday;
+`scripts/daily_digest.py` and `scripts/morning_analyst.py` never opened the proof book (the digest lists its settles
+only since 537e8bcc); the v1.6 milestone telegram "every proof-week close" was never wired; the -30% daily-equity
+drawdown bound was never evaluated by anything, so a breach would have been noticed by reading
+`proof_logs_equity.jsonl` by hand. The first settle (expiry 2026-09-25) lands Monday 2026-09-28.
+ROOT CAUSE: the contract scoped the week counter into phase C and the seat was armed by owner ruling on 2026-09-20
+ahead of phase C; the placeholder fields let every reader assume a writer existed, and the scoreboard's "0/8" read
+as a true zero rather than as an unwritten field.
+FIX (this commit): `scripts/proof_stint.py`, a VPS evidence job off the trade path (Monday hourly 14-21 UTC and
+daily 22:18), derives the stint state from `proof_logs.json`, `proof_logs_equity.jsonl` and the seat block on every
+run (never accumulates), writes it to `/home/poller/proof_stint.json` and a Friday copy in
+`reports/performance/proof_stint.json`, sends the week-close, streak-met, pass, fail and breach telegrams once each,
+and prints on its face that the stint tests survival and mechanics, not edge, with the Clopper-Pearson bound beside
+the streak. The scoreboard, the digest and the morning analyst read that state; the two spec placeholders are
+deleted and `seats[0].stint_constants` holds the archive figures measured once from `scripts/cs_legs_measure.py`.
+The charter's ambiguities were listed and read one way each in
+`~/research_data/learning_2026-09-24/proof_stint_design.md` before the first verdict existed; the owner ruled on
+2026-09-25 that the -30% bound and the 2%/4% width both stay (A11), so the judge prints that a full loss breaches
+the bound while the high-water mark is under about $5,217.
+LESSON: a rule with a number in the charter needs a job that computes the number, a check that the job ran, and a
+reader that cannot print the number from anywhere else. A placeholder field is written by the commit that creates
+it or it is not created.
+REGRESSION CHECK: MOT 6.44 (fixtures a-x: rising, losing, gated, unexplained, closed-early, drawdown breach, three-in-five,
+streak-met/extend/pass/capture-fail, under water at 8, pending settle, double record, equity hole, open-mark basis,
+idempotent announce, the bound arithmetic, determinism, the readers repointed, the spec free of the placeholders; and,
+from the pre-ship review of the same day, the capture verdict latched at the 20th closed trade's week (19x+35, -465,
++35 fixed at trade 20; 20x+35 PASSED with a later -1,000 outside the counters), today's row an intraday mark before
+21:00 UTC (3,400 vs 5,035 at 14:07 is no breach, at 22:18 it is), the UNCOUNTED week announced under its own key so
+the counted close pages once, the week after a FAIL saying so instead of a streak, a Friday/Saturday re-seat never
+inheriting the old stint's expiry, and main() returning 0 with one FAILED line on an unwritable state path) and the
+sentinel row "proof stint judge".
+
+2026-09-26 (second entry) - THE KILL SWITCH COULD NOT PUBLISH WHILE THE WATCHDOG'S STAMP WAS DIRTY (found while retiring
+the nightly snapshot; never fired in anger).
+WHAT BROKE: `scripts/telegram_commands.py:_write_flag` publishes /halt, /resume and /flatten by `git pull --rebase`,
+then commit and push, in `~/harvest-snapshots`, and returns False ("COMMAND FAILED TO PUBLISH") when the pull fails.
+`scripts/watchdog_vps.sh` rewrites `watchdog_status.json` in that same checkout every quarter-hour of the session and
+only the 21:30 nightly snapshot (`git add -A`) ever committed it, so the file was dirty from 21:45 until the next
+21:30 - and a plain `git pull --rebase` refuses a dirty tree ("cannot pull with rebase: You have unstaged changes",
+verified on the box's git 2.43 with a scratch repository). At 21:24 UTC on 2026-09-25 the checkout showed
+` M watchdog_status.json`; a /halt sent then would have failed to publish.
+ROOT CAUSE: two jobs shared one checkout - a control channel and a status stamp - and the channel's pull was hardened
+on 2026-09-07 without a dirty-tree test; the 2026-09-22 fix (split parts) restored the push and never sent a command
+end to end.
+FIX (this commit): the pull in `_write_flag` carries `--autostash` (the stamp is stashed and re-applied around the
+rebase); the sentinel row "kill-switch repo push sync" (`push_sync` on `~/harvest-snapshots`) pages on an unpushed
+commit there, and the row "kill-switch repo pull" (`git_pull`) runs the same `git pull --rebase --autostash` every
+morning and pages when it is refused or a rebase is left unfinished - a refused pull returns False in `_write_flag`
+before any commit exists, so push-sync alone could never see this very failure; the Sunday health-check canary keeps
+proving the deploy key clones. With the nightly snapshot retired nothing commits the stamp any more, which is exactly
+why the pull must tolerate it. The poller's healthchecks.io ping (the external dead-man) moved to
+`scripts/mirror_sync_vps.sh` on the same cadence, so retiring the poller did not silence that check.
+LESSON: a control channel is tested by sending a command through it, not by proving the push works; a checkout that
+another job writes into is pulled with --autostash or not shared at all; a watch that cannot see the failure it was
+built for is exercised, not inferred.
+REGRESSION CHECK: MOT 6.45 (the pull in `_write_flag` carries --autostash), the two sentinel rows and the mirror's
+ping (MOT 6.46).

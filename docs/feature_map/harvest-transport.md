@@ -1,6 +1,14 @@
 # Counterfactual harvest and transport
 
 ## What
+RETIRED 2026-09-26. The feed ended with Unusual Whales on 2026-09-22; the last barrier label was written at the
+2026-09-25 20:00 UTC poll (86,060 candidates, 86,007 labels; the 53 unlabelled are `poll_tier` none by design); the
+final off-box snapshot (harvest_20260925_2130, three parts, plus cs_legs_20260925_2130) was pushed at 21:30 that
+night. The poller cron, the nightly snapshot, the integrity gate and the archiver watch no longer run; the persist
+step no longer carries the inbox; `data/harvest.db` is a frozen record. `harvest_logger.py:harvest_scan` is still
+called by the engine (fail-open, no rows while `uw_scanner.enabled` is false) and the four harvest suites still run
+in the gate, so the passivity proof stands. What follows describes the machine as it ran.
+
 Every scored candidate, traded or not, is logged with its features and later labeled with a
 path-dependent triple-barrier outcome on executable prices. It is the training pile for the
 student and the brain. Logging is passive: it may never alter or crash the trade path.
@@ -10,12 +18,13 @@ student and the brain. Logging is passive: it may never alter or crash the trade
   per-contract-per-day dedup, top-N and Bernoulli random tiers, cheap rows for the rest; appends to
   `data/harvest_inbox/candidates_YYYYMMDD.jsonl` and updates `data/harvest_state.json`; committed
   by the persist step.
-- Poller (VPS, `scripts/run_poller_vps.sh` every 15 min 13-21 UTC weekdays): `poller.py --once`
+- Poller (VPS, `scripts/run_poller_vps.sh` every 15 min 13-21 UTC weekdays, retired 2026-09-26): `poller.py --once`
   pulls `main` first, ingests the inbox into `data/harvest.db` (idempotent on candidate_id), polls
   open candidates, writes bid paths and labels (`harvest_labeler.py`, XNYS-calendar vertical
   barrier), `harvest_db.py` schema.
-- Backups: `/home/poller/backup_snapshot.sh` 21:30 UTC weekdays to the private snapshots repo; the archiver
-  workflow and `scripts/archiver_watch.sh`.
+- Backups (retired 2026-09-26 after the final push): `/home/poller/backup_snapshot.sh` 21:30 UTC weekdays to the
+  private snapshots repo; the archiver workflow and `scripts/archiver_watch.sh`. The kill switch still publishes
+  through that repo (docs/feature_map/telegram-and-watchdogs.md).
 
 ## Exercise
 - `./.venv/bin/python test_harvest_passivity.py` (mandatory after ANY change touching the logger or the trade path).
@@ -34,6 +43,8 @@ student and the brain. Logging is passive: it may never alter or crash the trade
 - The four harvest suites in `~/vps_ship_grid.sh`; MOT dimension 1 (input and schema).
 
 ## Traps
+- 2026-09-26: a sentinel row, a landing-watch grep or a watchdog keyed to a retired job pages every night; when a job
+  is retired, its rows come out in the same commit (MOT 6.28 rewritten, 6.46).
 - 2026-09-22: `harvest_logger.py:_flow_rows` was NOT covered by the spec's `uw_scanner` switch and kept
   calling Unusual Whales every cycle after the scanner was switched off. A switch named for a dependency must be
   read at every call site of that dependency (MOT 6.34).

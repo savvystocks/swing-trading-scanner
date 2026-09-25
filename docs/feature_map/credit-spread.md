@@ -48,6 +48,9 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
   scripts/cs_legs_pull.py:mark_final (deleted 2026-09-21)). Coverage of the live 2%/4% rule is 91% of weeks on XSP and 100% on SPY, against 54% from
   the capped chain archive. scripts/cs_legs_pull.py:backup (deleted 2026-09-21) leaves `cs_legs.db.gz` in the snapshot folder so the nightly
   off-box backup carries it: the vendor's floor rolls forward daily and the oldest weeks can never be pulled again.
+  Correction 2026-09-26: `*.db.gz` is ignored in that repository, so the nightly job never carried that copy; the
+  off-box copies are OneDrive `offbox_backup/cs_legs_2026-09-24.db.gz` (sha256-verified against the VPS file on
+  2026-09-24) and the split parts `cs_legs_20260925_2130.db.gz.part-*` pushed by the final snapshot run on 2026-09-25.
 - `scripts/cs_legs_measure.py` (on demand: `./.venv/bin/python scripts/cs_legs_measure.py`) measures the rule on that database -
   real XSP quotes, real ^XSP settlement, the BEAR stand-down applied, coverage and the Clopper-Pearson tail bound on every row.
   As of 2026-09-19 the live 2%/4% rule: 122 gated weeks, 92% win, +$26.1 a week, t 2.95, worst week -$624 against an average

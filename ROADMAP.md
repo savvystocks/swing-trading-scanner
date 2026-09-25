@@ -83,11 +83,13 @@
    the scoreboard; and for a `closed_ok=false` whose position DOES still exist, hands it back to the exit
    engine (or lets 2b re-adopt). Idempotent, passivity-safe, MOT-covered, changes NO entry selection —
    pure bookkeeping hygiene. Does not gate anything; run it before relying on the live scoreboard.
-4. **Inbox retention pruning** — QUEUED. Poller deletes working-tree inbox files older than 14 days only
+4. **Inbox retention pruning** — REJECTED 2026-09-26 (the harvest froze on 2026-09-25 and the inbox no longer travels;
+   nothing to prune, no live harvest to protect). As written: Poller deletes working-tree inbox files older than 14 days only
    after verifying every candidate_id is in the DB and a newer DB backup exists. (Verified not yet built:
    the `keep=14` prune in `harvest_db.backup()` prunes DB *backups*, not the inbox jsonl.) Accept: lean
    checkout, zero data loss.
-4b. **NOT-NULL primary keys on the LIVE harvest.db** — QUEUED. The fresh-DB DDL gained
+4b. **NOT-NULL primary keys on the LIVE harvest.db** — REJECTED 2026-09-26 (the live harvest.db is a frozen record; no
+   writer exists to protect). As written: The fresh-DB DDL gained
    `NOT NULL` on `candidates`/`labels` PKs (Tier B); the live VPS DB keeps the old DDL until a
    copy-rename rebuild (`integrity_check` before and after, outside market hours). Purely defensive:
    all writers assign uuid4 ids. Accept: live DDL matches `harvest_db._SCHEMA`, zero row loss.
@@ -98,7 +100,8 @@
    queryable per-trade table; this replaces the EV engine's half-spread placeholder (the brain's
    `ev.cost_model` points at "ROADMAP item 3"; today `entry_slippage_pct` is always null). Accept:
    measured slippage feeding Gate-2 thresholds.
-12. **Free orthogonal sensors** — IN-FLIGHT. Each wired into the harvest payload as fail-open, log-only,
+12. **Free orthogonal sensors** — REJECTED 2026-09-26 (the harvest payload they fed froze on 2026-09-25; the two shipped
+    sensors stay in the code as log-only history). As written: Each wired into the harvest payload as fail-open, log-only,
     **never gating** (£0, versioned via `feature_set_version`). **Never EODHD.** Priority order (owner
     decision):
     - (1) **Earnings calendar** — the days-since-earnings SENSOR is **SHIPPED** (`post_earnings_drift`,
@@ -162,7 +165,9 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
    - **Stratified view is reporting only:** the pinned SPRT object is the POOLED executed stream; the
      report's hit rate by source premium (>=50k vs 25-50k) is insight, never a driver of the decision.
    - Reported weekly as CONTINUE / REJECT (no edge) / ACCEPT (edge).
-8. **Meta-labeling model — Student (Stage 2)** — IN-FLIGHT (pipeline SHIPPED 2026-07-22:
+8. **Meta-labeling model — Student (Stage 2)** — REJECTED 2026-09-26 (decision 47: its feed ended with Unusual Whales
+   on 2026-09-22, its walk-forward AUC was ~0.51, it made zero live picks under the cap, and a weekly index credit
+   spread offers it no candidate; the engine code stays, pinned by MOT 6.11/6.17). History (pipeline SHIPPED 2026-07-22:
    `src/brain/student.py` + `src/brain/run_student.py`; weekly `student` job in `brain_weekly.yml` →
    `reports/student/`). The V10 rules engine stays primary; a gradient-boosted binary filter answers
    only "is this signal real?" on the harvested features. Built as specified: correlation clustering
@@ -176,7 +181,8 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
    effective-training-set refinement of the original ~10–15k labeled gate, per the 2026-07-16 readiness
    assessment) — below it every run renders PROVISIONAL and withholds the official verdict. Remaining
    to close this item: the first at-gate OFFICIAL run (expected ~2026-07-24) and its verdict.
-8b. **Discovery rig (pre-Student search)** — SHIPPED 2026-07-21 (`src/brain/discovery.py`,
+8b. **Discovery rig (pre-Student search)** — SHIPPED 2026-07-21; closed 2026-09-26 with item 8 (its graded snapshots
+   froze on 2026-09-25 and it runs from no schedule) (`src/brain/discovery.py`,
    `src/brain/convergence.py`, `src/brain/run_discovery.py`; weekly via `brain_weekly.yml` discovery
    job → `reports/discovery/`). A systematic, re-runnable search over the graded snapshot: per-feature
    verdict table (fill rate first, uniqueness-weighted band stats, EV at executable prices), a
@@ -192,10 +198,12 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
    scikit-learn added to `requirements-brain.txt` (brain-only dependency; isolation unchanged).
    Accept: weekly dated reports append; leakage caught by `test_brain.py` discovery tests; zero
    live-path changes.
-9. **Ensemble abstention — Council (Stage 3)** — QUEUED. ~5 seed/window variants; disagreement above a set
+9. **Ensemble abstention — Council (Stage 3)** — REJECTED 2026-09-26 (built on the Student's probabilities; item 8 is
+   REJECTED). As written: ~5 seed/window variants; disagreement above a set
    band = no trade regardless of mean probability. Accept: abstention rate and its P&L effect measured on
    paper.
-10. **Champion/challenger MLOps — Governor (Stage 4)** — QUEUED. Weekly retrain of challengers; promotion
+10. **Champion/challenger MLOps — Governor (Stage 4)** — REJECTED 2026-09-26 (built on the Student; item 8 is REJECTED).
+    As written: Weekly retrain of challengers; promotion
     only on predefined out-of-fold plus shadow criteria; kill-switches on feature drift (PSI), calibration
     drift, and drawdown that fall back to the frozen rules engine. Hyperparameters frozen, re-tuned at most
     quarterly under purged CV. Accept: fully automated weekly cycle with human-visible promotion reports.
@@ -206,7 +214,8 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
       trades) may only be RAISED after a predefined shadow record exists (minimum weeks and prediction
       count stated in advance), and only the owner may decide it. Until then the ceiling is gate + sizing.
       Accept: the predefined thresholds written here before Stage 4 ships.
-11. **Probability-mapped sizing (Stage 4+)** — QUEUED. Fractional Kelly on the EMPIRICAL return
+11. **Probability-mapped sizing (Stage 4+)** — REJECTED 2026-09-26 (built on the Student's calibrated probabilities;
+    item 8 is REJECTED). As written: Fractional Kelly on the EMPIRICAL return
     distribution (Gate 2's expected shortfall, not binary assumptions), capped at the per-trade
     allocation, portfolio-level correlation awareness so simultaneous same-thesis candidates size as one
     bet. Accept: sizing driven by calibrated probabilities only after item 7 returns a go; deployed
@@ -241,15 +250,15 @@ touches the live harvest.db or the trading path. Two-way import isolation is ass
 | 1 | Single-engine consolidation (V9 retirement) | Foundation | SHIPPED | One engine on main; collision closed |
 | 2 | Server-side exit backstop | A | IN-FLIGHT | Every open position carries a working broker-side floor; T0–T5 done, ships config-OFF, canary flips on |
 | 3 | Slippage ledger | B | QUEUED | Measured slippage feeds Gate-2 thresholds |
-| 4 | Inbox retention pruning | A | QUEUED | Lean checkout, zero data loss |
+| 4 | Inbox retention pruning | A | REJECTED 2026-09-26 | Harvest frozen 2026-09-25; the inbox no longer travels |
 | 5 | Data Foundry (Stage 0) + GATE 1 / 4a | C | SHIPPED | Versioned parquet + card; overlap weights + cache tested |
 | 6 | Truth Harness (Stage 1) + GATE 2 / 3 / 4b | C | SHIPPED | Purged-CV leakage caught; EV/calibration/guard shipped; weekly-report bands QUEUED |
 | 7 | Sequential edge test (SPRT) | C | SHIPPED | Weekly CONTINUE/REJECT/ACCEPT; params pinned (H0=breakeven+0.02) |
-| 8 | Meta-labeling — Student (Stage 2) | C | QUEUED | Gate ~10–15k rows; beats rules engine via items 5–7 |
-| 9 | Ensemble abstention — Council (Stage 3) | C | QUEUED | Abstention rate + P&L effect measured on paper |
-| 10 | Champion/challenger MLOps — Governor (Stage 4) | C | QUEUED | Automated weekly cycle + kill-switches; P(halt) & Ceiling-Review gates |
-| 11 | Probability-mapped Kelly sizing (Stage 4+) | C | QUEUED | Calibrated-prob sizing only after item 7 go; shadow→gate→size |
-| 12 | Free orthogonal sensors | B | IN-FLIGHT | earnings-drift + VIX-level SHIPPED; blackout/term-struct/S-3/FINRA/IBKR/FTD/halts QUEUED |
+| 8 | Meta-labeling — Student (Stage 2) | C | REJECTED 2026-09-26 | Decision 47: feed gone, walk-forward AUC ~0.51, zero live picks |
+| 9 | Ensemble abstention — Council (Stage 3) | C | REJECTED 2026-09-26 | Built on item 8, which is REJECTED |
+| 10 | Champion/challenger MLOps — Governor (Stage 4) | C | REJECTED 2026-09-26 | Built on item 8, which is REJECTED |
+| 11 | Probability-mapped Kelly sizing (Stage 4+) | C | REJECTED 2026-09-26 | Built on item 8, which is REJECTED |
+| 12 | Free orthogonal sensors | B | REJECTED 2026-09-26 | Harvest payload frozen 2026-09-25; shipped sensors stay log-only |
 | 13 | Engine off GitHub Actions onto the VPS | D | QUEUED | Zero missed cycles over a test month |
 | 14 | Live-capital gate | D | QUEUED | £1–5k initial staged; criteria pass before real money; best-case live review ~early Oct (gates decide); NORTH_STAR "item 14" |
 | 15 | Barrier-configuration optimization | D | QUEUED | Barrier changes justified under item-7 PBO discipline |
@@ -449,7 +458,7 @@ proposal passes a simplicity test: does a number already in the reports justify 
   the holdout AND a full-loss weekend at five slots stays inside the GBP 2,500 lifetime cap; otherwise it closes as REJECTED with the
   search. Re-running the six family scripts on the complete chain waits on the same re-pull (prior ~10% that any candidate passes).
 
-- **Dark-pool sensor hardening — Sunday 2026-08-02 boundary (governed; birth certificate:
+- **REJECTED 2026-09-26 (Unusual Whales ended 2026-09-22; the harvest froze 2026-09-25) - Dark-pool sensor hardening — Sunday 2026-08-02 boundary (governed; birth certificate:
   source_hunt_2026-07-27.md machinery finding #1).** Finding refined 2026-07-28: there is NO
   explicit payload ration — every full payload calls `darkpool_node`, and the 35% coverage is the
   UW darkpool endpoint failing/rate-limiting inside `_safe` (~65% of calls). Spec: add 429-aware
@@ -457,7 +466,7 @@ proposal passes a simplicity test: does a number already in the reports justify 
   TTL; expected coverage 35% → ~80%+; cost ≤ 2 extra API calls per failing sensor call, inside
   existing UW limits, £0. Harvest-side change → passivity battery mandatory. NOT deployed until the
   owner's go at the boundary.
-- **Weekly-report expected-bands view (queued item 6) + shadow feature-attribution + inbox
+- **REJECTED 2026-09-26 (the weekly brain report, the shadow lab and the inbox are all frozen) - Weekly-report expected-bands view (queued item 6) + shadow feature-attribution + inbox
   retention — staged, need design/decision.** Bands: how NORMAL-VARIANCE vs DEGRADATION bands are
   drawn around the four owner numbers deserves a considered design, not a 1am one — proposal at the
   boundary. Attribution: SHAP-free "extreme-decile" per-TAKE attribution proposed (£0); confirm
@@ -505,9 +514,30 @@ proposal passes a simplicity test: does a number already in the reports justify 
   page on a completed session; the equity row's `ts_utc` is after 19:30. Deferred with reasons: the cs_legs off-box
   refresh is a VPS-side edit to `~/backup_snapshot.sh` (block proposed in the batch notes); the court docket (row
   below) and the harvest poller's idle cohort are separate decisions.
-- **QUEUED - the court's docket is empty of living challengers.** All eleven challengers it judges are directional
-  and can never receive another day of evidence; the credit spread is judged by the proof stint, not the court.
-  Accept: either the docket is re-cut to challengers that can accrue evidence, or the three court crons stand down
-  with a dated note in SYSTEM_ARCHITECTURE.md. Deferred from the 2026-09-22 batch deliberately: pausing the court
-  also retires its sentinel rows, and that is a decision to take in daylight, not at midnight.
+- **SHIPPED 2026-09-26 - the court stood down (its docket was empty of living challengers).** The three
+  `scripts/sunday_boundary.py` crons (Fri 22:35, Wed 10:00, nightly 22:00) are removed with their sentinel rows
+  (nightly boundary, friday court, challengers parses); the file stays in the tree and runs from nothing; the
+  morning analyst and the evening digest no longer narrate it; the dated note is in SYSTEM_ARCHITECTURE.md. As
+  queued: all eleven challengers it judged are directional and can never receive another day of evidence; the
+  credit spread is judged by the proof stint, not the court.
+- **SHIPPED 2026-09-26 - the proof stint judge.** `scripts/proof_stint.py` derives the 8-rising-week state from the
+  proof book's own files (Monday hourly 14-21 UTC and daily 22:18) and repoints the scoreboard, digest and analyst
+  to it; the charter's eleven ambiguities are read one way each in the design
+  (~/research_data/learning_2026-09-24/proof_stint_design.md) and stand until the owner amends any (A11 ruled
+  2026-09-25: the -30% bound and the 2%/4% width both stay); the contract's item 6 location (week_history in the
+  spec) is superseded with the reason recorded in the BREAKDOWNS entry. Accept: the Monday 2026-09-28 settle
+  produces a PROOF WEEK 1 CLOSED telegram with the survival sentence and the tail bound on it, the Friday 2026-10-02
+  scoreboard prints the streak from the judge and no longer from the spec, MOT 6.44 green, the sentinel row fresh,
+  and `proof_account.rising_weeks` gone from the spec.
+- **SHIPPED 2026-09-26 - the dead learning jobs retired in one batch.** The harvest poller, the nightly snapshot
+  (after its final push of 2026-09-25), the integrity gate and the archiver watch come off the crontab with their
+  sentinel rows and the landing watch's greps (the poller's quarter-hour mirror of origin/main survives as
+  `scripts/mirror_sync_vps.sh` in the same slot); the persist step no longer carries the harvest inbox; the kill
+  switch's pull carries --autostash and its channel has two sentinel rows (push-sync and a daily exercised pull);
+  the poller's healthchecks.io ping rides the mirror on the same cadence, so the external dead-man keeps its check;
+  the VPS watchdog stays (reason in SYSTEM_ARCHITECTURE.md). Accept: no sentinel page on Monday 2026-09-28 morning
+  for a retired job, a /status or /halt round-trip publishes on the first try, MOT 6.28/6.45/6.46 green. Still
+  owed, separately: `data/harvest_backups/` (866 MB) and the stale `~/harvest-snapshots/cs_legs.db.gz` can go, and
+  `scripts/engine_watch.sh`'s session window is a summer clock that needs the calendar before the watchdog can
+  follow the poller out.
 

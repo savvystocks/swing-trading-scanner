@@ -3,7 +3,7 @@ pattern worth stealing - an LLM that reads structured evidence and writes a plai
 routed judgment).
 
 Every weekday morning after the freshness sentinel, this composes a brief from COMMITTED
-OUTPUTS ONLY - last night's boundary verdict, the latest sentinel reading, the scoreboard
+OUTPUTS ONLY - last night's proof stint state, the latest sentinel reading, the scoreboard
 state, yesterday's record activity - and telegrams the kind of plain-English update the
 owner otherwise gets only in a session. Monitoring tier: reads only, never trades, never
 touches the spec. Guardrails: the model may summarize ONLY the provided data, never invent
@@ -32,8 +32,14 @@ def tail(path, n=25):
 
 def gather():
     parts = [f"DATE: {datetime.now(timezone.utc):%A %Y-%m-%d %H:%M} UTC"]
-    parts.append("== LAST NIGHTLY BOUNDARY (court verdict) ==\n" + tail(H + "/trajectory_nightly.log", 20))
+    # the court block came out 2026-09-26 (its crons are retired; the log it tailed stops changing)
     parts.append("== FRESHNESS SENTINEL (this morning) ==\n" + tail(H + "/freshness.log", 12))
+    try:
+        import proof_stint
+        parts.append("== PROOF STINT (last night's judge, the one live strategy) ==\n"
+                     + proof_stint.brief_block(proof_stint.read_state(), date.today()))
+    except Exception as e:
+        parts.append(f"== PROOF STINT == (unavailable: {e})")
     try:
         sb = json.load(open("reports/research/trajectory_scoreboard.json", encoding="utf-8"))
         parts.append("== TRAJECTORY SCOREBOARD (last Friday) ==\n" +
@@ -68,7 +74,9 @@ PROMPT = """You are the morning analyst for the owner of an automated options tr
 Write his morning brief in plain English - warm, direct, no jargon walls, no markdown, no
 emojis, 8-13 sentences. RULES: use ONLY the data below; never invent or extrapolate numbers;
 if a section is unavailable, say so in one clause and move on; lead with what matters most
-(court verdicts, anything stale, notable exits); end with what today's rhythm brings. The
+(anything stale, notable exits, the proof stint); the PROOF STINT block is the one live strategy's
+scorecard - lead with it when a week settled, the streak moved, or the drawdown grew, and repeat its
+survival-not-edge sentence verbatim, never restated; end with what today's rhythm brings. The
 owner knows the system - PRIORITY book vs DISCOVERY tuition, the courts, the sentinel.
 
 DATA:

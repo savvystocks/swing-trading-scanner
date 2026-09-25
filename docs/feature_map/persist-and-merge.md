@@ -1,15 +1,16 @@
 # Persist step and merge resolver
 
 ## What
-The engine runs on an ephemeral GitHub runner; the book and the harvest inbox survive only because
-the last workflow step commits them to `main`. Two runners can race (a stale checkout 34 seconds
+The engine runs on an ephemeral GitHub runner; the record books survive only because the last
+workflow step commits them to `main` (the harvest inbox rode the same step until 2026-09-26; the
+transport is retired and `data/harvest_inbox/` is frozen history). Two runners can race (a stale checkout 34 seconds
 after a push happened on 2026-09-11), so the push loop rebases, resolves whole-file JSON at record
 level, and finally unions the book with `origin/main` so no record present on either side is lost.
 
 ## Where
 - `.github/workflows/v10_lab.yml` step "Persist forensic logs to main": `git add -f` of the book,
-  cool-off, watchlist, `data/last_cycle_ok`, `reports/shadow_lab/student_scores.jsonl`, advisory
-  files and the harvest inbox; `validate_log` (never push unparseable JSON); a five-attempt loop:
+  the proof book (`proof_logs.json`, `proof_logs_equity.jsonl` - the stint judge's inputs), cool-off, watchlist, `data/last_cycle_ok`, `reports/shadow_lab/student_scores.jsonl`, advisory
+  files (the harvest inbox no longer, since 2026-09-26); `validate_log` (never push unparseable JSON); a five-attempt loop:
   push, on rejection `git pull --rebase --autostash`, on conflict `scripts/merge_logs.py`
   (record-level), on resolver failure abort and `-X theirs`; then the UNION GUARD
   `python scripts/merge_logs.py --guard origin/main` and an amend; a final validate and push.

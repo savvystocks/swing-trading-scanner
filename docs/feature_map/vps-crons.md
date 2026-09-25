@@ -9,25 +9,32 @@ prints pullers, the Saturday legs pull, the shadow lab and breaker, the student 
 monthly corpus, the nightly corpus chain and both Friday tuner jobs. The final data pull ran once from
 `~/cs_multi/final_pulls.sh`. The crontab backup is `~/cron.pre_uw_exit.bak`.
 
+Retired 2026-09-26 (the harvest froze on 2026-09-25 with its last label and the court's docket held no living
+challenger): the harvest poller (its quarter-hour mirror of origin/main survives as `scripts/mirror_sync_vps.sh`
+in the same slot), the nightly off-box snapshot (its final push, 2026-09-25 21:30, carries harvest_20260925_2130
+and cs_legs_20260925_2130), the integrity gate, the archiver watch and the court's three slots.
+`scripts/watchdog_vps.sh` stays: `scripts/engine_watch.sh` covers the stall with a slower fuse but its
+session window is a hard-coded summer clock, and the watchdog is the only intraday disk alarm.
+
 | slot | job | log | healthy |
 |---|---|---|---|
-| */15 13-21 Mon-Fri | `scripts/run_poller_vps.sh` (harvest poller) | poller log | `data/harvest.db` max(day) = today |
+| */15 13-21 Mon-Fri | `scripts/mirror_sync_vps.sh` (fetch + reset --hard to origin/main; the retired poller's first action, kept because the sentinel's mtimes, the Monday judge runs and the quote log read this tree; then the external dead-man: pings HEALTHCHECK_URL from `.harvest_env`, or its /fail endpoint when the fetch or reset failed) | mirror_sync.log | `HEAD is now at` lines, no `MIRROR SYNC FAILED` |
 | */15 13-22 Mon-Fri | `scripts/watchdog_vps.sh` (engine dead-man on the `data/last_cycle_ok` stamp, 30 min) | watchdog log | no page |
 | */15 14-21 Mon-Fri | `scripts/engine_watch.sh` (engine heartbeat, `data/last_cycle_ok`, auto-rollback to the last-good SHA) | engine_watch.log | `ok` lines, no rollback |
 | */15 always | `scripts/telegram_commands.py` (owner commands) | telegram log | commands acknowledged |
 | 15:05 and 19:50 Mon-Fri | `scripts/xsp_quote_log.py` (passive: XSP vs SPY quote width on the legs the credit spread would trade) | xsp_quotes.log | one line per run; `reports/research/xsp_quotes.jsonl` grows by two rows a day |
-| 21:30 Mon-Fri | `/home/poller/backup_snapshot.sh` | - | snapshot landed (landing_watch) |
-| 22:00 Mon-Fri | `scripts/sunday_boundary.py` report-only, sequential apply (trajectory) | trajectory log | nightly line |
-| 22:05 Tue-Sat | `scripts/integrity_gate.py` | - | gate green |
-| 22:15 Mon-Fri | `scripts/archiver_watch.sh` | archiver_watch.log | - |
+| Mon 14:07-21:07 hourly | `scripts/proof_stint.py` (the settle's verdict and the week-close telegram; today's equity row is an intraday mark, shown but not judged) | proof_stint.log | PROOF STINT line |
+| 22:15 Mon-Fri | `scripts/daily_bars_archive.py` (30 ETF daily bars and the ^XSP/^GSPC closes into `data/daily_bars.db`) | daily_bars.log | one line per run |
+| 22:18 Mon-Fri | `scripts/proof_stint.py` (the day's close mark judged against the -30% bound; Friday writes and pushes `reports/performance/proof_stint.json`) | proof_stint.log | PROOF STINT line |
 | 22:20 Mon-Fri | `scripts/daily_digest.py` (exits by `closed_at`, settles by `at`, both books) | digest.log | digest telegram sent |
-| 22:45 Mon-Sat | `scripts/landing_watch.sh`, `scripts/evening_persist.sh` | landing_watch.log, evening_persist.log | - |
+| 22:24 Mon-Fri | `scripts/returns_alarms.py` | returns_alarms.log | - |
+| Fri 22:40 | `scripts/returns_ledger.py --update-map`, then commit and push of the ledger and `docs/performance_map` | returns.log | the ledger table |
+| 22:45 Mon-Fri | `scripts/evening_persist.sh` | evening_persist.log | - |
+| 22:45 Mon-Sat | `scripts/landing_watch.sh` (kill-switch poller state only since 2026-09-26) | landing_watch.log | `OK: all scheduled artifacts landed` |
 | 08:00 daily | `scripts/freshness_sentinel.py` | freshness log | all rows green |
 | 08:10 Mon-Fri | `scripts/morning_analyst.py` | analyst.log | morning brief telegram |
-| Wed 10:00 | `scripts/sunday_boundary.py` report-only | sunday_boundary.log | standings |
 | Sat 12:00 | `scripts/cs_live_fills.py` (the credit spread's real fills, read-only, Alpaca) | cs_legs.log | `cs live fills: n/n records with both fills` |
 | Fri 22:25 | `scripts/trajectory_scoreboard.py` | scoreboard.log | North Star block |
-| Fri 22:35 | `scripts/sunday_boundary.py` (the court) | sunday_boundary.log | verdict lines |
 
 ## Exercise
 - `crontab -l | grep <script>`; `tail -20 /home/poller/<log>`; `./.venv/bin/python scripts/freshness_sentinel.py`.

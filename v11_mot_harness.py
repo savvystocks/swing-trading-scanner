@@ -1611,13 +1611,13 @@ os.environ["FADE_BOOK_FORCE_OFF"] = _env
 
 print("\n" + "=" * 70)
 # 6.27 retired 2026-09-21 with scripts/uw_history_pull.py (its locked-database lesson is in BREAKDOWNS 2026-09-18).
-# 6.28 THE LANDING WATCH CAN SEE THE INTEGRITY GATE AND BOTH ARCHIVE PULLERS (BREAKDOWNS 2026-09-19)
-import re as _re28
+# 6.28 rewritten 2026-09-26: the integrity gate, the poller and the nightly snapshot are retired with the frozen harvest,
+# so the landing watch must demand none of their artefacts (a check that greps a retired job's log pages every night -
+# the 2026-09-19 lesson in reverse) and must still watch the kill-switch poller's state file.
 _lw28 = open("scripts/landing_watch.sh", encoding="utf-8").read()
-_win28 = _re28.search(r'tail -(\d+) "\$HOME/integrity_gate\.log"', _lw28)
-check(6, "landing watch: the integrity-gate window outgrows the gate's own output, and it no longer watches UW pullers (ended 2026-09-21)",
-      bool(_win28) and int(_win28.group(1)) >= 20 and "for S in uw_pull uw_prints" not in _lw28,
-      f"window={_win28.group(1) if _win28 else None}")
+check(6, "landing watch: no retired artefact demanded (poller log, snapshot file, integrity gate, UW pullers); kill-switch state still watched",
+      "integrity_gate.log" not in _lw28 and "poller.log" not in _lw28 and "harvest_${TODAY_C}" not in _lw28
+      and "for S in uw_pull uw_prints" not in _lw28 and "telegram_commands_state.json" in _lw28)
 # 6.29 retired 2026-09-21: both Unusual Whales pullers are deleted.
 # 6.15 DRILLS AND THE MOT LEAVE THE PASSIVE SCORE LOG ALONE (BREAKDOWNS 2026-09-12 third entry)
 _dr15 = open("scripts/regime_drill.py", encoding="utf-8").read()
@@ -1799,6 +1799,8 @@ _sb37 = open("scripts/trajectory_scoreboard.py", encoding="utf-8").read()
 check(6, "the scoreboard computes the charter version and the promotion count",
       "_charter_version()" in _sb37 and "_proof_promotions()" in _sb37
       and "NORTH STAR (v1.6)" not in _sb37 and "proof-seat promotions 0;" not in _sb37)
+check(6, "the scoreboard reads the proof stint from the judge, not from a spec field or a typed commitment (2026-09-26)",
+      "rising_weeks" not in _sb37 and "October-gate" not in _sb37 and "proof_stint" in _sb37)
 
 # 6.38 THE DAILY BAR ARCHIVE WRITES, IS IDEMPOTENT, AND NEVER RAISES (forward capture, 2026-09-22)
 import sqlite3 as _sq38
@@ -1922,6 +1924,296 @@ check(6, "credit spread: a series with no close on the expiry date defers the se
 check(6, "the engine and health-check workflows no longer inject UNUSUAL_WHALES_TOKEN",
       "secrets.UNUSUAL_WHALES_TOKEN" not in open(os.path.join(".github", "workflows", "v10_lab.yml"), encoding="utf-8").read()
       and "secrets.UNUSUAL_WHALES_TOKEN" not in open(os.path.join(".github", "workflows", "health-check.yml"), encoding="utf-8").read())
+# 6.44 THE PROOF STINT HAS A JUDGE (BREAKDOWNS 2026-09-26): the 8-rising-week rule of NORTH_STAR v1.4/v1.6/v1.7 is
+# computed by scripts/proof_stint.py from the proof book's own files. These fixtures call week_rows()/judge()/announce()
+# directly and never touch the live files, the durable state or Telegram.
+_sp44 = _ilu36.spec_from_file_location("proof_stint", "scripts/proof_stint.py")
+_m44 = _ilu36.module_from_spec(_sp44); _sp44.loader.exec_module(_m44)
+_C44 = {"denominator_usd_per_traded_week": 21.6, "weekly_sd_usd": 180, "archive_weeks": 122, "archive_losses": 10,
+        "archive_mean_win_usd": 47.0, "archive_mean_loss_usd": -210.0, "archive_max_loss_usd": 1187}
+_SEAT44 = date(2026, 9, 20)
+_BEAR44 = lambda d: ("BEAR", -0.031)
+
+
+def _rec44(exp, pnl=None, closed_early=None, short_k=757, long_k=741, credit=0.35, tsid=None):
+    r = {"book": "PROOF", "probe_strategy": "CREDIT_SPREAD_W", "trade_set_id": tsid or "p" + exp.replace("-", ""),
+         "expiry": exp, "net_credit": credit, "contracts": 1, "status": "OPEN",
+         "entry_ts_utc": (date.fromisoformat(exp) - timedelta(days=4)).isoformat() + "T15:05:00+00:00",
+         "structure": {"short": [{"k": short_k, "prem": 0.5, "cp": "P", "filled": True}],
+                       "long": [{"k": long_k, "prem": 0.15, "cp": "P", "filled": True}]}}
+    if pnl is not None:
+        r["status"] = "CLOSED"
+        r["settle"] = {"xsp": 771.2, "pnl_usd": pnl, "at": _m44.next_session_after(date.fromisoformat(exp)).isoformat() + "T13:36:00+00:00"}
+        if closed_early:
+            r["settle"]["closed_early"] = closed_early
+    return r
+
+
+def _eq44(last, values=None, hour=19, skip=()):
+    values = values or {}
+    rows = [{"day": "2026-09-20", "ts_utc": "2026-09-20T20:00:00+00:00", "equity": 5000.0}]
+    cur = 5035.0
+    for d in _m44.sessions_between(date(2026, 9, 21), last):
+        k = d.isoformat()
+        if k in skip:
+            continue
+        cur = values.get(k, cur)
+        rows.append({"day": k, "ts_utc": f"{k}T{hour:02d}:51:00+00:00", "equity": cur})
+    return rows
+
+
+def _seq44(vals, start=date(2026, 9, 25)):
+    return [_rec44((start + timedelta(days=7 * i)).isoformat(), v) for i, v in enumerate(vals)]
+
+
+def _judge44(recs, eq, today, regime=_BEAR44, seen=None, include_today=False, seated=_SEAT44):
+    rows = _m44.week_rows(recs, eq, seated, today, regime_at=regime, cycle_seen=seen or (lambda d: True))
+    return _m44.judge(rows, eq, _C44, today, seated, records=recs, include_today=include_today)
+
+
+_ra = [_rec44("2026-09-25", 35.0)]
+_sa = _judge44(_ra, _eq44(date(2026, 9, 28)), date(2026, 9, 28))
+check(6, "proof stint a: one settled rising week -> streak 1, traded 1, RUNNING, curve +35, stint tail n=1 k=0 ub~0.95",
+      _sa["streak"] == 1 and _sa["traded"] == 1 and _sa["weeks"][0]["verdict"] == "RISING" and _sa["status"] == "RUNNING"
+      and _sa["cum_pnl_usd"] == 35.0 and _sa["tail"]["stint"]["n"] == 1 and _sa["tail"]["stint"]["k"] == 0
+      and approx(_sa["tail"]["stint"]["ub"], 0.95, 0.002), f"{_sa['status']} streak={_sa['streak']} kinds={[w['kind'] for w in _sa['weeks']]}")
+_rb = _ra + [_rec44("2026-10-02", -612.0)]
+_sb = _judge44(_rb, _eq44(date(2026, 10, 5)), date(2026, 10, 5))
+check(6, "proof stint b: a losing week resets the streak to 0, counts one non-rising, and does not fail the stint",
+      _sb["streak"] == 0 and _sb["non_rising"] == 1 and _sb["cum_pnl_usd"] == -577.0 and _sb["worst_week_usd"] == -612.0
+      and _sb["worst_week_expiry"] == "2026-10-02" and _sb["status"] == "RUNNING")
+_rc = [_rec44("2026-09-25", 35.0), _rec44("2026-10-09", 40.0)]
+_sc = _judge44(_rc, _eq44(date(2026, 10, 12)), date(2026, 10, 12))
+_wc = [w for w in _sc["weeks"] if w["expiry"] == "2026-10-02"][0]
+check(6, "proof stint c: a no-record week with BEAR re-derived is PAUSED - streak 2 holds through it, no mechanics entry",
+      _wc["kind"] == "PAUSED" and _wc["regime_rederived"] == "BEAR" and _sc["streak"] == 2 and _sc["paused"] == 1
+      and _sc["paused_unexplained"] == 0 and not _sc["mechanics"])
+_sd = _judge44(_rc, _eq44(date(2026, 10, 12)), date(2026, 10, 12), regime=lambda d: ("MILD", 0.004), seen=lambda d: False)
+_wd = [w for w in _sd["weeks"] if w["expiry"] == "2026-10-02"][0]
+check(6, "proof stint d: a no-record week that was not BEAR is PAUSED_UNEXPLAINED with one mechanics entry naming it and 'entry window: no'",
+      _wd["kind"] == "PAUSED_UNEXPLAINED" and _sd["paused_unexplained"] == 1 and _sd["streak"] == 2 and len(_sd["mechanics"]) == 1
+      and "2026-10-02" in _sd["mechanics"][0]["text"] and "entry window: no" in _sd["mechanics"][0]["text"])
+_re_ = [_rec44("2026-09-25", 27.0, closed_early={"XSP260925P00757000": 0.45, "XSP260925P00741000": 0.10})]
+_se = _judge44(_re_, _eq44(date(2026, 9, 28)), date(2026, 9, 28))
+_te = _m44.week_close_text(_se, _se["weeks"][0])
+check(6, "proof stint e: a broker-closed-early week counts on its realised P&L, is flagged, and its telegram says CLOSED EARLY AT THE BROKER",
+      _se["weeks"][0]["verdict"] == "RISING" and _se["weeks"][0]["closed_early"] is True and bool(_se["mechanics"])
+      and "CLOSED EARLY AT THE BROKER" in _te and _te.startswith("PROOF WEEK 1 CLOSED"))
+_sf = _judge44([], _eq44(date(2026, 10, 7), {"2026-09-21": 5100.0, "2026-10-07": 3560.0}), date(2026, 10, 7), include_today=True)
+_sf2 = _judge44([], _eq44(date(2026, 10, 7), {"2026-09-21": 5100.0, "2026-10-07": 3580.0}), date(2026, 10, 7), include_today=True)
+check(6, "proof stint f: equity at or below 70% of the running high-water FAILS the stint (DD_BREACH on that day's close mark, floor 3570)",
+      _sf["status"] == "FAILED" and _sf["fail_reason"] == "DD_BREACH" and _sf["equity"]["breach_day"] == "2026-10-07"
+      and _sf["equity"]["floor"] == 3570.0)
+check(6, "proof stint f: 3580 against a 5100 high-water is a 29.8% drawdown - RUNNING, no breach",
+      _sf2["status"] == "RUNNING" and _sf2["equity"]["breach_day"] is None and approx(_sf2["equity"]["dd_pct"], -29.8, 0.05))
+_of = [_rec44("2026-10-09")]
+_sfo = _judge44(_of, _eq44(date(2026, 10, 7), {"2026-09-21": 5100.0}), date(2026, 10, 7))
+_sfo2 = _judge44(_of, _eq44(date(2026, 10, 7), {"2026-09-21": 5300.0}), date(2026, 10, 7))
+check(6, "proof stint f: the open 757/741 spread's max loss ($1,565) breaches the bound while high-water is under $5,217, not above (A11)",
+      _sfo["open"]["max_loss_usd"] == 1565.0 and _sfo["open"]["full_loss_breaches"] is True and _sfo2["open"]["full_loss_breaches"] is False)
+_sg = _judge44(_seq44([35.0, -100.0, 35.0, -100.0, -100.0]), _eq44(date(2026, 10, 26)), date(2026, 10, 26))
+# the design's second example (R L R L R L) DOES hold three non-rising in five (weeks 2-6), so the no-fail case is R L R R L R L
+_sg2 = _judge44(_seq44([35.0, -100.0, 35.0, 35.0, -100.0, 35.0, -100.0]), _eq44(date(2026, 11, 9)), date(2026, 11, 9))
+check(6, "proof stint g: R L R L L fails THREE_IN_FIVE on the third loss; R L R R L R L never has three in any five and runs on with streak 0",
+      _sg["status"] == "FAILED" and _sg["fail_reason"] == "THREE_IN_FIVE" and _sg["fail_date"] == "2026-10-23"
+      and _sg2["status"] == "RUNNING" and _sg2["streak"] == 0 and _sg2["fail_reason"] is None)
+_sh = _judge44(_seq44([35.0] * 8), _eq44(date(2026, 11, 16)), date(2026, 11, 16))
+_sh2 = _judge44(_seq44([35.0] * 20), _eq44(date(2027, 2, 8)), date(2027, 2, 8))
+_sh3 = _judge44(_seq44([35.0] * 19 + [-465.0]), _eq44(date(2027, 2, 8)), date(2027, 2, 8))
+check(6, "proof stint h: 8 rising weeks -> STREAK_MET_EXTENDING on 2026-11-13 with capture not yet evaluable",
+      _sh["status"] == "STREAK_MET_EXTENDING" and _sh["streak_met_on"] == "2026-11-13" and _sh["capture"]["evaluable"] is False)
+check(6, "proof stint h: 20 rising weeks of +35 -> PASSED with capture 1.62 of the frozen +21.6",
+      _sh2["status"] == "PASSED" and approx(_sh2["capture"]["ratio"], 1.62, 0.01) and _sh2["capture"]["closed"] == 20)
+check(6, "proof stint h: 20 closed trades averaging +$10 with the streak met -> FAILED CAPTURE_BELOW_60 (A7)",
+      _sh3["status"] == "FAILED" and _sh3["fail_reason"] == "CAPTURE_BELOW_60" and _sh3["streak_met_on"] == "2026-11-13"
+      and approx(_sh3["mean_per_traded_week_usd"], 10.0, 0.01))
+_si = _judge44(_seq44([-1340.0] + [35.0] * 8), _eq44(date(2026, 11, 23)), date(2026, 11, 23))
+check(6, "proof stint i: streak 8 with the settled curve under water does not meet the bar, and the block says so",
+      _si["streak"] == 8 and _si["streak_met_on"] is None and _si["under_water_at_8"] == "2026-11-20"
+      and "curve under water" in _m44.render(_si))
+_rj = [_rec44("2026-09-25")]
+_sj = _judge44(_rj, _eq44(date(2026, 9, 28)), date(2026, 9, 28))
+_sj2 = _judge44(_rj, _eq44(date(2026, 9, 30)), date(2026, 9, 30))
+check(6, "proof stint j: an unsettled expired record is TRADED_PENDING with no verdict and no streak; after 2 sessions a mechanics entry appears",
+      _sj["weeks"][0]["kind"] == "TRADED_PENDING" and _sj["weeks"][0]["verdict"] is None and _sj["streak"] == 0
+      and "settle pending since 2026-09-25" in _m44.render(_sj) and not _sj["mechanics"]
+      and bool(_sj2["mechanics"]) and _sj2["mechanics"][0]["kind"] == "SETTLE_PENDING")
+_sk = _judge44([_rec44("2026-09-25", 35.0), _rec44("2026-10-02", 33.0, tsid="p1"), _rec44("2026-10-02", 33.0, tsid="p2")],
+               _eq44(date(2026, 10, 5)), date(2026, 10, 5))
+_wk = [w for w in _sk["weeks"] if w["expiry"] == "2026-10-02"][0]
+check(6, "proof stint k: two records in one expiry week are one traded week on the summed P&L, flagged, counted once in the streak (A9)",
+      _wk["kind"] == "TRADED" and _wk["pnl_usd"] == 66.0 and _wk["records"] == 2 and _sk["streak"] == 2 and _sk["traded"] == 2
+      and len(_sk["mechanics"]) == 1 and _sk["mechanics"][0]["kind"] == "DOUBLE_RECORD")
+_sl = _judge44([_rec44("2026-09-25", 35.0), _rec44("2026-10-02", 33.0)], _eq44(date(2026, 10, 5), skip={"2026-10-01"}), date(2026, 10, 5))
+_wl = [w for w in _sl["weeks"] if w["expiry"] == "2026-10-02"][0]
+check(6, "proof stint l: a settled week with a hole in the daily equity series is UNCOUNTED - streak held, hole named (A10)",
+      _wl["kind"] == "UNCOUNTED" and _sl["uncounted"] == 1 and _sl["streak"] == 1 and _sl["equity"]["holes"] == ["2026-10-01"])
+_sm = _judge44(_ra, _eq44(date(2026, 9, 28), hour=13), date(2026, 9, 28))
+check(6, "proof stint m: 13:3x rows are open marks (listed, and the week's basis says open); 19:5x rows are close marks",
+      "2026-09-21" in _sm["equity"]["open_mark_days"] and _sm["weeks"][0]["equity_basis"] == "open"
+      and _sa["weeks"][0]["equity_basis"] == "close" and _sa["equity"]["open_mark_days"] == [])
+_sn = _judge44(_ra, _eq44(date(2026, 9, 28)), date(2026, 9, 28))
+_sent44 = []
+_m44.announce(_sn, lambda t: _sent44.append(t) or True, log=lambda *a: None)
+_n1 = len(_sent44)
+_m44.announce(_sn, lambda t: _sent44.append(t) or True, log=lambda *a: None)
+_sn2 = _judge44(_ra, _eq44(date(2026, 9, 28)), date(2026, 9, 28))
+_m44.announce(_sn2, lambda t: False, log=lambda *a: None)
+check(6, "proof stint n: the week-close telegram is sent once and marked only after a confirmed send; a failed send stays unmarked for retry",
+      _sn["announced"] == ["2026-09-25"] and _n1 == 1 and len(_sent44) == 1 and _sn2["announced"] == []
+      and _sent44[0].startswith("PROOF WEEK 1 CLOSED (expiry 2026-09-25): +$35"), _sent44[0][:90] if _sent44 else "nothing sent")
+_bo = _m44.render(_sa)
+check(6, "proof stint o: Clopper-Pearson arithmetic and the fixed honesty wording on the block's face",
+      approx(_m44.cp_upper(0, 8), 0.3123, 0.001) and approx(_m44.cp_upper(10, 122), 0.1351, 0.001)
+      and approx(_m44.cp_upper(0, 20), 0.1391, 0.001) and "0.92^8" in _bo and "51%" in _bo and "sd is about $180" in _bo
+      and "Clopper-Pearson" in _bo and "survival and mechanics" in _bo)
+_sp1 = _judge44(_rb, _eq44(date(2026, 10, 5)), date(2026, 10, 5))
+_sp2 = _judge44(_rb, _eq44(date(2026, 10, 5)), date(2026, 10, 5))
+_sp1.pop("as_of"); _sp2.pop("as_of")
+check(6, "proof stint p: the state is derived, so judging the same inputs twice gives the same state", _sp1 == _sp2)
+_sb44 = open("scripts/trajectory_scoreboard.py", encoding="utf-8").read()
+_dd44 = open("scripts/daily_digest.py", encoding="utf-8").read()
+_sa["as_of"] = "2026-09-28T14:07:12+00:00"                       # the judge ran that day; a stale state is tagged, tested separately
+_dl44 = _m44.digest_line(_sa, date(2026, 9, 28))
+_dl44_stale = _m44.digest_line(dict(_sa, as_of="2026-09-25T22:18:00+00:00"), date(2026, 9, 28))
+sys.modules["proof_stint"] = _m44
+_sp44m = _ilu36.spec_from_file_location("morning_analyst", "scripts/morning_analyst.py")
+_ma44 = _ilu36.module_from_spec(_sp44m); _sp44m.loader.exec_module(_ma44)
+_ma44.tail = lambda p, n=25: "(tail patched)"
+_rs44 = _m44.read_state
+_m44.read_state = lambda: _sa
+try:
+    _g44 = _ma44.gather()
+finally:
+    _m44.read_state = _rs44
+_spec44 = __import__("json").load(open("fade_book_spec.json", encoding="utf-8"))["proof_account"]
+check(6, "proof stint q: the scoreboard, the digest and the analyst read the judge's state, and the spec holds no stint numbers",
+      "rising_weeks" not in _sb44 and "proof_stint" in _sb44 and "proof_stint.digest_line" in _dd44 and _dl44.startswith("Proof stint:")
+      and "1/8 rising traded weeks" in _dl44 and "(state from" not in _dl44 and "(state from 2026-09-25)" in _dl44_stale
+      and "== PROOF STINT (last night's judge" in _g44 and "Streak 1/8" in _g44
+      and "rising_weeks" not in _spec44 and "week_history" not in _spec44
+      and all(k in _spec44["seats"][0].get("stint_constants", {}) for k in _C44), _dl44[:100])
+_fs44 = open("scripts/freshness_sentinel.py", encoding="utf-8").read()
+check(6, "proof stint r: the freshness sentinel carries the judge's row at (22, 18, WEEKDAYS)",
+      '("proof stint judge", "schedule", H + "/proof_stint.log", (22, 18, WEEKDAYS), "MONITOR")' in _fs44)
+# s-x (review fixes 2026-09-26): the capture verdict is latched at the 20th closed trade's week, today's intraday
+# mark is shown but not judged before 21:00 UTC, a hole-restored week pages its counted close once, a week after a
+# verdict says so, a Friday/Saturday re-seat never inherits the old stint's expiry, and main() cannot raise into cron.
+_rs1 = _seq44([35.0] * 19 + [-465.0])
+_rs2 = _seq44([35.0] * 19 + [-465.0, 35.0])
+_rs3 = _seq44([35.0] * 20 + [-1000.0])
+_ss1 = _judge44(_rs1, _eq44(date(2027, 2, 19)), date(2027, 2, 19))
+_ss2 = _judge44(_rs2, _eq44(date(2027, 2, 19)), date(2027, 2, 19))
+_ss3 = _judge44(_rs3, _eq44(date(2027, 2, 19)), date(2027, 2, 19))
+check(6, "proof stint s: 19x+35 then -465 FAILS capture at the 20th trade's expiry (2027-02-05) and trade 21 (+35) changes nothing - "
+         "verdict, fail_date, traded 20, curve +200 all latched; the 21st week is reported outside the counters",
+      _ss1["status"] == "FAILED" and _ss1["fail_reason"] == "CAPTURE_BELOW_60" and _ss1["fail_date"] == "2027-02-05"
+      and _ss2["status"] == "FAILED" and _ss2["fail_reason"] == "CAPTURE_BELOW_60" and _ss2["fail_date"] == "2027-02-05"
+      and _ss2["traded"] == 20 and _ss2["cum_pnl_usd"] == 200.0 and _ss2["capture"]["closed"] == 20
+      and _ss2["capture"]["tested_on"] == "2027-02-05" and _ss2["capture"]["passed"] is False and len(_ss2["weeks"]) == 21
+      and _ss2["latched_on"] == "2027-02-05",
+      f"{_ss2['status']} {_ss2['fail_reason']} {_ss2['fail_date']} traded={_ss2['traded']} cum={_ss2['cum_pnl_usd']} weeks={len(_ss2['weeks'])}")
+check(6, "proof stint s: 20x+35 PASSES at the 2027-02-05 expiry and a -1,000 week after it stays outside the counters (PASSED latched, streak 20, curve +700)",
+      _ss3["status"] == "PASSED" and _ss3["pass_date"] == "2027-02-05" and _ss3["fail_reason"] is None and _ss3["traded"] == 20
+      and _ss3["streak"] == 20 and _ss3["cum_pnl_usd"] == 700.0 and _ss3["capture"]["passed"] is True and len(_ss3["weeks"]) == 21
+      and "PASSED:2027-02-05" in [k for k, _ in _m44._event_texts(_ss3)],
+      f"{_ss3['status']} pass={_ss3.get('pass_date')} fail={_ss3['fail_reason']} traded={_ss3['traded']} streak={_ss3['streak']} cum={_ss3['cum_pnl_usd']}")
+_eqt = _eq44(date(2026, 9, 28), {"2026-09-28": 3400.0})
+_st1 = _judge44(_ra, _eqt, date(2026, 9, 28))
+_st2 = _judge44(_ra, _eqt, date(2026, 9, 28), include_today=True)
+check(6, "proof stint t: today's row 3,400 vs high-water 5,035 is an intraday mark at 14:07 (shown, not judged: no breach, bound judged through 09-25); the same row at 22:18 breaches",
+      _st1["status"] == "RUNNING" and _st1["equity"]["breach_day"] is None and _st1["equity"]["hwm"] == 5035.0
+      and _st1["equity"]["last"] == 3400.0 and _st1["equity"]["today_intraday"] is True and _st1["equity"]["judged_through"] == "2026-09-25"
+      and "intraday" in _m44.render(_st1)
+      and _st2["status"] == "FAILED" and _st2["fail_reason"] == "DD_BREACH" and _st2["equity"]["breach_day"] == "2026-09-28",
+      f"14:07 {_st1['status']} breach={_st1['equity']['breach_day']} | 22:18 {_st2['status']} breach={_st2['equity']['breach_day']}")
+_ru = [_rec44("2026-09-25", 35.0), _rec44("2026-10-02", 33.0)]
+_su1 = _judge44(_ru, _eq44(date(2026, 10, 5), skip={"2026-10-01"}), date(2026, 10, 5))
+_sent_u = []
+_m44.announce(_su1, lambda t: _sent_u.append(t) or True, log=lambda *a: None)
+_su2 = _judge44(_ru, _eq44(date(2026, 10, 5)), date(2026, 10, 5))
+_su2["announced"] = list(_su1["announced"])
+_n_u = len(_sent_u)
+_m44.announce(_su2, lambda t: _sent_u.append(t) or True, log=lambda *a: None)
+check(6, "proof stint u: an UNCOUNTED week is announced under UNCOUNTED:<expiry>; once the hole is restored its counted week-close pages exactly once under the plain key",
+      "UNCOUNTED:2026-10-02" in _su1["announced"] and "2026-10-02" not in _su1["announced"]
+      and "2026-10-02" in _su2["announced"] and len(_sent_u) == _n_u + 1
+      and _sent_u[-1].startswith("PROOF WEEK 2 CLOSED (expiry 2026-10-02): +$33") and "UNCOUNTED" not in _sent_u[-1],
+      f"first={_su1['announced']} then={_su2['announced']} sends={len(_sent_u)}")
+_sv = _judge44(_seq44([35.0, -100.0, 35.0, -100.0, -100.0, 35.0]), _eq44(date(2026, 11, 2)), date(2026, 11, 2))
+_wv = [w for w in _sv["weeks"] if w["expiry"] == "2026-10-30"][0]
+_tv = _m44.week_close_text(_sv, _wv)
+check(6, "proof stint v: a week closed after a FAIL carries no streak sentence - it says the stint FAILED on 2026-10-23 (THREE_IN_FIVE) and is outside the counters",
+      _sv["status"] == "FAILED" and _sv["fail_date"] == "2026-10-23" and _sv["traded"] == 5
+      and "Stint FAILED on 2026-10-23 (THREE_IN_FIVE); this week is outside the counters" in _tv
+      and "Streak reset" not in _tv and "/8 rising traded weeks" not in _tv, _tv.split("\n")[1][:120] if "\n" in _tv else _tv[:120])
+_rw = [_rec44("2026-09-25", 35.0), _rec44("2026-10-02", 33.0)]
+_sw_fri = _judge44(_rw, _eq44(date(2026, 10, 5)), date(2026, 10, 5), seated=date(2026, 9, 25))
+_sw_sat = _judge44(_rw, _eq44(date(2026, 10, 5)), date(2026, 10, 5), seated=date(2026, 9, 26))
+_sw_mon = _judge44(_rw, _eq44(date(2026, 10, 5)), date(2026, 10, 5), seated=date(2026, 9, 28))
+check(6, "proof stint w: a re-seat dated Friday 09-25 or Saturday 09-26 starts at the 10-02 week (the 09-25 expiry, entered 09-21, belongs to the old stint); "
+         "a Monday 09-28 seat counts its own week; the live Sunday seat still sees 09-25",
+      [w["expiry"] for w in _sw_fri["weeks"]] == ["2026-10-02"] and _sw_fri["traded"] == 1 and _sw_fri["cum_pnl_usd"] == 33.0
+      and _sw_fri["capture"]["closed"] == 1 and [w["expiry"] for w in _sw_sat["weeks"]] == ["2026-10-02"]
+      and [w["expiry"] for w in _sw_mon["weeks"]] == ["2026-10-02"] and _sa["weeks"][0]["expiry"] == "2026-09-25",
+      f"fri={[w['expiry'] for w in _sw_fri['weeks']]} sat={[w['expiry'] for w in _sw_sat['weeks']]} mon={[w['expiry'] for w in _sw_mon['weeks']]}")
+import io as _io44
+import contextlib as _ctx44
+os.environ["PROOF_STINT_STATE"] = "/nonexistent_dir/x.json"
+_spx = _ilu36.spec_from_file_location("proof_stint_x", "scripts/proof_stint.py")
+_mx = _ilu36.module_from_spec(_spx); _spx.loader.exec_module(_mx)
+os.environ.pop("PROOF_STINT_STATE", None)
+_mx.send_telegram = lambda t: False                                   # no network from the gate, ever
+_mx._publish_tracked = lambda *a, **k: (_ for _ in ()).throw(AssertionError("publish must not run in the gate"))
+_bufx = _io44.StringIO()
+with _ctx44.redirect_stdout(_bufx):
+    _rcx = _mx.main([])
+_outx = _bufx.getvalue()
+check(6, "proof stint x: PROOF_STINT_STATE=/nonexistent_dir/x.json -> main() returns 0 with one 'PROOF STINT: FAILED at WRITE' line and no traceback (cron-safe)",
+      _rcx == 0 and _mx.DURABLE == "/nonexistent_dir/x.json" and "PROOF STINT: FAILED at WRITE /nonexistent_dir/x.json" in _outx
+      and "Traceback" not in _outx and "PROOF STINT 20" in _outx, f"rc={_rcx} out={_outx[-160:]!r}")
+_so = _judge44([_rec44("2026-10-09", short_k=None, long_k=None)], _eq44(date(2026, 10, 7)), date(2026, 10, 7))
+check(6, "proof stint x: an open record with no strikes renders 'max loss unknown' in the block and the brief instead of raising",
+      _so["open"]["max_loss_usd"] is None and "max loss unknown" in _m44.render(_so) and "max loss unknown" in _m44.brief_block(_so, date(2026, 10, 7)))
+
+# 6.45 THE KILL SWITCH PULLS WITH --autostash (BREAKDOWNS 2026-09-26 second entry): scripts/watchdog_vps.sh rewrites
+# watchdog_status.json in ~/harvest-snapshots every quarter-hour and only the nightly snapshot committed it, so a plain
+# `git pull --rebase` there refused ("You have unstaged changes") and /halt could not publish outside one quarter-hour a day.
+_tc45 = open("scripts/telegram_commands.py", encoding="utf-8").read()
+_wf45 = _tc45.split("def _write_flag(")[1].split("\ndef ")[0]
+check(6, "the kill switch's pull carries --autostash so a dirty watchdog stamp cannot block a /halt publish",
+      '"--rebase", "--autostash"' in _wf45)
+
+# 6.46 THE DEAD LEARNING JOBS ARE RETIRED (2026-09-26): the harvest froze on 2026-09-25 and the court's docket held no
+# living challenger. A sentinel row for a job that no longer runs pages every morning; the persist step must not carry
+# the frozen transport; the kill switch's channel keeps a liveness row of its own.
+_fs46 = open("scripts/freshness_sentinel.py", encoding="utf-8").read()
+_rows46 = [l for l in _fs46.splitlines() if l.strip().startswith("(")]
+_wf46 = open(os.path.join(".github", "workflows", "v10_lab.yml"), encoding="utf-8").read()
+check(6, "retired 2026-09-26: no sentinel row watches the poller, the court, the integrity gate, the archiver watch or the nightly snapshot",
+      not any(any(k in l for k in ('"harvest poller log"', '"nightly boundary', '"friday court"', '"integrity gate"',
+                                     '"archiver watch"', '"off-box backup"', '"off-box snapshot repo"', '"challengers parses"'))
+              for l in _rows46)
+      and any('"kill-switch repo push sync", "push_sync"' in l for l in _rows46)
+      and any('"vps mirror sync", "schedule"' in l for l in _rows46) and os.path.exists("scripts/mirror_sync_vps.sh"))
+check(6, "retired 2026-09-26: the persist step no longer carries the harvest inbox or state, and the fail-open harvest hook still runs",
+      not any(l.strip().startswith("git add") and "harvest_inbox" in l for l in _wf46.splitlines())
+      and "harvest_logger.harvest_scan(" in open("sandbox_proactive_lab.py", encoding="utf-8").read())
+# review fixes 2026-09-26 (A, H, I, K): the external dead-man rides the mirror; the kill-switch pull is exercised daily;
+# a new sentinel row is "not yet due" before its first firing; the returns ledger names the court as retired.
+_ms46 = open("scripts/mirror_sync_vps.sh", encoding="utf-8").read()
+check(6, "the external dead-man rides the mirror: mirror_sync_vps.sh sources .harvest_env with set -a and pings HEALTHCHECK_URL on a clean sync, HEALTHCHECK_URL/fail otherwise",
+      "set -a" in _ms46 and ".harvest_env" in _ms46 and 'curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL"' in _ms46
+      and 'curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL/fail"' in _ms46 and '-n "${HEALTHCHECK_URL:-}"' in _ms46)
+check(6, "the kill-switch channel's pull is exercised daily: sentinel row 'kill-switch repo pull' (git_pull) runs pull --rebase --autostash and pages on rc != 0 or a leftover rebase",
+      any('"kill-switch repo pull", "git_pull"' in l for l in _rows46) and 'kind == "git_pull"' in _fs46
+      and '"pull", "--rebase", "--autostash", "origin", "main"' in _fs46 and "rebase-merge" in _fs46)
+check(6, "a sentinel schedule row younger than its first expected run is 'not yet due', not CHECK FAILED (FIRST_RUN carries the two 2026-09-26 rows)",
+      "FIRST_RUN = {" in _fs46 and '"vps mirror sync": datetime(2026, 9, 28' in _fs46 and '"proof stint judge": datetime(2026, 9, 28' in _fs46
+      and "name in FIRST_RUN" in _fs46)
+_rl46 = open("scripts/returns_ledger.py", encoding="utf-8").read()
+check(6, "the returns ledger names the court column as retired and reads the frozen log without implying currency",
+      "court (retired 2026-09-26, last standing)" in _rl46 and "frozen" in _rl46.split("def court_side(")[1].split("\ndef ")[0])
 total = len(RESULTS)
 passed = sum(1 for r in RESULTS if r[2])
 by_dim = {}

@@ -14,8 +14,9 @@ from the code. This map is the maintained verification source for the engine; `s
   `~/swing-trading-scanner`, always at `origin/main`. The laptop checkout under OneDrive is weeks
   stale and must never be read for engine facts or edited.
 - The engine itself runs on GitHub Actions (`.github/workflows/v10_lab.yml`) every 10 minutes,
-  13:00-21:00 UTC on weekdays, from `main`. The VPS runs the poller, the watchdogs, the evidence
-  chain and the court from cron.
+  13:00-21:00 UTC on weekdays, from `main`. The VPS runs the watchdogs, the proof stint judge, the
+  daily bar archive and the evening reports from cron (the poller, the evidence chain and the court
+  retired 2026-09-21/26).
 - `fade_book_spec.json` is edited only on the VPS. `SYSTEM_ARCHITECTURE.md` is present tense,
   `ROADMAP.md` is future tense, `BREAKDOWNS.md` is append-only and every fix adds its entry.
 
@@ -36,13 +37,13 @@ from the code. This map is the maintained verification source for the engine; `s
 | probe-roster.md | the seven-strategy probe loop, rotation, attempt budget | a cycle log's `probes:` line |
 | student-seat.md | the pickers: pool, rank, select, budget, export | drill scenarios 6-7, MOT 6.11/6.17 |
 | credit-spread.md | the weekly XSP credit spread and the $5k defined-risk probes | drill scenario 5, Monday settle line |
-| proof-book.md | the $5,000 proof account ("promotion 1"), its isolation and its one seat | MOT 6.31, a cycle log's `PROOF` lines |
+| proof-book.md | the $5,000 proof account ("promotion 1"), its isolation, its one seat and the stint judge | MOT 6.31/6.44, a cycle log's `PROOF` lines, the `PROOF STINT` line in proof_stint.log |
 | entry-path.md | enter_proactive_set: guards, legs, repricing, PENDING, routing | drill scenarios 1-4, MOT 6.14 |
 | exit-engine.md | exits, backstops, VOID, autopsy | MOT dimension 3, 6.13 |
 | reconcile.md | pending-intent and orphan roll-calls, stale orders, log integrity | MOT 6.14 (both) |
 | persist-and-merge.md | the GHA persist step, resolver, union guard | `merge_logs.py --selftest` |
-| harvest-transport.md | counterfactual harvest -> inbox -> VPS poller -> labels | `test_harvest_passivity.py` |
-| evidence-and-court.md | corpora, tuner, glide, court, scoreboard, student research | Friday logs |
+| harvest-transport.md | counterfactual harvest (RETIRED 2026-09-26; frozen record) | `test_harvest_passivity.py` still runs |
+| evidence-and-court.md | corpora, tuner, glide, court (retired 2026-09-26), scoreboard | Friday scoreboard log |
 | daily-bars.md | the daily share-price archive, the only forward data capture | MOT 6.38 |
 | vps-crons.md | every cron slot, its log, its freshness row | `scripts/freshness_sentinel.py` |
 | telegram-and-watchdogs.md | notifications, owner commands, dead-man watchdogs, auto-rollback | watchdog logs |

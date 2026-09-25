@@ -20,7 +20,8 @@ ALLOW_MISSING = {"data/harvest.db", "data/uw_history.db", "data/hourly_paths.db"
                  "reports/research/student_asof_v3.jsonl", "reports/shadow_lab/student_scores.jsonl",
                  "reports/shadow_lab/sentinels.jsonl", "reports/shadow_lab/ledger.jsonl",
                  "reports/shadow_lab/trajectory.log", "proactive_autopsy_log.md", "data/last_cycle_ok",
-                 "reports/research/superseded"}
+                 "reports/research/superseded",
+                 "reports/performance/proof_stint.json"}   # written by the judge's first Friday run (2026-09-26)
 CITE = re.compile(r"`([A-Za-z0-9_./\-]+\.(?:py|sh|yml|json|md|jsonl|db|log))(?::([A-Za-z_][A-Za-z0-9_]*))?`")
 
 

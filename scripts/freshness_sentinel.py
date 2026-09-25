@@ -31,6 +31,12 @@ GRACE_H = 2.0
 
 WEEKDAYS = {0, 1, 2, 3, 4}
 DAILY = {0, 1, 2, 3, 4, 5, 6}
+# a schedule row whose log does not exist until its job first fires is "not yet due" until that firing (+ grace),
+# never CHECK FAILED: name -> first scheduled firing, UTC. Rows leave this dict once their log exists for good.
+FIRST_RUN = {
+    "vps mirror sync": datetime(2026, 9, 28, 13, 0, tzinfo=timezone.utc),
+    "proof stint judge": datetime(2026, 9, 28, 14, 7, tzinfo=timezone.utc),
+}
 
 try:                                    # holiday-aware (coverage audit 2026-09-07): the 07-02
     import pandas_market_calendars as _mcal    # harvest lesson - exchange calendars in ALL date
@@ -71,27 +77,30 @@ CHECKS = [
     # the one write was at 13:3x and landed at 13:45; 20:30 would page every summer day for the same reason.
     # A schedule row's time is read from the writer's timestamp AND the pull that lands it, never assumed.
     ("proof book equity samples", "schedule", "proof_logs_equity.jsonl", (19, 30, WEEKDAYS), "TRADE"),
-    ("harvest poller log", "schedule", "data/poller.log", (21, 0, WEEKDAYS), "TRADE"),
+    # the poller is retired (2026-09-26) but its quarter-hour mirror of origin/main is not: scripts/mirror_sync_vps.sh
+    # keeps the reset that lands the three files above, and this row proves it ran to the session's last slot
+    ("vps mirror sync", "schedule", H + "/mirror_sync.log", (21, 45, WEEKDAYS), "TRADE"),
     ("engine watch log", "schedule", H + "/engine_watch.log", (19, 30, WEEKDAYS), "TRADE"),
     ("telegram commands state", "mtime", H + "/telegram_commands_state.json", 1.0, "MONITOR"),
-    # -- harvest data: labels and candidates must track the market
-    # -- evidence stores: everything tuning/promotion decisions read
-    # -- nightly rhythm: courts, student, digests, integrity
-    ("nightly boundary (SEQ_APPLY)", "schedule", H + "/trajectory_nightly.log", (22, 0, WEEKDAYS), "COURT"),
-    ("friday court", "schedule", H + "/sunday_boundary.log", (22, 35, {4}), "COURT"),
+    # RETIRED 2026-09-26 (the harvest froze on 2026-09-25 with its last label; the court's docket held no living
+    # challenger): harvest poller log, nightly boundary, friday court, integrity gate, archiver watch, off-box backup,
+    # off-box snapshot repo, challengers parses. Recoverable from git history.
+    # -- nightly rhythm: the proof stint judge, digests, watches
+    # the judge appends its own log on every run, so this row reads the writer's clock, not a landing pull
+    ("proof stint judge", "schedule", H + "/proof_stint.log", (22, 18, WEEKDAYS), "MONITOR"),
     ("daily digest", "schedule", H + "/digest.log", (22, 20, WEEKDAYS), "MONITOR"),
-    ("integrity gate", "schedule", H + "/integrity_gate.log", (22, 5, {1, 2, 3, 4, 5}), "MONITOR"),
     ("landing watch", "schedule", H + "/landing_watch.log", (22, 45, {0, 1, 2, 3, 4, 5}), "MONITOR"),
-    ("archiver watch", "schedule", H + "/archiver_watch.log", (22, 15, WEEKDAYS), "MONITOR"),
     ("evening persist", "schedule", H + "/evening_persist.log", (22, 45, WEEKDAYS), "MONITOR"),
-    ("off-box backup", "schedule", "data/snapshot.log", (21, 30, WEEKDAYS), "MONITOR"),
     ("xsp quote log", "schedule", H + "/xsp_quotes.log", (19, 50, WEEKDAYS), "EVIDENCE"),
     ("trajectory scoreboard", "schedule", H + "/scoreboard.log", (22, 25, {4}), "MONITOR"),
     # -- v1.1 (registry sweep 2026-09-04): failure modes mtime checks cannot see
     ("repo push sync", "push_sync", ".", None, "COURT"),
-    ("off-box snapshot repo", "git_commit", H + "/harvest-snapshots", (21, 30, WEEKDAYS), "TRADE"),
+    # the /halt kill switch publishes through this checkout (BREAKDOWNS 2026-09-26 second entry): an unpushed commit
+    # here means a flag that never reached the engine, and a refused pull returns False there before any commit
+    # exists (invisible to push_sync), so the pull itself is exercised every morning
+    ("kill-switch repo push sync", "push_sync", H + "/harvest-snapshots", None, "TRADE"),
+    ("kill-switch repo pull", "git_pull", H + "/harvest-snapshots", None, "TRADE"),
     ("spec parses", "json_ok", "fade_book_spec.json", None, "TRADE"),
-    ("challengers parses", "json_ok", "challengers.json", None, "COURT"),
     ("expired legs still open", "expired_open", "proactive_sandbox_logs.json", 1, "TRADE"),
     ("ghost open records", "ghost_open", "proactive_sandbox_logs.json", 10, "TRADE"),
     # the proof book keeps its own records, so the discovery rows above cannot see it (BREAKDOWNS 2026-09-22)
@@ -150,6 +159,9 @@ def main():
             if kind == "schedule":
                 exp = last_expected(spec[0], spec[1], spec[2], now)
                 if exp is None:
+                    continue
+                if not os.path.exists(target) and name in FIRST_RUN and now < FIRST_RUN[name] + timedelta(hours=GRACE_H):
+                    fresh += 1              # younger than its first expected run: not yet due
                     continue
                 mt = datetime.fromtimestamp(os.path.getmtime(target), tz=timezone.utc)
                 if mt < exp:
@@ -210,9 +222,27 @@ def main():
                                     capture_output=True, text=True).stdout.splitlines()
                 if sb and "ahead" in sb[0]:
                     stale.append(f"[{crit}] {name}: unpushed commits ({sb[0].strip()}) - "
-                                 "push credential or network dead; court artifacts frozen on origin")
+                                 f"push credential or network dead; what {target} publishes is frozen on origin")
                 else:
                     fresh += 1
+            elif kind == "git_pull":
+                import subprocess
+                # scripts/telegram_commands.py:_write_flag publishes /halt by pull --rebase --autostash, commit, push;
+                # a pull that a leftover rebase or a refused rebase blocks fails there silently (False before any
+                # commit), so this row runs the same pull and pages on rc != 0 or on an unfinished rebase
+                gd = os.path.join(target, ".git")
+                left = [n for n in ("rebase-merge", "rebase-apply", "REBASE_HEAD") if os.path.exists(os.path.join(gd, n))]
+                if left:
+                    stale.append(f"[{crit}] {name}: unfinished rebase in {target} ({', '.join(left)}) - the /halt "
+                                 "channel cannot publish until it is aborted (git rebase --abort)")
+                else:
+                    r = subprocess.run(["git", "-C", target, "pull", "--rebase", "--autostash", "origin", "main"],
+                                       capture_output=True, text=True, timeout=120)
+                    if r.returncode != 0:
+                        stale.append(f"[{crit}] {name}: pull refused (rc {r.returncode}: "
+                                     f"{(r.stderr or r.stdout).strip()[:80]}) - the /halt channel cannot publish")
+                    else:
+                        fresh += 1
             elif kind == "git_commit":
                 import subprocess
                 ct = subprocess.run(["git", "-C", target, "log", "-1", "--format=%ct"],

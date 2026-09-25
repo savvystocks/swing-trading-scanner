@@ -3,7 +3,7 @@ explained better on telegram").
 
 One plain-English message every market evening (22:20 UTC) that explains the whole day:
 what traded, what closed, what the market regime was, whether fade was allowed on the field,
-what the court learned (evidence days), any tidy-ups (adoptions/reconciles) translated, and
+the proof stint's standing (from the judge), any tidy-ups (adoptions/reconciles) translated, and
 what runs later tonight - so the owner never has to decode jargon or wonder what's missing.
 Read-only everywhere; failure of any section never blocks the rest.
 """
@@ -94,28 +94,17 @@ def main(today=None):
         L += trade_lines(recs, today)
     except Exception:
         L.append("Trade summary: log unavailable this evening.")
+    try:
+        import proof_stint
+        L.append(proof_stint.digest_line(proof_stint.read_state(), today))
+    except Exception:
+        L.append("Proof stint: judge state unavailable this evening.")
     L.append("")
 
-    # what the court learned (evidence odometer, compact)
-    try:
-        led = [json.loads(l) for l in open("reports/shadow_lab/ledger.jsonl", encoding="utf-8") if l.strip()]
-        seen = {}
-        for d in led:
-            seen.setdefault(d["day"], {}).update(d)
-        ndays = len(seen)
-        sent_seen = any(k.startswith("SENTINEL_") for d in seen.values() for k in d)
-        L.append(f"The court: {ndays} evidence days on file; every strategy was re-judged "
-                 "overnight against 200 random fakes (nothing promotes unless it beats the "
-                 "luckiest fake).")
-        if sent_seen:
-            L.append("The 8 test-dummies (sentinels) with known fake edges are walking the same "
-                     "court - they measure whether the judge itself works.")
-    except Exception:
-        pass
-    L.append("")
-    L.append("Still to run tonight: the nightly lab replay, the judge, the student's training, "
-             "and the data archive top-up - all automatic. Weekly deep review comes FRIDAY night "
-             "(it moved from Sunday, so no Sunday report is normal).")
+    # the court paragraph came out 2026-09-26: its three crons are retired and the shadow ledger it read froze on
+    # 2026-09-18, so "N evidence days on file" could only ever repeat one number.
+    L.append("Tonight's rhythm: the daily bar archive (22:15) and the proof stint judge (22:18) ran before this "
+             "note; the Friday scoreboard follows at 22:25 on Fridays - all automatic.")
     tg("\n".join(L))
 
 

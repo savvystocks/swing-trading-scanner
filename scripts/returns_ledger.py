@@ -2,7 +2,7 @@
 
 One script that recomputes every strategy's performance from the two sources of truth and writes
 one machine-readable ledger the performance map must agree with:
-  LIVE   - proactive_sandbox_logs.json, built EXACTLY as the Friday court builds it
+  LIVE   - proactive_sandbox_logs.json, built EXACTLY as the Friday court built it (the court retired 2026-09-26)
            (scripts/sunday_boundary.py): book PROBE, entry day, the first leg's return_pct, a
            settled weekly structure as pnl_usd / $1,000, STUDENT_* pooled into STUDENT_FAMILY;
            then per-trade mean and win rate, day means, days shared with the control, the court's
@@ -12,7 +12,8 @@ one machine-readable ledger the performance map must agree with:
            strategy filters, on the exit the roster runs (spec probe.tuning.<name>.exit snapped to
            the tuner's exit list, else BASE): %/day, the pool on the same days, t vs pool, halves.
            Strategies with no honest cell say so instead of carrying a stale number.
-  COURT  - the last standing line per strategy from the Friday court log.
+  COURT  - the last standing line per strategy from the retired court's frozen log (no run after 2026-09-25;
+           the column is historical and says so).
   CAPTURE - live day-mean over archive %/day, only with >= 20 live days (else the reason).
 Writes reports/performance/ledger.json and ledger.md; --update-map rewrites every
 [[KEY = value]] token in docs/performance_map/*.md from the ledger so the map can never quote a
@@ -33,7 +34,7 @@ sys.path.insert(0, os.path.join(REPO, "scripts"))
 
 BOOK = "proactive_sandbox_logs.json"
 CORPUS = "reports/research/probe_tuner_rows_v3.jsonl"
-COURT_LOG = os.path.expanduser("~/sunday_boundary.log")
+COURT_LOG = os.path.expanduser("~/sunday_boundary.log")     # frozen: the court retired 2026-09-26, its last lines stand
 OUT_JSON = "reports/performance/ledger.json"
 OUT_MD = "reports/performance/ledger.md"
 MAP = "docs/performance_map"
@@ -224,6 +225,8 @@ def archive_side(spec):
 
 
 def court_side():
+    """The retired court's last standing line per strategy, read from its frozen log (no run after 2026-09-25).
+    History, not a current verdict: nothing writes this log any more."""
     out = {}
     try:
         for line in open(COURT_LOG, encoding="utf-8", errors="ignore"):
@@ -310,9 +313,9 @@ def main():
     os.makedirs("reports/performance", exist_ok=True)
     json.dump(led, open(OUT_JSON, "w", encoding="utf-8"), indent=1)
     L = [f"# RETURNS LEDGER - {led['generated_at']}", "",
-         f"live from {BOOK} ({len(book)} records, the court's construction); archive from {CORPUS} "
+         f"live from {BOOK} ({len(book)} records, the retired court's construction); archive from {CORPUS} "
          f"({cmeta.get('rows')} rows, last day {cmeta.get('last_day')}, {cmeta.get('basis')}).", "",
-         "| strategy | live n | %/trade | win | best removed | unit | units | own mean | shared | t vs control | halves | $ | archive %/day (pool) | t vs pool | archive halves | court |",
+         "| strategy | live n | %/trade | win | best removed | unit | units | own mean | shared | t vs control | halves | $ | archive %/day (pool) | t vs pool | archive halves | court (retired 2026-09-26, last standing) |",
          "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     order = ACTIVE + sorted(s for s in led["strategies"] if s not in ACTIVE)
     for s in order:

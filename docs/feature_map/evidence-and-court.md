@@ -2,7 +2,11 @@
 
 ## What
 - 2026-09-21: the Unusual Whales evidence chain is RETIRED - the prints puller, the hourly bar library and the
-  nightly and Friday corpus chains no longer run, and the flow archive is frozen history. The court still runs.
+  nightly and Friday corpus chains no longer run, and the flow archive is frozen history.
+- 2026-09-26: the COURT is RETIRED - its three cron slots (Fri 22:35, Wed 10:00, nightly 22:00) are gone with their
+  sentinel rows; `scripts/sunday_boundary.py` stays in the tree and runs from nothing; the shadow ledger it read froze
+  on 2026-09-18 and `reports/shadow_lab/trajectory.log` and `reports/shadow_lab/sentinels.jsonl` stop growing. The one live strategy is
+  judged by `scripts/proof_stint.py` (docs/feature_map/proof-book.md), not by a court.
 The archive corpora that every backtest number comes from, the weekly tuner that judges anchor
 exits against incumbents, the Friday court that promotes or holds every probe against the control,
 and the scoreboard that reports where the system stands against the North Star.
@@ -20,8 +24,8 @@ and the scoreboard that reports where the system stands against the North Star.
   logged to `/home/poller/corpus_nightly.log`.
 - Tuner: Friday 20:15 UTC `scripts/probe_tuner.py` (report), 21:45 `scripts/tuner_apply.py`
   (verify-after-push, density guard; incumbents `pricey_4_9`).
-- Court: `scripts/sunday_boundary.py` Friday 22:35 UTC (Wednesday 10:00 report-only; nightly 22:00
-  trajectory): per probe, shared scoreable days with the control (weeks for `_W` structures),
+- Court (retired 2026-09-26, described as it ran): `scripts/sunday_boundary.py` Friday 22:35 UTC (Wednesday 10:00
+  report-only; nightly 22:00 trajectory): per probe, shared scoreable days with the control (weeks for `_W` structures),
   n >= 8, symmetric trim, t >= 1.8, own mean above the floor, both halves positive -> PROMOTE;
   the tuning clock `probe.tuning.<name>.applied` excludes pre-change days; demotion symmetry.
 - Scoreboard: `scripts/trajectory_scoreboard.py` Friday 22:25 (North Star block); the fade meta
@@ -29,7 +33,7 @@ and the scoreboard that reports where the system stands against the North Star.
 - Research reports: `reports/research/*.md` (basis diffs, capture ratio, spread study, formula
   searches); superseded corpora in `reports/research/superseded/`.
 
-## Exercise
+## Exercise (frozen 2026-09-25; retired 2026-09-26 - these read logs and corpora nothing writes any more)
 - `./.venv/bin/python scripts/returns_ledger.py` - the one-command performance table (live as the
   court reads it, archive on the executable basis, court standing), written to
   `reports/performance/ledger.md`; `--update-map` refreshes `docs/performance_map/`.
@@ -38,11 +42,11 @@ and the scoreboard that reports where the system stands against the North Star.
 - A strategy's honest cell: `grep <NAME> reports/research/basis_diff_v2_v3_2026-09-11.md`.
 
 ## Healthy
-- `PROBE FOLLOW_CALLS: 1/8 live virgin days vs control - HOLD`
+- `PROBE FOLLOW_CALLS: 1/8 live virgin days vs control - HOLD` (historical; no court run after 2026-09-25)
 - `row build complete: 210 new` in the corpus log; `STUDENT EXPORT COMPLETE`.
 - Tuner: every anchor HOLD is the normal first honest pass.
 
-## Evidence
+## Evidence (frozen 2026-09-25; retired 2026-09-26)
 - The court's verdict lines in `/home/poller/sunday_boundary.log`; `reports/shadow_lab/ledger.jsonl`;
   `reports/shadow_lab/trajectory.log`.
 

@@ -10,7 +10,8 @@ realized P&L into the three lines that mean something:
 Realized exits only (leg_exits return_pct on the recorded entry premium) - open marks can
 flatter a curve, so they are reported as a footnote count, never drawn. Known caveat: entry
 premiums are decision marks until the fill-honesty fix ships; consistent across cohorts.
-Output: reports/research/trajectory_scoreboard.json + a compact weekly Telegram.
+Output: reports/research/trajectory_scoreboard.json + a compact weekly Telegram, with the PROOF block from
+scripts/proof_stint.py's state (2026-09-26: the stint's numbers come from the judge, never from the spec).
 Cron: Friday 22:25 UTC. Sentinel row ships in the same commit (registry rule)."""
 import json
 import os
@@ -112,8 +113,15 @@ def main():
     except Exception:
         pass
     promoted = sorted(k[5:] for k in spec if str(k).startswith("auto_"))
-    proof = spec.get("proof_account") or {}
-    pw = proof.get("rising_weeks", 0)
+    try:
+        import proof_stint
+        st = proof_stint.read_state()
+        proof_block = proof_stint.scoreboard_block(st)
+        proof_pos = f"proof stint {st['streak']}/8 rising traded weeks ({st['status']})"
+        nearest = st["next_line"]
+    except Exception as e:
+        proof_block = f"PROOF STINT: judge state unavailable ({type(e).__name__})"
+        proof_pos, nearest = "proof stint: state unavailable", "unknown - the stint judge did not run"
     msg = ("TRAJECTORY SCOREBOARD (realized, cumulative):\n"
            f"PRIORITY book: ${latest.get('priority', 0):+,} lifetime, ${week.get('priority', 0):+,} this week "
            f"({open_counts['priority']} open)\n"
@@ -121,12 +129,13 @@ def main():
            f"({open_counts['discovery']} open)\n"
            f"V10 legacy (frozen): ${latest.get('legacy', 0):+,}\n"
            "Right direction = PRIORITY rising while DISCOVERY stays small and flat.\n"
+           f"\n{proof_block}\n"
            f"\nNORTH STAR ({_charter_version()}): promotion -> proof seat -> 8 rising weeks -> first GBP 1-5k "
            "-> +5% quarters double rungs -> GBP 100k pot.\n"
            f"Position: proof-seat promotions {_proof_promotions()}; court upgrades applied to the live spec: {len(promoted)}; "
-           f"proof weeks {pw}/8; real capital GBP 0 of 100,000; "
+           f"{proof_pos}; real capital GBP 0 of 100,000; "
            "lifetime real loss GBP 0 of the 2,500 cap.\n"
-           "Nearest commitment: October-gate pre-registration written before 2026-09-18.")
+           f"Nearest commitment: {nearest}.")
     print(msg, flush=True)
     tok, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
     if tok and chat and os.environ.get("SCOREBOARD_DRY") != "1":

@@ -38,7 +38,10 @@ def _write_flag(state, why):
     """Returns True ONLY when the flag verifiably reached origin - the engine reads origin,
     so a confirmation on anything less is a lie (never record an action that didn't confirm,
     2026-07-06; command-truth hardening 2026-09-07)."""
-    if subprocess.run(["git", "-C", SNAP, "pull", "--rebase", "origin", "main"],
+    # --autostash (BREAKDOWNS 2026-09-26 second entry): scripts/watchdog_vps.sh rewrites watchdog_status.json in this
+    # checkout every quarter-hour and only the nightly snapshot committed it, so a plain --rebase refused ("You have
+    # unstaged changes") and every command outside that window came back COMMAND FAILED TO PUBLISH.
+    if subprocess.run(["git", "-C", SNAP, "pull", "--rebase", "--autostash", "origin", "main"],
                       capture_output=True).returncode != 0:
         return False
     state["updated_utc"] = datetime.now(timezone.utc).isoformat()

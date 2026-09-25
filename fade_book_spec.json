@@ -382,7 +382,19 @@
     "structure": "weekly put credit spread, short 2% OTM / long 4% OTM, one contract, European cash-settled",
     "contracts": 1,
     "capture_denominator": "frozen at seating (NORTH_STAR v1.7): scripts/cs_legs_measure.py on data/cs_legs.db, XSP 2%/4% with the BEAR stand-down and blank-quote weeks refilled = +$21.6 per TRADED week over 135 weeks (t 2.55), 2023-10-23..2026-09-18, one contract, bull+mild only. NOT the +$26.1 headline, which drops 13 weeks the vendor failed to quote.",
-    "honest_expectation": "audit 2026-09-20: live-faithful +$10 to +$22 per traded week, 95% range -$3 to +$40, P(true long-run edge > 0) about 35-40%. The stint IS the validation; the edge is not proven."
+    "honest_expectation": "audit 2026-09-20: live-faithful +$10 to +$22 per traded week, 95% range -$3 to +$40, P(true long-run edge > 0) about 35-40%. The stint IS the validation; the edge is not proven.",
+    "stint_constants": {
+     "denominator_usd_per_traded_week": 21.6,
+     "weekly_sd_usd": 156,
+     "archive_weeks": 122,
+     "archive_losses": 10,
+     "archive_wins": 112,
+     "archive_mean_win_usd": 47.2,
+     "archive_mean_loss_usd": -210.7,
+     "archive_max_loss_usd": 1187,
+     "archive_worst_week_usd": -624,
+     "measured": "scripts/cs_legs_measure.py run 2026-09-25 ~22:00 UTC on the frozen data/cs_legs.db: XSP 2%/4% with the BEAR stand-down, 122 traded weeks 2023-11-06..2026-09-14, 112 wins / 10 losses, mean +$26.1/wk, mean win +$47.2, mean losing week -$210.7, mean max loss $1,187, worst week -$624, CP 95% upper loss rate 13.5%. weekly_sd_usd is the sd over all 138 usable weeks ($156; the 122 gated weeks alone give $98 - the gate is in-sample, so the wider figure is frozen). The capture denominator stays the refilled +$21.6 (capture_denominator), never the +$26.1 headline."
+    }
    }
   ],
   "sizing": {
@@ -391,9 +403,8 @@
    "contracts": 1,
    "spread_width_rule": "OWNER RULING 2026-09-20: the $1,000 cap is irrelevant for this book - it trades the SAME 2%/4% width as discovery, one contract, so its weeks are like-for-like with the evidence. Worst case per contract is width minus credit, about $1,490 at XSP 765, roughly 30% of the $5,000 account on a single trade. NORTH_STAR v1.7/v1.8's cap is superseded here by v1.9; discovery is unchanged."
   },
-  "rising_weeks": 0,
-  "week_history": [],
-  "note": "NORTH_STAR v1.4-v1.9 + build contract 2026-09-06. Credentials live ONLY in GitHub Actions secrets (ALPACA_PROOF_*) and proof_book.verify re-checks every cycle that they open account_id above and are not the discovery keys: wrong account, missing keys or a wrong-slot paste means no trade and an alarm. Records live in proof_logs.json, never in the discovery book, and the discovery sweeps list positions with DISCOVERY creds so they cannot see this account. One seat only - condor and put-debit are refused on this book."
+  "note": "NORTH_STAR v1.4-v1.9 + build contract 2026-09-06. Credentials live ONLY in GitHub Actions secrets (ALPACA_PROOF_*) and proof_book.verify re-checks every cycle that they open account_id above and are not the discovery keys: wrong account, missing keys or a wrong-slot paste means no trade and an alarm. Records live in proof_logs.json, never in the discovery book, and the discovery sweeps list positions with DISCOVERY creds so they cannot see this account. One seat only - condor and put-debit are refused on this book.",
+  "stint_state": "reports/performance/proof_stint.json - written by scripts/proof_stint.py (durable copy /home/poller/proof_stint.json); the spec holds no stint numbers (2026-09-26)"
  },
  "uw_scanner": {
   "enabled": false,

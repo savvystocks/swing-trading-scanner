@@ -23,7 +23,7 @@ Live: PROBE records on days whose prior close had SPY below its 50-day and 20-da
 `./.venv/bin/python scripts/returns_ledger.py` (row DIP_CONVEXITY).
 
 ## Healthy
-Court standing: [[strategies.DIP_CONVEXITY.court.standing = 1/8 live virgin days vs control - HOLD]]. Zero scoreable days is the
+Court standing: [[strategies.DIP_CONVEXITY.court.standing = 2/8 live virgin days vs control - HOLD]]. Zero scoreable days is the
 normal state while SPY holds above its 50-day (1 of the 60 sessions to 2026-09-14); it has never had a
 live day on current code.
 

@@ -235,6 +235,9 @@ def main():
                 if left:
                     stale.append(f"[{crit}] {name}: unfinished rebase in {target} ({', '.join(left)}) - the /halt "
                                  "channel cannot publish until it is aborted (git rebase --abort)")
+                elif os.environ.get("SENTINEL_DRY") == "1":
+                    print(f"{name}: skipped in dry mode (SENTINEL_DRY=1 - no pull of {target})", flush=True)
+                    fresh += 1
                 else:
                     r = subprocess.run(["git", "-C", target, "pull", "--rebase", "--autostash", "origin", "main"],
                                        capture_output=True, text=True, timeout=120)

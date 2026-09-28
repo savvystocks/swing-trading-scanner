@@ -7,16 +7,23 @@ Two weekly XSP structures, both sized for a real $5k account, both European cash
   CONDOR_W        - the same put spread PLUS sell 2%-OTM call / buy 4%-OTM call. Collects
                     both sides; capped both sides.
 Mechanics: one entry per structure per week (first cycle >= 15:00 UTC); LONG wings are
-bought FIRST so a partial fill can never leave a naked short; broker-position idempotency
+bought FIRST and the short is placed only on their CONFIRMED fill (2026-09-28: a $5k account
+cannot carry a naked short for even a second); broker-position idempotency
 check before entering (the record-propagation lesson); settle after Friday expiry vs ^XSP
 close. Records: no legs dict (options exit engine ignores), occ + occ_more (reconciler
 knows every leg). Fail-open everywhere.
 """
 import json
+import time
+import urllib.error
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
 
 import fade_book
+
+LONG_FILL_WAIT_S = 20      # 2026-09-28: the short goes in only on a CONFIRMED long fill; a $5k book cannot carry a naked short
+LONG_FILL_POLL_S = 2
+SHORT_RETRY_S = 3
 
 
 def _cfg():
@@ -69,6 +76,13 @@ def _order(occ, side, limit, creds):
     try:
         with urllib.request.urlopen(req, timeout=20) as r:
             return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        try:
+            body = e.read().decode("utf-8", "replace").strip()[:200]
+        except Exception:
+            body = ""
+        print(f"  fivek: {side} {occ} failed HTTP {e.code} {e.reason}: {body or '(no body)'}")
+        return {"http": e.code}
     except Exception as e:
         print(f"  fivek: {side} {occ} failed {type(e).__name__}: {str(e)[:70]}")
         return None
@@ -123,6 +137,39 @@ def _order_state(oid, creds):
         return o.get("status"), (float(fp) if fp else None), float(o.get("filled_qty") or 0)
     except Exception:
         return None, None, 0.0
+
+
+def _cancel(oid, creds):
+    req = urllib.request.Request(f"https://paper-api.alpaca.markets/v2/orders/{oid}", method="DELETE",
+                                 headers={"APCA-API-KEY-ID": creds[0], "APCA-API-SECRET-KEY": creds[1]})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return r.status in (200, 204)
+    except Exception:
+        return False
+
+
+def _await_fill(oid, creds):
+    t0 = time.monotonic()
+    while True:
+        st = _order_state(oid, creds)[0]
+        if st == "filled":
+            return True
+        if st in ("canceled", "expired", "rejected", "suspended") or time.monotonic() - t0 >= LONG_FILL_WAIT_S:
+            return False
+        time.sleep(LONG_FILL_POLL_S)
+
+
+def _account_line(creds):
+    h = {"APCA-API-KEY-ID": creds[0], "APCA-API-SECRET-KEY": creds[1]}
+    try:
+        with urllib.request.urlopen(urllib.request.Request("https://paper-api.alpaca.markets/v2/account", headers=h), timeout=15) as r:
+            a = json.loads(r.read())
+        with urllib.request.urlopen(urllib.request.Request("https://paper-api.alpaca.markets/v2/positions", headers=h), timeout=15) as r:
+            n = sum(1 for p in json.loads(r.read()) if p.get("asset_class") == "us_option")
+        return f"options_buying_power={a.get('options_buying_power')} buying_power={a.get('buying_power')} open_option_positions={n}"
+    except Exception as e:
+        return f"account unreadable ({type(e).__name__})"
 
 
 def _confirm_fills(r, creds):
@@ -188,13 +235,14 @@ def _closing_fills(r, creds):
 
 
 def _settle_one(r, lab, now, creds=None):
+    bk = r.get("book") or "PROBE"
     try:
         s = _xsp_close_series()
         exp = date.fromisoformat(r["expiry"])
         sd = [d for d in s.index.date if d <= exp]
         settle = float(s[s.index.date == sd[-1]].iloc[-1]) if sd else None
         if sd and sd[-1] != exp:               # the expiry session itself is missing (Yahoo skipped 2026-09-22 in
-            print(f"  PROBE[{r['probe_strategy']}] settle deferred: no {exp} close in the series yet (last {sd[-1]})")
+            print(f"  {bk}[{r['probe_strategy']}] settle deferred: no {exp} close in the series yet (last {sd[-1]})")
             settle = None                      # ^XSP and ^GSPC alike): never settle on the previous session's close
     except Exception:
         settle = None
@@ -218,14 +266,14 @@ def _settle_one(r, lab, now, creds=None):
     if closed:
         r["settle"]["closed_early"] = {k: v for k, v in closed.items()}
         r["note"] = (r.get("note") or "") + " | LEGS CLOSED EARLY AT THE BROKER - P&L is realised, not expiry"
-    print(f"  PROBE[{r['probe_strategy']}] settled: ${pnl:+.0f}" + (f" (EARLY CLOSE on {len(closed)} leg(s))" if closed else ""))
+    print(f"  {bk}[{r['probe_strategy']}] settled: ${pnl:+.0f}" + (f" (EARLY CLOSE on {len(closed)} leg(s))" if closed else ""))
     try:
         if closed:
-            lab._notify(f"<b>ALARM: {r['probe_strategy']} legs were CLOSED AT THE BROKER</b> before expiry - "
+            lab._notify(f"<b>ALARM: {bk} {r['probe_strategy']} legs were CLOSED AT THE BROKER</b> before expiry - "
                         f"{', '.join(closed)}. A cash-settled spread must never be closed by a sweep. "
                         f"Booked the REALISED ${pnl:+.0f}; check what closed it.")
         else:
-            lab._notify(f"<b>PROBE {r['probe_strategy']} settled</b> ${pnl:+.0f} (XSP {settle:.2f})")
+            lab._notify(f"<b>{bk} {r['probe_strategy']} settled</b> ${pnl:+.0f} (XSP {settle:.2f})")
     except Exception:
         pass
     return True
@@ -266,6 +314,21 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now, book="PROBE", save=Non
         if not (resp and resp.get("id")):
             return False
         struct["long"].append({"occ": o, "cp": cp, "k": k, "prem": ask, "oid": resp["id"], "filled": None})
+    for lg in list(struct["long"]):                 # the short goes in on a CONFIRMED long fill, never on submission (2026-09-28)
+        if _await_fill(lg["oid"], creds):
+            continue
+        _cancel(lg["oid"], creds)                   # 204 = cancel accepted, not done: read the state once more
+        time.sleep(LONG_FILL_POLL_S)
+        st = _order_state(lg["oid"], creds)[0]
+        if st == "filled":
+            print(f"  fivek {strategy}: long wing {lg['occ']} filled late, after its cancel - wings held, no short this week")
+        else:
+            print(f"  fivek {strategy}: long wing {lg['occ']} not filled within {LONG_FILL_WAIT_S}s (state {st or 'unreadable'} after cancel) - no short this week")
+            struct["long"].remove(lg)
+        legs_s = []
+    if not struct["long"]:
+        print(f"  fivek {strategy}: no long wing filled - structure aborted, nothing recorded")
+        return False
     for cp, k in legs_s:
         o = _occ(exp, cp, k)
         bid, ask = _quote(o, creds)
@@ -273,6 +336,10 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now, book="PROBE", save=Non
             print(f"  fivek: no usable bid on short leg {o} - wings held, structure incomplete")
             break
         resp = _order(o, "sell", bid, creds)
+        if resp and resp.get("http") == 403:        # refused outright, nothing placed: name the cause, one retry after a pause (2026-09-28)
+            print(f"  fivek {strategy}: short refused 403 - {_account_line(creds)}")
+            time.sleep(SHORT_RETRY_S)
+            resp = _order(o, "sell", bid, creds)
         if not (resp and resp.get("id")):
             break
         struct["short"].append({"occ": o, "cp": cp, "k": k, "prem": bid, "oid": resp["id"], "filled": None})
@@ -285,7 +352,7 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now, book="PROBE", save=Non
         if struct["long"]:
             cost = -sum(l["prem"] for l in struct["long"])
             log.append({"book": book, "probe_strategy": strategy,
-                        "trade_set_id": "f5k" + now.strftime("%m%d%H%M"), "ticker": "XSP",
+                        "trade_set_id": ("p5k" if book == "PROOF" else "f5k") + now.strftime("%m%d%H%M"), "ticker": "XSP",
                         "occ": struct["long"][0]["occ"],
                         "occ_more": [l["occ"] for l in struct["long"][1:]],
                         "structure": struct, "expiry": exp.isoformat(), "contracts": 1,
@@ -293,9 +360,9 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now, book="PROBE", save=Non
                         "entry_ts_utc": now.isoformat(),
                         "note": "INCOMPLETE - long wings only, short leg failed; logged to stop re-entry"})
             save(log)
-            print(f"  PROBE[{strategy}] INCOMPLETE - short failed, wings logged (${cost * 100:+.0f})")
+            print(f"  {book}[{strategy}] INCOMPLETE - short failed, wings logged (${cost * 100:+.0f})")
             try:
-                lab._notify(f"<b>PROBE {strategy}</b> INCOMPLETE - long wings held, short leg failed; "
+                lab._notify(f"<b>{book} {strategy}</b> INCOMPLETE - long wings held, short leg failed; "
                             f"recorded, no re-entry this week")
             except Exception:
                 pass

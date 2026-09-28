@@ -202,7 +202,21 @@ def _stint_monday(kept, seated):
 
 
 def _short_unfilled(r):
-    return any(lg.get("filled") is False for lg in ((r.get("structure") or {}).get("short") or []))
+    st = r.get("structure")
+    if not isinstance(st, dict):
+        return False
+    shorts = st.get("short") or []
+    return not shorts or any(lg.get("filled") is False for lg in shorts) or "INCOMPLETE" in str(r.get("note") or "")
+
+
+def _wings_only_mech(expiry, note):
+    return {"date": expiry, "kind": "WINGS_ONLY",
+            "text": f"week {expiry}: WINGS ONLY - the short leg never filled, the strategy did not trade"
+                    + (f" ({note})" if note else "") + "; scores as a traded NON_RISING week (A12, 2026-09-28)"}
+
+
+def _open_label(o):
+    return f"WINGS ONLY (long put {o['long_k']} held, no spread)" if o.get("wings_only") else f"{o['short_k']}/{o['long_k']}"
 
 
 def _strikes(r):
@@ -250,6 +264,7 @@ def week_rows(records, equity_rows, seated, today, regime_at=None, cycle_seen=No
                        credit_usd=round(sum(float(r.get("net_credit") or 0) * 100 * int(r.get("contracts") or 1) for r in recs), 2))
             if pending:
                 row["kind"] = "TRADED_PENDING"
+                row["wings_only"] = any(_short_unfilled(r) for r in pending)
                 n_after = _sessions_after(row["expiry"], today)
                 row["sessions_pending"] = n_after
                 if n_after > 2:
@@ -279,9 +294,9 @@ def week_rows(records, equity_rows, seated, today, regime_at=None, cycle_seen=No
                 if row["closed_early"]:
                     row["mechanics"].append({"date": row["expiry"], "kind": "CLOSED_EARLY",
                                              "text": f"week {row['expiry']}: legs closed early at the broker; realised P&L {pnl:+.0f} counts"})
-                if row["wings_only"]:
-                    row["mechanics"].append({"date": row["expiry"], "kind": "WINGS_ONLY",
-                                             "text": f"week {row['expiry']}: the short leg never filled (wings only)"})
+            if row["wings_only"]:
+                row["mechanics"].append(_wings_only_mech(row["expiry"], next((str(r.get("note") or "").strip()
+                                                                            for r in recs if _short_unfilled(r)), "")))
         else:
             fs = sess[0] if sess else monday
             rg, dist = rg_fn(fs)
@@ -380,8 +395,8 @@ def _equity(equity_rows, seated, today, include_today):
         if hwm:
             out["dd_pct"] = round(min(0.0, (e / hwm - 1) * 100), 2)
     for x in rows:
-        if _is_open_mark(x):
-            day = str(x["day"])[:10]
+        day = str(x["day"])[:10]
+        if _is_open_mark(x) and not (out["today_intraday"] and day == out["last_day"]):
             out["open_mark_days"].append(day)
             out["open_mark_clock"][day] = _mark_clock(x)
     have = {str(x["day"])[:10] for x in rows}
@@ -411,6 +426,7 @@ def _open_block(records, today, eq, xsp_close):
     max_loss = round((sk - lk) * 100 * n - credit, 2) if sk is not None and lk is not None else None
     exp = _d(r["expiry"])
     o = {"expiry": exp.isoformat(), "trade_set_id": r.get("trade_set_id"), "short_k": sk, "long_k": lk,
+         "wings_only": _short_unfilled(r), "note": str(r.get("note") or "").strip(),
          "credit_usd": credit, "max_loss_usd": max_loss, "sessions_to_expiry": len(sessions_between(today + timedelta(days=1), exp)),
          "xsp_close": None, "xsp_close_day": None, "dist_to_short_pct": None, "full_loss_breaches": None,
          "next_settle": next_session_after(exp).isoformat()}
@@ -543,6 +559,8 @@ def judge(weeks, equity_rows, constants, today, seated, records=(), xsp_close=No
     open_block = _open_block(kept, today, eq, xsp_close)
     tail = _tail(walk, C, open_block)
     mech = [m for w in rows for m in w.get("mechanics", [])]
+    if open_block and open_block["wings_only"]:
+        mech.append(_wings_only_mech(open_block["expiry"], open_block["note"]))
     for w in rows:
         w.pop("mechanics", None)
     state = {"as_of": datetime.now(timezone.utc).isoformat(timespec="seconds"), "judged_for": today.isoformat(),
@@ -687,7 +705,10 @@ def render(st):
             txt += f"XSP {o['xsp_close']:.2f} on {o['xsp_close_day']} is {o['dist_to_short_pct']:.2f}% above the short strike; "
         else:
             txt += "no ^XSP close on disk; "
-        if o["max_loss_usd"] is None:
+        if o.get("wings_only"):
+            txt = (f"Open: WINGS ONLY - the strategy did not trade this week; a ${abs(o['credit_usd']):,.0f} long put ({o['long_k']}) is held, "
+                   f"expires {exp:%a} {o['expiry']} ({o['sessions_to_expiry']} sessions); scores as a traded NON_RISING week at settle (A12).")
+        elif o["max_loss_usd"] is None:
             txt += "max loss unknown (a strike is missing from the record)."
         else:
             txt += f"max loss ${o['max_loss_usd']:,.0f} = {o['max_loss_usd'] / ACCOUNT_USD * 100:.1f}% of the account"
@@ -754,6 +775,8 @@ def week_close_text(st, w):
         L.append(f"LEGS CLOSED EARLY AT THE BROKER - P&L is realised, not expiry (the engine paged this on {str(w.get('settled_at'))[:10]}).")
     if w.get("records", 1) > 1:
         L.append(f"{w['records']} records in one expiry week - one traded week on the summed P&L; the account carried double risk.")
+    if w.get("wings_only"):
+        L.append("WINGS ONLY - the short leg never filled; the strategy did not trade this week and the week scores as traded NON_RISING (A12).")
     eq = st["equity"]
     curve = f"Curve {_usd(st['cum_pnl_usd'])}" + ("" if st["cum_pnl_usd"] > 0 else ", under water")
     latch = st.get("latched_on")
@@ -773,7 +796,7 @@ def week_close_text(st, w):
     o = st["open"]
     if o:
         ns = _d(o["next_settle"])
-        L.append(f"Next: {o['short_k']}/{o['long_k']} expires {_d(o['expiry']):%a} {o['expiry']}; settle lands {ns:%a} {o['next_settle']} {settle_clock(ns)}.")
+        L.append(f"Next: {_open_label(o)} expires {_d(o['expiry']):%a} {o['expiry']}; settle lands {ns:%a} {o['next_settle']} {settle_clock(ns)}.")
     L.append(f"This tests survival and mechanics, not edge: weekly sd ~${st['constants']['weekly_sd_usd']:.0f}; {STREAK_BAR} loss-free "
              f"weeks happen {_survival_pct(st)}% of the time whether the edge is +$20/wk or zero.")
     t = st["tail"]
@@ -796,7 +819,7 @@ def _event_texts(st):
     for m in st["mechanics"]:
         if m["kind"] in ("UNEXPLAINED_UNTRADED", "SETTLE_PENDING", "EQUITY_HOLE"):
             out.append((f"MECH:{m['date']}:{m['kind']}", f"[MONITOR] PROOF STINT: {m['text']}."))
-        elif m["kind"] in ("DOUBLE_RECORD",):
+        elif m["kind"] in ("DOUBLE_RECORD", "WINGS_ONLY"):
             out.append((f"MECH:{m['date']}:{m['kind']}", f"[TRADE] PROOF STINT: {m['text']}."))
     if st["streak_met_on"]:
         eq = st["equity"]
@@ -916,7 +939,8 @@ def digest_line(st, today):
     head = f"Proof stint{tag}:"
     if settled:
         w = settled[-1]
-        xsp = f"XSP {w['xsp_settle']:.2f} vs short {w['short_k']}" if w.get("xsp_settle") is not None else "settled"
+        xsp = (f"XSP {w['xsp_settle']:.2f} vs {'wings only, no short leg' if w.get('wings_only') else 'short ' + str(w['short_k'])}"
+               if w.get("xsp_settle") is not None else "settled")
         head += f" week {w['expiry']} settled {_usd(w['pnl_usd'])} ({xsp}) -"
     parts = [f"{head} {st['streak']}/{STREAK_BAR} rising traded weeks ({st['status']}); {_usd(st['cum_pnl_usd'])} settled"]
     if eq["last"] is not None and eq.get("hwm") is not None:
@@ -924,7 +948,7 @@ def digest_line(st, today):
                      f"{abs(eq['dd_pct'] or 0):.1f}% below high-water (bound -{DD_BOUND * 100:.0f}%)")
     if o:
         dist = f", XSP {o['dist_to_short_pct']:.2f}% above the short strike" if o["dist_to_short_pct"] is not None else ""
-        parts.append(f"{o['short_k']}/{o['long_k']} expires {_d(o['expiry']):%a} {o['expiry']}{dist}")
+        parts.append(f"{_open_label(o)} expires {_d(o['expiry']):%a} {o['expiry']}{dist}")
     else:
         paused = [w for w in st["weeks"] if w["kind"] in ("PAUSED", "PAUSED_UNEXPLAINED")]
         if paused and paused[-1]["expiry"] >= (today - timedelta(days=7)).isoformat():
@@ -948,9 +972,10 @@ def brief_block(st, today):
     if o:
         dist = (f"XSP {o['xsp_close']:.2f} on {o['xsp_close_day']} is {o['dist_to_short_pct']:.2f}% above the short strike"
                 if o["xsp_close"] is not None and o["dist_to_short_pct"] is not None else "no ^XSP close on disk")
-        ml = ("max loss unknown (a strike is missing from the record)" if o["max_loss_usd"] is None
+        ml = (f"max loss is the ${abs(o['credit_usd']):,.0f} debit already paid" if o.get("wings_only")
+              else "max loss unknown (a strike is missing from the record)" if o["max_loss_usd"] is None
               else f"max loss ${o['max_loss_usd']:,.0f}" + (" - a full loss breaches the -30% bound" if o["full_loss_breaches"] else ""))
-        L.append(f"Open spread {o['short_k']}/{o['long_k']} expires {_d(o['expiry']):%a} {o['expiry']} ({o['sessions_to_expiry']} sessions); {dist}; {ml}.")
+        L.append(f"Open spread {_open_label(o)} expires {_d(o['expiry']):%a} {o['expiry']} ({o['sessions_to_expiry']} sessions); {dist}; {ml}.")
     else:
         L.append("No open spread (" + st["next_line"] + ").")
     if eq["last"] is not None and eq.get("hwm") is not None:

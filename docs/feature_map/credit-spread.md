@@ -13,7 +13,8 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
 - `fivek_probes.py:cycle` - called every engine cycle from `sandbox_proactive_lab.py:run_scheduled_cycle`
   (`fivek_probes.cycle(creds, allow_entries=not (brake_active or halt_active))`), fail-open.
 - `fivek_probes.py:_enter` - one entry per structure per ISO week, first cycle at or after 15:00
-  UTC; the LONG wing is bought FIRST so a partial fill can never leave a naked short; broker
+  UTC; the LONG wing is bought FIRST and the short is placed only once the broker reports it filled
+  (`fivek_probes.py:_await_fill`, `fivek_probes.py:_cancel` for an unfilled long; 2026-09-28); broker
   idempotency check (`fivek_probes.py:_held`) before entering; limits from `fivek_probes.py:_quote`;
   orders via `fivek_probes.py:_order`; OCCs from `fivek_probes.py:_occ`.
 - `fivek_probes.py:_settle_one` - after Friday expiry, settles each open record against the ^XSP
@@ -67,6 +68,18 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
   close is deferred, not settled on the previous session.
 
 ## Traps
+- 2026-09-28 THE SHORT WAS REFUSED IN THE SAME SECOND AS THE LONG WENT IN: on the $5,000 proof book the long wing
+  filled and the short came back `HTTP Error 403: Forbidden` in the same second, leaving a $25 wings-only week, while
+  the $860k discovery book filled the identical legs. "Wings first" ordered the submissions, not the fills: for the
+  second between the two the short is a naked put, which the small account cannot carry (a second candidate, the
+  expired legs still consuming options buying power, is named by the new account line either way).
+  `fivek_probes.py:_await_fill` now holds the short until the broker reports the long `filled` (LONG_FILL_WAIT_S 20 s,
+  2 s polls); an unfilled long is cancelled (`fivek_probes.py:_cancel`; 204 = accepted, so the state is read once
+  more), a late fill falls to the wings-only record, nothing filled records nothing. `fivek_probes.py:_order` prints a
+  rejected order's HTTP body; a 403 on the short prints `fivek_probes.py:_account_line` (options buying power, buying
+  power, open option positions) and retries once. The wings-only record and the INCOMPLETE and settle lines carry the
+  book's name. Residual: a cancel left `pending_cancel` that fills afterwards is an unrecorded long put for the week
+  (no naked risk). MOT 6.47; drill scenario 5.
 - 2026-09-22: `scripts/xsp_quote_log.py` booked $58 of friction from a long leg quoted 0.00/1.13 - a
   one-sided quote makes the mid meaningless, and the instrument verdict is measured against the mid. Such
   snapshots are now dropped with a reason (MOT 6.36).

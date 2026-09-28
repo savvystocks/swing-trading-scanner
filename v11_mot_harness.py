@@ -2217,6 +2217,151 @@ check(6, "a sentinel schedule row younger than its first expected run is 'not ye
 _rl46 = open("scripts/returns_ledger.py", encoding="utf-8").read()
 check(6, "the returns ledger names the court column as retired and reads the frozen log without implying currency",
       "court (retired 2026-09-26, last standing)" in _rl46 and "frozen" in _rl46.split("def court_side(")[1].split("\ndef ")[0])
+# 6.47 THE SHORT LEG WAITS FOR THE LONG'S FILL (BREAKDOWNS 2026-09-28): on the $5,000 proof book the short was refused 403
+# in the same second the long went in, so week 2 became a $25 long put with no premium. Mock orders throughout: the short
+# is placed only after the broker reports the long filled; an unfilled long is cancelled and leaves nothing; a 403 prints
+# its body and the account line and is retried once; the wings-only path names the book; the judge flags a wings-only
+# record at once and scores its settled week as traded NON_RISING (owner reading A12, 2026-09-28).
+import fivek_probes as _f47
+import io as _io47
+import contextlib as _ctx47
+import urllib.error as _ue47
+import urllib.request as _ur47
+_NOW47 = datetime(2026, 9, 28, 15, 2, tzinfo=timezone.utc)
+_bak47 = (_f47._order, _f47._order_state, _f47._cancel, _f47._quote, _f47._held, _f47._xsp_close_series, _f47._closing_fills,
+          _f47._account_line, _f47.LONG_FILL_WAIT_S, _f47.LONG_FILL_POLL_S, _f47.SHORT_RETRY_S)
+_f47._quote = lambda occ, creds: (0.30, 0.34) if occ.endswith("P00739000") else (0.98, 1.04)
+_f47._held = lambda occ, creds: False
+_f47._xsp_close_series = lambda: _pd30.Series([770.0], index=_pd30.to_datetime(["2026-09-25"]))
+_f47._account_line = lambda creds: "options_buying_power=1234.56 buying_power=5000.00 open_option_positions=2"
+_f47.LONG_FILL_WAIT_S, _f47.LONG_FILL_POLL_S, _f47.SHORT_RETRY_S = 1.0, 0.01, 0
+
+
+class _Lab47:
+    sent = []
+    _save_log_list = staticmethod(lambda log: None)
+
+    @staticmethod
+    def _notify(m):
+        _Lab47.sent.append(m)
+        return True
+
+
+def _run47(states, sells, book="PROOF"):
+    seq, log, n = [], [], [0]
+
+    def order(occ, side, limit, creds):
+        seq.append((side, occ, round(limit, 2)))
+        return {"id": "L47", "status": "new"} if side == "buy" else sells.pop(0)
+
+    def state(oid, creds):
+        seq.append(("state", oid))
+        n[0] += 1
+        return states[min(n[0], len(states)) - 1], 0.34, 1.0
+
+    _f47._order, _f47._order_state = order, state
+    _f47._cancel = lambda oid, creds: (seq.append(("cancel", oid)), True)[1]
+    _Lab47.sent.clear()
+    buf = _io47.StringIO()
+    with _ctx47.redirect_stdout(buf):
+        ok = _f47._enter("CREDIT_SPREAD_W", True, {"otm_short": 2.0, "otm_long": 4.0}, ("k", "s"), _Lab47, log, _NOW47, book, lambda l: None)
+    return ok, seq, log, buf.getvalue(), list(_Lab47.sent)
+
+
+_L47, _S47 = "XSP261002P00739000", "XSP261002P00755000"
+_ok47a, _seq47a, _log47a, _out47a, _snt47a = _run47(["new", "new", "filled"], [{"id": "S47"}])
+check(6, "credit spread: the short is placed only AFTER the broker reports the long filled (new, new, filled -> then the sell)",
+      _ok47a is True and _seq47a == [("buy", _L47, 0.34), ("state", "L47"), ("state", "L47"), ("state", "L47"), ("sell", _S47, 0.98)]
+      and len(_log47a) == 1 and _log47a[0]["net_credit"] == 0.64 and _log47a[0]["trade_set_id"] == "p5k09281502",
+      str(_seq47a))
+_ok47b, _seq47b, _log47b, _out47b, _snt47b = _run47(["new"], [{"id": "S47"}])
+check(6, "credit spread: a long that never fills in the window is cancelled - no short order, no record, a clear line",
+      _ok47b is False and not any(o[0] == "sell" for o in _seq47b) and ("cancel", "L47") in _seq47b and _log47b == [] and _snt47b == []
+      and "not filled within" in _out47b and "nothing recorded" in _out47b,
+      str([o for o in _seq47b if o[0] != "state"]) + " | " + _out47b.strip().splitlines()[-1][:90])
+_ok47c, _seq47c, _log47c, _out47c, _snt47c = _run47(["filled"], [{"http": 403}, {"id": "S47"}])
+check(6, "credit spread: a 403 on the first sell prints the account line (options buying power, open option positions) and the retry completes the record",
+      _ok47c is True and [o[0] for o in _seq47c] == ["buy", "state", "sell", "sell"] and len(_log47c) == 1
+      and _log47c[0]["net_credit"] == 0.64 and len(_log47c[0]["structure"]["short"]) == 1
+      and "short refused 403 - options_buying_power=1234.56 buying_power=5000.00 open_option_positions=2" in _out47c, str(_seq47c))
+_ok47d, _seq47d, _log47d, _out47d, _snt47d = _run47(["filled"], [{"http": 403}, {"http": 403}])
+_ok47e, _seq47e, _log47e, _out47e, _snt47e = _run47(["filled"], [{"http": 403}, {"http": 403}], book="PROBE")
+check(6, "credit spread: the wings-only record carries the book's prefix (p5k on PROOF, f5k on PROBE) and its line and page name the book",
+      _ok47d is False and len(_log47d) == 1 and _log47d[0]["trade_set_id"] == "p5k09281502" and _log47d[0]["structure"]["short"] == []
+      and _log47d[0]["net_credit"] == -0.34 and "PROOF[CREDIT_SPREAD_W] INCOMPLETE" in _out47d
+      and any("<b>PROOF CREDIT_SPREAD_W</b> INCOMPLETE" in m for m in _snt47d)
+      and _log47e[0]["trade_set_id"] == "f5k09281502" and "PROBE[CREDIT_SPREAD_W] INCOMPLETE" in _out47e
+      and any("<b>PROBE CREDIT_SPREAD_W</b> INCOMPLETE" in m for m in _snt47e),
+      f"{_log47d[0].get('trade_set_id') if _log47d else None} / {_log47e[0].get('trade_set_id') if _log47e else None}")
+_body47 = b'{"code":40310000,"message":"insufficient options buying power"}'
+
+
+def _raise47(req, timeout=None):
+    raise _ue47.HTTPError("https://paper-api.alpaca.markets/v2/orders", 403, "Forbidden", {}, _io47.BytesIO(_body47))
+
+
+_uo47 = _ur47.urlopen
+_ur47.urlopen = _raise47
+try:
+    _buf47 = _io47.StringIO()
+    with _ctx47.redirect_stdout(_buf47):
+        _r47 = _bak47[0](_S47, "sell", 0.98, ("k", "s"))
+finally:
+    _ur47.urlopen = _uo47
+check(6, "credit spread: a rejected order prints the broker's HTTP code and BODY on one line and returns the code",
+      _r47 == {"http": 403} and "sell XSP261002P00755000 failed HTTP 403 Forbidden: " in _buf47.getvalue()
+      and "insufficient options buying power" in _buf47.getvalue(), _buf47.getvalue().strip())
+_rw47 = {"book": "PROOF", "probe_strategy": "CREDIT_SPREAD_W", "trade_set_id": "p5k09281502", "ticker": "XSP", "occ": "XSP261002P00736000",
+         "occ_more": [], "expiry": "2026-10-02", "contracts": 1, "net_credit": -0.25, "status": "OPEN", "entry_ts_utc": "2026-09-28T15:02:00+00:00",
+         "structure": {"short": [], "long": [{"occ": "XSP261002P00736000", "cp": "P", "k": 736, "prem": 0.25, "oid": "L", "filled": True}]},
+         "note": "INCOMPLETE - long wings only, short leg failed; logged to stop re-entry | SHORT LEG DIED - wings only"}
+_rs47 = dict(_rw47, structure={"short": [], "long": [dict(_rw47["structure"]["long"][0])]})
+_f47._xsp_close_series = lambda: _pd30.Series([780.0], index=_pd30.to_datetime(["2026-10-02"]))
+_f47._closing_fills = lambda r, creds: {}
+_Lab47.sent.clear()
+_buf47s = _io47.StringIO()
+with _ctx47.redirect_stdout(_buf47s):
+    _f47._settle_one(_rs47, _Lab47, datetime(2026, 10, 5, 13, 36, tzinfo=timezone.utc), ("k", "s"))
+check(6, "credit spread: today's wings-only record (empty short list) settles at -$25 and the settle line and page name the PROOF book",
+      _rs47["status"] == "CLOSED" and _rs47["settle"]["pnl_usd"] == -25.0 and "PROOF[CREDIT_SPREAD_W] settled: $-25" in _buf47s.getvalue()
+      and any(m.startswith("<b>PROOF CREDIT_SPREAD_W settled</b>") for m in _Lab47.sent), _buf47s.getvalue().strip())
+(_f47._order, _f47._order_state, _f47._cancel, _f47._quote, _f47._held, _f47._xsp_close_series, _f47._closing_fills,
+ _f47._account_line, _f47.LONG_FILL_WAIT_S, _f47.LONG_FILL_POLL_S, _f47.SHORT_RETRY_S) = _bak47
+_sj47 = _judge44([_rec44("2026-09-25", 35.0), _rw47], _eq44(date(2026, 9, 28)), date(2026, 9, 28))
+_rj47 = _m44.render(_sj47)
+_ev47 = dict(_m44._event_texts(_sj47))
+check(6, "proof stint: a wings-only OPEN record (today's shape: no short leg) is in mechanics at once, renders the WINGS ONLY open line, and its page is [TRADE]",
+      _sj47["open"]["wings_only"] is True and [m["kind"] for m in _sj47["mechanics"]] == ["WINGS_ONLY"]
+      and _sj47["mechanics"][0]["date"] == "2026-10-02" and "INCOMPLETE" in _sj47["mechanics"][0]["text"]
+      and "Open: WINGS ONLY - the strategy did not trade this week; a $25 long put (736) is held" in _rj47
+      and _ev47.get("MECH:2026-10-02:WINGS_ONLY", "").startswith("[TRADE] PROOF STINT: week 2026-10-02: WINGS ONLY")
+      and _sj47["streak"] == 1 and "WINGS ONLY (long put 736 held, no spread) expires" in _m44.digest_line(_sj47, date(2026, 9, 28))
+      and "Open spread WINGS ONLY (long put 736 held, no spread) expires" in _m44.brief_block(_sj47, date(2026, 9, 28)),
+      next((l for l in _rj47.splitlines() if l.startswith("Open:")), _rj47[:120]))
+_sent47 = []
+_m44.announce(_sj47, lambda t: (_sent47.append(t), True)[1], log=lambda m: None)
+_n47 = len(_sent47)
+_m44.announce(_sj47, lambda t: (_sent47.append(t), True)[1], log=lambda m: None)
+check(6, "proof stint: the wings-only page goes once - the second announce sends nothing",
+      sum(1 for t in _sent47 if t.startswith("[TRADE] PROOF STINT: week 2026-10-02: WINGS ONLY")) == 1 and len(_sent47) == _n47
+      and "MECH:2026-10-02:WINGS_ONLY" in _sj47["announced"], f"first announce {_n47} page(s), second {len(_sent47) - _n47}")
+_ss47 = _judge44([_rec44("2026-09-25", 35.0), _rs47], _eq44(date(2026, 10, 5)), date(2026, 10, 5))
+_ws47 = [w for w in _ss47["weeks"] if w["expiry"] == "2026-10-02"][0]
+check(6, "proof stint A12 (owner 2026-09-28): the settled wings-only week is TRADED NON_RISING, never paused - streak 0, one non-rising, wings_only carried",
+      _ws47["kind"] == "TRADED" and _ws47["verdict"] == "NON_RISING" and _ws47["wings_only"] is True and _ws47["pnl_usd"] == -25.0
+      and _ss47["streak"] == 0 and _ss47["non_rising"] == 1 and _ss47["paused"] == 0 and _ss47["status"] == "RUNNING"
+      and any(m["kind"] == "WINGS_ONLY" and m["date"] == "2026-10-02" for m in _ss47["mechanics"])
+      and "wings only" in _m44.week_line(_ws47).lower() and "WINGS ONLY" in _m44.week_close_text(_ss47, _ws47)
+      and "XSP 780.00 vs wings only, no short leg" in _m44.digest_line(_ss47, date(2026, 10, 5)),
+      f"{_ws47['kind']} {_ws47['verdict']} streak={_ss47['streak']} non_rising={_ss47['non_rising']}")
+_sx47 = _judge44([_rec44("2026-09-25", 35.0)], _eq44(date(2026, 9, 28), hour=13), date(2026, 9, 28))
+check(6, "proof stint: today's rewritten row is an intraday mark, not an 'open mark' - the label leaves it out while the day is unjudged",
+      _sx47["equity"]["today_intraday"] is True and "2026-09-28" not in _sx47["equity"]["open_mark_days"]
+      and "2026-09-25" in _sx47["equity"]["open_mark_days"] and _m44._mark_basis(_sx47["equity"]) == "intraday mark (not yet judged)",
+      str(_sx47["equity"]["open_mark_days"]))
+check(6, "freshness sentinel: the git_pull row is skipped in dry mode (SENTINEL_DRY=1) instead of pulling the kill-switch checkout",
+      'os.environ.get("SENTINEL_DRY") == "1"' in _fs46.split('kind == "git_pull"')[1].split('elif kind == "git_commit"')[0]
+      and "skipped in dry mode" in _fs46)
 total = len(RESULTS)
 passed = sum(1 for r in RESULTS if r[2])
 by_dim = {}

@@ -80,6 +80,15 @@ that this tests survival and mechanics, not edge.
   book; an unreadable proof log raises instead of reading empty.
 
 ## Traps
+- 2026-09-28 (stint week 2) THE SHORT LEG WAS REFUSED 403 A SECOND AFTER THE LONG: see credit-spread.md - this book
+  cannot carry a naked short for even a second, so the short now waits for the long's confirmed fill. The judge flags a
+  wings-only record (an empty short list - a rejected short creates no leg - a short with `filled: false`, or a note
+  carrying INCOMPLETE) the moment it is OPEN: mechanics `WINGS_ONLY` with the expiry and the note, one [TRADE] page,
+  and the open block reads "WINGS ONLY - the strategy did not trade this week; a $N long put is held". A12 as ruled
+  2026-09-28 (22:25 BST): a wings-only week is a FAILED week - scored as a traded NON_RISING week (streak to 0, counts
+  toward 3-in-5), never paused; "nothing can hide behind the market didn't move". The wings-only record carries this
+  book's `p5k` prefix and the INCOMPLETE and settle lines name the book (the 2026-09-28 page said PROBE). The
+  2026-09-28 record stays as written (`f5k09281502`) and settles under A12 on 2026-10-05. MOT 6.47.
 - 2026-09-26 THE PROOF STINT HAD NO JUDGE: the seat ran five days under a rule nothing computed; the spec's
   `rising_weeks` / `week_history` placeholders were written by nothing and read as a true zero. The judge derives the
   state from the record files on every run and the placeholders are gone (MOT 6.44).

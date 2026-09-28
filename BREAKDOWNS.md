@@ -1228,6 +1228,51 @@ built for is exercised, not inferred.
 REGRESSION CHECK: MOT 6.45 (the pull in `_write_flag` carries --autostash), the two sentinel rows and the mirror's
 ping (MOT 6.46).
 
+2026-09-28 - THE PROOF BOOK'S SHORT LEG WAS REFUSED IN THE SAME SECOND AS ITS LONG WENT IN (stint week 2; a $25 debit, no
+premium sold; the discovery book unaffected).
+WHAT BROKE: at 15:02 UTC on Monday 2026-09-28 the proof book ("promotion 1", $5,000) bought its long wing XSP261002P00736000
+at the ask (filled 0.25) and, in the same second, had its short leg XSP261002P00752000 rejected with "HTTPError: HTTP Error
+403: Forbidden". The engine wrote a wings-only INCOMPLETE record (long put only, net_credit -0.25, and a `f5k` trade_set_id
+on a PROOF record) and the week is a $25 debit with no premium. The discovery book (PROBE, ~$860k) entered the identical
+legs in the same cycle and filled 752/736 for a 0.74 credit; the proof book's week-1 entry on 2026-09-21 had succeeded. The
+403 body was never printed, so the log named the status and not the cause, and the INCOMPLETE page said PROBE for a PROOF
+failure.
+ROOT CAUSE: `fivek_probes.py:_enter` placed the long and then the short with no wait for the long's fill - "wings first"
+ordered the SUBMISSIONS, not the fills. For the second between the two the short is a naked put, which a $5,000 account
+cannot carry (options buying power / approval level) while an $860k account can, so the same code passed on one book and
+was refused on the other. A second candidate (the status sweep, same evening): the expired 757/741 legs may still have sat
+on the paper account at 15:02 (Alpaca's expiration processing can lag the settle) and consumed options buying power; the
+body and the account line logged from now on name which. `fivek_probes.py:_order` swallowed the HTTPError body, so the
+broker's reason was lost.
+FIX: the short is placed only on a CONFIRMED long fill - `fivek_probes.py:_await_fill` polls `fivek_probes.py:_order_state`
+every LONG_FILL_POLL_S (2 s) for up to LONG_FILL_WAIT_S (20 s); an unfilled long is cancelled (`fivek_probes.py:_cancel`;
+204 is "accepted", so the state is read once more), a long that filled anyway falls to the wings-only record, and nothing
+filled means nothing recorded. `_order` prints an HTTPError's code and body on one line and returns `{"http": code}`; a
+short refused 403 prints `fivek_probes.py:_account_line` (options_buying_power, buying_power, the count of open option
+positions - nothing else) and is retried once after SHORT_RETRY_S. The wings-only record carries the book's prefix (`p5k`
+on PROOF) and the INCOMPLETE and settle lines and pages name the book. The judge (`scripts/proof_stint.py`) flags a
+wings-only record the moment it is OPEN - `_short_unfilled` now sees an EMPTY short list (a rejected short creates no leg
+at all; the old test looked only for `filled: false`) or a note carrying INCOMPLETE - as mechanics `WINGS_ONLY` with the
+expiry and the note, one [TRADE] page, and its open block reads "WINGS ONLY - the strategy did not trade this week; a $N
+long put is held". OWNER RULING A12 (2026-09-28 22:25 BST): a wings-only week is a FAILED week - a settled wings-only
+record scores as a traded NON_RISING week (the streak resets to 0 and it counts toward the 3-in-5 rule), never as paused;
+"nothing can hide behind the market didn't move". The judge's classification already did this (a settled -$25 record is
+TRADED NON_RISING); the fix only makes the flag reach today's record shape and carries `wings_only: true` on the settled
+row and its telegram. Two judge cosmetics rode along: today's rewritten equity row is no longer labelled an "open mark"
+while it is an intraday mark, and the sentinel's git_pull row reports "skipped in dry mode" under SENTINEL_DRY=1 instead of
+pulling ~/harvest-snapshots. The 2026-09-28 record itself is left as written (f5k prefix and all); it settles under A12 on
+2026-10-05.
+LESSON: a small account is a different broker from a big one. Sequence legs on confirmed fills, never on submission; log
+the broker's body, not the status code; and a "never naked" claim in a docstring is a claim about fills, so test it on
+fills.
+REGRESSION CHECK: MOT 6.47 - with mock orders a long reporting "new" twice and "filled" on the third poll places the short
+after the fill (the order sequence is asserted); a long that never fills is cancelled and leaves no short order and no
+record; a 403 on the first sell prints the account line and the retry completes the record; the HTTPError body is printed
+and the code returned; the PROOF wings-only record carries p5k (PROBE f5k) and its line and page name the book; the settle
+line names the book; the judge lists a wings-only OPEN record (today's shape) in mechanics, renders the WINGS ONLY open
+line, pages it once, and scores the settled wings-only week TRADED NON_RISING with the streak reset; the intraday-mark
+label; the sentinel's dry-mode skip. Drill scenario 5 asserts the short is placed only after a fill poll.
+
 2026-09-28 - THE MIRROR'S HEARTBEAT CRIED DOWN SEVEN TIMES ON ITS FIRST DAY (owner saw the healthchecks.io emails).
 WHAT BROKE: `scripts/mirror_sync_vps.sh` (7d0a225c, the retired poller's quarter-hour fetch + reset, now carrying the
 healthchecks.io ping) pinged HEALTHCHECK_URL/fail at 19:30, 19:45, 20:00, 20:30 and 20:45 UTC, so the owner's inbox

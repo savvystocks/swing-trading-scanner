@@ -140,6 +140,7 @@ orders_placed = []
 fk._quote = lambda occ, creds: (1.10, 1.20)
 fk._order = lambda occ, side, limit, creds: (orders_placed.append((side, occ)) or {"id": "drill"})
 fk._held = lambda occ, creds: False
+fk._order_state = lambda oid, creds: (orders_placed.append(("state", oid)) or ("filled", 1.20, 1.0))
 fk._xsp_close_series = lambda: type("S", (), {"iloc": type("I", (), {"__getitem__": lambda s, i: 650.0})(),
                                               "index": type("X", (), {"date": []})()})()
 saved = []
@@ -159,10 +160,10 @@ check("MILD: put debit stands down (BEAR-only gate)", rg_mild != "BEAR", f"regim
 fade_book._REGIME.update({"date": date.today().isoformat(), "val": "BEAR"})
 ok5 = fk._enter("PUT_DEBIT_W", True, {"otm_short": 4.0, "otm_long": 1.0}, ("k", "s"), LabShim, [],
                 __import__("datetime").datetime.now(__import__("datetime").timezone.utc))
-buys_first = orders_placed and orders_placed[0][0] == "buy"
-check("BEAR: PUT_DEBIT_W enters, LONG wing bought FIRST (never naked)",
+buys_first = [o[0] for o in orders_placed[:3]] == ["buy", "state", "sell"]
+check("BEAR: PUT_DEBIT_W enters, LONG wing bought FIRST and the short waits for its confirmed fill (never naked)",
       bool(ok5) and buys_first and any(r.get("probe_strategy") == "PUT_DEBIT_W" for r in saved),
-      str(orders_placed[:2]))
+      str(orders_placed[:3]))
 
 # --- scenario 6: STUDENT seat (2026-09-11): no model -> stands down; unknown/BEAR regime -> no
 #     scoring; MILD with a model -> ranked pick; shadow mode never enters ---

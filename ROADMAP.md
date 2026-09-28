@@ -540,4 +540,12 @@ proposal passes a simplicity test: does a number already in the reports justify 
   owed, separately: `data/harvest_backups/` (866 MB) and the stale `~/harvest-snapshots/cs_legs.db.gz` can go, and
   `scripts/engine_watch.sh`'s session window is a summer clock that needs the calendar before the watchdog can
   follow the poller out.
+- **SHIPPED 2026-09-28 - the short leg waits for the long's fill (the proof book's week-2 refusal).** On 2026-09-28
+  the proof book's short leg was refused 403 in the same second as its long wing filled, leaving a $25 wings-only
+  week (BREAKDOWNS 2026-09-28). `fivek_probes.py` places the short only on a confirmed long fill, cancels an
+  unfilled long, prints a rejection's body and the account's options buying power on a 403, retries the short
+  once, and names the book on the wings-only record and its lines; `scripts/proof_stint.py` flags a wings-only
+  record the moment it is OPEN and scores the settled week as traded NON_RISING (owner ruling A12, 2026-09-28).
+  Accept: MOT 6.47 and drill scenario 5 green; the next PROOF Monday's log shows the sell after the long's fill
+  poll, or names the refusal's body and the account line.
 

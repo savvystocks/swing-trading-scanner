@@ -2205,6 +2205,9 @@ _ms46 = open("scripts/mirror_sync_vps.sh", encoding="utf-8").read()
 check(6, "the external dead-man rides the mirror: mirror_sync_vps.sh sources .harvest_env with set -a and pings HEALTHCHECK_URL on a clean sync, HEALTHCHECK_URL/fail otherwise",
       "set -a" in _ms46 and ".harvest_env" in _ms46 and 'curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL"' in _ms46
       and 'curl -fsS -m 10 --retry 3 "$HEALTHCHECK_URL/fail"' in _ms46 and '-n "${HEALTHCHECK_URL:-}"' in _ms46)
+check(6, "the mirror fetches into its private ref refs/mirror/main and judges success by HEAD matching it (BREAKDOWNS 2026-09-28)",
+      "+refs/heads/main:refs/mirror/main" in _ms46 and "git reset --hard refs/mirror/main" in _ms46
+      and 'rev-parse refs/mirror/main' in _ms46 and "git fetch --no-tags origin main" not in _ms46)
 check(6, "the kill-switch channel's pull is exercised daily: sentinel row 'kill-switch repo pull' (git_pull) runs pull --rebase --autostash and pages on rc != 0 or a leftover rebase",
       any('"kill-switch repo pull", "git_pull"' in l for l in _rows46) and 'kind == "git_pull"' in _fs46
       and '"pull", "--rebase", "--autostash", "origin", "main"' in _fs46 and "rebase-merge" in _fs46)

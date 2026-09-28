@@ -1227,3 +1227,17 @@ another job writes into is pulled with --autostash or not shared at all; a watch
 built for is exercised, not inferred.
 REGRESSION CHECK: MOT 6.45 (the pull in `_write_flag` carries --autostash), the two sentinel rows and the mirror's
 ping (MOT 6.46).
+
+2026-09-28 - THE MIRROR'S HEARTBEAT CRIED DOWN SEVEN TIMES ON ITS FIRST DAY (owner saw the healthchecks.io emails).
+WHAT BROKE: `scripts/mirror_sync_vps.sh` (7d0a225c, the retired poller's quarter-hour fetch + reset, now carrying the
+healthchecks.io ping) pinged HEALTHCHECK_URL/fail at 19:30, 19:45, 20:00, 20:30 and 20:45 UTC, so the owner's inbox
+got DOWN/UP pairs all evening. Every one of those runs had actually synced the tree ("HEAD is now at ...").
+ROOT CAUSE: `git fetch origin main` returns rc 1 when it cannot update refs/remotes/origin/main because another job
+(watchdog_vps.sh, engine_watch.sh, telegram_commands.py all fetch at :00/:15/:30/:45) holds the same ref lock -
+"cannot lock ref ... unable to update local ref". FETCH_HEAD is still written and the reset still lands, so the old
+poller logged the same error 701 times without consequence; the new script promoted that rc into a failure signal.
+FIX (this commit): the mirror fetches into a private ref (+refs/heads/main:refs/mirror/main) that nothing else writes,
+resets to it, and judges success by HEAD matching that ref - a genuine network or reset failure still pings /fail.
+LESSON: a heartbeat must measure the outcome (the tree is at origin/main) and never a side effect's return code.
+REGRESSION CHECK: MOT 6.46's new line (the mirror fetches into refs/mirror/main, never `git fetch origin main`).
+

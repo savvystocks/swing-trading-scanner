@@ -40,6 +40,9 @@ session window is a hard-coded summer clock, and the watchdog is the only intrad
 - `crontab -l | grep <script>`; `tail -20 /home/poller/<log>`; `./.venv/bin/python scripts/freshness_sentinel.py`.
 
 ## Traps
+- 2026-09-28: the mirror's `git fetch origin main` raced the other quarter-hour fetchers on the shared
+  origin/main ref lock and returned rc 1 on healthy syncs, so its heartbeat pinged /fail seven times on day one.
+  It now fetches into refs/mirror/main and judges success by HEAD matching it (MOT 6.46).
 - 2026-09-19 THE PRINTS TAPE IS THINNED BY THE VENDOR AND WAS BEING CAPTURED BY LUCK: contract-days pulled
   fresh hold 149-484 prints, the same requests a week later return 2-9, and recent days return nothing at all
   for several days first. scripts/uw_flow_prints.py:is_final (deleted 2026-09-21) now keeps every contract-day inside a 12-day

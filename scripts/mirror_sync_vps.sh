@@ -18,8 +18,11 @@ LOG="$HOME/mirror_sync.log"
 {
   echo "=== $(date -u +%FT%TZ) mirror sync ==="
   RC=0
-  git fetch --no-tags origin main || RC=1
-  git reset --hard FETCH_HEAD || RC=1
+  # 2026-09-28: fetch into a PRIVATE ref - the other quarter-hour jobs fetch origin/main at the same instant and the
+  # shared ref lock made a healthy sync return rc 1 ("cannot lock ref"), which pinged /fail seven times on day one.
+  git fetch --no-tags origin +refs/heads/main:refs/mirror/main || RC=1
+  [ "$RC" -eq 0 ] && { git reset --hard refs/mirror/main || RC=1; }
+  [ "$RC" -eq 0 ] && [ "$(git rev-parse HEAD)" != "$(git rev-parse refs/mirror/main)" ] && RC=1
   set -a
   [ -f "$REPO/.harvest_env" ] && . "$REPO/.harvest_env"
   set +a

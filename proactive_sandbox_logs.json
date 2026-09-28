@@ -202529,7 +202529,7 @@
         "mfe_pct": 10.0,
         "mae_pct": -47.3,
         "stage": "initial",
-        "last_ret": -47.3
+        "last_ret": -46.9
       }
     },
     "backstop": {
@@ -230335,12 +230335,43 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BACKSTOP",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -50.0
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 13.3,
+          "mae_pct": -49.3,
+          "stage": "initial",
+          "last_ret": -49.3
+        }
+      },
+      "mfe_pct": 13.3,
+      "mae_pct": -49.3,
+      "determining_factor": "Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; negative_gamma regime / spot vs zero-gamma 55.0 worked against it.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "intent_ts_utc": "2026-09-21T13:46:42.412Z",
     "probe_strategy": "FOLLOW_CALLS",
     "buy_alert_delivered": true,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "NFLX261023C00075000",
+        "closed_at": "2026-09-28T15:26:38.016172542Z",
+        "return_pct": -50.0,
+        "filled_qty": 3,
+        "reason": "broker backstop filled 3 @ 1.5",
+        "action": "CLOSE_BACKSTOP",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 13.3,
@@ -230353,7 +230384,9 @@
       "bullish_call": {
         "order_id": "ae221aaf-411c-42b0-b441-976b65d91e11",
         "prior_order_ids": [],
-        "reconciled_ids": [],
+        "reconciled_ids": [
+          "ae221aaf-411c-42b0-b441-976b65d91e11"
+        ],
         "stop_price": 1.5,
         "qty": 3,
         "entry_px": 3.0,
@@ -230361,7 +230394,8 @@
         "stage": "initial",
         "at": "2026-09-22T13:34:32.170Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "reconciled": true
       }
     }
   },
@@ -231986,7 +232020,7 @@
         "mfe_pct": 8.3,
         "mae_pct": -33.3,
         "stage": "initial",
-        "last_ret": 1.4
+        "last_ret": 2.8
       }
     },
     "backstop": {
@@ -232276,7 +232310,7 @@
         "mfe_pct": 7.9,
         "mae_pct": -48.4,
         "stage": "initial",
-        "last_ret": -36.1
+        "last_ret": -38.7
       }
     },
     "backstop": {

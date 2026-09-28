@@ -11,10 +11,10 @@ Archive: none in the options corpus. The 2.5-year XSP backtest in `scripts/fivek
 weekly record is the evidence.
 
 ## Numbers
-- live: [[strategies.CREDIT_SPREAD_W.live.n_closed = 6]] settled weeks, [[strategies.CREDIT_SPREAD_W.live.per_trade = +4.3]]
-  per week as a percentage of $1,000, dollars [[strategies.CREDIT_SPREAD_W.live.total_usd = +256]],
-  weeks shared with the control [[strategies.CREDIT_SPREAD_W.live.shared_units = 5]],
-  t vs control [[strategies.CREDIT_SPREAD_W.live.t_vs_control = -0.21]].
+- live: [[strategies.CREDIT_SPREAD_W.live.n_closed = 7]] settled weeks, [[strategies.CREDIT_SPREAD_W.live.per_trade = +4.2]]
+  per week as a percentage of $1,000, dollars [[strategies.CREDIT_SPREAD_W.live.total_usd = +291]],
+  weeks shared with the control [[strategies.CREDIT_SPREAD_W.live.shared_units = 6]],
+  t vs control [[strategies.CREDIT_SPREAD_W.live.t_vs_control = -0.14]].
 
 ## Recompute
 `./.venv/bin/python scripts/returns_ledger.py` (row CREDIT_SPREAD_W).

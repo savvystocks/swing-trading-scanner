@@ -5473,3 +5473,30 @@
 
 **Determining factor:** Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 490.0 worked against it.
 
+## Autopsy - TLT (4068a4edae79)
+- entered 2026-09-16T15:46:09.379Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -76.1% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-76%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 130.0 worked against it.
+
+## Autopsy - APLD (156e24e9a788)
+- entered 2026-09-18T18:15:28.019Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | -63.3% | WINNER |
+
+**Determining factor:** Bullish call FAILED (-63%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 27.5 worked against it.
+
+## Autopsy - NVDA (d235e68a4bc0)
+- entered 2026-09-21T14:06:11.113Z | trigger regime_BEARISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bearish (put) | LONG_PUT | -50.8% | WINNER |
+
+**Determining factor:** Bearish put FAILED (-51%, move 0.0%): no breakdown materialised; spot held above zero-gamma 222.5.
+

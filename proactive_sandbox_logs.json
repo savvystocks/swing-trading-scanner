@@ -202519,11 +202519,44 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BACKSTOP",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": -50.4
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 10.0,
+          "mae_pct": -49.5,
+          "stage": "initial",
+          "last_ret": -49.5
+        }
+      },
+      "mfe_pct": 10.0,
+      "mae_pct": -49.5,
+      "determining_factor": "Bullish call FAILED (-50%, move 0.0%): the expected expansion never came; positive_gamma regime / spot vs zero-gamma 64.0 worked against it.",
+      "tuning_recommendations": [
+        "min_gex_distance"
+      ]
+    },
+    "status": "CLOSED",
     "buy_alert_delivered": true,
     "probe_strategy": "DIP_CONF_MILD",
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "SLV270115C00060000",
+        "closed_at": "2026-09-29T15:26:35.714045226Z",
+        "return_pct": -50.4,
+        "filled_qty": 1,
+        "reason": "broker backstop filled 1 @ 2.73",
+        "action": "CLOSE_BACKSTOP",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 10.0,
@@ -202536,7 +202569,9 @@
       "bullish_call": {
         "order_id": "d54c35e3-139d-4796-8105-b45abc3b5c73",
         "prior_order_ids": [],
-        "reconciled_ids": [],
+        "reconciled_ids": [
+          "d54c35e3-139d-4796-8105-b45abc3b5c73"
+        ],
         "stop_price": 2.75,
         "qty": 1,
         "entry_px": 5.5,
@@ -202544,7 +202579,8 @@
         "stage": "initial",
         "at": "2026-09-14T13:34:29.357Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "reconciled": true
       }
     }
   },
@@ -232020,7 +232056,7 @@
         "mfe_pct": 8.3,
         "mae_pct": -33.3,
         "stage": "initial",
-        "last_ret": -16.7
+        "last_ret": -11.1
       }
     },
     "backstop": {
@@ -232307,10 +232343,10 @@
     "leg_exits": {},
     "leg_path": {
       "bearish_put": {
-        "mfe_pct": 14.5,
+        "mfe_pct": 15.8,
         "mae_pct": -48.4,
         "stage": "initial",
-        "last_ret": 11.8
+        "last_ret": 15.8
       }
     },
     "backstop": {

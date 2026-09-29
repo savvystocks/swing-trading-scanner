@@ -1286,3 +1286,19 @@ resets to it, and judges success by HEAD matching that ref - a genuine network o
 LESSON: a heartbeat must measure the outcome (the tree is at origin/main) and never a side effect's return code.
 REGRESSION CHECK: MOT 6.46's new line (the mirror fetches into refs/mirror/main, never `git fetch origin main`).
 
+2026-09-29 - THE MIRROR FIX LOST THE SAME RACE AND SKIPPED THE RESET (owner saw a 30-minute DOWN email on day two).
+WHAT BROKE: 13c34899 (2026-09-28) fetched into refs/mirror/main to escape the shared origin/main lock, but git still
+performs its "opportunistic" update of refs/remotes/origin/main from the remote's configured refmap whenever the
+fetched branch matches it, so 15 of 32 runs on 2026-09-29 still hit "cannot lock ref" - and because that version set
+RC=1 from the fetch and gated the reset on RC, those runs SKIPPED the reset: the VPS tree lagged origin by a
+quarter-hour on half the runs, and the healthchecks.io check was sent /fail (DOWN 21:30, UP 21:45 BST).
+ROOT CAUSE: the fix was reasoned about, not reproduced under the race; and it kept judging the job by a side effect's
+return code, which was the lesson of the entry it was fixing.
+FIX (this commit): the fetch passes --refmap='' so ONLY refs/mirror/main is written; the reset always runs when that
+ref exists; success is judged by the outcome (HEAD, FETCH_HEAD and refs/mirror/main agree); the mirror pings
+HEALTHCHECK_URL only on success and never pings /fail - a missed ping past the check's grace is the alarm, so a lock
+race costs nothing and a real outage still pages.
+LESSON: a fix for a race is proven under the race (two fetchers in the same second), not by reading the man page.
+REGRESSION CHECK: MOT 6.46 (the mirror fetches with --refmap='' into its private ref, has no fetch-gated reset, and
+never pings /fail).
+

@@ -53,6 +53,9 @@ its /fail endpoint, the URL comes from `.harvest_env` and an unset URL pings not
   6.40 (the VPS watchdog reads the cycle stamp, never the harvest inbox).
 
 ## Traps
+- 2026-09-29: the first mirror fix still lost the ref-lock race (git's opportunistic origin/main update)
+  and skipped the reset on those runs. The mirror now fetches with --refmap='', judges the outcome, and pings
+  healthchecks.io only on success - it never pings /fail, so silence past the grace is the only alarm.
 - 2026-09-28: healthchecks.io emailed DOWN/UP pairs all evening because the mirror treated a ref-lock race
   ("cannot lock ref") as a failed sync. A heartbeat measures the outcome, never a side effect's return code.
 - 2026-09-26 (second entry) THE KILL SWITCH COULD NOT PUBLISH WHILE THE WATCHDOG'S STAMP WAS DIRTY:

@@ -221467,7 +221467,7 @@
         "mfe_pct": 20.4,
         "mae_pct": -27.2,
         "stage": "initial",
-        "last_ret": -22.3
+        "last_ret": 17.5
       }
     },
     "backstop": {
@@ -232056,7 +232056,7 @@
         "mfe_pct": 8.3,
         "mae_pct": -33.3,
         "stage": "initial",
-        "last_ret": -16.7
+        "last_ret": -29.2
       }
     },
     "backstop": {
@@ -232335,12 +232335,44 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BACKSTOP",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": 14.5
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 38.2,
+          "mae_pct": -48.4,
+          "stage": "trailing",
+          "last_ret": 38.2,
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 38.2,
+      "mae_pct": -48.4,
+      "determining_factor": "Bearish breakdown (move 0.0%): spot below zero-gamma 335.0 -> negative-gamma slide, no positive catalyst.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "intent_ts_utc": "2026-09-21T17:54:30.267Z",
     "probe_strategy": "WINNER_PROFILE",
     "buy_alert_delivered": true,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "AAPL261023P00325000",
+        "closed_at": "2026-09-30T13:30:22.852508202Z",
+        "return_pct": 14.5,
+        "filled_qty": 1,
+        "reason": "broker backstop filled 1 @ 4.35",
+        "action": "CLOSE_BACKSTOP",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 38.2,
@@ -232357,7 +232389,9 @@
           "6c00a33b-aaf7-4134-92f4-7bcb65470451",
           "608e17af-0702-4921-b97e-e5f7e5dc3044"
         ],
-        "reconciled_ids": [],
+        "reconciled_ids": [
+          "a903c58b-96b8-4ff6-818c-e08a95c68323"
+        ],
         "stop_price": 4.96,
         "qty": 1,
         "entry_px": 3.8,
@@ -232365,7 +232399,8 @@
         "stage": "trailing",
         "at": "2026-09-29T19:53:38.719Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "reconciled": true
       }
     }
   },
@@ -232467,6 +232502,17 @@
   {
     "type": "reconcile",
     "ts_utc": "2026-09-29T13:31:57.861Z",
+    "open_records_no_position": 0,
+    "positions_no_record": 2,
+    "sample_stale": [],
+    "sample_orphan": [
+      "SPY",
+      "XSP261002P00736000"
+    ]
+  },
+  {
+    "type": "reconcile",
+    "ts_utc": "2026-09-30T13:32:04.504Z",
     "open_records_no_position": 0,
     "positions_no_record": 2,
     "sample_stale": [],

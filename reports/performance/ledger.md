@@ -1,15 +1,15 @@
-# RETURNS LEDGER - 2026-09-28T22:24:05+00:00
+# RETURNS LEDGER - 2026-09-30T22:24:04+00:00
 
-live from proactive_sandbox_logs.json (1102 records, the retired court's construction); archive from reports/research/probe_tuner_rows_v3.jsonl (90405 rows, last day 2026-09-11, ask_at_qualifying_print / d1_close).
+live from proactive_sandbox_logs.json (1104 records, the retired court's construction); archive from reports/research/probe_tuner_rows_v3.jsonl (90405 rows, last day 2026-09-11, ask_at_qualifying_print / d1_close).
 
 | strategy | live n | %/trade | win | best removed | unit | units | own mean | shared | t vs control | halves | $ | archive %/day (pool) | t vs pool | archive halves | court (retired 2026-09-26, last standing) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | EXEC_BASELINE | 75 | +7.4 | 44% | +1.5 | days | 24 | +9.8 | 24 | +0.00 | +24.1/-4.4 | +1,742 | -5.1 (-5.1) | n/a | -4.4/-5.8 | - |
 | FOLLOW_CALLS | 30 | +15.0 | 53% | -2.0 | days | 11 | -12.2 | 11 | -1.05 | -57.7/+25.6 | +266 | -0.1 (-5.1) | +4.99 | +2.3/-2.6 | 11d vs control t -0.50 (trimmed) own-mean -6.1 (floor +3) HOLD |
 | BULL_DIP | 0 | n/a | n/a | n/a | days | 0 | n/a | 0 | n/a | n/a/n/a | n/a | +2.2 (-5.1) | +4.44 | +5.7/-1.4 | 0/8 live virgin days vs control - HOLD |
-| DIP_CONF_MILD | 4 | +22.9 | 50% | -24.6 | days | 4 | +22.9 | 4 | +0.72 | -50.6/+96.5 | +437 | +0.5 (-7.4) | +2.69 | +3.8/-2.8 | 4/8 live virgin days vs control - HOLD |
+| DIP_CONF_MILD | 5 | +8.3 | 40% | -31.0 | days | 5 | +8.3 | 5 | +0.73 | -50.6/+47.5 | +161 | +0.5 (-7.4) | +2.69 | +3.8/-2.8 | 4/8 live virgin days vs control - HOLD |
 | DIP_CONVEXITY | 3 | +254.4 | 67% | +31.5 | days | 2 | +365.8 | 2 | n/a | +31.6/+700.0 | +2,497 | +8.3 (-4.8) | +3.83 | +5.7/+10.9 | 2/8 live virgin days vs control - HOLD |
-| WINNER_PROFILE | 15 | +10.3 | 33% | -23.8 | days | 7 | -7.7 | 7 | -0.76 | -18.4/+0.4 | -1,689 | -5.2 (-5.1) | -2.54 | -4.5/-5.9 | - |
+| WINNER_PROFILE | 16 | +10.6 | 38% | -21.2 | days | 7 | -3.0 | 7 | -0.52 | -18.4/+8.6 | -1,547 | -5.2 (-5.1) | -2.54 | -4.5/-5.9 | - |
 | CREDIT_SPREAD_W | 7 | +4.2 | 100% | +3.1 | weeks | 6 | +4.7 | 6 | -0.14 | +3.5/+5.8 | +291 | n/a (n/a) | n/a | n/a/n/a | 5/8 live virgin weeks vs control - HOLD |
 | STUDENT_FAMILY | 0 | n/a | n/a | n/a | days | 0 | n/a | 0 | n/a | n/a/n/a | n/a | n/a (n/a) | n/a | n/a/n/a | 0/8 live virgin days vs control - HOLD |
 | CONSENSUS (retired) | 19 | -20.1 | 21% | -29.3 | days | 11 | -20.6 | 8 | -0.31 | -10.2/-29.3 | -3,424 | n/a (n/a) | n/a | n/a/n/a | - |

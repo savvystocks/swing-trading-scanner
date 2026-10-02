@@ -221456,12 +221456,44 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_BACKSTOP",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bullish_call": 43.7
+      },
+      "winner": "bullish_call",
+      "loser": "bullish_call",
+      "leg_path": {
+        "bullish_call": {
+          "mfe_pct": 43.7,
+          "mae_pct": -27.2,
+          "stage": "trailing",
+          "last_ret": 43.7,
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 43.7,
+      "mae_pct": -27.2,
+      "determining_factor": "Bullish breakout (move 0.0%); dealers short gamma near 57.0 fed the squeeze.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "intent_ts_utc": "2026-09-17T15:27:31.002Z",
     "probe_strategy": "DIP_CONVEXITY",
     "buy_alert_delivered": true,
-    "leg_exits": {},
+    "leg_exits": {
+      "bullish_call": {
+        "occ": "HPE261030C00062000",
+        "closed_at": "2026-10-02T13:31:50.248559256Z",
+        "return_pct": 43.7,
+        "filled_qty": 1,
+        "reason": "broker backstop filled 1 @ 7.4",
+        "action": "CLOSE_BACKSTOP",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bullish_call": {
         "mfe_pct": 43.7,
@@ -221477,7 +221509,9 @@
         "prior_order_ids": [
           "8bff0ce6-80da-4ddb-b130-b11d07a3f715"
         ],
-        "reconciled_ids": [],
+        "reconciled_ids": [
+          "292034be-343c-4490-9bb0-9574a50700b9"
+        ],
         "stop_price": 6.73,
         "qty": 1,
         "entry_px": 5.15,
@@ -221485,7 +221519,8 @@
         "stage": "trailing",
         "at": "2026-10-02T13:31:50.100Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "reconciled": true
       }
     }
   },
@@ -222751,7 +222786,7 @@
         "mfe_pct": 5.9,
         "mae_pct": -27.1,
         "stage": "initial",
-        "last_ret": -20.0
+        "last_ret": -22.4
       }
     },
     "backstop": {

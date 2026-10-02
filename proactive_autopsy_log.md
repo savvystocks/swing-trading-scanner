@@ -5545,3 +5545,12 @@
 
 **Determining factor:** Bearish breakdown (move 0.0%): spot below zero-gamma 335.0 -> negative-gamma slide, no positive catalyst.
 
+## Autopsy - HPE (e79a25a9f91c)
+- entered 2026-09-17T15:27:21.987Z | trigger regime_BULLISH_loose | exit CLOSE_BACKSTOP | move 0.0% | slippage None%
+
+| leg | structure | return % | verdict |
+|---|---|---|---|
+| Bullish (call) | LONG_CALL | +43.7% | WINNER |
+
+**Determining factor:** Bullish breakout (move 0.0%); dealers short gamma near 57.0 fed the squeeze.
+

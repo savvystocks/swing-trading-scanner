@@ -12,8 +12,8 @@ Archive: calls, SPY 50d distance < 0 and SPY 20d distance < 0 (prior close), the
 Live: PROBE records on days whose prior close had SPY below its 50-day and 20-day.
 
 ## Numbers
-- live: [[strategies.DIP_CONVEXITY.live.n_closed = 3]] closed, [[strategies.DIP_CONVEXITY.live.per_trade = +254.4]] per trade,
-  day mean [[strategies.DIP_CONVEXITY.live.unit_mean = +365.8]] over [[strategies.DIP_CONVEXITY.live.units = 2]] days,
+- live: [[strategies.DIP_CONVEXITY.live.n_closed = 4]] closed, [[strategies.DIP_CONVEXITY.live.per_trade = +201.7]] per trade,
+  day mean [[strategies.DIP_CONVEXITY.live.unit_mean = +201.7]] over [[strategies.DIP_CONVEXITY.live.units = 2]] days,
   t vs control [[strategies.DIP_CONVEXITY.live.t_vs_control = n/a]].
 - archive: [[strategies.DIP_CONVEXITY.archive.per_day = +8.3]] per day (pool [[strategies.DIP_CONVEXITY.archive.pool_per_day_same_days = -4.8]]),
   t vs pool [[strategies.DIP_CONVEXITY.archive.t_vs_pool = +3.83]], [[strategies.DIP_CONVEXITY.archive.trades = 7249]] trades over

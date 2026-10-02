@@ -14,7 +14,7 @@ weekly record is the evidence.
 - live: [[strategies.CREDIT_SPREAD_W.live.n_closed = 7]] settled weeks, [[strategies.CREDIT_SPREAD_W.live.per_trade = +4.2]]
   per week as a percentage of $1,000, dollars [[strategies.CREDIT_SPREAD_W.live.total_usd = +291]],
   weeks shared with the control [[strategies.CREDIT_SPREAD_W.live.shared_units = 6]],
-  t vs control [[strategies.CREDIT_SPREAD_W.live.t_vs_control = -0.14]].
+  t vs control [[strategies.CREDIT_SPREAD_W.live.t_vs_control = +0.05]].
 
 ## Recompute
 `./.venv/bin/python scripts/returns_ledger.py` (row CREDIT_SPREAD_W).

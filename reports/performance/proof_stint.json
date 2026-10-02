@@ -1,0 +1,148 @@
+{
+ "as_of": "2026-10-02T22:18:03+00:00",
+ "judged_for": "2026-10-02",
+ "seated": "2026-09-20",
+ "status": "RUNNING",
+ "fail_reason": null,
+ "fail_date": null,
+ "fail_detail": "",
+ "pass_date": null,
+ "latched_on": null,
+ "streak": 1,
+ "streak_met_on": null,
+ "under_water_at_8": null,
+ "traded": 1,
+ "paused": 0,
+ "paused_unexplained": 0,
+ "uncounted": 0,
+ "pending": 0,
+ "non_rising": 0,
+ "rolling5_non_rising": 0,
+ "cum_pnl_usd": 35.0,
+ "mean_per_traded_week_usd": 35.0,
+ "worst_week_usd": 35.0,
+ "worst_week_expiry": "2026-09-25",
+ "capture": {
+  "closed": 1,
+  "denominator": 21.6,
+  "ratio": 1.62,
+  "evaluable": false,
+  "tested_on": null,
+  "closed_at_test": null,
+  "mean_at_test": null,
+  "passed": null
+ },
+ "equity": {
+  "last": 5008.34,
+  "last_day": "2026-10-02",
+  "hwm": 5032.89,
+  "hwm_day": "2026-09-25",
+  "floor": 3523.02,
+  "dd_pct": -0.49,
+  "max_dd_pct": -0.49,
+  "breach_day": null,
+  "holes": [],
+  "open_mark_days": [
+   "2026-09-21",
+   "2026-09-22",
+   "2026-09-23",
+   "2026-09-24"
+  ],
+  "open_mark_clock": {
+   "2026-09-21": "13:36",
+   "2026-09-22": "13:34",
+   "2026-09-23": "13:31",
+   "2026-09-24": "13:31"
+  },
+  "judged_through": "2026-10-02",
+  "today_intraday": false,
+  "n": 11
+ },
+ "tail": {
+  "stint": {
+   "n": 1,
+   "k": 0,
+   "ub": 0.95,
+   "ev_realised": -198.42,
+   "ev_max": -1125.9,
+   "mean_win": 35.0,
+   "max_loss_ref": 1187.0
+  },
+  "pooled": {
+   "n": 123,
+   "k": 10,
+   "ub": 0.134,
+   "ev_realised": 12.64,
+   "ev_max": -118.18
+  }
+ },
+ "open": {
+  "expiry": "2026-10-02",
+  "trade_set_id": "f5k09281502",
+  "short_k": null,
+  "long_k": 736,
+  "wings_only": true,
+  "note": "INCOMPLETE - long wings only, short leg failed; logged to stop re-entry | SHORT LEG DIED - wings only",
+  "credit_usd": -25.0,
+  "max_loss_usd": null,
+  "sessions_to_expiry": 0,
+  "xsp_close": 772.27,
+  "xsp_close_day": "2026-10-02",
+  "dist_to_short_pct": null,
+  "full_loss_breaches": null,
+  "next_settle": "2026-10-05"
+ },
+ "weeks": [
+  {
+   "expiry": "2026-09-25",
+   "kind": "TRADED",
+   "verdict": "RISING",
+   "pnl_usd": 35.0,
+   "credit_usd": 35.0,
+   "short_k": 757,
+   "long_k": 741,
+   "xsp_settle": 774.3400268554688,
+   "records": 1,
+   "closed_early": false,
+   "wings_only": false,
+   "equity_basis": "open",
+   "regime_rederived": null,
+   "regime_dist": null,
+   "cycle_seen": null,
+   "settled_at": "2026-09-28T13:31:58.540586+00:00",
+   "holes": []
+  }
+ ],
+ "mechanics": [
+  {
+   "date": "2026-10-02",
+   "kind": "WINGS_ONLY",
+   "text": "week 2026-10-02: WINGS ONLY - the short leg never filled, the strategy did not trade (INCOMPLETE - long wings only, short leg failed; logged to stop re-entry | SHORT LEG DIED - wings only); scores as a traded NON_RISING week (A12, 2026-09-28)"
+  }
+ ],
+ "announced": [
+  "2026-09-25",
+  "MECH:2026-10-02:WINGS_ONLY"
+ ],
+ "constants": {
+  "denominator_usd_per_traded_week": 21.6,
+  "weekly_sd_usd": 156,
+  "archive_weeks": 122,
+  "archive_losses": 10,
+  "archive_wins": 112,
+  "archive_mean_win_usd": 47.2,
+  "archive_mean_loss_usd": -210.7,
+  "archive_max_loss_usd": 1187,
+  "archive_worst_week_usd": -624,
+  "measured": "scripts/cs_legs_measure.py run 2026-09-25 ~22:00 UTC on the frozen data/cs_legs.db: XSP 2%/4% with the BEAR stand-down, 122 traded weeks 2023-11-06..2026-09-14, 112 wins / 10 losses, mean +$26.1/wk, mean win +$47.2, mean losing week -$210.7, mean max loss $1,187, worst week -$624, CP 95% upper loss rate 13.5%. weekly_sd_usd is the sd over all 138 usable weeks ($156; the 122 gated weeks alone give $98 - the gate is in-sample, so the wider figure is frozen). The capture denominator stays the refilled +$21.6 (capture_denominator), never the +$26.1 headline."
+ },
+ "calendar_ok": true,
+ "next_line": "settle of the 2026-10-02 spread lands Mon 2026-10-05; streak can reach 8 no earlier than the 2026-11-13 expiry",
+ "honesty": [
+  "What 8 weeks test: survival and mechanics (fills, settlement, gate timing, drawdown behaviour), NOT edge. Weekly P&L sd is about $156 and the archive win rate about 92%, so 8 loss-free weeks happen 51% of the time (0.92^8) whether the true edge is +$20 a week or zero. A pass here means \"no loss week yet\"; a fail means \"one ordinary loss week arrived\" (8% a week).",
+  "Tail bound, 95% Clopper-Pearson upper bound on the losing-week rate: this stint 0 losses in 1 traded week -> up to 95.0%; expectancy at that rate -$198/wk with losses at the archive's realised size (-$211) and -$1,126/wk at max loss ($1,187). Pooled with the archive (122 weeks, 10 losses -> 123/10): 13.4%; +$13/wk realised, -$118/wk at max loss. Each loss-free week lowers the pooled bound by about 0.1 point; this stint cannot close it.",
+  "Capture: 1 closed trade of the 20 needed before the 60% test; mean +$35.0 per traded week against the frozen +$21.6.",
+  "Honest expectation at seating (audit 2026-09-20): +$10 to +$22 per traded week, 95% range -$3 to +$40, P(true edge > 0) about 35-40%."
+ ],
+ "proof_account_enabled": true
+}

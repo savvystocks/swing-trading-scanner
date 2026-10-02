@@ -232083,18 +232083,50 @@
         "ledger_terminal": "filled"
       }
     },
-    "exit": null,
-    "status": "OPEN",
+    "exit": {
+      "reason": "CLOSE_STOP_LOSS",
+      "underlying_move_pct": 0.0,
+      "entry_slippage_pct": null,
+      "leg_returns_pct": {
+        "bearish_put": -50.0
+      },
+      "winner": "bearish_put",
+      "loser": "bearish_put",
+      "leg_path": {
+        "bearish_put": {
+          "mfe_pct": 8.3,
+          "mae_pct": -50.0,
+          "stage": "closed",
+          "last_ret": -50.0,
+          "close_fails": 0
+        }
+      },
+      "mfe_pct": 8.3,
+      "mae_pct": -50.0,
+      "determining_factor": "Bearish put FAILED (-50%, move 0.0%): no breakdown materialised; spot held above zero-gamma 74.0.",
+      "tuning_recommendations": []
+    },
+    "status": "CLOSED",
     "intent_ts_utc": "2026-09-21T16:57:04.550Z",
     "probe_strategy": "EXEC_BASELINE",
     "buy_alert_delivered": true,
-    "leg_exits": {},
+    "leg_exits": {
+      "bearish_put": {
+        "occ": "TQQQ261023P00075000",
+        "closed_at": "2026-10-02T13:51:34.742Z",
+        "return_pct": -50.0,
+        "reason": "-50.0% <= -50% hard stop",
+        "action": "CLOSE_STOP_LOSS",
+        "closed_ok": true
+      }
+    },
     "leg_path": {
       "bearish_put": {
         "mfe_pct": 8.3,
-        "mae_pct": -48.9,
-        "stage": "initial",
-        "last_ret": -48.9
+        "mae_pct": -50.0,
+        "stage": "closed",
+        "last_ret": -50.0,
+        "close_fails": 0
       }
     },
     "backstop": {
@@ -232109,9 +232141,17 @@
         "stage": "initial",
         "at": "2026-09-22T13:34:32.727Z",
         "status": "pending_new",
-        "error": null
+        "error": null,
+        "retired": true
       }
-    }
+    },
+    "exit_order_ids": [
+      {
+        "order_id": "236c8591-c07b-43ab-9bc6-da5947de9205",
+        "at": "2026-10-02T13:51:34.742Z",
+        "ledger_terminal": "filled"
+      }
+    ]
   },
   {
     "trade_set_id": "dd20d00642cb",

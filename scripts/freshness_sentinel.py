@@ -5,7 +5,8 @@ Born from the frozen-archive breakdown (BREAKDOWNS 2026-09-04): every process ex
 nightly while the data underneath died for two weeks. This watches the DATA, not the exit
 codes. Three check kinds:
   schedule - a file a cron writes: compute the most recent datetime its schedule should
-             have fired (weekend/holiday-aware via day-of-week sets) and alarm if the file
+             have fired (weekend/holiday-aware via day-of-week sets; on a 13:00 ET half day a weekday
+             row expects 30 minutes before the early close) and alarm if the file
              predates it (+2h grace). A missed weekday night alarms the next morning at
              08:00; a weekend gap never false-alarms.
   data_day - a sqlite max(day/ts) that must track the trading calendar: alarm when the
@@ -38,14 +39,21 @@ FIRST_RUN = {
     "proof stint judge": datetime(2026, 9, 28, 14, 7, tzinfo=timezone.utc),
 }
 
+EARLY_CLOSE = {}                        # half days: session date -> its 13:00 ET close in UTC (2026-10-05)
 try:                                    # holiday-aware (coverage audit 2026-09-07): the 07-02
     import pandas_market_calendars as _mcal    # harvest lesson - exchange calendars in ALL date
     _sch = _mcal.get_calendar("XNYS").schedule(
         start_date=(date.today() - timedelta(days=75)).isoformat(),
-        end_date=date.today().isoformat())
+        end_date=(date.today() + timedelta(days=400)).isoformat())   # ahead too, so the coming half days are known
     SESSIONS = {d.date() for d in _sch.index}
 except Exception:
     SESSIONS = None
+try:
+    for _d0, _c0 in zip(_sch.index, _sch["market_close"]):
+        if _c0.tz_convert("America/New_York").hour < 16:
+            EARLY_CLOSE[_d0.date()] = _c0.to_pydatetime().astimezone(timezone.utc)
+except Exception:
+    EARLY_CLOSE = {}
 
 
 def is_session(d):
@@ -93,6 +101,14 @@ CHECKS = [
     ("evening persist", "schedule", H + "/evening_persist.log", (22, 45, WEEKDAYS), "MONITOR"),
     ("xsp quote log", "schedule", H + "/xsp_quotes.log", (19, 50, WEEKDAYS), "EVIDENCE"),
     ("trajectory scoreboard", "schedule", H + "/scoreboard.log", (22, 25, {4}), "MONITOR"),
+    # three live jobs that had no row (2026-10-05). Each appends its log on EVERY run, a quiet one included, and each
+    # time is the writer's own stamp read from the log's history, never assumed (BREAKDOWNS 2026-09-24 third entry):
+    # returns_alarms prints "returns alarms <day>: nothing to report" (its bundles are stamped 22:24:03-22:24:06),
+    # returns_ledger opens with "# RETURNS LEDGER - <ts>" (22:40:04 on 09-18, 09-25 and 10-02), cs_live_fills ends
+    # with "<ts> cs live fills: n/n records" (12:00 on 09-26 and 10-03, log mtime 12:00:10)
+    ("returns alarms", "schedule", H + "/returns_alarms.log", (22, 24, WEEKDAYS), "MONITOR"),
+    ("returns ledger", "schedule", H + "/returns.log", (22, 40, {4}), "MONITOR"),
+    ("credit spread live fills", "schedule", H + "/cs_legs.log", (12, 0, {5}), "EVIDENCE"),
     # -- v1.1 (registry sweep 2026-09-04): failure modes mtime checks cannot see
     ("repo push sync", "push_sync", ".", None, "COURT"),
     # the /halt kill switch publishes through this checkout (BREAKDOWNS 2026-09-26 second entry): an unpushed commit
@@ -131,6 +147,8 @@ def last_expected(hour, minute, dows, now):
         if dows == WEEKDAYS and not is_session(d):
             dow_ok = False              # market-hours artifacts legitimately sleep on holidays
         cand = datetime(d.year, d.month, d.day, hour, minute, tzinfo=timezone.utc)
+        if dows == WEEKDAYS and d in EARLY_CLOSE:
+            cand = min(cand, EARLY_CLOSE[d] - timedelta(minutes=30))   # a half day's writers stop at its 13:00 ET close
         if dow_ok and cand <= now - timedelta(hours=GRACE_H):
             return cand
         d -= timedelta(days=1)

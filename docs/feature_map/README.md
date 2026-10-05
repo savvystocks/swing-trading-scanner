@@ -23,8 +23,8 @@ from the code. This map is the maintained verification source for the engine; `s
 ## Baseline preconditions for any verification
 - On the VPS, in the repo root, with `. ./.harvest_env` sourced when a job needs Alpaca or UW
   keys, and `./.venv/bin/python` for anything that imports sklearn or pandas.
-- The market gate decides whether a cycle does anything; outside 13:30-20:00 UTC on a trading day
-  a live cycle prints `market closed - no cycle` and exits. Use the drill and the MOT for
+- The market gate decides whether a cycle does anything; outside the XNYS session (13:30-20:00 UTC in
+  US summer time, 14:30-21:00 UTC in winter) a live cycle prints `market closed - no cycle` and exits. Use the drill and the MOT for
   out-of-hours verification; they fake every external.
 - Nothing here places a real order: Alpaca paper only, keys in GitHub secrets and `.harvest_env`,
   never in chat.

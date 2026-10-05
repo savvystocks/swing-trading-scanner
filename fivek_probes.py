@@ -9,7 +9,8 @@ Two weekly XSP structures, both sized for a real $5k account, both European cash
 Mechanics: one entry per structure per week (first cycle >= 15:00 UTC); LONG wings are
 bought FIRST and the short is placed only on their CONFIRMED fill (2026-09-28: a $5k account
 cannot carry a naked short for even a second); broker-position idempotency
-check before entering (the record-propagation lesson); settle after Friday expiry vs ^XSP
+check before entering (the record-propagation lesson); the expiry is the week's LAST exchange session
+(Thursday when Friday is an exchange holiday, 2026-10-05); settle after expiry vs the ^XSP
 close. Records: no legs dict (options exit engine ignores), occ + occ_more (reconciler
 knows every leg). Fail-open everywhere.
 """
@@ -124,6 +125,38 @@ def _first_session(day):
         return sch.index[0].date() if len(sch) else None
     except Exception:
         return None
+
+
+def _last_session(day):
+    """The LAST exchange session of `day`'s ISO week: the week's XSP expiry. When Friday is an exchange holiday
+    (2026-12-25, 2027-01-01, Good Friday) XSP lists the week's expiry on the session before it (2026-10-05). Same
+    calendar machinery as _first_session; None when the calendar is unreadable."""
+    try:
+        import pandas_market_calendars as mcal
+        mon = day - timedelta(days=day.weekday())
+        sch = mcal.get_calendar("XNYS").schedule(start_date=mon.isoformat(),
+                                                 end_date=(mon + timedelta(days=4)).isoformat())
+        return sch.index[-1].date() if len(sch) else None
+    except Exception:
+        return None
+
+
+def _week_expiry(today):
+    """The expiry _enter trades: this week's last session, or next week's once today is that session or later. With
+    the calendar unreadable it falls back to the calendar Friday and SAYS so - that date is not checked against the
+    exchange's holidays, and an OCC on a holiday names no contract (the long wing then gets no ask, nothing is placed)."""
+    for wk in (0, 7):
+        ls = _last_session(today + timedelta(days=wk))
+        if ls is None:
+            break
+        if ls > today:
+            return ls
+    fri = today + timedelta(days=(4 - today.weekday()) % 7)
+    if fri <= today:
+        fri += timedelta(days=7)
+    print(f"  fivek: WARNING - XNYS calendar unreadable; expiry falls back to the calendar Friday {fri}, "
+          "NOT checked against exchange holidays")
+    return fri
 
 
 def _order_state(oid, creds):
@@ -287,9 +320,7 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now, book="PROBE", save=Non
     except Exception:
         print(f"  fivek {strategy}: XSP spot fetch failed - no entry this cycle")
         return False
-    exp = now.date() + timedelta(days=(4 - now.date().weekday()) % 7)
-    if exp <= now.date():
-        exp += timedelta(days=7)
+    exp = _week_expiry(now.date())                  # the week's LAST session: Thursday when Friday is a holiday (2026-10-05)
     k1 = round(spot * (1 - cfg.get("otm_short", 2.0) / 100))
     k2 = round(spot * (1 - cfg.get("otm_long", 4.0) / 100))
     legs_s = [("P", k1)]

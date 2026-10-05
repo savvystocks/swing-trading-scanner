@@ -2593,11 +2593,17 @@ def daily_digest():
     return text
 
 
-def _maybe_send_digest():
-    """Fire the EOD digest once/day, on the first cycle at/after 20:00 UTC. Persistence = a marker
-    record in the (committed) log, so it survives the ephemeral GHA runner."""
-    now = datetime.now(timezone.utc)
-    if now.hour < 20:
+def _maybe_send_digest(now=None):
+    """Fire the EOD digest once/day, on the first cycle at/after the 16:00 New York close. Persistence = a marker
+    record in the (committed) log, so it survives the ephemeral GHA runner. The hour is read on the New York clock
+    (2026-10-05): 20:00 UTC is the close only in US summer time; from November it is 15:00 ET, mid-session, and every
+    winter weekday would have paged an "EOD" digest an hour before the close. Unreadable zone data -> no digest."""
+    now = now or datetime.now(timezone.utc)
+    try:
+        from zoneinfo import ZoneInfo
+        if now.astimezone(ZoneInfo("America/New_York")).hour < 16:
+            return
+    except Exception:
         return
     today = now.date().isoformat()
     if any(r.get("type") == "daily_digest" and str(r.get("ts_utc", "")).startswith(today) for r in _load_log_list()):
@@ -2838,7 +2844,7 @@ def run_scheduled_cycle(mock=False):
     open_orders = get_open_orders(creds)
     positions = get_open_positions(creds)
     print(f"portfolio: {len(positions)} positions, {len(open_orders)} open orders")
-    _maybe_send_digest()                                     # EOD digest (once/day at/after 20:00 UTC, fail-open)
+    _maybe_send_digest()                                     # EOD digest (once/day at/after 16:00 New York, fail-open)
 
     # school 1e: DAILY broker-state reconciliation marker (records-vs-broker two-way diff). One marker
     # per day; Telegram fires only when the divergence COUNT CHANGES (the standing 2c drift would

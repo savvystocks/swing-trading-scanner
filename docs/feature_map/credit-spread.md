@@ -13,11 +13,13 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
 - `fivek_probes.py:cycle` - called every engine cycle from `sandbox_proactive_lab.py:run_scheduled_cycle`
   (`fivek_probes.cycle(creds, allow_entries=not (brake_active or halt_active))`), fail-open.
 - `fivek_probes.py:_enter` - one entry per structure per ISO week, first cycle at or after 15:00
-  UTC; the LONG wing is bought FIRST and the short is placed only once the broker reports it filled
+  UTC, on the expiry `fivek_probes.py:_week_expiry` names (the week's LAST XNYS session, `fivek_probes.py:_last_session`:
+  Thursday when Friday is an exchange holiday; the calendar Friday with a WARNING line when the calendar is unreadable);
+  the LONG wing is bought FIRST and the short is placed only once the broker reports it filled
   (`fivek_probes.py:_await_fill`, `fivek_probes.py:_cancel` for an unfilled long; 2026-09-28); broker
   idempotency check (`fivek_probes.py:_held`) before entering; limits from `fivek_probes.py:_quote`;
   orders via `fivek_probes.py:_order`; OCCs from `fivek_probes.py:_occ`.
-- `fivek_probes.py:_settle_one` - after Friday expiry, settles each open record against the ^XSP
+- `fivek_probes.py:_settle_one` - after the expiry (Friday, or the Thursday of a holiday-Friday week), settles each open record against the ^XSP
   close (`fivek_probes.py:_xsp_close_series`, yfinance; a session Yahoo skipped in ^XSP is filled from
   ^GSPC/10 by `fivek_probes.py:_fill_xsp_gaps`, logged) and books `settle.pnl_usd`; with no close dated the
   expiry itself the settle is deferred, never priced on the previous session.
@@ -66,8 +68,18 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
 - Drill scenario 5 (bear-only PUT_DEBIT_W, wings first); the court's weekly cadence branch.
 - MOT 6.42: a missing ^XSP session is filled from ^GSPC/10 with present sessions untouched; an expiry with no
   close is deferred, not settled on the previous session.
+- MOT 6.48: the expiry is the week's last session (2026-12-24 and 2026-12-31 on the two holiday-Friday weeks, the
+  Friday otherwise, the half-day Friday 2026-11-27 kept); an unreadable calendar prints a WARNING; the Christmas-week
+  entry books 2026-12-24 legs and settles on that day's 13:00 ET close; the quote log's would-be legs agree.
 
 ## Traps
+- 2026-10-05 THE HOLIDAY-FRIDAY EXPIRY (found in review): `_enter` named the calendar Friday, so on the weeks of
+  Fri 2026-12-25 and Fri 2027-01-01 (and Good Friday) both books would have built OCCs that name no contract, got no
+  ask on the long wing and recorded nothing - a PAUSED-UNEXPLAINED page on the proof book. The expiry is now the
+  week's last session (`fivek_probes.py:_week_expiry`), shared by `scripts/xsp_quote_log.py:snapshot`. XSP is
+  PM-settled on every expiry, so the 2026-12-24 half day settles on its 13:00 ET close; `fivek_probes.py:_settle_one`
+  reads the close dated the expiry and assumes no hour. The entry hour (first cycle from 15:00 UTC) is 11:00 ET in
+  summer and 10:00 ET in winter, inside the session both ways; it was left as it is. MOT 6.48.
 - 2026-09-28 THE SHORT WAS REFUSED IN THE SAME SECOND AS THE LONG WENT IN: on the $5,000 proof book the long wing
   filled and the short came back `HTTP Error 403: Forbidden` in the same second, leaving a $25 wings-only week, while
   the $860k discovery book filled the identical legs. "Wings first" ordered the submissions, not the fills: for the

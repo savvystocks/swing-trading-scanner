@@ -22,7 +22,11 @@ are reported outside them. A stint's records are those entered on or after seats
 Friday or Saturday never inherits the previous stint's expiry), and its first week is the ISO week after the
 seat date unless the seat's own week holds such a record. The Monday :07 runs judge the drawdown bound on the
 marks up to yesterday's close (today's row is an intraday mark, shown but not judged); the 22:18 run judges
-the day's close mark too.
+the day's close mark too. Today's row counts as judged only from 17:00 New York time (21:00 UTC in summer time,
+22:00 in winter), when the session's last mark has landed in both clock regimes.
+A week whose Friday is an exchange holiday (2026-12-25, 2027-01-01) trades the Thursday expiry - the week's last
+session - since 2026-10-05, so the design's pre-registered note that such weeks are expected no-record weeks is
+superseded: a no-record holiday week is a mechanics miss like any other, and its row carries the Thursday.
 
 On its face every output says this tests survival and mechanics, not edge, and prints the 95%
 Clopper-Pearson upper bound on the losing-week rate beside the streak.
@@ -112,6 +116,17 @@ def settle_clock(day):
         return "~13:45 UTC" if off == timedelta(hours=-4) else "~14:45 UTC"
     except Exception:
         return "~13:45 UTC in summer time / ~14:45 in winter"
+
+
+def day_closed(now):
+    """True from 17:00 New York time - an hour after the regular close, when the mirror has landed the session's last
+    equity mark in both clock regimes (21:00 UTC in summer time, 22:00 in winter; 2026-10-05). Before it, today's row
+    is an intraday mark: shown, not judged. Unreadable zone data -> 22:00 UTC, the later of the two."""
+    try:
+        from zoneinfo import ZoneInfo
+        return now.astimezone(ZoneInfo("America/New_York")).hour >= 17
+    except Exception:
+        return now.astimezone(timezone.utc).hour >= 22
 
 
 def regime_at(day, db=BARS_DB):
@@ -247,11 +262,11 @@ def week_rows(records, equity_rows, seated, today, regime_at=None, cycle_seen=No
     rows = []
     while True:
         friday = monday + timedelta(days=4)
-        if friday >= today:
-            break
         sess = sessions_between(monday, friday)
+        if (sess[-1] if sess else friday) >= today:
+            break
         recs = sorted(by_week.get(monday.isocalendar()[:2], []), key=lambda r: str(r.get("entry_ts_utc") or ""))
-        row = {"expiry": friday.isoformat(), "kind": None, "verdict": None, "pnl_usd": None, "credit_usd": None,
+        row = {"expiry": (sess[-1] if sess else friday).isoformat(), "kind": None, "verdict": None, "pnl_usd": None, "credit_usd": None,
                "short_k": None, "long_k": None, "xsp_settle": None, "records": len(recs), "closed_early": False,
                "wings_only": False, "equity_basis": None, "regime_rederived": None, "regime_dist": None,
                "cycle_seen": None, "settled_at": None, "holes": [], "mechanics": []}
@@ -458,10 +473,12 @@ def _tail(walk, C, open_block):
 
 
 def _fridays_from(day):
+    """Each week's expiry from `day` on: the week's last session (Thursday when Friday is a holiday, 2026-10-05)."""
     d = _d(day)
     d = d + timedelta(days=(4 - d.weekday()) % 7)
     while True:
-        yield d
+        s = sessions_between(d - timedelta(days=4), d)
+        yield s[-1] if s else d
         d += timedelta(days=7)
 
 
@@ -1057,7 +1074,7 @@ def main(argv=None):
         stage = "JUDGE"
         weeks = week_rows(records, equity, seated, today)
         st = judge(weeks, equity, C, today, seated, records=records, xsp_close=xsp_close_on_disk(today),
-                   include_today=(as_of is not None or now.hour >= 21))
+                   include_today=(as_of is not None or day_closed(now)))
         st["proof_account_enabled"] = enabled
         try:
             prev = read_state()

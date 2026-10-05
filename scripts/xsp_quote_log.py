@@ -68,9 +68,8 @@ def _spread(short, long_):
 
 def snapshot(kind, creds, quote, cfg, now=None, last=_last):
     now = now or datetime.now(timezone.utc)
-    exp = now.date() + timedelta(days=(4 - now.date().weekday()) % 7)     # fivek_probes._enter, verbatim
-    if exp <= now.date():
-        exp += timedelta(days=7)
+    import fivek_probes
+    exp = fivek_probes._week_expiry(now.date())     # the engine's own rule: the week's last session (2026-10-05)
     o_s, o_l = cfg.get("otm_short", 2.0), cfg.get("otm_long", 4.0)
     row = {"ts_utc": now.isoformat(), "kind": kind, "feed": "indicative", "expiry": exp.isoformat(),
            "otm_short": o_s, "otm_long": o_l}

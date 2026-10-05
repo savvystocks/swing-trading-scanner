@@ -4,7 +4,8 @@
 # dead dispatcher, and every alarm that lived inside GHA died with it. This watches the
 # engine's own commit heartbeat ("sandbox lab data" after every successful cycle) from the
 # outside. Absence pages: heartbeat older than 35 min during market hours -> Telegram, loud.
-# Cron: */15 14-20 * * 1-5 (UTC). sh-compatible (dash) - the 07-22 lesson.
+# Cron: */15 14-21 * * 1-5 (UTC) covers the session in both clock regimes; the guard below decides. sh-compatible
+# (dash) - the 07-22 lesson.
 set -u
 REPO="/home/poller/swing-trading-scanner"
 cd "$REPO" || exit 0
@@ -21,12 +22,29 @@ alarm() {
   bash "$REPO/scripts/page_bundle.sh" "engine_watch: ${MSG}" >/dev/null 2>&1 || true
 }
 
-# market-hours guard (UTC): 13:40-20:05 Mon-Fri, skip outside
-HHMM=$(date -u +%H%M)
-DOW=$(date -u +%u)
-[ "$DOW" -gt 5 ] && exit 0
-[ "$HHMM" -lt 1340 ] && exit 0
-[ "$HHMM" -gt 2005 ] && exit 0
+# market-hours guard (2026-10-05): the XNYS session on the NEW YORK clock, 10 minutes after the open to 5 after the
+# close - 09:40-16:05 ET, 13:05 on a half day, nothing on an exchange holiday (scripts/session_window.py). The UTC
+# window it replaces (13:40-20:05) was right only in US summer time: from 2026-11-02 the NYSE trades 14:30-21:00 UTC,
+# so it would have paged and started the failover before the open and left the session's last hour unwatched.
+WIN=$("$REPO/.venv/bin/python" "$REPO/scripts/session_window.py" 2>/dev/null | head -1)
+case "$WIN" in
+  INSIDE*) ;;
+  OUTSIDE*) exit 0 ;;
+  *)
+    # the helper did not answer: the New York wall clock, Mon-Fri, with no holiday or half-day knowledge; with no
+    # zone data either, the union of both clock regimes in UTC (13:40-21:05) - watching longer beats going blind
+    NYZ=$(TZ=America/New_York date +%Z)
+    if [ "$NYZ" = "EDT" ] || [ "$NYZ" = "EST" ]; then
+      HM=$(TZ=America/New_York date +%H%M); DW=$(TZ=America/New_York date +%u); LO=0940; HI=1605
+    else
+      HM=$(date -u +%H%M); DW=$(date -u +%u); LO=1340; HI=2105
+    fi
+    echo "$(date -u +%FT%TZ) session helper did not answer - clock fallback ${NYZ} ${HM} (window ${LO}-${HI})"
+    [ "$DW" -gt 5 ] && exit 0
+    [ "1$HM" -lt "1$LO" ] && exit 0
+    [ "1$HM" -gt "1$HI" ] && exit 0
+    ;;
+esac
 
 BLINDF=/home/poller/.engine_watch_blind
 if ! git fetch -q origin main 2>/dev/null; then

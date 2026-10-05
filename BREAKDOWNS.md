@@ -1302,3 +1302,65 @@ LESSON: a fix for a race is proven under the race (two fetchers in the same seco
 REGRESSION CHECK: MOT 6.46 (the mirror fetches with --refmap='' into its private ref, has no fetch-gated reset, and
 never pings /fail).
 
+2026-10-05 - THE HOLIDAY-FRIDAY WEEK WOULD HAVE TRADED A CONTRACT THAT DOES NOT EXIST (found in review, before it bit).
+WHAT BROKE: nothing yet. `fivek_probes.py:_enter` named the week's expiry as the CALENDAR Friday
+(`now.date() + (4 - weekday) % 7`). On a week whose Friday is an exchange holiday - Fri 2026-12-25 and Fri 2027-01-01
+are next, Good Friday 2027-03-26 after - XSP lists the week's expiry on the preceding session (Thursday), so both books
+would have built OCCs that name no contract, got no ask on the long wing, aborted before any order and recorded
+nothing: a silent empty week on the discovery book and, on the proof book, a week the judge pages as
+PAUSED-UNEXPLAINED. `scripts/xsp_quote_log.py` copied the rule verbatim, and the judge's design (item 6.6)
+pre-registered those weeks as expected no-record weeks instead of fixing them.
+ROOT CAUSE: the ENTRY was made holiday-aware on 2026-09-20 (`fivek_probes.py:_first_session`) and the EXPIRY was not;
+"the weekly expiry is Friday" is true about 48 weeks a year.
+FIX (this commit): `fivek_probes.py:_week_expiry` returns the week's LAST XNYS session (`fivek_probes.py:_last_session`,
+the calendar machinery `_first_session` uses), rolling to next week once today is that session or later; with the
+calendar unreadable it falls back to the calendar Friday and prints a WARNING naming the date. `_enter` and
+`scripts/xsp_quote_log.py:snapshot` both call it; `scripts/proof_stint.py:week_rows` labels a no-record week by its last
+session and `_fridays_from` projects last sessions, so a holiday week reads Thursday everywhere. The settle path needed
+nothing: `fivek_probes.py:_settle_one` prices the close dated the expiry itself, which on the 2026-12-24 half day is the
+13:00 ET close (XSP is PM-settled on every expiry), and it runs on the first cycle after the expiry date (Mon 2026-12-28;
+the market gate keeps the holiday's runs out). `scripts/cs_live_fills.py` and the regime drill derive no
+expiry. The retired put-write probe's `putw_leg.py:_next_friday` keeps the calendar Friday; its entries are off.
+LESSON: a calendar rule fixed at one end of a trade (the entry) is fixed at the other (the expiry) in the same pass;
+and a pre-registered "expected miss" is a defect with a date on it, not a design.
+REGRESSION CHECK: MOT 6.48 - expiries for Mon 2026-10-05 (Fri 10-09), Mon 2026-12-21 (Thu 12-24), Mon 2026-12-28
+(Thu 12-31), Tue 2026-01-20 and Tue 2027-01-19 (MLK weeks, Friday), Mon 2026-11-23 (the half-day Friday 11-27),
+Mon 2027-03-22 (Thu 03-25, Good Friday) and the roll-forward cases; the unreadable-calendar WARNING; `_enter` on 2026-12-21
+places XSP261224 legs long first and books expiry 2026-12-24; that record settles on the 2026-12-24 close;
+the quote log's legs, the judge's week rows and its expiry projection agree.
+
+2026-10-05 - THE ENGINE WATCH KEPT A SUMMER CLOCK (found in review, four weeks before the US clock change).
+WHAT BROKE: nothing yet. `scripts/engine_watch.sh` judged the GitHub engine's liveness only inside a hard-coded
+13:40-20:05 UTC window, which is 09:40-16:05 New York time only while the US is on daylight time. From Mon 2026-11-02 the
+NYSE trades 14:30-21:00 UTC: the watch would have been armed from its first tick at 09:00 ET (a GitHub outage there pages "during market
+hours" and starts the VPS failover before the open) and stopped at 15:05 ET, leaving the session's last hour
+unwatched. The sweep of every hard-coded UTC time found the same class three more times: `scripts/engine_failover_exits.py`
+refused to run outside 13:40-20:00 UTC (in winter it would have refused the last session hour the watch covers);
+`sandbox_proactive_lab.py:_maybe_send_digest` sends the engine's "EOD" digest on the first cycle at or after 20:00 UTC,
+which in summer is after the close (so it almost never fires) and in winter is 15:00 ET, mid-session - a new telegram
+every winter weekday; and the proof stint judge treated today's equity row as judged from 21:00 UTC, which in winter
+left the Monday 21:07 run only seven minutes after the day's last mark lands (~20:52 UTC, on disk by 21:00). The sentinel's weekday rows also expected full-day hours on
+13:00 ET half days, so the proof equity row (19:30 UTC) would have paged on Sat 2026-11-28 and Fri 2026-12-25.
+ROOT CAUSE: every hour on the box is UTC and every market hour in the estate was written in summer; the watchdog was
+moved onto the calendar (`poller.py:_stale_watch_eligible`) but its sibling stayed on the summer clock, marked owed.
+FIX (this commit): `scripts/session_window.py:in_window` answers from the XNYS calendar on the New York clock (holidays
+and half days included) and falls back to the New York wall clock Monday-Friday, never to a UTC hour.
+`scripts/engine_watch.sh` keeps its margins through it (open + 10 min to close + 5 min: 09:40-16:05 ET, 13:05 on a half
+day, nothing on a holiday) and, if the helper does not answer, reads `TZ=America/New_York` itself (the union of both
+regimes in UTC if the zone data is missing). `scripts/engine_failover_exits.py:_in_session` gates on the same helper
+(open + 10 min to the close; a helper that cannot answer lets the cycle run behind the engine's own market gate).
+`_maybe_send_digest` waits for 16:00 New York. `scripts/proof_stint.py:day_closed` judges today's row from 17:00 New
+York (21:00 UTC in summer, unchanged; 22:00 in winter). `scripts/freshness_sentinel.py:last_expected` moves a weekday
+row's expected time to 30 minutes before an early close. No crontab line changes: the engine watch's `*/15 14-21`
+already spans 13:40-21:05 UTC. Listed, not changed: the credit spread enters at the first cycle from 15:00 UTC (11:00 ET
+in summer, 10:00 ET in winter, inside the session both ways) and the quote log's 15:05/19:50 UTC samples move with it
+(the 19:50 `pre_close` sample becomes 14:50 ET).
+LESSON: a market system's clock is the exchange's clock. Every hour in a crontab or a gate on this box is UTC, so a
+market hour is written in New York time or read from the calendar - and when one gate is fixed, its siblings are swept.
+REGRESSION CHECK: MOT 6.48 - `session_window.in_window` in summer (13:39 out, 13:45 in, 20:00 in, 20:06 out), in winter
+(14:00 and 14:30 out, 14:45, 20:30 and 21:00 in, 21:06 out), Thanksgiving and Christmas out, the 2026-11-27 half day in
+at 13:04 ET and out at 13:10 ET, the wall-clock fallback with the calendar unimportable, and the CLI's INSIDE/OUTSIDE
+line; engine_watch's CODE (comments excluded) asks the helper and carries no 2005 bound; the failover's `_in_session`
+in both regimes; the engine digest silent at 20:06 UTC in winter and sent at 21:01; the judge's 17:00 New York cut;
+the sentinel's half-day expectation.
+

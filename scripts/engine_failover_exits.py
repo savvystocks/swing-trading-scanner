@@ -21,10 +21,25 @@ def sh(cmd):
     return subprocess.run(cmd, shell=True, capture_output=True, text=True).stdout.strip()
 
 
+def _in_session(now):
+    """The XNYS session on the New York clock, 10 minutes after the open to the close (scripts/session_window.py,
+    2026-10-05). The fixed 13:40-20:00 UTC gate it replaces was summer time only: from November it would have run a
+    covering cycle before the open and refused the session's last hour. A helper that cannot answer lets the cycle
+    run - the engine's own market gate still decides, and closed-for-exits is the exposure (BREAKDOWNS 2026-09-11)."""
+    try:
+        import importlib.util
+        sp = importlib.util.spec_from_file_location("session_window", os.path.join(REPO, "scripts", "session_window.py"))
+        sw = importlib.util.module_from_spec(sp)
+        sp.loader.exec_module(sw)
+        return sw.in_window(now, close_margin_min=0)[0]
+    except Exception:
+        return True
+
+
 def main(check_only=False):
     now = datetime.now(timezone.utc)
     if not check_only:
-        if now.weekday() > 4 or not (13 * 60 + 40 <= now.hour * 60 + now.minute <= 20 * 60):
+        if not _in_session(now):
             print(f"{now.isoformat()} outside market hours - skip")
             return 0
     import sandbox_proactive_lab as lab

@@ -40,7 +40,8 @@ that this tests survival and mechanics, not edge.
   `scripts/proof_stint.py:announce` (the once-only telegrams), `scripts/proof_stint.py:read_state` (what the
   scoreboard, digest and analyst read, through `scripts/proof_stint.py:scoreboard_block`,
   `scripts/proof_stint.py:digest_line` and `scripts/proof_stint.py:brief_block`), `scripts/proof_stint.py:cp_upper`
-  (the Clopper-Pearson bound). State at `/home/poller/proof_stint.json` (durable) and
+  (the Clopper-Pearson bound), `scripts/proof_stint.py:day_closed` (today's equity row is judged from 17:00 New York
+  time, 21:00 UTC in summer and 22:00 in winter). State at `/home/poller/proof_stint.json` (durable) and
   `reports/performance/proof_stint.json` (Friday copy, pushed by the judge).
 
 ## Exercise
@@ -80,6 +81,12 @@ that this tests survival and mechanics, not edge.
   book; an unreadable proof log raises instead of reading empty.
 
 ## Traps
+- 2026-10-05 HOLIDAY-FRIDAY WEEKS NOW TRADE: the judge's design pre-registered the weeks of Fri 2026-12-25 and Fri
+  2027-01-01 as expected no-record weeks (the engine named a Friday expiry that does not exist). The engine trades the
+  Thursday expiry now (`fivek_probes.py:_week_expiry`), so that note is superseded: such a week is a traded week, a
+  no-record holiday week is a genuine mechanics miss, and `scripts/proof_stint.py:week_rows` labels it with its last
+  session. In winter the Monday 21:07 run would read the day's last mark (~20:52 UTC, on disk by 21:00) with seven minutes to spare; the cut
+  is 17:00 New York now (`scripts/proof_stint.py:day_closed`). MOT 6.48.
 - 2026-09-28 (stint week 2) THE SHORT LEG WAS REFUSED 403 A SECOND AFTER THE LONG: see credit-spread.md - this book
   cannot carry a naked short for even a second, so the short now waits for the long's confirmed fill. The judge flags a
   wings-only record (an empty short list - a rejected short creates no leg - a short with `filled: false`, or a note

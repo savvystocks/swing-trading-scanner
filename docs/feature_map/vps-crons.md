@@ -13,33 +13,39 @@ Retired 2026-09-26 (the harvest froze on 2026-09-25 with its last label and the 
 challenger): the harvest poller (its quarter-hour mirror of origin/main survives as `scripts/mirror_sync_vps.sh`
 in the same slot), the nightly off-box snapshot (its final push, 2026-09-25 21:30, carries harvest_20260925_2130
 and cs_legs_20260925_2130), the integrity gate, the archiver watch and the court's three slots.
-`scripts/watchdog_vps.sh` stays: `scripts/engine_watch.sh` covers the stall with a slower fuse but its
-session window is a hard-coded summer clock, and the watchdog is the only intraday disk alarm.
+`scripts/watchdog_vps.sh` stays: `scripts/engine_watch.sh` covers the stall with a slower fuse, both read the
+session from the XNYS calendar (the engine watch since 2026-10-05), and the watchdog is the only intraday disk alarm.
 
 | slot | job | log | healthy |
 |---|---|---|---|
 | */15 13-21 Mon-Fri | `scripts/mirror_sync_vps.sh` (fetch + reset --hard to origin/main; the retired poller's first action, kept because the sentinel's mtimes, the Monday judge runs and the quote log read this tree; then the external dead-man: pings HEALTHCHECK_URL from `.harvest_env`, or its /fail endpoint when the fetch or reset failed) | mirror_sync.log | `HEAD is now at` lines, no `MIRROR SYNC FAILED` |
 | */15 13-22 Mon-Fri | `scripts/watchdog_vps.sh` (engine dead-man on the `data/last_cycle_ok` stamp, 30 min) | watchdog log | no page |
-| */15 14-21 Mon-Fri | `scripts/engine_watch.sh` (engine heartbeat, `data/last_cycle_ok`, auto-rollback to the last-good SHA) | engine_watch.log | `ok` lines, no rollback |
+| */15 14-21 Mon-Fri | `scripts/engine_watch.sh` (engine heartbeat, `data/last_cycle_ok`, auto-rollback to the last-good SHA; acts only inside the XNYS session on the New York clock, 09:40-16:05 ET via `scripts/session_window.py`, so this UTC slot covers both clock regimes) | engine_watch.log | `ok` lines, no rollback |
 | */15 always | `scripts/telegram_commands.py` (owner commands) | telegram log | commands acknowledged |
 | 15:05 and 19:50 Mon-Fri | `scripts/xsp_quote_log.py` (passive: XSP vs SPY quote width on the legs the credit spread would trade) | xsp_quotes.log | one line per run; `reports/research/xsp_quotes.jsonl` grows by two rows a day |
 | Mon 14:07-21:07 hourly | `scripts/proof_stint.py` (the settle's verdict and the week-close telegram; today's equity row is an intraday mark, shown but not judged) | proof_stint.log | PROOF STINT line |
 | 22:15 Mon-Fri | `scripts/daily_bars_archive.py` (30 ETF daily bars and the ^XSP/^GSPC closes into `data/daily_bars.db`) | daily_bars.log | one line per run |
 | 22:18 Mon-Fri | `scripts/proof_stint.py` (the day's close mark judged against the -30% bound; Friday writes and pushes `reports/performance/proof_stint.json`) | proof_stint.log | PROOF STINT line |
 | 22:20 Mon-Fri | `scripts/daily_digest.py` (exits by `closed_at`, settles by `at`, both books) | digest.log | digest telegram sent |
-| 22:24 Mon-Fri | `scripts/returns_alarms.py` | returns_alarms.log | - |
-| Fri 22:40 | `scripts/returns_ledger.py --update-map`, then commit and push of the ledger and `docs/performance_map` | returns.log | the ledger table |
+| 22:24 Mon-Fri | `scripts/returns_alarms.py` (sentinel row "returns alarms", 22:24 weekdays) | returns_alarms.log | `returns alarms <day>: nothing to report` or the alarm lines, every run |
+| Fri 22:40 | `scripts/returns_ledger.py --update-map`, then commit and push of the ledger and `docs/performance_map` | returns.log | `# RETURNS LEDGER - <ts>` then the ledger table, every run (sentinel row "returns ledger", Fri 22:40) |
 | 22:45 Mon-Fri | `scripts/evening_persist.sh` | evening_persist.log | - |
 | 22:45 Mon-Sat | `scripts/landing_watch.sh` (kill-switch poller state only since 2026-09-26) | landing_watch.log | `OK: all scheduled artifacts landed` |
 | 08:00 daily | `scripts/freshness_sentinel.py` | freshness log | all rows green |
 | 08:10 Mon-Fri | `scripts/morning_analyst.py` | analyst.log | morning brief telegram |
-| Sat 12:00 | `scripts/cs_live_fills.py` (the credit spread's real fills, read-only, Alpaca) | cs_legs.log | `cs live fills: n/n records with both fills` |
+| Sat 12:00 | `scripts/cs_live_fills.py` (the credit spread's real fills, read-only, Alpaca) | cs_legs.log | `<ts> cs live fills: n/n records with both fills`, every run (sentinel row "credit spread live fills", Sat 12:00) |
 | Fri 22:25 | `scripts/trajectory_scoreboard.py` | scoreboard.log | North Star block |
 
 ## Exercise
 - `crontab -l | grep <script>`; `tail -20 /home/poller/<log>`; `./.venv/bin/python scripts/freshness_sentinel.py`.
 
 ## Traps
+- 2026-10-05: three live jobs (returns_alarms, returns_ledger, cs_live_fills) ran with no sentinel row; each has one
+  now on its own log, at the time read from the log's history (22:24:04, 22:40:04, 12:00:10), never assumed. Every
+  slot in this table is UTC and stays put across the US clock change; what moves is the market (14:30-21:00 UTC from
+  2026-11-02), so a job that means a market hour reads the New York clock (`scripts/session_window.py:in_window`), and a
+  weekday sentinel row expects 30 minutes before the close on a 13:00 ET half day. Mistimed but harmless in winter: the
+  credit spread's entry hour (15:00 UTC: 10:00 ET instead of 11:00) and the quote log's 19:50 `pre_close` sample (14:50 ET).
 - 2026-09-28: the mirror's `git fetch origin main` raced the other quarter-hour fetchers on the shared
   origin/main ref lock and returned rc 1 on healthy syncs, so its heartbeat pinged /fail seven times on day one.
   It now fetches into refs/mirror/main and judges success by HEAD matching it (MOT 6.46).

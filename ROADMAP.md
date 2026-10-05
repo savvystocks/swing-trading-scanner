@@ -548,4 +548,15 @@ proposal passes a simplicity test: does a number already in the reports justify 
   record the moment it is OPEN and scores the settled week as traded NON_RISING (owner ruling A12, 2026-09-28).
   Accept: MOT 6.47 and drill scenario 5 green; the next PROOF Monday's log shows the sell after the long's fill
   poll, or names the refusal's body and the account line.
+- **SHIPPED 2026-10-05 - the New York clock, the holiday-Friday expiry and three sentinel rows (owner: "fix the three
+  queued items now").** (1) `scripts/engine_watch.sh` reads the XNYS session on the New York clock through
+  `scripts/session_window.py`, closing the summer-clock window owed in the 2026-09-26 entry above; the sweep of every
+  hard-coded UTC time fixed the failover's gate, the engine's EOD digest hour, the proof judge's Monday cut and the
+  sentinel's half days with it (BREAKDOWNS 2026-10-05, second entry). (2) The credit spread's expiry is the week's last
+  XNYS session, so the weeks of Fri 2026-12-25 and Fri 2027-01-01 trade their Thursday contracts instead of recording
+  nothing (BREAKDOWNS 2026-10-05, first entry). (3) The freshness sentinel carries rows for returns_alarms,
+  returns_ledger and cs_live_fills, each on the log its every run appends. Accept: MOT 6.48 green; on Mon 2026-11-02
+  engine_watch.log's first `ok` line is at 14:45 UTC and its last at 21:00 UTC, with no page before the open; the
+  2026-12-21 entry line names exp 2026-12-24 in both books and its settle lands Mon 2026-12-28; each new sentinel row
+  reads fresh on the morning after its job's next run.
 

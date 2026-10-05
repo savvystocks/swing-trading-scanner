@@ -2363,6 +2363,178 @@ check(6, "proof stint: today's rewritten row is an intraday mark, not an 'open m
 check(6, "freshness sentinel: the git_pull row is skipped in dry mode (SENTINEL_DRY=1) instead of pulling the kill-switch checkout",
       'os.environ.get("SENTINEL_DRY") == "1"' in _fs46.split('kind == "git_pull"')[1].split('elif kind == "git_commit"')[0]
       and "skipped in dry mode" in _fs46)
+# 6.48 THE NEW YORK CLOCK AND THE HOLIDAY FRIDAY (BREAKDOWNS 2026-10-05, two entries). (a) The weekly spread's expiry is
+# the week's LAST XNYS session - Thursday when Friday is an exchange holiday - and an unreadable calendar falls back to
+# the calendar Friday with a WARNING, never silently; the quote log and the judge use the same week. (b) The engine
+# watch, the failover and the engine's EOD digest read the session on the New York clock, so the US clock change of
+# 2026-11-01 moves them with the market; the judge's Monday cut is 17:00 New York. (c) The sentinel carries rows for
+# the three live jobs that had none, each on the log its every run appends, and a half day's weekday rows expect the
+# early close instead of the full-day hour.
+import fivek_probes as _f48
+import io as _io48
+import contextlib as _ctx48
+import itertools as _it48
+import importlib.util as _ilu48
+import subprocess as _sp48
+import pandas as _pd48
+from datetime import date as _d48
+
+
+def _U48(*a):
+    return datetime(*a, tzinfo=timezone.utc)
+
+
+_WE48 = _f48._week_expiry
+_cases48 = [(_d48(2026, 10, 5), _d48(2026, 10, 9)), (_d48(2026, 12, 21), _d48(2026, 12, 24)),
+            (_d48(2026, 12, 28), _d48(2026, 12, 31)), (_d48(2026, 1, 20), _d48(2026, 1, 23)),
+            (_d48(2027, 1, 19), _d48(2027, 1, 22)), (_d48(2026, 11, 23), _d48(2026, 11, 27)),
+            (_d48(2027, 3, 22), _d48(2027, 3, 25)), (_d48(2026, 10, 9), _d48(2026, 10, 16)),
+            (_d48(2026, 12, 24), _d48(2026, 12, 31)), (_d48(2026, 12, 26), _d48(2026, 12, 31))]
+_got48 = [(a, _WE48(a)) for a, _ in _cases48]
+check(6, "holiday-Friday expiry: the week's last XNYS session - Thu 2026-12-24 and Thu 2026-12-31 on the holiday-Friday weeks, Fri otherwise (MLK weeks, the 2026-11-27 half day, Good Friday 2027 -> Thu 03-25; a Fri/Thu-last/Sat call rolls to next week)",
+      [g for _, g in _got48] == [b for _, b in _cases48], "; ".join(f"{a}->{g}" for a, g in _got48))
+_ls48 = _f48._last_session
+_f48._last_session = lambda day: None
+_buf48 = _io48.StringIO()
+try:
+    with _ctx48.redirect_stdout(_buf48):
+        _fb48 = _WE48(_d48(2026, 12, 21))
+finally:
+    _f48._last_session = _ls48
+check(6, "holiday-Friday expiry: with the calendar unreadable the fallback is the calendar Friday and it prints a WARNING naming that date - never a silent holiday",
+      _fb48 == _d48(2026, 12, 25) and "WARNING" in _buf48.getvalue() and "2026-12-25" in _buf48.getvalue(), _buf48.getvalue().strip())
+_bak48 = (_f48._order, _f48._order_state, _f48._quote, _f48._held, _f48._xsp_close_series, _f48._closing_fills)
+_seq48, _log48 = [], []
+_f48._quote = lambda occ, creds: (0.50, 0.60)
+_f48._held = lambda occ, creds: False
+_f48._order = lambda occ, side, limit, creds: (_seq48.append((side, occ)), {"id": "O48"})[1]
+_f48._order_state = lambda oid, creds: ("filled", 0.60, 1.0)
+_f48._xsp_close_series = lambda: _pd48.Series([680.0], index=_pd48.to_datetime(["2026-12-18"]))
+try:
+    with _ctx48.redirect_stdout(_io48.StringIO()):
+        _ok48 = _f48._enter("CREDIT_SPREAD_W", True, {"otm_short": 2.0, "otm_long": 4.0}, ("k", "s"), _Lab47, _log48,
+                            _U48(2026, 12, 21, 15, 2), "PROOF", lambda l: None)
+    _r48 = {k: v for k, v in (_log48[0] if _log48 else {}).items()}
+    if _log48:
+        _r48["structure"] = {s: [dict(x) for x in v] for s, v in _log48[0]["structure"].items()}
+    _f48._xsp_close_series = lambda: _pd48.Series([675.0, 650.0], index=_pd48.to_datetime(["2026-12-23", "2026-12-24"]))
+    _f48._closing_fills = lambda r, creds: {}
+    _bufs48 = _io48.StringIO()
+    with _ctx48.redirect_stdout(_bufs48):
+        _set48 = _f48._settle_one(_r48, _Lab47, _U48(2026, 12, 28, 14, 40), ("k", "s")) if _log48 else False
+finally:
+    (_f48._order, _f48._order_state, _f48._quote, _f48._held, _f48._xsp_close_series, _f48._closing_fills) = _bak48
+check(6, "holiday-Friday expiry: the Christmas week (Fri 2026-12-25 closed) enters on Thursday 2026-12-24's OCCs, long first, and books expiry 2026-12-24",
+      _ok48 is True and len(_log48) == 1 and _log48[0]["expiry"] == "2026-12-24"
+      and [o for _, o in _seq48] == ["XSP261224P00653000", "XSP261224P00666000"] and [s for s, _ in _seq48] == ["buy", "sell"],
+      str(_seq48))
+check(6, "holiday-Friday expiry: that record settles on the close dated 2026-12-24 (the 13:00 ET half-day close; XSP is PM-settled) - no 16:00 assumption in the settle path",
+      _set48 is True and _r48.get("status") == "CLOSED" and (_r48.get("settle") or {}).get("xsp") == 650.0
+      and (_r48.get("settle") or {}).get("pnl_usd") == -1310.0, _bufs48.getvalue().strip())
+_snap48 = _m36.snapshot("entry_window", ("k", "s"), lambda occ, creds: (0.50, 0.60), {}, now=_U48(2026, 12, 21, 15, 5),
+                        last=lambda sym: 680.0)
+_wr48a = _m44.week_rows([], [], "2026-12-14", _d48(2026, 12, 29), regime_at=lambda d: ("MILD", 0.0), cycle_seen=lambda d: True)
+_rh48 = {"book": "PROOF", "probe_strategy": "CREDIT_SPREAD_W", "trade_set_id": "p5k12211502", "expiry": "2026-12-24",
+         "status": "OPEN", "entry_ts_utc": "2026-12-21T15:02:00+00:00", "net_credit": 0.4, "contracts": 1,
+         "structure": {"short": [{"occ": "XSP261224P00666000", "cp": "P", "k": 666, "prem": 0.9, "filled": True}],
+                       "long": [{"occ": "XSP261224P00653000", "cp": "P", "k": 653, "prem": 0.5, "filled": True}]}}
+_wr48b = _m44.week_rows([_rh48], [], "2026-12-14", _d48(2026, 12, 29), regime_at=lambda d: ("MILD", 0.0), cycle_seen=lambda d: True)
+_ff48 = list(_it48.islice(_m44._fridays_from(_d48(2026, 12, 14)), 4))
+_wr48c = _m44.week_rows([_rh48], [], "2026-12-14", _d48(2026, 12, 25), regime_at=lambda d: ("MILD", 0.0), cycle_seen=lambda d: True)
+check(6, "holiday-Friday expiry: on the holiday Friday itself the Thursday-expiry week is already in the judge's rows as TRADED_PENDING",
+      [(w["expiry"], w["kind"]) for w in _wr48c] == [("2026-12-24", "TRADED_PENDING")])
+check(6, "holiday-Friday expiry: the quote log's would-be legs, the judge's week rows and its expiry projection all read Thursday 2026-12-24 / 2026-12-31",
+      _snap48["expiry"] == "2026-12-24" and str(((_snap48.get("xsp") or {}).get("short") or {}).get("occ", "")).startswith("XSP261224P")
+      and [(w["expiry"], w["kind"]) for w in _wr48a] == [("2026-12-24", "PAUSED_UNEXPLAINED")]
+      and [(w["expiry"], w["kind"]) for w in _wr48b] == [("2026-12-24", "TRADED_PENDING")]
+      and _ff48 == [_d48(2026, 12, 18), _d48(2026, 12, 24), _d48(2026, 12, 31), _d48(2027, 1, 8)],
+      f"{_snap48.get('expiry')} {[(w['expiry'], w['kind']) for w in _wr48a + _wr48b]} {_ff48}")
+check(6, "proof stint: today's equity row is judged from 17:00 New York - 21:07 UTC judges in summer time, not in winter; 22:18 judges in both",
+      _m44.day_closed(_U48(2026, 10, 5, 21, 7)) is True and _m44.day_closed(_U48(2026, 10, 5, 20, 7)) is False
+      and _m44.day_closed(_U48(2026, 11, 2, 21, 7)) is False and _m44.day_closed(_U48(2026, 11, 2, 22, 18)) is True)
+_spw48 = _ilu48.spec_from_file_location("session_window", "scripts/session_window.py")
+_sw48 = _ilu48.module_from_spec(_spw48); _spw48.loader.exec_module(_sw48)
+_win48 = [(_U48(2026, 10, 5, 13, 39), False), (_U48(2026, 10, 5, 13, 45), True), (_U48(2026, 10, 5, 20, 0), True),
+          (_U48(2026, 10, 5, 20, 6), False), (_U48(2026, 11, 2, 14, 0), False), (_U48(2026, 11, 2, 14, 30), False),
+          (_U48(2026, 11, 2, 14, 45), True), (_U48(2026, 11, 2, 20, 30), True), (_U48(2026, 11, 2, 21, 0), True),
+          (_U48(2026, 11, 2, 21, 6), False), (_U48(2026, 11, 26, 16, 0), False), (_U48(2026, 11, 27, 17, 0), True),
+          (_U48(2026, 11, 27, 18, 4), True), (_U48(2026, 11, 27, 18, 10), False), (_U48(2026, 12, 24, 18, 15), False),
+          (_U48(2026, 12, 25, 16, 0), False), (_U48(2026, 10, 10, 16, 0), False)]
+_bad48 = [(str(t), _sw48.in_window(t)) for t, want in _win48 if _sw48.in_window(t)[0] is not want]
+check(6, "engine watch window: the XNYS session on the New York clock, 09:40-16:05 ET - summer 13:40-20:05 UTC, winter 14:40-21:05 UTC, Thanksgiving and Christmas out, the 2026-11-27 half day ends 13:05 ET",
+      not _bad48, str(_bad48)[:200])
+_pmc48 = sys.modules.get("pandas_market_calendars", "absent")
+sys.modules["pandas_market_calendars"] = None
+try:
+    _fbw48 = [_sw48.in_window(_U48(2026, 11, 2, 14, 45)), _sw48.in_window(_U48(2026, 11, 2, 14, 0)),
+              _sw48.in_window(_U48(2026, 10, 5, 20, 6)), _sw48.in_window(_U48(2026, 10, 10, 16, 0))]
+finally:
+    if _pmc48 == "absent":
+        del sys.modules["pandas_market_calendars"]
+    else:
+        sys.modules["pandas_market_calendars"] = _pmc48
+check(6, "engine watch window: with the calendar unimportable it falls back to the New York wall clock (winter 14:45 in, 14:00 out; summer 20:06 out; Saturday out), never a UTC hour",
+      [x[0] for x in _fbw48] == [True, False, False, False] and all("ny-clock" in x[1] for x in _fbw48), str(_fbw48))
+_cli48 = [_sp48.run([sys.executable, "scripts/session_window.py", "--at", a], capture_output=True, text=True, timeout=180).stdout
+          for a in ("2026-11-02T20:30:00Z", "2026-11-02T14:00:00Z")]
+check(6, "engine watch window: the CLI prints INSIDE at 2026-11-02 20:30 UTC and OUTSIDE at 14:00 UTC (the first word is what the shell reads)",
+      _cli48[0].startswith("INSIDE ") and _cli48[1].startswith("OUTSIDE "), " | ".join(c.strip() for c in _cli48))
+_ewc48 = "\n".join(l.split(" #")[0] for l in open("scripts/engine_watch.sh", encoding="utf-8").read().splitlines()
+                   if not l.lstrip().startswith("#"))
+check(6, "engine watch: its CODE asks scripts/session_window.py, falls back to TZ=America/New_York, and carries no summer UTC bound (2005) - comments excluded",
+      '"$REPO/scripts/session_window.py"' in _ewc48 and "INSIDE*) ;;" in _ewc48 and "OUTSIDE*) exit 0 ;;" in _ewc48
+      and "TZ=America/New_York date +%H%M" in _ewc48 and "2005" not in _ewc48 and "-gt 1340" not in _ewc48
+      and '"sandbox lab data [skip ci]"' in _ewc48)
+_spf48 = _ilu48.spec_from_file_location("engine_failover_exits_48", "scripts/engine_failover_exits.py")
+_fo48 = _ilu48.module_from_spec(_spf48); _spf48.loader.exec_module(_fo48)
+_foc48 = "\n".join(l for l in open("scripts/engine_failover_exits.py", encoding="utf-8").read().splitlines() if not l.lstrip().startswith("#"))
+check(6, "failover: its gate is the same New York session (winter 20:30 UTC in, 14:00 out; summer 19:59 in, 20:01 out) and the 13:40-20:00 UTC arithmetic is gone",
+      _fo48._in_session(_U48(2026, 11, 2, 20, 30)) is True and _fo48._in_session(_U48(2026, 11, 2, 14, 0)) is False
+      and _fo48._in_session(_U48(2026, 10, 5, 19, 59)) is True and _fo48._in_session(_U48(2026, 10, 5, 20, 1)) is False
+      and "13 * 60 + 40" not in _foc48 and "if not _in_session(now):" in _foc48)
+_bk48 = (lab.daily_digest, lab._load_log_list, lab._append_log)
+_dd48 = []
+lab.daily_digest = lambda: _dd48.append(1)
+lab._load_log_list = lambda: []
+lab._append_log = lambda rec: None
+_res48 = []
+try:
+    for _t48 in (_U48(2026, 10, 5, 19, 56), _U48(2026, 10, 5, 20, 1), _U48(2026, 11, 2, 20, 6), _U48(2026, 11, 2, 21, 1)):
+        _n48 = len(_dd48)
+        lab._maybe_send_digest(_t48)
+        _res48.append(len(_dd48) - _n48)
+finally:
+    lab.daily_digest, lab._load_log_list, lab._append_log = _bk48
+check(6, "engine EOD digest: sent from 16:00 New York only - summer 20:01 UTC yes, winter 20:06 UTC (15:06 ET, mid-session) no, winter 21:01 yes",
+      _res48 == [0, 1, 0, 1], str(_res48))
+_sps48 = _ilu48.spec_from_file_location("freshness_sentinel_48", "scripts/freshness_sentinel.py")
+_fs48 = _ilu48.module_from_spec(_sps48); _sps48.loader.exec_module(_fs48)
+_rw48 = {c[0]: c for c in _fs48.CHECKS}
+
+
+def _code48(p):
+    return "\n".join(l for l in open(p, encoding="utf-8").read().splitlines() if not l.lstrip().startswith("#"))
+
+
+check(6, "freshness sentinel: rows for returns_alarms (22:24 weekdays), returns_ledger (Fri 22:40) and cs_live_fills (Sat 12:00), each on the log its every run appends",
+      _rw48.get("returns alarms") == ("returns alarms", "schedule", "/home/poller/returns_alarms.log", (22, 24, _fs48.WEEKDAYS), "MONITOR")
+      and _rw48.get("returns ledger") == ("returns ledger", "schedule", "/home/poller/returns.log", (22, 40, {4}), "MONITOR")
+      and _rw48.get("credit spread live fills") == ("credit spread live fills", "schedule", "/home/poller/cs_legs.log", (12, 0, {5}), "EVIDENCE")
+      and 'print(f"returns alarms {today}: nothing to report")' in _code48("scripts/returns_alarms.py")
+      and 'L = [f"# RETURNS LEDGER - {led[' in _code48("scripts/returns_ledger.py")
+      and "print(\"\\n\".join(L[:4]" in _code48("scripts/returns_ledger.py")
+      and "cs live fills: {len(seen)}/{len(rows)} records with both fills" in _code48("scripts/cs_live_fills.py")
+      and 'print("cs live fills: no Alpaca creds in the environment' in _code48("scripts/cs_live_fills.py")
+      and 'print(f"cs live fills failed open:' in _code48("scripts/cs_live_fills.py"))
+_le48 = _fs48.last_expected
+check(6, "freshness sentinel: a half day's weekday rows expect 30 minutes before the early close (Fri 2026-11-27 -> 17:30 UTC), a full winter day keeps its hour, Thanksgiving is skipped, the Fri/Sat rows are untouched",
+      _fs48.EARLY_CLOSE.get(_d48(2026, 11, 27)) == _U48(2026, 11, 27, 18, 0)
+      and _le48(19, 30, _fs48.WEEKDAYS, _U48(2026, 11, 28, 8, 0)) == _U48(2026, 11, 27, 17, 30)
+      and _le48(19, 30, _fs48.WEEKDAYS, _U48(2026, 11, 3, 8, 0)) == _U48(2026, 11, 2, 19, 30)
+      and _le48(19, 30, _fs48.WEEKDAYS, _U48(2026, 11, 27, 8, 0)) == _U48(2026, 11, 25, 19, 30)
+      and _le48(22, 40, {4}, _U48(2026, 12, 26, 8, 0)) == _U48(2026, 12, 25, 22, 40)
+      and _le48(12, 0, {5}, _U48(2026, 10, 11, 8, 0)) == _U48(2026, 10, 10, 12, 0),
+      str(_le48(19, 30, _fs48.WEEKDAYS, _U48(2026, 11, 28, 8, 0))))
 total = len(RESULTS)
 passed = sum(1 for r in RESULTS if r[2])
 by_dim = {}

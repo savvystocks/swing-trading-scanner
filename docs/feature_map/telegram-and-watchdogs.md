@@ -17,7 +17,10 @@ its /fail endpoint, the URL comes from `.harvest_env` and an unset URL pings not
   exempt from the no-same-day-sell rule. Read its header for the command list.
 - Engine watchdog: `scripts/engine_watch.sh` - reads `origin/main:data/last_cycle_ok`; a stale
   stamp during session hours pages "engine dead"; a crash loop rolls the workflow back to the
-  last-good SHA recorded in that file.
+  last-good SHA recorded in that file. Session hours are the XNYS session on the New York clock, open + 10 min to
+  close + 5 min (09:40-16:05 ET, 13:05 on a half day, nothing on a holiday), from `scripts/session_window.py:in_window`;
+  if the helper does not answer the script reads `TZ=America/New_York` itself. The failover it starts gates on the
+  same helper (`scripts/engine_failover_exits.py:_in_session`).
 - Second dead-man, independent of the first: `scripts/watchdog_vps.sh` reads the stamp in
   `origin/main:data/last_cycle_ok` and pages when it is older than 30 minutes during the session (until
   2026-09-24 it read the harvest inbox's newest commit); kill-switch poller state: `scripts/landing_watch.sh`.
@@ -53,6 +56,11 @@ its /fail endpoint, the URL comes from `.harvest_env` and an unset URL pings not
   6.40 (the VPS watchdog reads the cycle stamp, never the harvest inbox).
 
 ## Traps
+- 2026-10-05 THE ENGINE WATCH KEPT A SUMMER CLOCK (found in review): its window was 13:40-20:05 UTC, which is
+  09:40-16:05 New York only in US summer time; from 2026-11-02 it would have paged and started the failover before the
+  14:30 UTC open and left the last session hour unwatched. The failover's own 13:40-20:00 UTC gate and the engine's
+  20:00 UTC "EOD" digest (`sandbox_proactive_lab.py:_maybe_send_digest`, mid-session in winter) were the same class.
+  All three read the New York clock now; a market hour is never written in UTC. MOT 6.48.
 - 2026-09-29: the first mirror fix still lost the ref-lock race (git's opportunistic origin/main update)
   and skipped the reset on those runs. The mirror now fetches with --refmap='', judges the outcome, and pings
   healthchecks.io only on success - it never pings /fail, so silence past the grace is the only alarm.

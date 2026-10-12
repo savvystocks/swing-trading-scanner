@@ -232756,7 +232756,8 @@
           "k": 765,
           "prem": 0.42,
           "oid": "d1175331-dbd2-40ea-8ce4-75bd4b4fdf45",
-          "filled": null
+          "filled": false,
+          "dead": "canceled"
         }
       ],
       "long": [
@@ -232773,9 +232774,24 @@
     },
     "expiry": "2026-10-16",
     "contracts": 1,
-    "net_credit": 0.29,
+    "net_credit": -0.13,
     "status": "OPEN",
     "entry_ts_utc": "2026-10-12T15:02:02.051311+00:00",
-    "note": "5k defined-risk weekly (owner order 2026-08-18)"
+    "note": "5k defined-risk weekly (owner order 2026-08-18) | SHORT LEG DIED - wings only"
+  },
+  {
+    "trade_set_id": "AUDIT-06895d24",
+    "type": "stale_order_cleanup",
+    "ts_utc": "2026-10-12T15:41:35.240Z",
+    "max_minutes": 30,
+    "cancelled": [
+      {
+        "order_id": "d1175331-dbd2-40ea-8ce4-75bd4b4fdf45",
+        "symbol": "XSP261016P00765000",
+        "age_min": 39.5,
+        "limit_price": "0.42"
+      }
+    ],
+    "status": "CANCELLED"
   }
 ]

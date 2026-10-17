@@ -25,6 +25,8 @@ import fade_book
 LONG_FILL_WAIT_S = 20      # 2026-09-28: the short goes in only on a CONFIRMED long fill; a $5k book cannot carry a naked short
 LONG_FILL_POLL_S = 2
 SHORT_RETRY_S = 3
+SHORT_UNDERCUT = 0.05      # 2026-10-17: a dead first short is re-quoted and sold ONCE this far under the fresh indicative bid
+SHORT_MIN_CREDIT = 0.02    # ...only while the credit kept after the wing clears the two cents the usable-bid guard asks of a premium
 
 
 def _cfg():
@@ -191,6 +193,17 @@ def _await_fill(oid, creds):
         if st in ("canceled", "expired", "rejected", "suspended") or time.monotonic() - t0 >= LONG_FILL_WAIT_S:
             return False
         time.sleep(LONG_FILL_POLL_S)
+
+
+def _fill_or_cancel(oid, creds, tag):
+    if _await_fill(oid, creds):
+        return "filled"
+    _cancel(oid, creds)                             # 204 = cancel accepted, not done: read the state once more
+    time.sleep(LONG_FILL_POLL_S)
+    st = _order_state(oid, creds)[0]
+    print(f"  {tag} not filled within {LONG_FILL_WAIT_S}s - cancelled, state {st or 'unreadable'}"
+          + (" - FILLED LATE, it stands" if st == "filled" else ""))
+    return st
 
 
 def _account_line(creds):
@@ -373,6 +386,25 @@ def _enter(strategy, put_only, cfg, creds, lab, log, now, book="PROBE", save=Non
             resp = _order(o, "sell", bid, creds)
         if not (resp and resp.get("id")):
             break
+        st = _fill_or_cancel(resp["id"], creds, f"{book}[{strategy}] short {o} @ {bid:.2f}")   # awaited like the long (2026-10-17)
+        if st in ("canceled", "expired", "rejected"):  # dead for certain, so the one retry is the only short working
+            nb = _quote(o, creds)[0]
+            px = round((nb or 0) - SHORT_UNDERCUT, 2)
+            cr = round(px + sum(l["prem"] for l in struct["short"]) - sum(l["prem"] for l in struct["long"]), 2)
+            if not nb or px <= 0.02 or (k1 > k2 and cr <= SHORT_MIN_CREDIT):
+                print(f"  {book}[{strategy}] short {o}: no retry - fresh bid {nb}, limit {px:.2f} (needs > 0.02), credit "
+                      f"{cr:+.2f} (needs > {SHORT_MIN_CREDIT:.2f} on a credit structure)")
+                break
+            print(f"  {book}[{strategy}] short {o}: fresh bid {nb:.2f} - selling once at {px:.2f} (credit {cr:+.2f})")
+            bid, resp = px, _order(o, "sell", px, creds)
+            if not (resp and resp.get("id")):
+                break
+            st = _fill_or_cancel(resp["id"], creds, f"{book}[{strategy}] retry {o} @ {px:.2f}")
+            if st in ("canceled", "expired", "rejected"):
+                break
+        if st != "filled":
+            print(f"  {book}[{strategy}] short {o}: state {st or 'unreadable'} after its cancel - kept on the record for the "
+                  f"next fill check, no second sell")
         struct["short"].append({"occ": o, "cp": cp, "k": k, "prem": bid, "oid": resp["id"], "filled": None})
     if not struct["short"]:
         # WINGS-ONLY record (adversarial review 2026-09-01): a filled long with a failed short

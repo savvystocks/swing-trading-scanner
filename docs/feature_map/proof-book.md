@@ -81,6 +81,12 @@ that this tests survival and mechanics, not edge.
   book; an unreadable proof log raises instead of reading empty.
 
 ## Traps
+- 2026-10-17 THE SHORT IS AWAITED TOO: see credit-spread.md. On 2026-10-12 this book's short also rested at the indicative
+  bid 0.42 and filled at it only about 1h40m later; nothing here cancels a resting order (the discovery stale-order audit
+  cannot see this account), which is why this book got its spread that week and discovery did not. Since 2026-10-17 the
+  short is awaited LONG_FILL_WAIT_S, cancelled, re-quoted and re-sold once at the fresh bid minus SHORT_UNDERCUT, and a
+  second miss is decided inside the entry cycle as a wings-only record - a FAILED week under A12 - where before the order
+  would have been left to rest. Read the Monday log's `PROOF[CREDIT_SPREAD_W] short ... not filled within` lines. MOT 6.49.
 - 2026-10-05 HOLIDAY-FRIDAY WEEKS NOW TRADE: the judge's design pre-registered the weeks of Fri 2026-12-25 and Fri
   2027-01-01 as expected no-record weeks (the engine named a Friday expiry that does not exist). The engine trades the
   Thursday expiry now (`fivek_probes.py:_week_expiry`), so that note is superseded: such a week is a traded week, a

@@ -2272,7 +2272,7 @@ def _run47(states, sells, book="PROOF"):
 _L47, _S47 = "XSP261002P00739000", "XSP261002P00755000"
 _ok47a, _seq47a, _log47a, _out47a, _snt47a = _run47(["new", "new", "filled"], [{"id": "S47"}])
 check(6, "credit spread: the short is placed only AFTER the broker reports the long filled (new, new, filled -> then the sell)",
-      _ok47a is True and _seq47a == [("buy", _L47, 0.34), ("state", "L47"), ("state", "L47"), ("state", "L47"), ("sell", _S47, 0.98)]
+      _ok47a is True and _seq47a == [("buy", _L47, 0.34), ("state", "L47"), ("state", "L47"), ("state", "L47"), ("sell", _S47, 0.98), ("state", "S47")]
       and len(_log47a) == 1 and _log47a[0]["net_credit"] == 0.64 and _log47a[0]["trade_set_id"] == "p5k09281502",
       str(_seq47a))
 _ok47b, _seq47b, _log47b, _out47b, _snt47b = _run47(["new"], [{"id": "S47"}])
@@ -2282,7 +2282,7 @@ check(6, "credit spread: a long that never fills in the window is cancelled - no
       str([o for o in _seq47b if o[0] != "state"]) + " | " + _out47b.strip().splitlines()[-1][:90])
 _ok47c, _seq47c, _log47c, _out47c, _snt47c = _run47(["filled"], [{"http": 403}, {"id": "S47"}])
 check(6, "credit spread: a 403 on the first sell prints the account line (options buying power, open option positions) and the retry completes the record",
-      _ok47c is True and [o[0] for o in _seq47c] == ["buy", "state", "sell", "sell"] and len(_log47c) == 1
+      _ok47c is True and [o[0] for o in _seq47c] == ["buy", "state", "sell", "sell", "state"] and len(_log47c) == 1
       and _log47c[0]["net_credit"] == 0.64 and len(_log47c[0]["structure"]["short"]) == 1
       and "short refused 403 - options_buying_power=1234.56 buying_power=5000.00 open_option_positions=2" in _out47c, str(_seq47c))
 _ok47d, _seq47d, _log47d, _out47d, _snt47d = _run47(["filled"], [{"http": 403}, {"http": 403}])
@@ -2535,6 +2535,155 @@ check(6, "freshness sentinel: a half day's weekday rows expect 30 minutes before
       and _le48(22, 40, {4}, _U48(2026, 12, 26, 8, 0)) == _U48(2026, 12, 25, 22, 40)
       and _le48(12, 0, {5}, _U48(2026, 10, 11, 8, 0)) == _U48(2026, 10, 10, 12, 0),
       str(_le48(19, 30, _fs48.WEEKDAYS, _U48(2026, 11, 28, 8, 0))))
+# 6.49 THE SHORT IS AWAITED TOO (BREAKDOWNS 2026-10-17): on 2026-10-12 the discovery book's sell at the INDICATIVE bid
+# rested unfilled until the stale-order audit cancelled it at 39.5 minutes, leaving a lone long put. Mock orders on the
+# 2026-10-12 legs (XSP 780.57 -> 765/749): a short filled at once is unchanged; a short unfilled in the window is
+# cancelled, re-quoted and re-sold ONCE under the fresh bid and its real fill is booked; two misses are the wings-only
+# record with one page; a fill landing after the cancel stands with no second sell; an unconfirmed cancel keeps the
+# order and sends no second sell; the credit floor; the debit orientation; both books; the order invariants.
+import copy as _cp49
+import fivek_probes as _f49
+_bak49 = (_f49._order, _f49._order_state, _f49._cancel, _f49._quote, _f49._held, _f49._xsp_close_series,
+          _f49.LONG_FILL_WAIT_S, _f49.LONG_FILL_POLL_S)
+_NOW49 = datetime(2026, 10, 12, 15, 2, tzinfo=timezone.utc)
+_S49, _L49 = "XSP261016P00765000", "XSP261016P00749000"
+_U49, _FL49 = _f49.SHORT_UNDERCUT, _f49.SHORT_MIN_CREDIT
+_FP49 = {"L": 0.13, "S1": 0.42, "S2": 0.41}
+_DEAD49 = ("canceled", "expired", "rejected")
+_FF49 = ("filled", "filled")
+_f49._held = lambda occ, creds: False
+_f49._xsp_close_series = lambda: _pd30.Series([780.57], index=_pd30.to_datetime(["2026-10-09"]))
+_f49.LONG_FILL_WAIT_S, _f49.LONG_FILL_POLL_S = 0.05, 0.01
+
+
+def _run49(script, shortq, book="PROOF", strategy="CREDIT_SPREAD_W", cfg=None, short_occ=_S49, longq=(0.10, 0.15)):
+    seq, log, ids, dead, qs = [], [], iter(("S1", "S2", "S3")), set(), list(shortq)
+
+    def order(occ, side, limit, creds):
+        oid = "L" if side == "buy" else next(ids)
+        seq.append((side, oid, round(limit, 2)))
+        return {"id": oid, "status": "new"}
+
+    def state(oid, creds):
+        st = script[oid][1 if oid in dead else 0]
+        seq.append(("state", oid, st))
+        return st, (_FP49[oid] if st == "filled" else None), (1.0 if st == "filled" else 0.0)
+
+    def quote(occ, creds):
+        if occ != short_occ:
+            return longq
+        q = qs.pop(0) if len(qs) > 1 else qs[0]
+        seq.append(("quote", occ, q[0]))
+        return q
+
+    def cancel(oid, creds):
+        seq.append(("cancel", oid))
+        dead.add(oid)
+        return True
+
+    _f49._order, _f49._order_state, _f49._quote, _f49._cancel = order, state, quote, cancel
+    _Lab47.sent.clear()
+    buf = _io47.StringIO()
+    with _ctx47.redirect_stdout(buf):
+        ok = _f49._enter(strategy, True, cfg or {"otm_short": 2.0, "otm_long": 4.0}, ("k", "s"), _Lab47, log, _NOW49,
+                         book, lambda l: None)
+    return ok, list(seq), log, buf.getvalue(), list(_Lab47.sent)
+
+
+def _ev49(seq):
+    return [e for e in seq if e[0] in ("buy", "sell", "cancel")]
+
+
+def _short49(run):
+    return ((run[2][0] if run[2] else {}).get("structure") or {}).get("short")
+
+
+def _orderly49(seq):
+    sells = [i for i, e in enumerate(seq) if e[0] == "sell"]
+    lf = next((i for i, e in enumerate(seq) if e == ("state", "L", "filled")), None)
+    if sells and (lf is None or sells[0] < lf):
+        return False
+    for a, b in zip(sells, sells[1:]):
+        c = next((i for i in range(a, b) if seq[i] == ("cancel", seq[a][1])), None)
+        if c is None or not any(seq[i][:2] == ("state", seq[a][1]) and seq[i][2] in _DEAD49 for i in range(c, b)):
+            return False
+    return len(sells) <= 2
+
+
+try:
+    _a49 = _run49({"L": _FF49, "S1": _FF49}, [(0.42, 0.43)])
+    check(6, "credit spread short (2026-10-17): a short that fills at once is unchanged - one sell at the indicative bid, no cancel, no retry line, the same record as before",
+          _a49[0] is True and _ev49(_a49[1]) == [("buy", "L", 0.15), ("sell", "S1", 0.42)] and len(_a49[2]) == 1
+          and _short49(_a49) == [{"occ": _S49, "cp": "P", "k": 765, "prem": 0.42, "oid": "S1", "filled": None}]
+          and _a49[2][0]["net_credit"] == 0.27 and _a49[2][0]["trade_set_id"] == "p5k10121502"
+          and "not filled within" not in _a49[3] and "selling once" not in _a49[3]
+          and len(_a49[4]) == 1 and _a49[4][0].startswith("<b>PROOF CREDIT_SPREAD_W</b> entered"), str(_ev49(_a49[1])))
+    _b49 = _run49({"L": _FF49, "S1": ("new", "canceled"), "S2": _FF49}, [(0.42, 0.43), (0.41, 0.43)])
+    _rb49 = _cp49.deepcopy(_b49[2][0]) if _b49[2] else {"structure": {"short": [{}]}}
+    _cb49 = _f49._confirm_fills(_rb49, ("k", "s")) if _b49[2] else False
+    _bs49 = ((_rb49.get("structure") or {}).get("short") or [{}])[0]
+    check(6, f"credit spread short: unfilled in the window -> cancelled, re-quoted, re-sold ONCE at the fresh bid minus ${_U49:.2f}, and the record books the retry's real fill",
+          _b49[0] is True and _ev49(_b49[1]) == [("buy", "L", 0.15), ("sell", "S1", 0.42), ("cancel", "S1"), ("sell", "S2", round(0.41 - _U49, 2))]
+          and _b49[1].index(("state", "S1", "canceled")) < _b49[1].index(("sell", "S2", round(0.41 - _U49, 2)))
+          and [e for e in _b49[1] if e[0] == "quote"] == [("quote", _S49, 0.42), ("quote", _S49, 0.41)]
+          and _short49(_b49) == [{"occ": _S49, "cp": "P", "k": 765, "prem": round(0.41 - _U49, 2), "oid": "S2", "filled": None}]
+          and _cb49 is True and _bs49.get("prem") == 0.41 and _bs49.get("filled") is True and _rb49.get("net_credit") == 0.28
+          and "PROOF[CREDIT_SPREAD_W] short XSP261016P00765000 @ 0.42 not filled within" in _b49[3]
+          and f"PROOF[CREDIT_SPREAD_W] short XSP261016P00765000: fresh bid 0.41 - selling once at {0.41 - _U49:.2f}" in _b49[3]
+          and len(_b49[4]) == 1 and _b49[4][0].startswith("<b>PROOF CREDIT_SPREAD_W</b> entered"),
+          f"{_ev49(_b49[1])} | booked {_bs49.get('prem')} (quoted {_bs49.get('quoted')}) net {_rb49.get('net_credit')}")
+    _c49 = _run49({"L": _FF49, "S1": ("new", "canceled"), "S2": ("new", "canceled")}, [(0.42, 0.43), (0.41, 0.43)])
+    _rc49 = _c49[2][0] if _c49[2] else {}
+    check(6, "credit spread short: both attempts unfilled -> both cancelled, then the wings-only record exactly as before (no short leg, INCOMPLETE note, p5k id) and ONE page",
+          _c49[0] is False and _ev49(_c49[1]) == [("buy", "L", 0.15), ("sell", "S1", 0.42), ("cancel", "S1"),
+                                                  ("sell", "S2", round(0.41 - _U49, 2)), ("cancel", "S2")]
+          and len(_c49[2]) == 1 and set(_rc49) == set(_log47d[0]) and _rc49.get("note") == _log47d[0]["note"]
+          and _rc49.get("structure") == {"short": [], "long": [{"occ": _L49, "cp": "P", "k": 749, "prem": 0.15, "oid": "L", "filled": None}]}
+          and _rc49.get("net_credit") == -0.15 and _rc49.get("trade_set_id") == "p5k10121502" and _rc49.get("occ") == _L49
+          and _rc49.get("occ_more") == [] and "PROOF[CREDIT_SPREAD_W] INCOMPLETE - short failed, wings logged ($-15)" in _c49[3]
+          and len(_c49[4]) == 1 and _c49[4][0].startswith("<b>PROOF CREDIT_SPREAD_W</b> INCOMPLETE"), str(_ev49(_c49[1])))
+    _d49 = _run49({"L": _FF49, "S1": ("new", "filled")}, [(0.42, 0.43), (0.41, 0.43)])
+    check(6, "credit spread short: a fill that lands after the cancel counts as filled - FILLED LATE, no re-quote, no second sell, the record carries the first order",
+          _d49[0] is True and _ev49(_d49[1]) == [("buy", "L", 0.15), ("sell", "S1", 0.42), ("cancel", "S1")]
+          and [e for e in _d49[1] if e[0] == "quote"] == [("quote", _S49, 0.42)]
+          and _short49(_d49) == [{"occ": _S49, "cp": "P", "k": 765, "prem": 0.42, "oid": "S1", "filled": None}]
+          and "state filled - FILLED LATE, it stands" in _d49[3] and _d49[4][0].startswith("<b>PROOF CREDIT_SPREAD_W</b> entered"),
+          str(_ev49(_d49[1])))
+    _g49 = _run49({"L": _FF49, "S1": ("new", "pending_cancel")}, [(0.42, 0.43), (0.41, 0.43)])
+    check(6, "credit spread short: a cancel not yet confirmed (pending_cancel) keeps the order on the record for the next fill check and sends NO second sell",
+          _g49[0] is True and _ev49(_g49[1]) == [("buy", "L", 0.15), ("sell", "S1", 0.42), ("cancel", "S1")]
+          and _short49(_g49) == [{"occ": _S49, "cp": "P", "k": 765, "prem": 0.42, "oid": "S1", "filled": None}]
+          and "short XSP261016P00765000: state pending_cancel after its cancel - kept on the record" in _g49[3], str(_ev49(_g49[1])))
+    _h49 = _run49({"L": _FF49, "S1": ("new", "canceled")}, [(0.42, 0.43), (0.17, 0.20)])
+    check(6, f"credit spread short: no retry when the credit left after the wing would not clear the ${_FL49:.2f} floor (fresh bid 0.17 against a 0.15 wing) - one sell, then the wings-only record and one page",
+          _h49[0] is False and _ev49(_h49[1]) == [("buy", "L", 0.15), ("sell", "S1", 0.42), ("cancel", "S1")]
+          and "PROOF[CREDIT_SPREAD_W] short XSP261016P00765000: no retry - fresh bid 0.17" in _h49[3]
+          and _short49(_h49) == [] and len(_h49[4]) == 1 and "INCOMPLETE" in _h49[4][0], str(_ev49(_h49[1])))
+    _p49 = _run49({"L": _FF49, "S1": ("new", "canceled"), "S2": _FF49}, [(0.13, 0.15), (0.12, 0.15)], strategy="PUT_DEBIT_W",
+                  cfg={"otm_short": 4.0, "otm_long": 1.0}, short_occ="XSP261016P00749000", longq=(1.40, 1.50))
+    _r49 = _run49({"L": _FF49, "S1": ("new", "canceled")}, [(0.13, 0.15), (round(0.02 + _U49, 2), 0.09)], strategy="PUT_DEBIT_W",
+                  cfg={"otm_short": 4.0, "otm_long": 1.0}, short_occ="XSP261016P00749000", longq=(1.40, 1.50))
+    check(6, "credit spread short: a DEBIT structure (PUT_DEBIT_W, short strike below the long) is not held to the credit floor - its dead first short is still retried once, and never at a limit of $0.02 or less",
+          _p49[0] is True and _ev49(_p49[1]) == [("buy", "L", 1.5), ("sell", "S1", 0.13), ("cancel", "S1"), ("sell", "S2", round(0.12 - _U49, 2))]
+          and _p49[2][0]["net_credit"] == round(round(0.12 - _U49, 2) - 1.5, 2)
+          and _ev49(_r49[1]) == [("buy", "L", 1.5), ("sell", "S1", 0.13), ("cancel", "S1")]
+          and "PROOF[PUT_DEBIT_W] short XSP261016P00749000: no retry - fresh bid" in _r49[3],
+          f"{_ev49(_p49[1])} | {_ev49(_r49[1])}")
+    _q49 = _run49({"L": _FF49, "S1": ("new", "canceled"), "S2": _FF49}, [(0.42, 0.43), (0.41, 0.43)], book="PROBE")
+    check(6, "credit spread short: the same retry runs on the discovery book (one _enter serves both) - f5k id, every line names PROBE",
+          _q49[0] is True and _ev49(_q49[1]) == _ev49(_b49[1]) and _q49[2][0]["trade_set_id"] == "f5k10121502"
+          and "PROBE[CREDIT_SPREAD_W] short XSP261016P00765000 @ 0.42 not filled within" in _q49[3]
+          and "PROBE[CREDIT_SPREAD_W] short XSP261016P00765000: fresh bid 0.41" in _q49[3] and "PROOF" not in _q49[3]
+          and _q49[4][0].startswith("<b>PROBE CREDIT_SPREAD_W</b> entered"), str(_ev49(_q49[1])))
+    _all49 = [_a49, _b49, _c49, _d49, _g49, _h49, _p49, _r49, _q49]
+    check(6, "credit spread short: in every scenario no sell precedes the long's 'filled' state, and a second sell only follows a cancel AND a dead state of the first - never two shorts working",
+          all(_orderly49(x[1]) for x in _all49)
+          and not _orderly49([("buy", "L", 0.15), ("sell", "S1", 0.42), ("state", "L", "filled")])
+          and not _orderly49([("buy", "L", 0.15), ("state", "L", "filled"), ("sell", "S1", 0.42), ("cancel", "S1"), ("sell", "S2", 0.40)]),
+          str([_orderly49(x[1]) for x in _all49]))
+finally:
+    (_f49._order, _f49._order_state, _f49._cancel, _f49._quote, _f49._held, _f49._xsp_close_series,
+     _f49.LONG_FILL_WAIT_S, _f49.LONG_FILL_POLL_S) = _bak49
 total = len(RESULTS)
 passed = sum(1 for r in RESULTS if r[2])
 by_dim = {}

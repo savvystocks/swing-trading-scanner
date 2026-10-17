@@ -1364,3 +1364,52 @@ line; engine_watch's CODE (comments excluded) asks the helper and carries no 200
 in both regimes; the engine digest silent at 20:06 UTC in winter and sent at 21:01; the judge's 17:00 New York cut;
 the sentinel's half-day expectation.
 
+2026-10-17 - THE DISCOVERY BOOK'S SHORT RESTED AT A BID THAT WAS NOT THERE, AND THE STALE-ORDER AUDIT KILLED IT (week of
+Fri 2026-10-16; a lone long put, no premium sold; the proof book's identical order filled at its limit 1h40m later).
+WHAT BROKE: at 15:02:02 UTC on Monday 2026-10-12 the discovery book (PROBE) bought its long wing XSP261016P00749000 (limit 0.15,
+the indicative ask; filled 0.13) and, on that confirmed fill, sold XSP261016P00765000 at the indicative bid 0.42. The sell
+never filled. In the 15:40 cycle (run 38271947262) the discovery stale-order audit printed "stale-order audit: 1 unfilled
+limit(s) cancelled (> 30m)" / "cancelled XSP261016P00765000 age 39.5m", and `fivek_probes.py:_confirm_fills` in the same
+cycle marked the leg {"filled": false, "dead": "canceled"} and appended "SHORT LEG DIED - wings only" (net_credit -0.13; the
+fill check annotates, it does not page), after the 15:02 entry line had said "PROBE[CREDIT_SPREAD_W] entered exp 2026-10-16,
+net credit $+27". The proof book sold the identical leg five seconds later at the same 0.42; it rested too (still unfilled
+in the 16:11 commit of proof_logs.json and unchanged through the 16:20-16:40 cycles) and was first recorded filled, at
+exactly 0.42, in commit 2ea0539a at 16:51:46. Nothing cancelled it because the discovery audit lists discovery orders only.
+ROOT CAUSE: the short's limit is the bid of Alpaca's free options feed (`fivek_probes.py:_quote`, feed=indicative), which
+Alpaca documents as "not actual OPRA quotes" but derived ("indicative derivatives"), while the paper account fills against
+the real market. Evidence that 0.42 sat above the real bid: the proof book's identical order rested ~1h40m and filled AT its
+limit, never through it; the quote log read the leg 0.42/0.43 at 15:05 - a one-cent market, where real XSP closing quotes for
+puts priced 0.20-1.20 have a median width of $0.08 (IQR 0.05-0.14, n 1,785, data/cs_legs.db; SPY $0.01); and two reads of
+one contract seconds apart in the 19:50 snapshot differed by 3-4 cents (765 put 0.39/0.44 vs 0.36/0.43, 749 put 0.12/0.14
+vs 0.08/0.10; 3-4 cents again on 09-23 and 10-08). History (reports/research/cs_live_fills.json, the nine earlier discovery
+entries): five shorts rested 2.2-23.4 minutes and filled exactly at their limit, four filled within seconds 1-2 cents better
+than it - the indicative bid lands a few cents either side of the real one. `fivek_probes.py:_enter` placed the short and
+moved on, leaving a resting short to later cycles, and on the discovery account `sandbox_proactive_lab.py:audit_stale_orders`
+cancels any limit older than stale_order_max_minutes (30), fivek legs included. The 2026-09-28 fix awaited the LONG only.
+FIX (this commit): the short is awaited the same way (`fivek_probes.py:_fill_or_cancel`: `_await_fill` for LONG_FILL_WAIT_S,
+then `_cancel` and one more state read, because 204 is only "accepted"). Filled in the window, or filled after the cancel:
+it stands and the record is the one written before. Dead for certain (canceled, expired, rejected): the leg is re-quoted and
+sold ONCE at the fresh bid minus SHORT_UNDERCUT ($0.05 - the owner's choice over the one cent first built, because two reads
+of one contract on this feed differ by 3-4 cents and the paper account fills a sell limit under the real bid at that bid,
+as four of the nine earlier shorts did 1-2 cents better than their limit) - a marketable limit, never above the bid - only
+while that limit clears the usable-premium line the bid guard already draws (> $0.02) and, on a credit structure, the credit kept after the wing's limit (an upper
+bound on what the wing cost) is above SHORT_MIN_CREDIT ($0.02, the two cents that guard already asks of a premium). A retry
+that also dies, a refused retry or a failed retry order falls to the existing wings-only record, its INCOMPLETE line and its
+one page, unchanged. Any other state after a cancel (pending_cancel, unreadable) keeps that order on the record unfilled
+for `_confirm_fills` and places no second sell, so two short orders are never working at once. Each step prints one line
+naming the book; both books run it (one `_enter`). Residual: a retry still misses when the real bid sits more than five
+cents under the indicative one, and a miss is now a wings-only week inside the entry cycle where a resting order (as on the
+proof book this week) might have filled later. Leaving the short to rest was rejected: a resting sell fills only when the
+market moves toward the strike, the weeks the spread does worst, and goes unfilled in the weeks it would have won.
+LESSON: a limit priced off a derived feed is a guess at the market. "Confirm on fills" applies to every leg priced off that
+feed, inside the cycle that placed it - a leg left resting is decided by whichever sweep reaches it first, and the sweep that
+reached this one was built for a different book.
+REGRESSION CHECK: MOT 6.49 - on the 2026-10-12 legs with mock orders: a short filled at once is unchanged (one sell, no
+cancel, the same record); a short unfilled in the window is cancelled, re-quoted and re-sold once at the fresh bid minus
+SHORT_UNDERCUT, the record carries the retry's order and `_confirm_fills` books its real fill; two misses give the wings-only
+record (same keys and note as before) and one page; a fill landing after the cancel stands with no re-quote and no second
+sell; pending_cancel keeps the order with no second sell; the credit floor refuses a retry whose credit after the wing is
+not above $0.02; a debit structure is not held to it but never sells at a limit of $0.02 or less; the PROBE book runs the same path under its own name; in every scenario no sell precedes the long's filled
+state and a second sell only follows a cancel and a dead state of the first. MOT 6.47's two order-sequence assertions now
+include the short's own fill poll.
+

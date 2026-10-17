@@ -16,7 +16,8 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
   UTC, on the expiry `fivek_probes.py:_week_expiry` names (the week's LAST XNYS session, `fivek_probes.py:_last_session`:
   Thursday when Friday is an exchange holiday; the calendar Friday with a WARNING line when the calendar is unreadable);
   the LONG wing is bought FIRST and the short is placed only once the broker reports it filled
-  (`fivek_probes.py:_await_fill`, `fivek_probes.py:_cancel` for an unfilled long; 2026-09-28); broker
+  (`fivek_probes.py:_await_fill`, `fivek_probes.py:_cancel` for an unfilled long; 2026-09-28); the short is awaited the same way and, dead
+  after its cancel, re-quoted and sold once under the fresh bid (`fivek_probes.py:_fill_or_cancel`, 2026-10-17); broker
   idempotency check (`fivek_probes.py:_held`) before entering; limits from `fivek_probes.py:_quote`;
   orders via `fivek_probes.py:_order`; OCCs from `fivek_probes.py:_occ`.
 - `fivek_probes.py:_settle_one` - after the expiry (Friday, or the Thursday of a holiday-Friday week), settles each open record against the ^XSP
@@ -71,8 +72,24 @@ cycle). The condor variant was killed by its backtest; PUT_DEBIT_W (bear-only) w
 - MOT 6.48: the expiry is the week's last session (2026-12-24 and 2026-12-31 on the two holiday-Friday weeks, the
   Friday otherwise, the half-day Friday 2026-11-27 kept); an unreadable calendar prints a WARNING; the Christmas-week
   entry books 2026-12-24 legs and settles on that day's 13:00 ET close; the quote log's would-be legs agree.
+- MOT 6.49: the short is awaited like the long - filled at once unchanged; unfilled -> cancelled, re-quoted, re-sold once
+  at the fresh bid minus SHORT_UNDERCUT, real fill booked; two misses -> the wings-only record and one page; a late fill
+  stands; pending_cancel sends no second sell; the credit floor; both books; never two shorts working.
 
 ## Traps
+- 2026-10-17 THE SHORT RESTED AT A BID THAT WAS NOT THERE: on Mon 2026-10-12 the discovery book's long filled and its short
+  XSP261016P00765000 was sold at the INDICATIVE bid 0.42 (`fivek_probes.py:_quote`, feed=indicative: Alpaca's derived
+  quotes, not OPRA). It rested, and at 39.5 minutes the discovery stale-order audit (`sandbox_proactive_lab.py:audit_stale_orders`,
+  30 minutes) cancelled it, leaving a lone long put; the proof book's identical order, which that audit cannot see, filled
+  at exactly 0.42 about 1h40m later. Five of the nine earlier shorts had rested 2-23 minutes for the same reason. The short
+  is now awaited like the long (`fivek_probes.py:_fill_or_cancel`: LONG_FILL_WAIT_S, cancel, one more state read); dead for
+  certain, it is re-quoted and sold ONCE at the fresh bid minus SHORT_UNDERCUT while the credit kept after the wing's limit
+  is above SHORT_MIN_CREDIT (credit structures only); a second miss or a refused retry is the wings-only record and its
+  page as before; a cancel not yet confirmed (pending_cancel, unreadable) keeps the order on the record for
+  `fivek_probes.py:_confirm_fills` and no second sell goes in. SHORT_UNDERCUT is five cents (owner, 2026-10-17): two reads
+  of one contract on this feed differ by 3-4 cents, and paper fills a sell limit under the real bid at that bid; a retry
+  still misses when the real bid is more than five cents under the indicative one. Healthy Monday: no `not filled within` line on the
+  short, or the retry's `selling once at` line followed by `entered` or one INCOMPLETE page. MOT 6.49.
 - 2026-10-05 THE HOLIDAY-FRIDAY EXPIRY (found in review): `_enter` named the calendar Friday, so on the weeks of
   Fri 2026-12-25 and Fri 2027-01-01 (and Good Friday) both books would have built OCCs that name no contract, got no
   ask on the long wing and recorded nothing - a PAUSED-UNEXPLAINED page on the proof book. The expiry is now the

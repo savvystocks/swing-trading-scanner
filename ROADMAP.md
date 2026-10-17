@@ -559,4 +559,12 @@ proposal passes a simplicity test: does a number already in the reports justify 
   engine_watch.log's first `ok` line is at 14:45 UTC and its last at 21:00 UTC, with no page before the open; the
   2026-12-21 entry line names exp 2026-12-24 in both books and its settle lands Mon 2026-12-28; each new sentinel row
   reads fresh on the morning after its job's next run.
+- **SHIPPED 2026-10-17 - the short leg is awaited, re-quoted once, or recorded as wings (the discovery book's lone long put
+  of 2026-10-12).** The discovery book's short, sold at the indicative bid, rested unfilled until the discovery stale-order
+  audit cancelled it at 39.5 minutes, leaving a long put for the week; the proof book's identical order filled at its limit
+  about 1h40m later (BREAKDOWNS 2026-10-17). `fivek_probes.py` awaits the short like the long, cancels it unfilled, re-sells
+  it once at the fresh bid minus five cents while the credit stays above two cents, and otherwise records wings only and
+  pages, as before. Accept: MOT 6.49 green; each book's next Monday log shows either no `not filled within` line on the
+  short or the retry's `selling once at` line followed by an `entered` line or one INCOMPLETE page, and the stale-order
+  audit never again names a fivek short.
 

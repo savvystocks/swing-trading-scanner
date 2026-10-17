@@ -446,11 +446,13 @@ proposal passes a simplicity test: does a number already in the reports justify 
 
 ## Scheduled decisions
 
-- **XSP quote-width verdict - about 2026-10-17.** Every backtest of CREDIT_SPREAD_W priced SPY; the book trades XSP (same price
-  level and notional, unknown quote width). `scripts/xsp_quote_log.py` will have logged about forty paired XSP/SPY snapshots of the
-  legs the book would trade. The rule is fixed in its docstring: median entry-window excess friction per spread, weeks as the unit of
-  evidence. Accept: <= $5 and the SPY backtests transfer; $5-20 and the ~$20-26/wk expectation is haircut by that much; >= $20 and
-  XSP's own spread consumes the edge and the book is re-examined. The two cron lines come out once the verdict is read.
+- **REJECTED 2026-10-17 - XSP quote-width verdict (void: the log cannot see XSP's real width).** The fixed rule (median
+  entry-window excess friction per spread, weeks as the unit) read under $5 on the 35 usable snapshots, but every quote in the log
+  is Alpaca's free indicative feed, which Alpaca describes as derived from OPRA and randomized a little: the 765 put of 2026-10-12
+  logged one cent wide where real XSP closing quotes at that price have a median width of $0.08 (data/cs_legs.db, BREAKDOWNS
+  2026-10-17). No transfer and no haircut is claimed; XSP's true excess cost stays unknown, between the log's ~$1 and the closing
+  archive's ~$12 a week. By the owner's word (2026-10-17) the logger and its two cron lines stay, and nothing is concluded from
+  them. Measuring the real width needs exchange quotes (Alpaca's OPRA feed), a spend decision that is not proposed.
 - **Pooled weekend-effect test - owner's word, and only after the archive re-pull completes (about 2026-09-28).** The one mechanism
   the 2026-09-18 search found: index put spreads held Friday close to Monday close are breached one half to one sixth as often as
   Thursday to Friday at the same credit (18 of 18 cells, 2024-26). It will be pre-registered as six pooled cells with a ~2.5 bar and

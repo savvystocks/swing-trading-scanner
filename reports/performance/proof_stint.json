@@ -1,6 +1,6 @@
 {
- "as_of": "2026-10-16T22:18:03+00:00",
- "judged_for": "2026-10-16",
+ "as_of": "2026-10-23T22:18:03+00:00",
+ "judged_for": "2026-10-23",
  "seated": "2026-09-20",
  "status": "RUNNING",
  "fail_reason": null,
@@ -8,24 +8,24 @@
  "fail_detail": "",
  "pass_date": null,
  "latched_on": null,
- "streak": 1,
+ "streak": 2,
  "streak_met_on": null,
  "under_water_at_8": null,
- "traded": 3,
+ "traded": 4,
  "paused": 0,
  "paused_unexplained": 0,
  "uncounted": 0,
  "pending": 0,
  "non_rising": 1,
  "rolling5_non_rising": 1,
- "cum_pnl_usd": 47.0,
- "mean_per_traded_week_usd": 15.67,
+ "cum_pnl_usd": 76.0,
+ "mean_per_traded_week_usd": 19.0,
  "worst_week_usd": -25.0,
  "worst_week_expiry": "2026-10-02",
  "capture": {
-  "closed": 3,
+  "closed": 4,
   "denominator": 21.6,
-  "ratio": 0.725,
+  "ratio": 0.88,
   "evaluable": false,
   "tested_on": null,
   "closed_at_test": null,
@@ -33,12 +33,12 @@
   "passed": null
  },
  "equity": {
-  "last": 5050.1,
-  "last_day": "2026-10-16",
-  "hwm": 5051.1,
-  "hwm_day": "2026-10-15",
-  "floor": 3535.77,
-  "dd_pct": -0.02,
+  "last": 5133.98,
+  "last_day": "2026-10-23",
+  "hwm": 5133.98,
+  "hwm_day": "2026-10-23",
+  "floor": 3593.79,
+  "dd_pct": 0.0,
   "max_dd_pct": -1.6,
   "breach_day": null,
   "holes": [],
@@ -54,43 +54,43 @@
    "2026-09-23": "13:31",
    "2026-09-24": "13:31"
   },
-  "judged_through": "2026-10-16",
+  "judged_through": "2026-10-23",
   "today_intraday": false,
-  "n": 21
+  "n": 26
  },
  "tail": {
   "stint": {
-   "n": 3,
+   "n": 4,
    "k": 1,
-   "ub": 0.8646,
-   "ev_realised": -177.31,
-   "ev_max": -1353.49,
-   "mean_win": 36.0,
-   "max_loss_ref": 1571.0
+   "ub": 0.7514,
+   "ev_realised": -149.95,
+   "ev_max": -1069.88,
+   "mean_win": 33.67,
+   "max_loss_ref": 1435.0
   },
   "pooled": {
-   "n": 125,
+   "n": 126,
    "k": 11,
-   "ub": 0.1415,
-   "ev_realised": 10.72,
-   "ev_max": -127.38
+   "ub": 0.1404,
+   "ev_realised": 11.0,
+   "ev_max": -126.04
   }
  },
  "open": {
-  "expiry": "2026-10-16",
-  "trade_set_id": "p5k10121502",
-  "short_k": 765,
-  "long_k": 749,
+  "expiry": "2026-10-23",
+  "trade_set_id": "p5k10191502",
+  "short_k": 755,
+  "long_k": 740,
   "wings_only": false,
   "note": "5k defined-risk weekly (owner order 2026-08-18)",
-  "credit_usd": 29.0,
-  "max_loss_usd": 1571.0,
+  "credit_usd": 65.0,
+  "max_loss_usd": 1435.0,
   "sessions_to_expiry": 0,
-  "xsp_close": 765.94,
-  "xsp_close_day": "2026-10-16",
-  "dist_to_short_pct": 0.12,
-  "full_loss_breaches": true,
-  "next_settle": "2026-10-19"
+  "xsp_close": 762.37,
+  "xsp_close_day": "2026-10-23",
+  "dist_to_short_pct": 0.98,
+  "full_loss_breaches": false,
+  "next_settle": "2026-10-26"
  },
  "weeks": [
   {
@@ -149,6 +149,25 @@
    "cycle_seen": null,
    "settled_at": "2026-10-12T13:32:03.000413+00:00",
    "holes": []
+  },
+  {
+   "expiry": "2026-10-16",
+   "kind": "TRADED",
+   "verdict": "RISING",
+   "pnl_usd": 29.0,
+   "credit_usd": 29.0,
+   "short_k": 765,
+   "long_k": 749,
+   "xsp_settle": 765.9400024414062,
+   "records": 1,
+   "closed_early": false,
+   "wings_only": false,
+   "equity_basis": "close",
+   "regime_rederived": null,
+   "regime_dist": null,
+   "cycle_seen": null,
+   "settled_at": "2026-10-19T13:31:50.724155+00:00",
+   "holes": []
   }
  ],
  "mechanics": [
@@ -162,7 +181,8 @@
   "2026-09-25",
   "MECH:2026-10-02:WINGS_ONLY",
   "2026-10-02",
-  "2026-10-09"
+  "2026-10-09",
+  "2026-10-16"
  ],
  "constants": {
   "denominator_usd_per_traded_week": 21.6,
@@ -177,11 +197,11 @@
   "measured": "scripts/cs_legs_measure.py run 2026-09-25 ~22:00 UTC on the frozen data/cs_legs.db: XSP 2%/4% with the BEAR stand-down, 122 traded weeks 2023-11-06..2026-09-14, 112 wins / 10 losses, mean +$26.1/wk, mean win +$47.2, mean losing week -$210.7, mean max loss $1,187, worst week -$624, CP 95% upper loss rate 13.5%. weekly_sd_usd is the sd over all 138 usable weeks ($156; the 122 gated weeks alone give $98 - the gate is in-sample, so the wider figure is frozen). The capture denominator stays the refilled +$21.6 (capture_denominator), never the +$26.1 headline."
  },
  "calendar_ok": true,
- "next_line": "settle of the 2026-10-16 spread lands Mon 2026-10-19; streak can reach 8 no earlier than the 2026-11-27 expiry",
+ "next_line": "settle of the 2026-10-23 spread lands Mon 2026-10-26; streak can reach 8 no earlier than the 2026-11-27 expiry",
  "honesty": [
   "What 8 weeks test: survival and mechanics (fills, settlement, gate timing, drawdown behaviour), NOT edge. Weekly P&L sd is about $156 and the archive win rate about 92%, so 8 loss-free weeks happen 51% of the time (0.92^8) whether the true edge is +$20 a week or zero. A pass here means \"no loss week yet\"; a fail means \"one ordinary loss week arrived\" (8% a week).",
-  "Tail bound, 95% Clopper-Pearson upper bound on the losing-week rate: this stint 1 losses in 3 traded weeks -> up to 86.5%; expectancy at that rate -$177/wk with losses at the archive's realised size (-$211) and -$1,353/wk at max loss ($1,571). Pooled with the archive (122 weeks, 10 losses -> 125/11): 14.1%; +$11/wk realised, -$127/wk at max loss. Each loss-free week lowers the pooled bound by about 0.1 point; this stint cannot close it.",
-  "Capture: 3 closed trades of the 20 needed before the 60% test; mean +$15.7 per traded week against the frozen +$21.6.",
+  "Tail bound, 95% Clopper-Pearson upper bound on the losing-week rate: this stint 1 losses in 4 traded weeks -> up to 75.1%; expectancy at that rate -$150/wk with losses at the archive's realised size (-$211) and -$1,070/wk at max loss ($1,435). Pooled with the archive (122 weeks, 10 losses -> 126/11): 14.0%; +$11/wk realised, -$126/wk at max loss. Each loss-free week lowers the pooled bound by about 0.1 point; this stint cannot close it.",
+  "Capture: 4 closed trades of the 20 needed before the 60% test; mean +$19.0 per traded week against the frozen +$21.6.",
   "Honest expectation at seating (audit 2026-09-20): +$10 to +$22 per traded week, 95% range -$3 to +$40, P(true edge > 0) about 35-40%."
  ],
  "proof_account_enabled": true

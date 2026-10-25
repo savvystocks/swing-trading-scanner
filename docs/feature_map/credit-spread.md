@@ -1,6 +1,8 @@
 # Credit spread (CREDIT_SPREAD_W) and the $5k defined-risk probes
 
 ## What
+ENTRIES OFF since 2026-10-25 (`probe.fivek.credit_spread.enabled` false; owner wind-down after the crash test failed
+his lifetime-loss rule): no book opens a spread, open records still settle. MOT 6.33.
 The income seat's candidate: once a week, sell the 2%-OTM XSP put and buy the 4%-OTM put
 (max loss = width minus credit, about $1,200 on XSP), European and cash-settled so no
 sell-to-close order ever exists and it can never day-trade. Judged by the court on ISO weeks

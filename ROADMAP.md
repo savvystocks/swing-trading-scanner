@@ -561,6 +561,12 @@ proposal passes a simplicity test: does a number already in the reports justify 
   engine_watch.log's first `ok` line is at 14:45 UTC and its last at 21:00 UTC, with no page before the open; the
   2026-12-21 entry line names exp 2026-12-24 in both books and its settle lands Mon 2026-12-28; each new sentinel row
   reads fresh on the morning after its job's next run.
+- **REJECTED 2026-10-25 - CREDIT_SPREAD_W, the weekly XSP 2%/4% put credit spread (wound down by the owner).** The
+  crash test (C:/Users/savva/swing_research/crash_test_2026-10, PROTOCOL_EOD.md sha256 0dc799a0, one run) replayed the
+  live rule on end-of-day SPY option quotes 2008-2025 after the archive matched our real quotes on 112 of 112 weeks:
+  705 traded weeks, 91% winners, +$12.75 a traded week after a $5 XSP charge (t 1.41), but a worst fall of $4,856 per
+  contract at today's size (2018) against the GBP 2,500 lifetime cap, and $2.24 a week behind $5,000 held in SPY.
+  Entries are off on both books; open records settle. Not to be re-seated without a NORTH_STAR amendment.
 - **SHIPPED 2026-10-17 - the short leg is awaited, re-quoted once, or recorded as wings (the discovery book's lone long put
   of 2026-10-12).** The discovery book's short, sold at the indicative bid, rested unfilled until the discovery stale-order
   audit cancelled it at 39.5 minutes, leaving a long put for the week; the proof book's identical order filled at its limit

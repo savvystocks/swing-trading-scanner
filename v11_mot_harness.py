@@ -1830,13 +1830,17 @@ check(6, "the daily bar archive stores the ^XSP and ^GSPC closes beside the ETF 
 
 # 6.33 CREDIT SPREAD ONLY (owner 2026-09-21), and a probe switched off keeps closing what it holds.
 _sp33 = __import__("json").load(open("fade_book_spec.json", encoding="utf-8"))
-check(6, "credit spread only: scanner, share probes, put-debit and student OFF; credit spread and proof book ON",
+check(6, "wind-down (owner 2026-10-25): scanner, share probes, put-debit, student and the credit spread's entries OFF; the proof book stays on so its records settle",
       (_sp33.get("uw_scanner") or {}).get("enabled") is False
       and _sp33["probe"]["shares"].get("enabled") is False
       and _sp33["probe"]["fivek"]["put_debit"].get("enabled") is False
       and _sp33["probe"]["student"].get("enabled") is False
-      and _sp33["probe"]["fivek"]["credit_spread"].get("enabled") is True
+      and _sp33["probe"]["fivek"]["credit_spread"].get("enabled") is False
       and _sp33["proof_account"].get("enabled") is True)
+_fv33 = open("fivek_probes.py", encoding="utf-8").read()
+_c33 = _fv33[_fv33.index("def cycle("):]
+check(6, "wind-down: with the credit spread switched off each book still settles what it holds - the settle runs before the entry switch is read",
+      0 <= _c33.find("dirty = _settle_one(r, lab, now, creds) or dirty") < _c33.find('if cs.get("enabled") and "CREDIT_SPREAD_W" not in have:'))
 _sh33 = open("shares_probes.py", encoding="utf-8").read()
 _i33 = _sh33.index("def cycle(")
 _j33 = _sh33.find("\ndef ", _i33 + 5)

@@ -16,16 +16,18 @@ and cs_legs_20260925_2130), the integrity gate, the archiver watch and the court
 `scripts/watchdog_vps.sh` stays: `scripts/engine_watch.sh` covers the stall with a slower fuse, both read the
 session from the XNYS calendar (the engine watch since 2026-10-05), and the watchdog is the only intraday disk alarm.
 
+Retired 2026-10-26 (the owner wound the credit spread down on 2026-10-25 and the proof stint's last week was judged
+on 2026-10-26): both `scripts/proof_stint.py` slots (Monday 14:07-21:07 hourly, weekdays 22:18) and the sentinel's
+"proof stint judge" row. The crontab backup is `~/crontab_backup_20261026_proofstint.txt`.
+
 | slot | job | log | healthy |
 |---|---|---|---|
-| */15 13-21 Mon-Fri | `scripts/mirror_sync_vps.sh` (fetch + reset --hard to origin/main; the retired poller's first action, kept because the sentinel's mtimes, the Monday judge runs and the quote log read this tree; then the external dead-man: pings HEALTHCHECK_URL from `.harvest_env`, or its /fail endpoint when the fetch or reset failed) | mirror_sync.log | `HEAD is now at` lines, no `MIRROR SYNC FAILED` |
+| */15 13-21 Mon-Fri | `scripts/mirror_sync_vps.sh` (fetch + reset --hard to origin/main; the retired poller's first action, kept because the sentinel's mtimes and the quote log read this tree; then the external dead-man: pings HEALTHCHECK_URL from `.harvest_env`, or its /fail endpoint when the fetch or reset failed) | mirror_sync.log | `HEAD is now at` lines, no `MIRROR SYNC FAILED` |
 | */15 13-22 Mon-Fri | `scripts/watchdog_vps.sh` (engine dead-man on the `data/last_cycle_ok` stamp, 30 min) | watchdog log | no page |
 | */15 14-21 Mon-Fri | `scripts/engine_watch.sh` (engine heartbeat, `data/last_cycle_ok`, auto-rollback to the last-good SHA; acts only inside the XNYS session on the New York clock, 09:40-16:05 ET via `scripts/session_window.py`, so this UTC slot covers both clock regimes) | engine_watch.log | `ok` lines, no rollback |
 | */15 always | `scripts/telegram_commands.py` (owner commands) | telegram log | commands acknowledged |
 | 15:05 and 19:50 Mon-Fri | `scripts/xsp_quote_log.py` (passive: XSP vs SPY quote width on the legs the credit spread would trade) | xsp_quotes.log | one line per run; `reports/research/xsp_quotes.jsonl` grows by two rows a day |
-| Mon 14:07-21:07 hourly | `scripts/proof_stint.py` (the settle's verdict and the week-close telegram; today's equity row is an intraday mark, shown but not judged) | proof_stint.log | PROOF STINT line |
 | 22:15 Mon-Fri | `scripts/daily_bars_archive.py` (30 ETF daily bars and the ^XSP/^GSPC closes into `data/daily_bars.db`) | daily_bars.log | one line per run |
-| 22:18 Mon-Fri | `scripts/proof_stint.py` (the day's close mark judged against the -30% bound; Friday writes and pushes `reports/performance/proof_stint.json`) | proof_stint.log | PROOF STINT line |
 | 22:20 Mon-Fri | `scripts/daily_digest.py` (exits by `closed_at`, settles by `at`, both books) | digest.log | digest telegram sent |
 | 22:24 Mon-Fri | `scripts/returns_alarms.py` (sentinel row "returns alarms", 22:24 weekdays) | returns_alarms.log | `returns alarms <day>: nothing to report` or the alarm lines, every run |
 | Fri 22:40 | `scripts/returns_ledger.py --update-map`, then commit and push of the ledger and `docs/performance_map` | returns.log | `# RETURNS LEDGER - <ts>` then the ledger table, every run (sentinel row "returns ledger", Fri 22:40) |

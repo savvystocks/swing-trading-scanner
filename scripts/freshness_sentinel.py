@@ -36,7 +36,6 @@ DAILY = {0, 1, 2, 3, 4, 5, 6}
 # never CHECK FAILED: name -> first scheduled firing, UTC. Rows leave this dict once their log exists for good.
 FIRST_RUN = {
     "vps mirror sync": datetime(2026, 9, 28, 13, 0, tzinfo=timezone.utc),
-    "proof stint judge": datetime(2026, 9, 28, 14, 7, tzinfo=timezone.utc),
 }
 
 EARLY_CLOSE = {}                        # half days: session date -> its 13:00 ET close in UTC (2026-10-05)
@@ -93,9 +92,7 @@ CHECKS = [
     # RETIRED 2026-09-26 (the harvest froze on 2026-09-25 with its last label; the court's docket held no living
     # challenger): harvest poller log, nightly boundary, friday court, integrity gate, archiver watch, off-box backup,
     # off-box snapshot repo, challengers parses. Recoverable from git history.
-    # -- nightly rhythm: the proof stint judge, digests, watches
-    # the judge appends its own log on every run, so this row reads the writer's clock, not a landing pull
-    ("proof stint judge", "schedule", H + "/proof_stint.log", (22, 18, WEEKDAYS), "MONITOR"),
+    # -- nightly rhythm: digests, watches (the proof stint judge's row retired with its crons on 2026-10-26)
     ("daily digest", "schedule", H + "/digest.log", (22, 20, WEEKDAYS), "MONITOR"),
     ("landing watch", "schedule", H + "/landing_watch.log", (22, 45, {0, 1, 2, 3, 4, 5}), "MONITOR"),
     ("evening persist", "schedule", H + "/evening_persist.log", (22, 45, WEEKDAYS), "MONITOR"),

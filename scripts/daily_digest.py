@@ -103,8 +103,8 @@ def main(today=None):
 
     # the court paragraph came out 2026-09-26: its three crons are retired and the shadow ledger it read froze on
     # 2026-09-18, so "N evidence days on file" could only ever repeat one number.
-    L.append("Tonight's rhythm: the daily bar archive (22:15) and the proof stint judge (22:18) ran before this "
-             "note; the Friday scoreboard follows at 22:25 on Fridays - all automatic.")
+    L.append("Tonight's rhythm: the daily bar archive (22:15) ran before this note; the Friday scoreboard follows "
+             "at 22:25 on Fridays - all automatic.")
     tg("\n".join(L))
 
 

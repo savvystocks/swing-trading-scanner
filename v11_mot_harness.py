@@ -2098,8 +2098,9 @@ check(6, "proof stint q: the scoreboard, the digest and the analyst read the jud
       and "rising_weeks" not in _spec44 and "week_history" not in _spec44
       and all(k in _spec44["seats"][0].get("stint_constants", {}) for k in _C44), _dl44[:100])
 _fs44 = open("scripts/freshness_sentinel.py", encoding="utf-8").read()
-check(6, "proof stint r: the freshness sentinel carries the judge's row at (22, 18, WEEKDAYS)",
-      '("proof stint judge", "schedule", H + "/proof_stint.log", (22, 18, WEEKDAYS), "MONITOR")' in _fs44)
+check(6, "proof stint r: the judge's crons are retired (owner 2026-10-26) and so is its sentinel row - the sentinel never pages the frozen proof_stint.log",
+      '"proof stint judge"' not in _fs44 and "/proof_stint.log" not in _fs44
+      and "the proof stint judge's row retired with its crons on 2026-10-26" in _fs44)
 # s-x (review fixes 2026-09-26): the capture verdict is latched at the 20th closed trade's week, today's intraday
 # mark is shown but not judged before 21:00 UTC, a hole-restored week pages its counted close once, a week after a
 # verdict says so, a Friday/Saturday re-seat never inherits the old stint's expiry, and main() cannot raise into cron.
@@ -2216,8 +2217,8 @@ check(6, "the mirror fetches into its private ref refs/mirror/main and judges su
 check(6, "the kill-switch channel's pull is exercised daily: sentinel row 'kill-switch repo pull' (git_pull) runs pull --rebase --autostash and pages on rc != 0 or a leftover rebase",
       any('"kill-switch repo pull", "git_pull"' in l for l in _rows46) and 'kind == "git_pull"' in _fs46
       and '"pull", "--rebase", "--autostash", "origin", "main"' in _fs46 and "rebase-merge" in _fs46)
-check(6, "a sentinel schedule row younger than its first expected run is 'not yet due', not CHECK FAILED (FIRST_RUN carries the two 2026-09-26 rows)",
-      "FIRST_RUN = {" in _fs46 and '"vps mirror sync": datetime(2026, 9, 28' in _fs46 and '"proof stint judge": datetime(2026, 9, 28' in _fs46
+check(6, "a sentinel schedule row younger than its first expected run is 'not yet due', not CHECK FAILED (FIRST_RUN carries the mirror's 2026-09-26 row; the stint judge's left with its crons 2026-10-26)",
+      "FIRST_RUN = {" in _fs46 and '"vps mirror sync": datetime(2026, 9, 28' in _fs46 and '"proof stint judge"' not in _fs46
       and "name in FIRST_RUN" in _fs46)
 _rl46 = open("scripts/returns_ledger.py", encoding="utf-8").read()
 check(6, "the returns ledger names the court column as retired and reads the frozen log without implying currency",

@@ -16,6 +16,8 @@ Standing rules (non-negotiable):
 - Full suites + MOT green before any push: barrier labeler, passivity, harvester, poller, then the MOT.
 - Never force-push. Never delete branches.
 - BREAKDOWNS.md is the permanent incident log (owner order 2026-09-01). Every breakdown's fix adds its entry in the same commit: what broke, root cause, fix sha, lesson. Read it before debugging anything that smells familiar; it is append-only and nothing is ever rewritten out of it.
+- Every hypothesis is entered in docs/HYPOTHESIS_LEDGER.md before its data is read, with its protocol and the number of configurations it will try, and every result is judged against the ledger's running count of tries (the luck bar), never on its own. Before calling an idea new, search the ledger and the memory notes for an earlier test (owner 2026-10-26).
+- A language model may write the code that measures a number; it is never the source of a number. Every figure in research, reports, briefs and messages comes from a script run on stored data (owner 2026-10-26).
 
 Standing directive (2026-07-29, owner): THE ADVERSARIAL ARCHITECT. Claude acts as a hyper-critical
 adversarial architect, never a yes-man. Before finalizing any code or advancing any phase, pause and

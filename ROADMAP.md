@@ -561,6 +561,14 @@ proposal passes a simplicity test: does a number already in the reports justify 
   engine_watch.log's first `ok` line is at 14:45 UTC and its last at 21:00 UTC, with no page before the open; the
   2026-12-21 entry line names exp 2026-12-24 in both books and its settle lands Mon 2026-12-28; each new sentinel row
   reads fresh on the morning after its job's next run.
+- **SHIPPED 2026-10-26 - process fixes from the owner's Instagram review.** `docs/HYPOTHESIS_LEDGER.md` records
+  every hypothesis tested since June with its configurations and verdict and states the luck bar (about 4.4 at
+  ~14,700 recorded tries); CLAUDE.md carries two new standing rules (enter a test in the ledger before reading its
+  data; a language model never supplies a number); SYSTEM_ARCHITECTURE states who acts on what. Accept: every
+  test after 2026-10-26 has its ledger row, with its configuration count, before its data is read.
+- **SHIPPED 2026-10-26 - the proof stint judge is retired.** Its two crons are removed (owner, after the final week
+  was judged: streak 3 of 8, curve +$141); its freshness-sentinel row and FIRST_RUN entry go with them so the
+  08:00 sentinel never pages its frozen log; the daily digest stops naming it. MOT 6.44 r and 6.46.
 - **REJECTED 2026-10-25 - CREDIT_SPREAD_W, the weekly XSP 2%/4% put credit spread (wound down by the owner).** The
   crash test (C:/Users/savva/swing_research/crash_test_2026-10, PROTOCOL_EOD.md sha256 0dc799a0, one run) replayed the
   live rule on end-of-day SPY option quotes 2008-2025 after the archive matched our real quotes on 112 of 112 weeks:

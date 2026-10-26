@@ -2,7 +2,9 @@
 
 ## What
 THE STINT ENDED 2026-10-25: the credit spread's entries are off (owner wind-down), so this book opens nothing; it
-settles what it holds and keeps sampling equity. The stint judge's crons come out once the last week is judged.
+settles what it holds and keeps sampling equity. The stint judge's crons came out on 2026-10-26 after the last
+week was judged (streak 3 of 8, five traded weeks, curve +$141, worst drawdown 1.6%); its state file holds that
+final judgement and nothing runs the judge now.
 A SECOND Alpaca paper account, $5,000, holding ONE strategy so its record is unambiguous. Seated
 2026-09-20 by owner ruling (NORTH_STAR v1.9) without the probe court, which stood at 4 of 8 HOLD:
 the weekly XSP put credit spread, short 2% OTM / long 4% OTM, one contract, European cash-settled.

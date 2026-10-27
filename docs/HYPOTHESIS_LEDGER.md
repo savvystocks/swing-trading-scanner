@@ -43,11 +43,10 @@ that were never counted, so the project-wide luck bar is about 4.4 and rising.
 | 2026-10-21 to 10-25 | Crash test: the live spread replayed on SPY options 2008-2025 | 1, pre-registered | FAIL: worst fall -$4,856 a contract vs the $3,300 cap (2018); the book was wound down | swing_research/crash_test_2026-10, PROTOCOL_EOD.md sha256 0dc799a0 |
 | 2026-10-25 to 10-26 | Index with a crash filter: (A) Faber 10-month rule on SPY; (B) half A, half Connors RSI(2) on 26 ETFs; each against a same-risk SPY/cash mix, 2007-2026 | 2 arms, pre-registered, one run | A FAIL (worst fall -25.9% vs the 25% limit); B PASS (4.80% a year, worst fall -14.7%, beats its same-risk mix 2.39% at p 0.0065; SPY made 10.86% with a -55.2% fall) | swing_research/trend_filter_2026-10, PROTOCOL.md sha256 661ed4be, VERDICT.md |
 | 2026-10-26 | Do the stock picks saved from Instagram beat SPY? Every dated pick, next open to 23 Oct 2026 | 1 (266 picks, 37 creators), rules written first | NO: average pick -8.9% vs SPY +9.4% over the same days; 29% beat SPY, 63% lost money | swing_research/influencer_scorecard_2026-10, PROTOCOL.md sha256 128718ac, SUMMARY.md |
+| 2026-10-27 | Pre-seat checks for strategy B's paper book: (0a) Alpaca IEX vs Yahoo signal parity 2024-2026; (0b) fills at 09:40 New York instead of the open; (0c) paper dividends | 2 measurements, no parameters, locked first | 0a FAIL: buy days agree 95.1% (need 97%), sells 99.1%, month-end trend 34 of 34, so a build takes its signals from Yahoo; 0b PASS: 09:40 fills cost 0.004 points a trade (+0.400% vs +0.396%), 6.2% of trades had no minute data; 0c: Alpaca paper pays no dividends (its documentation) | swing_research/trend_filter_2026-10/PRESEAT_RESULTS.md; protocol PRESEAT_CHECKS.md sha256 de97a7f7 |
 
 ## Locked, not yet run
-| Date | Hypothesis | Configurations | Record |
-|---|---|---|---|
-| 2026-10-27 | Pre-seat checks for strategy B's paper book: (0a) Alpaca vs Yahoo signal parity, stop below 97%; (0b) fills at 09:40 New York instead of the open, stop if they cost more than half the dip trades' mean; (0c) paper dividends, answered by Alpaca's documentation (not simulated) | 2 measurements, no parameters | swing_research/trend_filter_2026-10/PRESEAT_CHECKS.md, sha256 de97a7f7 |
+None.
 
 ## Proposed, not tested (from the Instagram review, 2026-10-26; each needs the owner's go and a locked protocol)
 Insider cluster buying (SEC Form 4); recession filters on FRED (yield curve, credit spreads, LEI, CPI above 4%); the

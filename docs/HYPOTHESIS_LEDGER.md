@@ -45,7 +45,9 @@ that were never counted, so the project-wide luck bar is about 4.4 and rising.
 | 2026-10-26 | Do the stock picks saved from Instagram beat SPY? Every dated pick, next open to 23 Oct 2026 | 1 (266 picks, 37 creators), rules written first | NO: average pick -8.9% vs SPY +9.4% over the same days; 29% beat SPY, 63% lost money | swing_research/influencer_scorecard_2026-10, PROTOCOL.md sha256 128718ac, SUMMARY.md |
 
 ## Locked, not yet run
-None.
+| Date | Hypothesis | Configurations | Record |
+|---|---|---|---|
+| 2026-10-27 | Pre-seat checks for strategy B's paper book: (0a) Alpaca vs Yahoo signal parity, stop below 97%; (0b) fills at 09:40 New York instead of the open, stop if they cost more than half the dip trades' mean; (0c) paper dividends, answered by Alpaca's documentation (not simulated) | 2 measurements, no parameters | swing_research/trend_filter_2026-10/PRESEAT_CHECKS.md, sha256 de97a7f7 |
 
 ## Proposed, not tested (from the Instagram review, 2026-10-26; each needs the owner's go and a locked protocol)
 Insider cluster buying (SEC Form 4); recession filters on FRED (yield curve, credit spreads, LEI, CPI above 4%); the

@@ -561,6 +561,24 @@ proposal passes a simplicity test: does a number already in the reports justify 
   engine_watch.log's first `ok` line is at 14:45 UTC and its last at 21:00 UTC, with no page before the open; the
   2026-12-21 entry line names exp 2026-12-24 in both books and its settle lands Mon 2026-12-28; each new sentinel row
   reads fresh on the morning after its job's next run.
+- **SHIPPED 2026-10-27 - the research desk (owner: "set the system up for success").** Nine Claude agent roles
+  (.claude/agents/desk-*.md), two team scripts (.claude/workflows/research-desk-design.js and
+  research-desk-measure.js) and .claude/desk/ (house rules, the protocol template, desk_tools.py, whose provenance
+  check fails any number in a verdict that no code-written file holds). An idea goes clerk, four blind reviewers,
+  locked protocol, ledger row, builder, blind replicator and auditor, judge, owner. The desk never trades. Accept:
+  before its first real job it passed two known-answer cases scored on a sheet locked before any agent ran: a GLD
+  study with two planted defects (verdict REFUSED, both defects located to the line, the blind rebuild matched the
+  true answer) and a breadth idea with four planted design flaws (each caught by its own reviewer).
+- **QUEUED - the ship review board.** Four reviewer agents and a confirmer check every engine change against the
+  feature map and the six adversarial checks, on top of the gate, never instead of it. Accept: given the pre-fix
+  change behind a BREAKDOWNS.md incident whose lesson is not in the memory index, it names the fault to the line.
+- **QUEUED - the operations crew.** Three reader agents and a writer replace scripts/morning_analyst.py's single
+  Gemini call; they read committed outputs only, the brief is written to a file and the VPS sends it, so no key
+  leaves the server. Accept: on a staged stale-data morning the brief names the stale source; the analyst's block
+  that still reads the retired proof stint is deleted in the same commit.
+- **QUEUED - the scout.** Weekly; reads the owner's links and a fixed source list for evidence against the ledger
+  and memory; everything it reads is data; it has no tools that act and nothing reaches the desk without the
+  owner's tick. Accept: on ten already-graded archive posts its grades match on at least eight.
 - **SHIPPED 2026-10-26 - process fixes from the owner's Instagram review.** `docs/HYPOTHESIS_LEDGER.md` records
   every hypothesis tested since June with its configurations and verdict and states the luck bar (about 4.4 at
   ~14,700 recorded tries); CLAUDE.md carries two new standing rules (enter a test in the ledger before reading its

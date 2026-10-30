@@ -1,6 +1,6 @@
-# RETURNS LEDGER - 2026-10-23T22:40:03+00:00
+# RETURNS LEDGER - 2026-10-30T22:40:03+00:00
 
-live from proactive_sandbox_logs.json (1125 records, the retired court's construction); archive from reports/research/probe_tuner_rows_v3.jsonl (90405 rows, last day 2026-09-11, ask_at_qualifying_print / d1_close).
+live from proactive_sandbox_logs.json (1130 records, the retired court's construction); archive from reports/research/probe_tuner_rows_v3.jsonl (90405 rows, last day 2026-09-11, ask_at_qualifying_print / d1_close).
 
 | strategy | live n | %/trade | win | best removed | unit | units | own mean | shared | t vs control | halves | $ | archive %/day (pool) | t vs pool | archive halves | court (retired 2026-09-26, last standing) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -10,7 +10,7 @@ live from proactive_sandbox_logs.json (1125 records, the retired court's constru
 | DIP_CONF_MILD | 5 | +8.3 | 40% | -31.0 | days | 5 | +8.3 | 5 | +0.73 | -50.6/+47.5 | +161 | +0.5 (-7.4) | +2.69 | +3.8/-2.8 | 4/8 live virgin days vs control - HOLD |
 | DIP_CONVEXITY | 4 | +201.7 | 75% | +35.6 | days | 2 | +201.7 | 2 | n/a | +31.6/+371.9 | +2,746 | +8.3 (-4.8) | +3.83 | +5.7/+10.9 | 2/8 live virgin days vs control - HOLD |
 | WINNER_PROFILE | 16 | +10.6 | 38% | -21.2 | days | 7 | -3.0 | 7 | -0.41 | -18.4/+8.6 | -1,547 | -5.2 (-5.1) | -2.54 | -4.5/-5.9 | - |
-| CREDIT_SPREAD_W | 10 | +3.9 | 90% | +3.1 | weeks | 9 | +4.2 | 6 | +0.05 | +3.5/+4.7 | +388 | n/a (n/a) | n/a | n/a/n/a | 5/8 live virgin weeks vs control - HOLD |
+| CREDIT_SPREAD_W | 11 | +4.1 | 91% | +3.5 | weeks | 10 | +4.4 | 6 | +0.05 | +4.9/+4.0 | +454 | n/a (n/a) | n/a | n/a/n/a | 5/8 live virgin weeks vs control - HOLD |
 | STUDENT_FAMILY | 0 | n/a | n/a | n/a | days | 0 | n/a | 0 | n/a | n/a/n/a | n/a | n/a (n/a) | n/a | n/a/n/a | 0/8 live virgin days vs control - HOLD |
 | CONSENSUS (retired) | 19 | -20.1 | 21% | -29.3 | days | 11 | -20.6 | 8 | -0.31 | -10.2/-29.3 | -3,424 | n/a (n/a) | n/a | n/a/n/a | - |
 | DP_HEAVY (retired) | 5 | -33.7 | 0% | -41.9 | days | 4 | -29.6 | 2 | n/a | -9.0/-50.2 | -1,426 | n/a (n/a) | n/a | n/a/n/a | - |

@@ -11,8 +11,8 @@ Archive: none in the options corpus. The 2.5-year XSP backtest in `scripts/fivek
 weekly record is the evidence.
 
 ## Numbers
-- live: [[strategies.CREDIT_SPREAD_W.live.n_closed = 10]] settled weeks, [[strategies.CREDIT_SPREAD_W.live.per_trade = +3.9]]
-  per week as a percentage of $1,000, dollars [[strategies.CREDIT_SPREAD_W.live.total_usd = +388]],
+- live: [[strategies.CREDIT_SPREAD_W.live.n_closed = 11]] settled weeks, [[strategies.CREDIT_SPREAD_W.live.per_trade = +4.1]]
+  per week as a percentage of $1,000, dollars [[strategies.CREDIT_SPREAD_W.live.total_usd = +454]],
   weeks shared with the control [[strategies.CREDIT_SPREAD_W.live.shared_units = 6]],
   t vs control [[strategies.CREDIT_SPREAD_W.live.t_vs_control = +0.05]].
 

@@ -27,7 +27,7 @@ A $5,000 account; $1,000 per position unless a NORTH_STAR amendment says otherwi
 ONE primary measure and the bar it must clear, set now. Secondary measures are reported, never used to pass.
 
 ## 7. Tries and luck
-Configurations this study tries (N). Project total from the ledger after adding N, and the luck bar
+Configurations this study tries (N). Project total from `python3 scripts/research_ledger.py bar N` (docs/research_ledger.jsonl), and the luck bar
 sqrt(2 ln total). A result below the luck bar is not evidence of an edge.
 
 ## 8. Holdout and splits

@@ -8,8 +8,11 @@ by luck alone.
 With N independent tries and no real edge anywhere, the best t-statistic expected from noise alone is about
 sqrt(2 ln N): 3.0 at 100 tries, 3.7 at 1,000, 4.4 at 14,000. Tries that share data are not fully independent, so a
 permutation bar computed on the exact grid (as the 2026-09-17 search did: |t| 2.90 for 60 combinations) beats this
-rule of thumb whenever it can be run. Recorded configurations to date: at least 14,700, plus engine and probe variants
-that were never counted, so the project-wide luck bar is about 4.4 and rising.
+rule of thumb whenever it can be run. The count of record is now kept by code (2026-11-13): docs/research_ledger.jsonl, read with
+`python3 scripts/research_ledger.py total`. It joins the two counts that used to disagree: the engine studies of
+July-August in lifetime_trials.json (30,947) and the rows below from late August on (14,801), 45,748 configurations
+in all, luck bar 4.63 and rising. Four studies were never counted and are listed as such. A new study is added with
+`research_ledger.py add` before it runs and closed with `research_ledger.py close` after.
 
 ## How a row is added
 1. Before any data is read: date, the hypothesis in one sentence, where its protocol lives (path and sha256 when
@@ -48,10 +51,11 @@ that were never counted, so the project-wide luck bar is about 4.4 and rising.
 | 2026-10-27 | Pre-seat checks for strategy B's paper book: (0a) Alpaca IEX vs Yahoo signal parity 2024-2026; (0b) fills at 09:40 New York instead of the open; (0c) paper dividends | 2 measurements, no parameters, locked first | 0a FAIL: buy days agree 95.1% (need 97%), sells 99.1%, month-end trend 34 of 34, so a build takes its signals from Yahoo; 0b PASS: 09:40 fills cost 0.004 points a trade (+0.400% vs +0.396%), 6.2% of trades had no minute data; 0c: Alpaca paper pays no dividends (its documentation) | swing_research/trend_filter_2026-10/PRESEAT_RESULTS.md; protocol PRESEAT_CHECKS.md sha256 de97a7f7 |
 | 2026-10-28 | Can the S&P 500 at 2x or 3x daily leverage, with or without the 10-month or 200-day trend filter, reach at least twice the S&P's annual return inside the owner's loss limits? | 0 new, answered from recorded rows; research desk design review only | NO, not run: best recorded 3x with the 200-day rule 16.6% a year vs 10.8% (worst fall -70.9%); no 2x or 3x row shallower than -45%; the 1x filter alone -25.9%; the crash-risk, prior-evidence and data-honesty reviewers killed it independently | swing_research/double_cost_2026-10 (DESK_OUTCOME.md, PROTOCOL_DRAFT.md) |
 
+| 2026-11-11 to 11-13 | Forex to funded-account rules: monthly long-short G10 baskets (carry, trend, combined) pass FTMO 2-Step rules on OANDA hourly bid/ask | 36, pre-registered, one run | REFUSED: not reproduced; both independent builds fail the gate (1 of 7 non-overlapping windows pass, builder 151 breaches in 227 starts, replicator 167 in 234; paired t -5.06 vs bar 4.55) | swing_research/forex_2026-11, PROTOCOL.md sha256 a707fc8b, VERDICT.md |
+
 ## Locked, not yet run
 | Date | Hypothesis | Configurations | Record |
 |---|---|---|---|
-| 2026-11-11 | Forex to funded-account rules: monthly long-short G10 baskets (carry, trend, combined) sized to FTMO 2-Step rules pass the challenge with zero 5%-daily or 10%-total breaches on OANDA intraday bid/ask data in at least half of non-overlapping 36-month windows, and more often than a same-risk S&P/cash mix | 36 (3 arms x 3 cost rungs x 2 financing levels x 2 data sets); luck bar 4.55 on the larger try counter (30,983), 4.38 on this ledger's | swing_research/forex_2026-11/PROTOCOL.md, sha256 a707fc8b |
 
 ## Proposed, not tested (from the Instagram review, 2026-10-26; each needs the owner's go and a locked protocol)
 Insider cluster buying (SEC Form 4); recession filters on FRED (yield curve, credit spreads, LEI, CPI above 4%); the

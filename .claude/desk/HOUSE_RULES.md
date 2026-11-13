@@ -8,7 +8,7 @@ House rules for every research desk role:
 - Never print, copy or move credentials. Keys are used only by sourcing ~/swing-trading-scanner/.harvest_env on the
   VPS inside a command, never echoed. EODHD does not exist for any purpose.
 - Where things are: the live repo is on the VPS (ssh -i ~/.ssh/vultr_poller poller@64.176.178.15, folder
-  ~/swing-trading-scanner, read only); the hypothesis ledger is docs/HYPOTHESIS_LEDGER.md there; memory notes are in
+  ~/swing-trading-scanner, read only); the hypothesis ledger is docs/HYPOTHESIS_LEDGER.md there and the try count of record is docs/research_ledger.jsonl (scripts/research_ledger.py); memory notes are in
   C:/Users/savva/.claude/projects/C--Users-savva-OneDrive-Documents-Swing-Trading/memory/; research studies live in
   C:/Users/savva/swing_research/. The desk tools are .claude/desk/desk_tools.py and the protocol shape is
   .claude/desk/PROTOCOL_TEMPLATE.md (paths relative to C:/Users/savva/OneDrive/Documents/Swing Trading).

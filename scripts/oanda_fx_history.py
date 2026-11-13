@@ -89,9 +89,16 @@ def main():
         print("FAIL: token missing")
         return 1
     os.makedirs(OUT, exist_ok=True)
-    if ACCOUNT:
+    account = ACCOUNT
+    if not account:
         try:
-            inst = get(f"/v3/accounts/{ACCOUNT}/instruments")
+            accs = get("/v3/accounts").get("accounts", [])
+            account = accs[0]["id"] if accs else ""
+        except (Refused, RuntimeError) as e:
+            print(f"account list: not read ({e})", flush=True)
+    if account:
+        try:
+            inst = get(f"/v3/accounts/{account}/instruments")
             with open(f"{OUT}/INSTRUMENTS.json", "w") as fh:
                 json.dump({"pulled_utc": f"{datetime.now(timezone.utc):%Y-%m-%dT%H:%MZ}", **inst}, fh, indent=1)
             print(f"account instruments: {len(inst.get('instruments', []))}", flush=True)

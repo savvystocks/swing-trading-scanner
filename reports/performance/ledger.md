@@ -1,6 +1,6 @@
-# RETURNS LEDGER - 2026-11-06T22:40:04+00:00
+# RETURNS LEDGER - 2026-11-13T22:40:04+00:00
 
-live from proactive_sandbox_logs.json (1135 records, the retired court's construction); archive from reports/research/probe_tuner_rows_v3.jsonl (90405 rows, last day 2026-09-11, ask_at_qualifying_print / d1_close).
+live from proactive_sandbox_logs.json (1140 records, the retired court's construction); archive from reports/research/probe_tuner_rows_v3.jsonl (90405 rows, last day 2026-09-11, ask_at_qualifying_print / d1_close).
 
 | strategy | live n | %/trade | win | best removed | unit | units | own mean | shared | t vs control | halves | $ | archive %/day (pool) | t vs pool | archive halves | court (retired 2026-09-26, last standing) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|

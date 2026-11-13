@@ -1,20 +1,42 @@
 name: oanda-fx-history
 on:
   workflow_dispatch:
+    inputs:
+      instruments:
+        description: "space-separated OANDA instruments (blank = the nine USD pairs)"
+        required: false
+        default: ""
+      granularity:
+        description: "M5, M15, H1, H4 or D"
+        required: false
+        default: "H1"
+      start_date:
+        description: "YYYY-MM-DD"
+        required: false
+        default: "2002-01-01"
+      artifact_name:
+        description: "name of the uploaded artifact"
+        required: false
+        default: "fx_history"
 permissions:
   contents: read
 jobs:
   pull:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
-      - name: Pull hourly bid/ask history (read-only)
+      - name: Pull bid/ask history (read-only)
         env:
           OANDA_API_TOKEN: ${{ secrets.OANDA_API_TOKEN }}
+          OANDA_ACCOUNT_ID: ${{ secrets.OANDA_ACCOUNT_ID }}
+          INSTRUMENTS: ${{ inputs.instruments }}
+          GRANULARITY: ${{ inputs.granularity }}
+          START_DATE: ${{ inputs.start_date }}
+          OUT_DIR: fx_history
         run: python3 scripts/oanda_fx_history.py
       - uses: actions/upload-artifact@v4
         with:
-          name: fx_history
+          name: ${{ inputs.artifact_name }}
           path: fx_history/
           retention-days: 30

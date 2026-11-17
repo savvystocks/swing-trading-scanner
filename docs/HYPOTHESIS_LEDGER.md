@@ -53,6 +53,8 @@ in all, luck bar 4.63 and rising. Four studies were never counted and are listed
 
 | 2026-11-11 to 11-13 | Forex to funded-account rules: monthly long-short G10 baskets (carry, trend, combined) pass FTMO 2-Step rules on OANDA hourly bid/ask | 36, pre-registered, one run | REFUSED: not reproduced; both independent builds fail the gate (1 of 7 non-overlapping windows pass, builder 151 breaches in 227 starts, replicator 167 in 234; paired t -5.06 vs bar 4.55) | swing_research/forex_2026-11, PROTOCOL.md sha256 a707fc8b, VERDICT.md |
 
+| 2026-11-13 | Two-pair 12-month trend to FTMO 2-Step rules (cross_trend_2026-11) | 11, pre-registered, one run | REFUSED: not reproduced on side numbers; both builds fail (P 0.295 vs mix 0.39-0.395, zero-edge 0.304) | swing_research/cross_trend_2026-11, PROTOCOL.md sha256 b01f267a, VERDICT.md |
+
 ## Locked, not yet run
 | Date | Hypothesis | Configurations | Record |
 |---|---|---|---|

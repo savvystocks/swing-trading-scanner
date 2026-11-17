@@ -1413,3 +1413,10 @@ not above $0.02; a debit structure is not held to it but never sells at a limit 
 state and a second sell only follows a cancel and a dead state of the first. MOT 6.47's two order-sequence assertions now
 include the short's own fill poll.
 
+
+
+## 2026-11-17 - ship gate RED after the old-data cleanup
+- What broke: verify_engine.sh went RED (feature-map lint: data/cs_legs.db does not exist) and 142 git-tracked files under data/ showed as deleted, after the 2026-11-15 cleanup removed the old options data from the VPS (copied first to the laptop archive vps_archive_2026-11-15, sha-checked).
+- Root cause: the cleanup deleted git-tracked files and a database the feature map still cites; the options-era gate still lints those docs although the engine is switched off.
+- Fix: git checkout -- data/ restored the tracked files; data/cs_legs.db restored from the laptop archive; gate GREEN again (this commit).
+- Lesson: before deleting data on the VPS, check git ls-files and grep docs/feature_map for references; the options gate stays until the forex gate replaces it.

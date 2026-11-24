@@ -1420,3 +1420,9 @@ include the short's own fill poll.
 - Root cause: the cleanup deleted git-tracked files and a database the feature map still cites; the options-era gate still lints those docs although the engine is switched off.
 - Fix: git checkout -- data/ restored the tracked files; data/cs_legs.db restored from the laptop archive; gate GREEN again (this commit).
 - Lesson: before deleting data on the VPS, check git ls-files and grep docs/feature_map for references; the options gate stays until the forex gate replaces it.
+
+## 2026-11-24 - chart-method screen v1: three of five rules could not trade
+- What broke: fx_chart_screen_2026-11 v1 (sha c2c8bb4a) produced n 1, 0 and 0 trades for the three daily rules (S24 Sid, S26 candle reversal, S27 Bollinger).
+- Root cause: the protocol (written by the coordinator) entered at the next bar open AND skipped any fill in the 16:00-18:00 New York roll window; daily bars open at 17:00 New York, so every daily entry fell in the window. The builder flagged it in RUNLOG before the run and ran the literal text.
+- Fix: protocol v2 (sha ec6f7d7a) defers roll-window entries to 18:00 New York instead of skipping them; v1 closed as VOID for those rules, v2 booked as 5 new tries (this commit).
+- Lesson: before locking, run a count-only check of entries per rule on DEVELOP; a rule whose count is near zero is a protocol defect, not a result.

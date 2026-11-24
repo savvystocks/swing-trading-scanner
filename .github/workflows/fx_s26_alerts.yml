@@ -1,0 +1,44 @@
+name: fx-s26-alerts
+on:
+  schedule:
+    - cron: "12 21 * * 1-5"
+    - cron: "12 22 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "1 = print only (no Telegram, no commit)"
+        required: false
+        default: "1"
+permissions:
+  contents: write
+concurrency:
+  group: fx-s26-alerts
+  cancel-in-progress: false
+jobs:
+  alerts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install --quiet numpy pandas matplotlib requests
+      - name: S26 paper alerts (read-only OANDA practice, no orders)
+        env:
+          OANDA_API_TOKEN: ${{ secrets.OANDA_API_TOKEN }}
+          OANDA_ACCOUNT_ID: "101-001-40973522-001"
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || '0' }}
+        run: python3 scripts/fx_s26_alerts.py
+      - name: Save the paper record
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run == '1') }}
+        run: |
+          git config user.name "fx-alerts-bot"
+          git config user.email "fx-alerts-bot@users.noreply.github.com"
+          git add reports/fx_alerts
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
+          git commit -m "fx alerts: S26 paper record [skip ci]"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0; sleep 5; done
+          exit 1

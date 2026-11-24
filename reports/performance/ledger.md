@@ -1,4 +1,4 @@
-# RETURNS LEDGER - 2026-11-13T22:40:04+00:00
+# RETURNS LEDGER - 2026-11-24T22:47:21+00:00
 
 live from proactive_sandbox_logs.json (1140 records, the retired court's construction); archive from reports/research/probe_tuner_rows_v3.jsonl (90405 rows, last day 2026-09-11, ask_at_qualifying_print / d1_close).
 

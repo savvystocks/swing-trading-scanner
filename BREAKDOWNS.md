@@ -1426,3 +1426,9 @@ include the short's own fill poll.
 - Root cause: the protocol (written by the coordinator) entered at the next bar open AND skipped any fill in the 16:00-18:00 New York roll window; daily bars open at 17:00 New York, so every daily entry fell in the window. The builder flagged it in RUNLOG before the run and ran the literal text.
 - Fix: protocol v2 (sha ec6f7d7a) defers roll-window entries to 18:00 New York instead of skipping them; v1 closed as VOID for those rules, v2 booked as 5 new tries (this commit).
 - Lesson: before locking, run a count-only check of entries per rule on DEVELOP; a rule whose count is near zero is a protocol defect, not a result.
+
+## 2026-11-24 - ship gate RED: performance map lint, returns ledger 11 days old
+- What broke: verify_engine.sh went RED (MOT Dimension 6, 229/230) on "performance map lint: FAIL - ledger is 11 days old (limit 10)" while booking a research ledger close.
+- Root cause: the options-era returns ledger (reports/performance/ledger.json) was last rebuilt 13 Nov; the options engine was switched off 15 Nov, so nothing refreshes it, and the lint ages out on the calendar alone.
+- Fix: scripts/returns_ledger.py --update-map (0 map values changed; ledger.json/ledger.md rewritten), gate GREEN again (this commit).
+- Lesson: an options-era staleness check will go red every 10 days while the options gate still runs; refresh before any VPS commit until the forex gate replaces the options gate.

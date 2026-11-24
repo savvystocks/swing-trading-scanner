@@ -3,12 +3,18 @@ on:
   schedule:
     - cron: "12 21 * * 1-5"
     - cron: "12 22 * * 1-5"
+    - cron: "3 22 * * 0-4"
+    - cron: "3 23 * * 0-4"
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "1 = print only (no Telegram, no commit)"
+        description: "1 = print only (no Telegram, no orders, no commit)"
         required: false
         default: "1"
+      order_test:
+        description: "1 = place and close one 1-unit EUR_USD practice order to test the order path (nothing else runs)"
+        required: false
+        default: "0"
 permissions:
   contents: write
 concurrency:
@@ -24,16 +30,18 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install --quiet numpy pandas matplotlib requests
-      - name: S26 paper alerts (read-only OANDA practice, no orders)
+      - name: S26 paper book (OANDA PRACTICE only)
         env:
           OANDA_API_TOKEN: ${{ secrets.OANDA_API_TOKEN }}
           OANDA_ACCOUNT_ID: "101-001-40973522-001"
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || '0' }}
+          ORDER_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.order_test || '0' }}
+          PLACE_ORDERS: "1"
         run: python3 scripts/fx_s26_alerts.py
       - name: Save the paper record
-        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run == '1') }}
+        if: ${{ !(github.event_name == 'workflow_dispatch' && (inputs.dry_run == '1' || inputs.order_test == '1')) }}
         run: |
           git config user.name "fx-alerts-bot"
           git config user.email "fx-alerts-bot@users.noreply.github.com"

@@ -22,6 +22,8 @@ STATE_DIR = os.environ.get("ALERT_DIR", "reports/fx_alerts")
 STATE = os.path.join(STATE_DIR, "s26_state.json")
 EVENTS = os.path.join(STATE_DIR, "s26_events.jsonl")
 DRY = os.environ.get("DRY_RUN", "") == "1"
+PLACE = os.environ.get("PLACE_ORDERS", "") == "1" and not DRY
+USD_SIDE = {"EUR_USD": -1, "USD_JPY": 1}
 
 
 def atr_wilder(h, l, c, n=14):
@@ -142,7 +144,7 @@ class Market:
     def time_exit_t(self, t_in):
         loc = pd.DatetimeIndex(pd.to_datetime([t_in], unit="ns", utc=True)).tz_convert(NYZ).tz_localize(None)
         td = (loc + pd.Timedelta(hours=7)).normalize().values.astype("datetime64[D]")
-        shift = int((np.busday_offset(td, TIME_DAYS, roll="raise") - td).astype("timedelta64[D]").astype(np.int64)[0])
+        shift = int((np.busday_offset(td, TIME_DAYS, roll="forward") - td).astype("timedelta64[D]").astype(np.int64)[0])
         return int(ns_from_local(loc + pd.Timedelta(days=shift))[0])
 
     def update(self, tr):
@@ -336,17 +338,113 @@ def run_live():
         if bal and D_est > 0:
             per_unit = D_est if pair == "EUR_USD" else D_est / last_c
             units = f"\nSize at 0.5% risk of the practice balance ({bal:,.0f}): about {int(RISK_FRAC * bal / per_unit):,} units."
+        how = (f"Entry: the system places a market order on the OANDA practice account at {uk(entry_t)} UK time (18:00 New York); "
+               f"you do not need to act.\n") if PLACE else \
+              (f"Entry: market order at {uk(entry_t)} UK time (18:00 New York) or as soon after as you can; "
+               f"do not enter after {uk(entry_t + 2 * 3600 * 10**9)}.\n")
         text = (f"S26 SETUP - {pair} {side} (paper, OANDA practice)\n"
                 f"{s['kind']} at daily {'support' if s['dir'] == 1 else 'resistance'} {fmt(pair, s['level'])}, signal day {td}.\n"
-                f"Entry: market order at {uk(entry_t)} UK time (18:00 New York) or as soon after as you can.\n"
+                f"{how}"
                 f"Stop: {fmt(pair, s['stop'])} (about {D_est / PIP[pair]:.0f} pips from the last price).\n"
                 f"Target: 2 x your stop distance from your fill (about {fmt(pair, last_c + 2 * D_est * s['dir'])}).\n"
                 f"Exit by time if neither is hit after 10 trading days.{units}\n"
                 f"Skip it if a major release is due within 15 minutes of your entry, or if the stop is closer than 8 x the spread.\n"
                 f"Not evidence of an edge yet: screen pass on 2005-2014 only.")
         tg_send(text, chart(mk, pair, s, last_c))
+    if PLACE:
+        try:
+            broker_step(st, now)
+        except Exception as e:
+            log_event({"event": "broker_error", "error": str(e)[:500]})
+            tg_send(f"S26 practice order job ERROR: {str(e)[:300]}. Open practice trades keep their broker stops.")
+            print("broker error:", e)
     with open(STATE, "w") as f:
         json.dump(st, f, indent=1)
+
+
+def broker_step(st, now):
+    from fx_oanda_orders import Practice, guard_ok
+    br = Practice()
+    acct = br.summary()
+    ny_day = str(pd.Timestamp(now, tz="UTC").tz_convert(NYZ).tz_localize(None) + pd.Timedelta(hours=7))[:10]
+    for tr in st["trades"]:
+        b = tr.get("broker")
+        if not b or b.get("status") != "open":
+            continue
+        x = br.trade(b["trade_id"])
+        if x["state"] == "OPEN" and now >= b["time_exit_t"]:
+            br.close(b["trade_id"])
+            x = br.trade(b["trade_id"])
+            b["closed_by"] = "time exit (10 trading days)"
+        if x["state"] == "CLOSED":
+            pl = float(x.get("realizedPL", 0))
+            b.update({"status": "closed", "close_time": x.get("closeTime"), "close_price": float(x.get("averageClosePrice", 0) or 0),
+                      "realized_pl": pl, "financing": float(x.get("financing", 0) or 0),
+                      "R": round(pl / b["risk_usd"], 3) if b.get("risk_usd") else None})
+            log_event({"event": "broker_closed", "id": tr["id"], **b})
+            tg_send(f"S26 practice trade closed: {tr['pair']} {'long' if tr['dir'] == 1 else 'short'} at "
+                    f"{fmt(tr['pair'], b['close_price'])}, P&L {pl:+,.2f} USD ({b['R']:+.2f} R incl. spread, financing)"
+                    f"{' - ' + b['closed_by'] if b.get('closed_by') else ''}.")
+    ok, why = guard_ok(st, acct, ny_day)
+    bal = float(acct["balance"])
+    for tr in st["trades"]:
+        if tr.get("broker") or tr["status"] not in ("pending", "open") or now < tr["entry_t"]:
+            continue
+        pair, sg = tr["pair"], tr["dir"]
+        if now > tr["entry_t"] + 2 * 3600 * 10**9:
+            tr["broker"] = {"status": "not_placed", "reason": "job ran more than 2 hours after 18:00 New York"}
+        elif not ok:
+            tr["broker"] = {"status": "not_placed", "reason": why}
+        elif any(o is not tr and (o.get("broker") or {}).get("status") == "open" and o["pair"] != pair
+                 and USD_SIDE[o["pair"]] * o["dir"] == USD_SIDE[pair] * sg for o in st["trades"]):
+            tr["broker"] = {"status": "not_placed", "reason": "same-direction dollar bet already open on the other pair"}
+        else:
+            bid, ask, tradeable = br.price(pair)
+            px, sp = (ask if sg == 1 else bid), ask - bid
+            D = (px - tr["stop"]) * sg
+            if not tradeable or D <= 0 or D < 8 * sp:
+                tr["broker"] = {"status": "not_placed", "reason": "market not tradeable" if not tradeable else
+                                ("price already through the stop" if D <= 0 else "stop distance below 8 x spread")}
+            else:
+                per_unit = D if pair == "EUR_USD" else D / px
+                units = int(RISK_FRAC * bal / per_unit)
+                f = br.market(pair, units * sg, tr["stop"], tr["id"])
+                if not f["filled"]:
+                    tr["broker"] = {"status": "not_placed", "reason": f"order not filled: {f['reason']}"}
+                else:
+                    Df = (f["fill"] - tr["stop"]) * sg
+                    tp = f["fill"] + 2 * Df * sg
+                    br.set_tp(pair, f["trade_id"], tp)
+                    t_fill = pd.Timestamp(f["time"]).value
+                    tr["broker"] = {"status": "open", "trade_id": f["trade_id"], "fill": f["fill"], "fill_time": f["time"],
+                                    "units": f["units"], "stop": tr["stop"], "tp": tp, "D": Df, "spread_at_order": sp,
+                                    "risk_usd": abs(f["units"]) * (Df if pair == "EUR_USD" else Df / f["fill"]),
+                                    "commission": f["commission"], "time_exit_t": Market.time_exit_t(None, t_fill)}
+                    log_event({"event": "broker_filled", "id": tr["id"], **tr["broker"]})
+                    tg_send(f"S26 practice order FILLED: {pair} {'BUY' if sg == 1 else 'SELL'} {abs(f['units']):,} units at "
+                            f"{fmt(pair, f['fill'])}; stop {fmt(pair, tr['stop'])}, target {fmt(pair, tp)} "
+                            f"({Df / PIP[pair]:.0f} pips risk, 0.5% of the balance). Time exit {uk(tr['broker']['time_exit_t'])} UK.")
+                    continue
+        log_event({"event": "broker_not_placed", "id": tr["id"], **tr["broker"]})
+        tg_send(f"S26 {pair}: practice order NOT placed - {tr['broker']['reason']}.")
+
+
+def order_test():
+    from fx_oanda_orders import Practice
+    br = Practice()
+    bid, ask, tradeable = br.price("EUR_USD")
+    print(f"EUR_USD bid {bid} ask {ask} tradeable {tradeable}")
+    f = br.market("EUR_USD", 1, bid - 0.0100, "s26_order_test")
+    print("order:", {k: f[k] for k in f if k != "raw"} if f["filled"] else f)
+    if f["filled"]:
+        br.set_tp("EUR_USD", f["trade_id"], f["fill"] + 0.0100)
+        x = br.trade(f["trade_id"])
+        print("trade state", x["state"], "stop", (x.get("stopLossOrder") or {}).get("price"),
+              "tp", (x.get("takeProfitOrder") or {}).get("price"))
+        br.close(f["trade_id"])
+        x = br.trade(f["trade_id"])
+        print("after close:", x["state"], "realizedPL", x.get("realizedPL"))
+    print("ORDER TEST DONE")
 
 
 def replay(parquet_by_pair):
@@ -371,5 +469,7 @@ if __name__ == "__main__":
         df = replay({"EUR_USD": sys.argv[2], "USD_JPY": sys.argv[3]})
         df.to_csv(sys.argv[4], index=False)
         print(f"{len(df)} signals written to {sys.argv[4]}")
+    elif os.environ.get("ORDER_TEST", "") == "1":
+        order_test()
     else:
         run_live()

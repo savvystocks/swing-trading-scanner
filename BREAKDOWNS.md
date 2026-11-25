@@ -1432,3 +1432,9 @@ include the short's own fill poll.
 - Root cause: the options-era returns ledger (reports/performance/ledger.json) was last rebuilt 13 Nov; the options engine was switched off 15 Nov, so nothing refreshes it, and the lint ages out on the calendar alone.
 - Fix: scripts/returns_ledger.py --update-map (0 map values changed; ledger.json/ledger.md rewritten), gate GREEN again (this commit).
 - Lesson: an options-era staleness check will go red every 10 days while the options gate still runs; refresh before any VPS commit until the forex gate replaces the options gate.
+
+## 2026-11-25 - S26 paper book never ran on its schedule
+- What broke: .github/workflows/fx_s26_alerts.yml (crons 21:12/22:12 UTC Mon-Fri, 22:03/23:03 UTC Sun-Thu) fired no scheduled run from its creation on 2026-11-24 to 2026-11-25 23:50 UTC; only the two manual dispatches ran, so the 2026-11-25 New York close was never scanned and the practice account placed nothing.
+- Root cause: every commit that touched the workflow was pushed from the VPS with the github_deploy key (author vps-poller, no GitHub account). GitHub runs scheduled workflows as the account that last edited the workflow file; with no account the schedule does not fire.
+- Fix: the workflow file re-committed and pushed from the laptop under the owner's GitHub account (this commit), plus a comment in the file; a manual dispatch scanned the 2026-11-25 close inside its entry window.
+- Lesson: any workflow with a schedule must last be pushed from a GitHub-linked account; after shipping a scheduled job, check the next scheduled run actually appears in gh run list --event schedule.

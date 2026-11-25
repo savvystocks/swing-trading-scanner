@@ -21,7 +21,7 @@ START = os.environ.get("START", "2017-01-01")
 END = os.environ.get("END", "2026-11-25")
 STEP = int(os.environ.get("STEP_MIN", "60"))
 BAND = float(os.environ.get("BAND", "0.02"))
-THREADS = int(os.environ.get("THREADS", "4"))
+THREADS = int(os.environ.get("THREADS", "2"))
 OUT = os.environ.get("OUT_DIR", "books")
 _lock = threading.Lock()
 
@@ -36,8 +36,8 @@ def get(path):
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 return 404, None
-            if e.code in (429, 500, 502, 503, 504):
-                time.sleep(2 ** attempt)
+            if e.code in (401, 429, 500, 502, 503, 504):
+                time.sleep(min(2 ** attempt, 60))
                 continue
             raise
         except (urllib.error.URLError, TimeoutError):
@@ -72,8 +72,12 @@ def summarise(snap):
 
 
 def fetch(t):
-    code, j = get(f"/v3/instruments/{PAIR}/{BOOK}?time={t.strftime('%Y-%m-%dT%H:%M:%SZ')}")
-    if code == 404 or not j:
+    try:
+        code, j = get(f"/v3/instruments/{PAIR}/{BOOK}?time={t.strftime('%Y-%m-%dT%H:%M:%SZ')}")
+    except Exception as e:
+        print(f"  error at {t}: {str(e)[:120]}", flush=True)
+        return "error"
+    if code == 404 or not j or not j.get(BOOK, {}).get("price"):
         return None
     s = summarise(j[BOOK])
     s["asked_time"] = t.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -87,16 +91,18 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     ts = list(times())
     print(f"{PAIR} {BOOK}: {len(ts)} snapshot times {START}..{END} every {STEP} min, band +/-{BAND:.0%}", flush=True)
-    by_year, done, miss = {}, 0, 0
+    by_year, done, miss, err = {}, 0, 0, 0
     with ThreadPoolExecutor(THREADS) as ex:
         for s in ex.map(fetch, ts):
             done += 1
-            if s is None:
+            if s == "error":
+                err += 1
+            elif s is None:
                 miss += 1
             else:
                 by_year.setdefault(s["asked_time"][:4], []).append(s)
             if done % 2000 == 0:
-                print(f"  {done}/{len(ts)} done, {miss} missing", flush=True)
+                print(f"  {done}/{len(ts)} done, {miss} missing, {err} errors", flush=True)
     cols = ["asked_time", "snapshot_time", "price", "bucket_width", "n_buckets", "long_above", "long_below",
             "short_above", "short_below", "buckets_near"]
     for y, rows in sorted(by_year.items()):
@@ -107,7 +113,7 @@ def main():
             w.writeheader()
             w.writerows(rows)
         print(f"wrote {path}: {len(rows)} snapshots, first {rows[0]['snapshot_time']}, last {rows[-1]['snapshot_time']}")
-    print(f"DONE {PAIR} {BOOK}: {done - miss} snapshots, {miss} missing")
+    print(f"DONE {PAIR} {BOOK}: {done - miss - err} snapshots, {miss} missing or no price, {err} errors")
     return 0
 
 

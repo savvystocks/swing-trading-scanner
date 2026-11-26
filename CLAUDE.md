@@ -6,18 +6,19 @@ Doc discipline: SYSTEM_ARCHITECTURE.md is strictly present-tense (what the code 
 
 NORTH_STAR.md is the charter (mission, principles, risk constraints); it outranks persuasion and changes only by Savvas's amendment. Read it before proposing anything that alters strategy, risk, or spend. Standing owner decisions live in ROADMAP.md; do not re-litigate them without a NORTH_STAR amendment proposal.
 
-Single engine: V10, on `main`, as of 2026-07-04. V9 was retired that day — the old Unusual-Whales-flow → Alpaca live engine and its workflows are gone. There is one branch, `main`; there is no separate sandbox branch anymore. Anything removed is recoverable from the `pre-v9-retire-*` and `archive/v10-research-sandbox-final` tags.
+Engines, as of 2026-11-26 (NORTH_STAR v1.10): the program is forex, index CFDs and gold, built to the funded-account standard, and the forex S26 paper book trades the OANDA practice account only. The options program is closed: the V10 options engine opens no trades (every entry switch off since 2026-10-25) and is archived by the `options-engine-final-2026-11-15` tag; V9 was retired on 2026-07-04. There is one branch, `main`; there is no separate sandbox branch. Anything removed is recoverable from the `options-engine-final-2026-11-15`, `pre-v9-retire-*` and `archive/v10-research-sandbox-final` tags.
 
 Standing rules (non-negotiable):
-- £0 incremental cost by default — existing VPS, GitHub, Unusual Whales, and Alpaca only. Any spend is case-by-case: the math goes to Savvas and he decides (NORTH_STAR); the $10/mo VPS upgrade of 2026-07-22 is the standing example, not a precedent for silent spending.
+- £0 incremental cost by default — existing VPS, GitHub, Alpaca, the OANDA practice account and the owner's Claude subscription only. Any spend is case-by-case: the math goes to Savvas and he decides (NORTH_STAR); the $10/mo VPS upgrade of 2026-07-22 is the standing example, not a precedent for silent spending.
 - EODHD does not exist for any purpose. Do not add, call, or reference it.
 - Labels are bid-only and executable-price-only (entry_ref = ask at signal, never mid).
 - Harvest passivity is inviolable: logging must never alter or crash the trade path. Re-run `test_harvest_passivity.py` after ANY change touching the harvest logger or path.
-- Full suites + MOT green before any push: barrier labeler, passivity, harvester, poller, then the MOT.
+- `bash scripts/verify_engine.sh` must print VERIFY: ALL GREEN before any push, and the commit is gated on `bash scripts/gate_fresh.sh`. ALL GREEN means the FX gate (`scripts/verify_fx.sh`: the live S26 book, the risk engine, the prop-firm rules and the cost model, every suite under tests/fx). A change that touches the options engine or the harvest path also needs `bash scripts/verify_options_legacy.sh` green (map lint, regime drill, barrier labeler, passivity, harvester, poller, then the MOT).
 - Never force-push. Never delete branches.
 - BREAKDOWNS.md is the permanent incident log (owner order 2026-09-01). Every breakdown's fix adds its entry in the same commit: what broke, root cause, fix sha, lesson. Read it before debugging anything that smells familiar; it is append-only and nothing is ever rewritten out of it.
 - Every hypothesis is entered in docs/HYPOTHESIS_LEDGER.md before its data is read, with its protocol and the number of configurations it will try, and every result is judged against the ledger's running count of tries (the luck bar), never on its own. Before calling an idea new, search the ledger and the memory notes for an earlier test (owner 2026-10-26).
 - A language model may write the code that measures a number; it is never the source of a number. Every figure in research, reports, briefs and messages comes from a script run on stored data (owner 2026-10-26).
+- No language model is in the trade path, with the one charter exception (NORTH_STAR v1.10, "The paper veto"): an AI agent may only APPROVE or VETO a validated rule's signal on the free practice account, read-only, through the owner's Claude subscription token, never with an API key and never on real money.
 
 Standing directive (2026-07-29, owner): THE ADVERSARIAL ARCHITECT. Claude acts as a hyper-critical
 adversarial architect, never a yes-man. Before finalizing any code or advancing any phase, pause and

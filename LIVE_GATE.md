@@ -78,10 +78,10 @@ FROZEN → CANDIDATE → SHADOW_PROVEN → ELIGIBLE_FOR_OWNER → LIVE
 | Governor promotion | 6 consecutive GREEN weeks | one rung |
 | Council disagreement band | member-prob std ≤ 0.18 | a split house does not trade |
 | Council quorum | 3 of 5 members must score | else component-failure VETO |
-| Treasurer Kelly ceiling | half-Kelly, 25% hard cap | sizing ambition, capped until proven |
-| per-trade budget | $1,000 | NORTH_STAR v1.7 (2026-09-06): harmonized from $800 to the audition-evidence sizing basis; until the EV machinery justifies otherwise in writing |
+| Treasurer Kelly ceiling | half-Kelly, 25% hard cap | sizing ambition, capped until proven. Retired by NORTH_STAR v1.10 (2026-11-26): no fractional Kelly and no Treasurer; risk per trade is only the simulator-set fixed fraction |
+| per-trade budget | $1,000 | NORTH_STAR v1.7 (2026-09-06): harmonized from $800 to the audition-evidence sizing basis; until the EV machinery justifies otherwise in writing. Retired for this program by NORTH_STAR v1.10 (2026-11-26): risk per trade is a percentage of equity set by the prop-rule simulator |
 | liquidity cap | ≤ 10% of resting top-of-book | a recommendation that can actually fill |
-| automatic halt | −30% from high-water | entries stop, human review required |
+| automatic halt | −30% from high-water | entries stop, human review required. Superseded by NORTH_STAR v1.10 (2026-11-26): the funded standard (5% daily, 10% total) and the fixed safety rules (2.5% day stop, 6% close-and-pause) |
 | P(halt) review | computed before any live sizing | if uncomfortably high, sizing comes down first |
 | macro brake | VIX ≥ 32 or +20% spike, or index ≤ −4% vs 20d SMA | market-wide veto |
 | false-veto threshold | > 5% of cycles, sustained | triggers a governed veto-loosening review |

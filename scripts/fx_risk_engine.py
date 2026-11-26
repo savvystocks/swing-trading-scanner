@@ -1,14 +1,17 @@
 """Risk engine: the one pure coordinator between any book's signals and its orders (FX, index and gold CFDs).
 Owner's fixed rules, every limit a fraction of the start balance B0: no new trade once equity (NAV, floating included)
 is 2.5% of B0 below the balance at Europe/Prague midnight; no new trade ever again once NAV falls to 94% of B0;
-open initial risk in total at most 2.5% of B0; each trade's risk as the book gives it. Correlation clusters, whose
-combined initial risk may not exceed the proposed trade's risk r: same-direction USD exposure across FX pairs, and
-equity-index longs. A trade that does not fit is cut to the room left, or skipped when that room is below 0.25 r."""
+open initial risk in total at most 2.5% of B0; today's loss from the Prague-midnight balance (floating included) plus
+all open initial risk, the new trade's included, at most 4% of B0 (the cushion); each trade's risk as the book gives it.
+Correlation clusters, whose combined initial risk may not exceed the proposed trade's risk r: same-direction USD
+exposure across FX pairs, and equity-index longs. A trade that does not fit the open-risk cap or its cluster is cut to
+the room left, or skipped when that room is below 0.25 r; a trade that, at that size, would pass the cushion is
+refused."""
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 PRAGUE = ZoneInfo("Europe/Prague")
-DAY_STOP, TOTAL_PAUSE, OPEN_RISK_CAP, MIN_CUT = 0.025, 0.06, 0.025, 0.25
+DAY_STOP, TOTAL_PAUSE, OPEN_RISK_CAP, CUSHION, MIN_CUT = 0.025, 0.06, 0.025, 0.04, 0.25
 INDEX_LONGS = {"US500", "US100", "US30", "US2000", "GER40", "UK100", "JP225", "EU50"}
 ALIASES = {"SPX500USD": "US500", "NAS100USD": "US100", "US30USD": "US30", "US2000USD": "US2000", "DE30EUR": "GER40",
            "DE40EUR": "GER40", "UK100GBP": "UK100", "JP225USD": "JP225", "EU50EUR": "EU50"}
@@ -76,8 +79,13 @@ def assess(account, prague_balance, trade):
         if r - in_c < room:
             room, why = r - in_c, (f"same-direction {'dollar bet' if c.startswith('USD') else c} already open: the {c} "
                                    f"cluster holds {in_c:,.2f} of the {r:,.2f} USD single-trade risk")
-    if room >= r:
-        return 1.0, ""
     if room < MIN_CUT * r:
         return 0.0, why + " (room below 0.25 of the trade's risk, skipped)"
+    take = min(room, r)
+    loss, at_risk = max(0.0, prague_balance - nav), sum(p["risk_usd"] for p in held)
+    if loss + at_risk + take > CUSHION * b0:
+        return 0.0, (f"4% cushion: today's loss {loss:,.2f} plus {at_risk:,.2f} USD open risk plus this trade's "
+                     f"{take:,.2f} would pass {CUSHION * b0:,.2f} USD (refused)")
+    if room >= r:
+        return 1.0, ""
     return room / r, why + f" (cut to {room / r:.0%} of the trade's risk)"

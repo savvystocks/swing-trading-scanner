@@ -6,7 +6,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 PY="${VERIFY_PY:-./.venv/bin/python}"; [ -x "$PY" ] || command -v "$PY" >/dev/null 2>&1 || PY=python3
 rc=0; pass=0; total=0
-if $PY -m py_compile scripts/fx_s26_alerts.py scripts/fx_oanda_orders.py scripts/fx_risk_engine.py research/costs.py research/prop_rules.py; then
+if $PY -m py_compile scripts/fx_s26_alerts.py scripts/fx_oanda_orders.py scripts/fx_risk_engine.py scripts/fx_veto_dossier.py scripts/fx_veto_run.py scripts/fx_veto_scoreboard.py research/costs.py research/prop_rules.py; then
   echo "compile: ok"
 else
   echo "compile: FAIL"; rc=1

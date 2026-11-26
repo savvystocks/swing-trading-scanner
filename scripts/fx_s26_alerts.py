@@ -288,10 +288,13 @@ def run_live():
     os.makedirs(STATE_DIR, exist_ok=True)
     st = load_state()
     now = pd.Timestamp.now(tz="UTC").value
-    bal = None
+    bal = nav = None
     try:
         acct = os.environ.get("OANDA_ACCOUNT_ID", "")
-        bal = float(oanda_get(f"/v3/accounts/{acct}/summary")["account"]["balance"]) if acct else None
+        if acct:
+            summ = oanda_get(f"/v3/accounts/{acct}/summary")["account"]
+            bal = float(summ["balance"])
+            nav = float(summ["NAV"]) if "NAV" in summ else None
     except Exception as e:
         print("balance read failed:", e)
     for pair in PAIRS:
@@ -332,6 +335,7 @@ def run_live():
               "signal_td": td, "sig_t": s["sig_t"], "entry_t": entry_t, "status": "pending"}
         st["trades"].append(tr)
         log_event({"event": "alert", **tr, "atrd": s["atrd"], "D_est": D_est})
+        veto_dossier(mk, pair, s, tr, st, bal, nav, now)
         side = "BUY" if s["dir"] == 1 else "SELL"
         units = ""
         if bal and D_est > 0:
@@ -359,6 +363,14 @@ def run_live():
             print("broker error:", e)
     with open(STATE, "w") as f:
         json.dump(st, f, indent=1)
+
+
+def veto_dossier(mk, pair, s, tr, st, bal, nav, now):
+    try:
+        import fx_veto_dossier
+        fx_veto_dossier.write(STATE_DIR, mk, pair, s, tr, st, bal, nav, now)
+    except Exception as e:
+        log_event({"event": "veto_dossier_error", "id": tr["id"], "error": f"{type(e).__name__}: {str(e)[:300]}"})
 
 
 def broker_step(st, now):

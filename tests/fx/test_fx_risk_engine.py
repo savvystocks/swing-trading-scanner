@@ -190,6 +190,46 @@ def test_tighter_of_cap_and_cluster_wins():
     assert fxtest.near(frac, 0.4) and why.startswith("open-risk cap")
 
 
+def test_cushion_allows_a_trade_landing_exactly_on_four_percent():
+    held = (("EUR_USD", 1, 1_500.0),)
+    assert R.assess(acct(98_000.0, held=held), B0, trade("EUR_JPY", 1, 500.0)) == (1.0, "")
+
+
+def test_cushion_refuses_a_trade_just_above_four_percent():
+    held = (("EUR_USD", 1, 1_500.0),)
+    frac, why = R.assess(acct(97_999.99, held=held), B0, trade("EUR_JPY", 1, 500.0))
+    assert frac == 0.0 and why.startswith("4% cushion") and "today's loss 2,000.01" in why and why.endswith("(refused)")
+
+
+def test_cushion_refuses_rather_than_cutting():
+    held = (("EUR_USD", 1, 1_500.0),)
+    frac, why = R.assess(acct(97_600.0, held=held), B0, trade("EUR_JPY", 1, 500.0))
+    assert frac == 0.0 and "plus this trade's 500.00 would pass 4,000.00 USD (refused)" in why
+
+
+def test_cushion_binds_where_the_open_risk_cap_does_not():
+    held = (("EUR_USD", 1, 1_000.0),)
+    frac, why = R.assess(acct(97_800.0, held=held), B0, trade("EUR_JPY", 1, 1_000.0))
+    assert frac == 0.0 and why.startswith("4% cushion")
+    assert R.assess(acct(B0, held=held), B0, trade("EUR_JPY", 1, 1_000.0)) == (1.0, "")
+
+
+def test_cushion_checks_the_trade_at_its_cut_size():
+    held = (("EUR_USD", 1, 2_000.0),)
+    frac, why = R.assess(acct(98_500.0, held=held), B0, trade("EUR_JPY", 1, 1_000.0))
+    assert frac == 0.5 and why.startswith("open-risk cap")
+    frac, why = R.assess(acct(98_400.0, held=held), B0, trade("EUR_JPY", 1, 1_000.0))
+    assert frac == 0.0 and why.startswith("4% cushion") and "this trade's 500.00" in why
+
+
+def test_cushion_counts_floating_losses():
+    g = R.refresh({}, B0, B0, utc("2026-11-26 10:00"))
+    g = R.refresh(g, B0, 97_600.0, utc("2026-11-26 15:00"))
+    held = (("EUR_USD", 1, 1_500.0),)
+    frac, why = R.assess(acct(97_600.0, held=held), g["prague_ref"], trade("EUR_JPY", 1, 500.0))
+    assert frac == 0.0 and why.startswith("4% cushion")
+
+
 def test_assess_is_pure():
     a, t = acct(held=(("EUR_USD", 1, 500.0),)), trade("GBP_USD", 1, 1_000.0)
     keep = copy.deepcopy((a, t))

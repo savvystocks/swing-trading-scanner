@@ -1,0 +1,50 @@
+name: fx-s26-veto
+# The S26 paper veto IN SHADOW (NORTH_STAR v1.10, decision V1): one structured APPROVE or VETO per new S26 alert,
+# recorded next to its dossier and read by no order. It runs on the owner's Claude subscription token only; no API key
+# is ever mapped into this job. Scheduled runs fire as the GitHub account that last edited this file. Edit it from a
+# GitHub-linked account (the laptop), never only from the VPS deploy key: a deploy-key push leaves no account and the
+# schedule never fires (BREAKDOWNS 2026-11-25).
+on:
+  schedule:
+    - cron: "27,42 21 * * 1-5"
+    - cron: "18,27,42 22 * * 1-5"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: fx-s26-veto
+  cancel-in-progress: false
+jobs:
+  veto:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dossiers without a verdict
+        id: pending
+        run: python3 scripts/fx_veto_run.py --pending >> "$GITHUB_OUTPUT"
+      - name: Install Claude Code (pinned version)
+        if: steps.pending.outputs.count != '0'
+        continue-on-error: true
+        run: |
+          curl -fsSL https://claude.ai/install.sh | bash -s 2.1.326
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Veto in shadow (read-only, structured output, fail open)
+        if: steps.pending.outputs.count != '0'
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          VETO_MODEL: claude-opus-5-5
+          DISABLE_AUTOUPDATER: "1"
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python3 scripts/fx_veto_run.py
+      - name: Save the verdicts
+        if: steps.pending.outputs.count != '0'
+        run: |
+          git config user.name "fx-alerts-bot"
+          git config user.email "fx-alerts-bot@users.noreply.github.com"
+          git add reports/fx_alerts/veto
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
+          git commit -m "fx veto: S26 shadow verdicts [skip ci]"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0; sleep 5; done
+          exit 1

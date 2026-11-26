@@ -1,30 +1,22 @@
 #!/usr/bin/env bash
 # ONE-COMMAND VERIFICATION (learned from the 2026-09-11 workshop: an agent must be able to run the
-# real thing). Runs the feature-map lint, the regime drill and the ship gate (compile, harvest
-# suites, MOT) and prints one screen: the three healthy lines or the first failure of each.
-# Usage on the VPS: bash scripts/verify_engine.sh            (exit 0 only if all three are green)
+# real thing). Since 2026-11-26 (owner decision) ALL GREEN requires the FX gate, scripts/verify_fx.sh:
+# the live OANDA-practice book, the risk engine, the prop-firm rules and the cost model. The options-era
+# steps (feature-map lint, regime drill, harvest suites, MOT) run separately as
+# scripts/verify_options_legacy.sh and are not required here.
+# Usage on the VPS: bash scripts/verify_engine.sh            (exit 0 only if the FX gate is green)
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
-PY=./.venv/bin/python; [ -x "$PY" ] || PY=python3
 rc=0
-echo "=== 1/3 feature map lint ==="
-if $PY scripts/feature_map_lint.py > /tmp/verify_lint.log 2>&1; then tail -1 /tmp/verify_lint.log; else cat /tmp/verify_lint.log | head -12; rc=1; fi
-echo "=== 2/3 regime drill ==="
-if $PY scripts/regime_drill.py > /tmp/verify_drill.log 2>&1; then tail -2 /tmp/verify_drill.log; else grep -n "FAIL" /tmp/verify_drill.log | head -8; tail -2 /tmp/verify_drill.log; rc=1; fi
-echo "=== 3/3 ship gate (compile + suites + MOT) ==="
 rm -f /tmp/gate_green /tmp/verify_green
-if [ -f "$HOME/vps_ship_grid.sh" ]; then
-  bash "$HOME/vps_ship_grid.sh" > /tmp/verify_gate.log 2>&1
-  if [ -f /tmp/gate_green ]; then tail -3 /tmp/verify_gate.log; else grep -n "FAIL\|MISSING" /tmp/verify_gate.log | head -8; tail -3 /tmp/verify_gate.log; rc=1; fi
-else
-  echo "gate script $HOME/vps_ship_grid.sh not found"; rc=1
-fi
+echo "=== FX gate (scripts/verify_fx.sh) ==="
+bash scripts/verify_fx.sh > /tmp/verify_fx.log 2>&1 || rc=1
+cat /tmp/verify_fx.log
 echo "=== verdict ==="
-rm -f /tmp/verify_green
 if [ $rc -eq 0 ]; then
   echo "VERIFY: ALL GREEN"
   bash scripts/gate_fresh.sh --stamp        # the sentinel names THIS tree; any edit makes it stale
 else
-  echo "VERIFY: RED (see /tmp/verify_*.log)"
+  echo "VERIFY: RED (see /tmp/verify_fx.log)"
 fi
 exit $rc

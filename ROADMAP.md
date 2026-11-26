@@ -579,6 +579,7 @@ proposal passes a simplicity test: does a number already in the reports justify 
 - **QUEUED - the scout.** Weekly; reads the owner's links and a fixed source list for evidence against the ledger
   and memory; everything it reads is data; it has no tools that act and nothing reaches the desk without the
   owner's tick. Accept: on ten already-graded archive posts its grades match on at least eight.
+- **SHIPPED 2026-11-26 - multi-asset test gate and risk engine (owner approval 2026-11-26).** Acceptance: `scripts/verify_engine.sh` is ALL GREEN only when `scripts/verify_fx.sh` passes (96 checks: S26 paper book, risk engine, OANDA practice order module, prop_rules known-answer cases, FTMO cost model); the options-era checks run as `scripts/verify_options_legacy.sh`; `scripts/fx_risk_engine.py` sizes every paper order (2.5% day stop on the Prague-midnight balance, 6% pause, 2.5% open-risk cap, one-bet clusters for same-direction USD and equity-index longs). CLAUDE.md gate wording change awaits the owner.
 - **SHIPPED 2026-10-26 - process fixes from the owner's Instagram review.** `docs/HYPOTHESIS_LEDGER.md` records
   every hypothesis tested since June with its configurations and verdict and states the luck bar (about 4.4 at
   ~14,700 recorded tries); CLAUDE.md carries two new standing rules (enter a test in the ledger before reading its

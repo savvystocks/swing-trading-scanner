@@ -23,7 +23,6 @@ STATE = os.path.join(STATE_DIR, "s26_state.json")
 EVENTS = os.path.join(STATE_DIR, "s26_events.jsonl")
 DRY = os.environ.get("DRY_RUN", "") == "1"
 PLACE = os.environ.get("PLACE_ORDERS", "") == "1" and not DRY
-USD_SIDE = {"EUR_USD": -1, "USD_JPY": 1}
 
 
 def atr_wilder(h, l, c, n=14):
@@ -363,10 +362,11 @@ def run_live():
 
 
 def broker_step(st, now):
-    from fx_oanda_orders import Practice, guard_ok
+    import fx_risk_engine as risk
+    from fx_oanda_orders import Practice
     br = Practice()
     acct = br.summary()
-    ny_day = str(pd.Timestamp(now, tz="UTC").tz_convert(NYZ).tz_localize(None) + pd.Timedelta(hours=7))[:10]
+    closed_now = []
     for tr in st["trades"]:
         b = tr.get("broker")
         if not b or b.get("status") != "open":
@@ -381,23 +381,25 @@ def broker_step(st, now):
             b.update({"status": "closed", "close_time": x.get("closeTime"), "close_price": float(x.get("averageClosePrice", 0) or 0),
                       "realized_pl": pl, "financing": float(x.get("financing", 0) or 0),
                       "R": round(pl / b["risk_usd"], 3) if b.get("risk_usd") else None})
+            closed_now.append((pd.Timestamp(b["close_time"]).value, pl))
             log_event({"event": "broker_closed", "id": tr["id"], **b})
             tg_send(f"S26 practice trade closed: {tr['pair']} {'long' if tr['dir'] == 1 else 'short'} at "
                     f"{fmt(tr['pair'], b['close_price'])}, P&L {pl:+,.2f} USD ({b['R']:+.2f} R incl. spread, financing)"
                     f"{' - ' + b['closed_by'] if b.get('closed_by') else ''}.")
-    ok, why = guard_ok(st, acct, ny_day)
-    bal = float(acct["balance"])
+    bal, nav = float(acct["balance"]), float(acct["NAV"])
+    st["guard"] = g = risk.refresh(st.get("guard", {}), bal, nav, now, closed_now)
     for tr in st["trades"]:
         if tr.get("broker") or tr["status"] not in ("pending", "open") or now < tr["entry_t"]:
             continue
         pair, sg = tr["pair"], tr["dir"]
-        if now > tr["entry_t"] + 2 * 3600 * 10**9:
-            tr["broker"] = {"status": "not_placed", "reason": "job ran more than 2 hours after 18:00 New York"}
-        elif not ok:
+        frac, why = 0.0, "job ran more than 2 hours after 18:00 New York"
+        if now <= tr["entry_t"] + 2 * 3600 * 10**9:
+            held = [{"instrument": o["pair"], "direction": o["dir"], "risk_usd": o["broker"]["risk_usd"]}
+                    for o in st["trades"] if (o.get("broker") or {}).get("status") == "open"]
+            frac, why = risk.assess({"nav": nav, "start": g["B0"], "paused": g.get("paused", False), "open": held},
+                                    g["prague_ref"], {"instrument": pair, "direction": sg, "risk_usd": RISK_FRAC * bal})
+        if frac <= 0:
             tr["broker"] = {"status": "not_placed", "reason": why}
-        elif any(o is not tr and (o.get("broker") or {}).get("status") == "open" and o["pair"] != pair
-                 and USD_SIDE[o["pair"]] * o["dir"] == USD_SIDE[pair] * sg for o in st["trades"]):
-            tr["broker"] = {"status": "not_placed", "reason": "same-direction dollar bet already open on the other pair"}
         else:
             bid, ask, tradeable = br.price(pair)
             px, sp = (ask if sg == 1 else bid), ask - bid
@@ -407,7 +409,7 @@ def broker_step(st, now):
                                 ("price already through the stop" if D <= 0 else "stop distance below 8 x spread")}
             else:
                 per_unit = D if pair == "EUR_USD" else D / px
-                units = int(RISK_FRAC * bal / per_unit)
+                units = int(frac * RISK_FRAC * bal / per_unit)
                 f = br.market(pair, units * sg, tr["stop"], tr["id"])
                 if not f["filled"]:
                     tr["broker"] = {"status": "not_placed", "reason": f"order not filled: {f['reason']}"}
@@ -419,11 +421,13 @@ def broker_step(st, now):
                     tr["broker"] = {"status": "open", "trade_id": f["trade_id"], "fill": f["fill"], "fill_time": f["time"],
                                     "units": f["units"], "stop": tr["stop"], "tp": tp, "D": Df, "spread_at_order": sp,
                                     "risk_usd": abs(f["units"]) * (Df if pair == "EUR_USD" else Df / f["fill"]),
-                                    "commission": f["commission"], "time_exit_t": Market.time_exit_t(None, t_fill)}
+                                    "commission": f["commission"], "time_exit_t": Market.time_exit_t(None, t_fill),
+                                    **({"size_fraction": frac, "size_cut": why} if frac < 1 else {})}
                     log_event({"event": "broker_filled", "id": tr["id"], **tr["broker"]})
                     tg_send(f"S26 practice order FILLED: {pair} {'BUY' if sg == 1 else 'SELL'} {abs(f['units']):,} units at "
                             f"{fmt(pair, f['fill'])}; stop {fmt(pair, tr['stop'])}, target {fmt(pair, tp)} "
-                            f"({Df / PIP[pair]:.0f} pips risk, 0.5% of the balance). Time exit {uk(tr['broker']['time_exit_t'])} UK.")
+                            f"({Df / PIP[pair]:.0f} pips risk, {100 * frac * RISK_FRAC:g}% of the balance{'; ' + why if frac < 1 else ''}). "
+                            f"Time exit {uk(tr['broker']['time_exit_t'])} UK.")
                     continue
         log_event({"event": "broker_not_placed", "id": tr["id"], **tr["broker"]})
         tg_send(f"S26 {pair}: practice order NOT placed - {tr['broker']['reason']}.")

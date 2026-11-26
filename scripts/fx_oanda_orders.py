@@ -1,6 +1,6 @@
 """OANDA PRACTICE order module for the forex paper books. Refuses any host but the practice API.
-Market entry with the broker stop attached at the fill, take-profit set from the actual fill, close by trade id,
-and the loss guard (2.5% day stop from the New York day-start balance, 6% total pause from the first recorded balance)."""
+Market entry with the broker stop attached at the fill, take-profit set from the actual fill, close by trade id.
+The loss limits live in scripts/fx_risk_engine.py."""
 import os
 
 import requests
@@ -11,7 +11,8 @@ DECIMALS = {"EUR_USD": 5, "USD_JPY": 3}
 
 class Practice:
     def __init__(self):
-        assert HOST.startswith("https://api-fxpractice."), "practice host only"
+        if not HOST.startswith("https://api-fxpractice."):
+            raise RuntimeError("practice host only")
         self.acct = os.environ["OANDA_ACCOUNT_ID"]
         self.h = {"Authorization": "Bearer " + os.environ["OANDA_API_TOKEN"], "Content-Type": "application/json"}
 
@@ -58,19 +59,3 @@ class Practice:
 
     def close(self, trade_id):
         return self._req("PUT", f"/trades/{trade_id}/close", {"units": "ALL"})
-
-
-def guard_ok(st, acct, ny_day):
-    """Loss guard. Returns (ok, reason). Day reference = balance at the first run of each New York trading day."""
-    nav, bal = float(acct["NAV"]), float(acct["balance"])
-    g = st.setdefault("guard", {})
-    g.setdefault("B0", bal)
-    if g.get("day") != ny_day:
-        g["day"], g["day_ref"] = ny_day, bal
-    B0 = g["B0"]
-    if g.get("paused") or nav <= 0.94 * B0:
-        g["paused"] = True
-        return False, f"PAUSED: NAV {nav:,.0f} at or below 94% of the start balance {B0:,.0f} (6% total pause, no new trades)"
-    if nav <= g["day_ref"] - 0.025 * B0:
-        return False, f"day stop: NAV {nav:,.0f} is 2.5% of {B0:,.0f} below today's start {g['day_ref']:,.0f}"
-    return True, ""

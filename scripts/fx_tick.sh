@@ -5,6 +5,9 @@
 # so the engine checkout is never touched. Never force-pushes. Pages Telegram if no tick could be pushed.
 set -u
 D="$HOME/fx_tick"
+# The default github.com key on the VPS is read-only; push with the key the engine checkout pushes with.
+SSHC=$(git -C "$HOME/swing-trading-scanner" config --get core.sshCommand)
+[ -n "$SSHC" ] && export GIT_SSH_COMMAND="$SSHC"
 if [ ! -d "$D/.git" ]; then
   git clone -q --depth 1 --filter=blob:none --sparse git@github.com:savvystocks/swing-trading-scanner.git "$D" || exit 1
   git -C "$D" sparse-checkout set reports/fx_alerts/tick || exit 1

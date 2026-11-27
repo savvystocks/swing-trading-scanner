@@ -428,7 +428,7 @@ def dip_scan(st, inst, dp, now):
 
 def tstat(x):
     x = np.asarray(x, float)
-    if len(x) < 2 or x.std(ddof=1) == 0:
+    if len(x) < 10 or x.std(ddof=1) == 0:
         return None
     return float(x.mean() / (x.std(ddof=1) / np.sqrt(len(x))))
 

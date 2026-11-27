@@ -1,0 +1,59 @@
+name: paper-lab
+# The paper lab (scripts/paper_lab.py): S26X on seven USD pairs (practice orders) and the DIP index dip-buy (model
+# record only), pre-registered in reports/paper_lab/PREREGISTRATION.md. Started on time by the VPS tick push
+# (scripts/fx_tick.sh, same tick as fx-s26-alerts); the schedule is the backup. Scheduled runs fire as the GitHub
+# account that last edited this file: edit it from the laptop, never only from the VPS deploy key (BREAKDOWNS 2026-11-25).
+on:
+  push:
+    branches: [main]
+    paths: ["reports/fx_alerts/tick/**"]
+  schedule:
+    - cron: "12 21 * * 1-5"
+    - cron: "12 22 * * 1-5"
+    - cron: "3 22 * * 0-4"
+    - cron: "3 23 * * 0-4"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "1 = print only (no Telegram, no orders, no commit)"
+        required: false
+        default: "1"
+      start:
+        description: "dry runs only: replay signals from this date (YYYY-MM-DD) as a preview"
+        required: false
+        default: ""
+permissions:
+  contents: write
+concurrency:
+  group: paper-lab
+  cancel-in-progress: false
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install --quiet numpy pandas matplotlib requests
+      - name: Paper lab (OANDA PRACTICE only)
+        env:
+          OANDA_API_TOKEN: ${{ secrets.OANDA_API_TOKEN }}
+          OANDA_ACCOUNT_ID: "101-001-40973522-001"
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || '0' }}
+          PLACE_ORDERS: "1"
+          LAB_START: ${{ github.event_name == 'workflow_dispatch' && inputs.start || '' }}
+        run: python3 scripts/paper_lab.py
+      - name: Save the lab record
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run == '1') }}
+        run: |
+          git config user.name "fx-alerts-bot"
+          git config user.email "fx-alerts-bot@users.noreply.github.com"
+          git add reports/paper_lab
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
+          git commit -m "paper lab: record [skip ci]"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0; sleep 5; done
+          exit 1

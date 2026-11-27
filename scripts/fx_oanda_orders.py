@@ -6,7 +6,8 @@ import os
 import requests
 
 HOST = "https://api-fxpractice.oanda.com"
-DECIMALS = {"EUR_USD": 5, "USD_JPY": 3}
+DECIMALS = {"EUR_USD": 5, "USD_JPY": 3, "GBP_USD": 5, "AUD_USD": 5, "NZD_USD": 5, "USD_CHF": 5, "USD_CAD": 5, "USD_NOK": 5,
+            "USD_SEK": 5}
 
 
 class Practice:
@@ -36,11 +37,11 @@ class Practice:
     def px(self, pair, x):
         return f"{x:.{DECIMALS[pair]}f}"
 
-    def market(self, pair, units, stop, client_id):
+    def market(self, pair, units, stop, client_id, tag="s26"):
         body = {"order": {"type": "MARKET", "instrument": pair, "units": str(int(units)), "timeInForce": "FOK",
                           "positionFill": "OPEN_ONLY", "stopLossOnFill": {"price": self.px(pair, stop), "timeInForce": "GTC"},
-                          "clientExtensions": {"id": client_id[:120], "tag": "s26"},
-                          "tradeClientExtensions": {"id": client_id[:120], "tag": "s26"}}}
+                          "clientExtensions": {"id": client_id[:120], "tag": tag},
+                          "tradeClientExtensions": {"id": client_id[:120], "tag": tag}}}
         j = self._req("POST", "/orders", body)
         f = j.get("orderFillTransaction")
         if not f or "tradeOpened" not in f:

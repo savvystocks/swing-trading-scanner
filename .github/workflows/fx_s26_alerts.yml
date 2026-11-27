@@ -2,7 +2,14 @@ name: fx-s26-alerts
 # Scheduled runs fire as the GitHub account that last edited this file. Edit it from a GitHub-linked account
 # (the laptop), never only from the VPS deploy key: a deploy-key push leaves no account and the schedule never fires
 # (BREAKDOWNS 2026-11-25).
+# GitHub ran the schedule about 6 hours late (BREAKDOWNS 2026-11-27), so the VPS starts the job on time: at the same
+# four minutes scripts/fx_tick.sh pushes reports/fx_alerts/tick/last_tick.txt and that push starts this job at once.
+# The schedule stays as the backup; a late duplicate finds the close already scanned and the concurrency group
+# runs one at a time.
 on:
+  push:
+    branches: [main]
+    paths: ["reports/fx_alerts/tick/**"]
   schedule:
     - cron: "12 21 * * 1-5"
     - cron: "12 22 * * 1-5"

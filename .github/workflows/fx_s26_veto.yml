@@ -3,8 +3,12 @@ name: fx-s26-veto
 # recorded next to its dossier and read by no order. It runs on the owner's Claude subscription token only; no API key
 # is ever mapped into this job. Scheduled runs fire as the GitHub account that last edited this file. Edit it from a
 # GitHub-linked account (the laptop), never only from the VPS deploy key: a deploy-key push leaves no account and the
-# schedule never fires (BREAKDOWNS 2026-11-25).
+# schedule never fires (BREAKDOWNS 2026-11-25). It also runs as soon as each fx-s26-alerts run ends (workflow_run),
+# because the schedule ran about 6 hours late (BREAKDOWNS 2026-11-27).
 on:
+  workflow_run:
+    workflows: ["fx-s26-alerts"]
+    types: [completed]
   schedule:
     - cron: "27,42 21 * * 1-5"
     - cron: "18,27,42 22 * * 1-5"

@@ -1,6 +1,6 @@
 # Paper lab scoreboard (OANDA practice, paper only)
 
-Updated Fri 27 Nov 22:13 UK.
+Updated Sat 28 Nov 03:16 UK.
 
 S26X (pin bar / engulfing at daily support or resistance, seven USD pairs):
 - model trades closed: 0, total +0.00 R
